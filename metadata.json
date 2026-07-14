@@ -1,0 +1,6 @@
+{
+  "name": "Supply Chain CRM",
+  "description": "A modern, intelligent, and highly polished Supply Chain CRM with automated Sellercloud sync, interactive dashboard, PO & vendor tracking, AI assistant, and reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
