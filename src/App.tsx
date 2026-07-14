@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, FileSpreadsheet, Users, Mail, MessageSquare, Sparkles, 
+import {
+  BarChart3, FileSpreadsheet, Users, Mail, MessageSquare, Sparkles,
   Settings, Bell, RefreshCw, Layers, Shield, HelpCircle, User, LogOut,
   TrendingUp, AlertTriangle, FileText, CheckCircle2, ChevronRight, X
 } from 'lucide-react';
@@ -16,8 +16,11 @@ import TeamChat from './components/TeamChat';
 import AIAssistant from './components/AIAssistant';
 import ReportsAnalytics from './components/ReportsAnalytics';
 import AdminPanel from './components/AdminPanel';
+import LoginPage from './components/LoginPage';
 
 export default function App() {
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Navigation & Active Session States
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userRole, setUserRole] = useState<UserRole>('Administrator');
@@ -193,6 +196,10 @@ export default function App() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
       {/* 1. INTERACTIVE NAVIGATION SIDEBAR */}
@@ -232,11 +239,10 @@ export default function App() {
                       setSelectedPOId(null);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition ${
-                    isActive 
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold border border-indigo-500' 
-                      : 'hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition ${isActive
+                    ? 'bg-indigo-600 text-white shadow-sm font-bold border border-indigo-500'
+                    : 'hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300'
+                    }`}
                 >
                   <IconComp className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-indigo-400'}`} />
                   <span>{tab.label}</span>
@@ -277,7 +283,7 @@ export default function App() {
               <span>Sellercloud Connected (10m interval active)</span>
             </div>
 
-            <button 
+            <button
               onClick={handleTriggerSync}
               className="p-2 hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-lg shadow-2xs transition"
               title="Trigger manual Sellercloud sync"
@@ -287,7 +293,7 @@ export default function App() {
 
             {/* Notifications trigger with Red badge */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="p-2 hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-lg shadow-2xs transition"
               >
@@ -304,7 +310,7 @@ export default function App() {
                 <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-4 space-y-3 animate-fadeIn">
                   <div className="flex items-center justify-between border-b border-slate-50 pb-2">
                     <span className="text-xs font-bold text-slate-800">Sourcing Alerts Desk</span>
-                    <button 
+                    <button
                       onClick={handleMarkAllNotificationsRead}
                       className="text-[10px] text-indigo-600 hover:underline font-semibold"
                     >
@@ -314,12 +320,11 @@ export default function App() {
 
                   <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
                     {notifications.map(ntf => (
-                      <div 
+                      <div
                         key={ntf.id}
                         onClick={() => handleNotificationClick(ntf)}
-                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition ${
-                          ntf.read ? 'bg-white border-slate-100 text-slate-500' : 'bg-indigo-50/30 border-indigo-100 text-slate-800 font-medium'
-                        }`}
+                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition ${ntf.read ? 'bg-white border-slate-100 text-slate-500' : 'bg-indigo-50/30 border-indigo-100 text-slate-800 font-medium'
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-[11px]">{ntf.title}</span>
@@ -346,7 +351,7 @@ export default function App() {
         {/* INTERNAL VIEWPORT PORTAL */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === 'dashboard' && (
-            <ExecutiveDashboard 
+            <ExecutiveDashboard
               purchaseOrders={purchaseOrders}
               vendors={vendors}
               syncLogs={syncLogs}
@@ -365,7 +370,7 @@ export default function App() {
           )}
 
           {activeTab === 'purchase-orders' && (
-            <POManagement 
+            <POManagement
               purchaseOrders={purchaseOrders}
               vendors={vendors}
               comments={comments}
@@ -400,7 +405,7 @@ export default function App() {
           )}
 
           {activeTab === 'vendors' && (
-            <VendorManagement 
+            <VendorManagement
               vendors={vendors}
               purchaseOrders={purchaseOrders}
               onUpdateVendor={handleUpdateVendors}
@@ -409,7 +414,7 @@ export default function App() {
           )}
 
           {activeTab === 'email-center' && (
-            <EmailCenter 
+            <EmailCenter
               emails={emailLogs}
               purchaseOrders={purchaseOrders}
               vendors={vendors}
@@ -419,7 +424,7 @@ export default function App() {
           )}
 
           {activeTab === 'chat' && (
-            <TeamChat 
+            <TeamChat
               chats={chats}
               purchaseOrders={purchaseOrders}
               userRole={userRole}
@@ -429,7 +434,7 @@ export default function App() {
           )}
 
           {activeTab === 'ai-assistant' && (
-            <AIAssistant 
+            <AIAssistant
               purchaseOrders={purchaseOrders}
               vendors={vendors}
               onSelectPO={(id) => { setSelectedPOId(id); setActiveTab('purchase-orders'); }}
@@ -438,14 +443,14 @@ export default function App() {
           )}
 
           {activeTab === 'reports' && (
-            <ReportsAnalytics 
+            <ReportsAnalytics
               purchaseOrders={purchaseOrders}
               vendors={vendors}
             />
           )}
 
           {activeTab === 'system-admin' && (
-            <AdminPanel 
+            <AdminPanel
               activityLogs={activityLogs}
               auditLogs={auditLogs}
               syncLogs={syncLogs}
