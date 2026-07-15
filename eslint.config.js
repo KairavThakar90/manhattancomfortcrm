@@ -38,6 +38,7 @@ export default [
       ],
       'prettier/prettier': 'error',
       'react/prop-types': 'off',
+      'no-unused-vars': 'off',
     },
   },
 ];
