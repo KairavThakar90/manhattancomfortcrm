@@ -1,15 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer base {
   :root {
-    --color-primary: 79 70 229; /* Indigo 600 */
-    --color-success: 22 163 74; /* Green 600 */
-    --color-warning: 202 138 4; /* Yellow 600 */
-    --color-danger: 220 38 38; /* Red 600 */
-    --color-background: 248 250 252; /* Slate 50 */
-
+    --color-primary: 79 70 229;
+    --color-success: 22 163 74;
+    --color-warning: 202 138 4;
+    --color-danger: 220 38 38;
+    --color-background: 248 250 252;
+    
     --radius-sm: 0.25rem;
     --radius-md: 0.375rem;
     --radius-lg: 0.5rem;
@@ -18,14 +14,9 @@
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
-    font-family:
-      'Inter',
-      system-ui,
-      -apple-system,
-      sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
-  /* Custom Smooth Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -42,7 +33,6 @@
 }
 
 @layer components {
-  /* Reusable class bundles you can use directly in JSX className="" */
   .crm-glass-panel {
     @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm rounded-xl;
   }
