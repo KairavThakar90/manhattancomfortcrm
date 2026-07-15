@@ -24,6 +24,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 <div className="absolute top-[60%] -right-[10%] w-[40%] h-[40%] bg-purple-600/20 blur-[100px] rounded-full mix-blend-screen" />
             </div>
 
+
             <div className="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10 animate-fadeIn">
                 <div className="flex flex-col items-center mb-10">
                     <div className="h-14 w-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 mb-4 border border-indigo-400/30 relative group">
