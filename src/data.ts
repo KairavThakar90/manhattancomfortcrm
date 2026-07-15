@@ -1,4 +1,14 @@
-import { PurchaseOrder, Vendor, EmailLog, Comment, ChatMessage, Notification, ActivityLog, AuditLog, SellercloudSyncLog } from './types';
+import {
+  PurchaseOrder,
+  Vendor,
+  EmailLog,
+  Comment,
+  ChatMessage,
+  Notification,
+  ActivityLog,
+  AuditLog,
+  SellercloudSyncLog,
+} from './types';
 
 // Initial Mock Vendors
 export const INITIAL_VENDORS: Vendor[] = [
@@ -12,7 +22,7 @@ export const INITIAL_VENDORS: Vendor[] = [
     delayedOrders: 3,
     totalOrders: 125,
     avgDeliveryDays: 18,
-    country: 'China'
+    country: 'China',
   },
   {
     id: 'VEND-002',
@@ -24,7 +34,7 @@ export const INITIAL_VENDORS: Vendor[] = [
     delayedOrders: 1,
     totalOrders: 80,
     avgDeliveryDays: 22,
-    country: 'India'
+    country: 'India',
   },
   {
     id: 'VEND-003',
@@ -36,7 +46,7 @@ export const INITIAL_VENDORS: Vendor[] = [
     delayedOrders: 5,
     totalOrders: 45,
     avgDeliveryDays: 29,
-    country: 'Vietnam'
+    country: 'Vietnam',
   },
   {
     id: 'VEND-004',
@@ -48,7 +58,7 @@ export const INITIAL_VENDORS: Vendor[] = [
     delayedOrders: 0,
     totalOrders: 300,
     avgDeliveryDays: 14,
-    country: 'China'
+    country: 'China',
   },
   {
     id: 'VEND-005',
@@ -60,8 +70,8 @@ export const INITIAL_VENDORS: Vendor[] = [
     delayedOrders: 2,
     totalOrders: 50,
     avgDeliveryDays: 16,
-    country: 'Germany'
-  }
+    country: 'Germany',
+  },
 ];
 
 // Initial Mock Purchase Orders
@@ -82,12 +92,22 @@ export const INITIAL_POS: PurchaseOrder[] = [
     delayedDays: 0,
     skus: ['SKU-5501', 'SKU-5502'],
     items: [
-      { sku: 'SKU-5501', name: 'Premium Heavy-Duty Casing', qty: 300, unitPrice: 24.50 },
-      { sku: 'SKU-5502', name: 'Reinforced Metal Brackets', qty: 200, unitPrice: 12.00 }
+      {
+        sku: 'SKU-5501',
+        name: 'Premium Heavy-Duty Casing',
+        qty: 300,
+        unitPrice: 24.5,
+      },
+      {
+        sku: 'SKU-5502',
+        name: 'Reinforced Metal Brackets',
+        qty: 200,
+        unitPrice: 12.0,
+      },
     ],
     productionStage: 'Assembly',
     commentsCount: 5,
-    emailCount: 4
+    emailCount: 4,
   },
   {
     id: 'PO-10026',
@@ -100,22 +120,32 @@ export const INITIAL_POS: PurchaseOrder[] = [
     invoiceStatus: 'Uploaded',
     invoiceFile: 'invoice_po10026.pdf',
     invoiceDetails: {
-      amount: 14400.00,
+      amount: 14400.0,
       invoiceNumber: 'INV-2026-8801',
       date: '2026-06-20',
-      ocrExtracted: true
+      ocrExtracted: true,
     },
     eta: '2026-07-12',
     creationDate: '2026-06-10',
     delayedDays: 0,
     skus: ['SKU-1022', 'SKU-1025'],
     items: [
-      { sku: 'SKU-1022', name: 'Ultra-Soft Fiber Roll', qty: 800, unitPrice: 10.50 },
-      { sku: 'SKU-1025', name: 'Water-Resistant Coating Web', qty: 400, unitPrice: 15.00 }
+      {
+        sku: 'SKU-1022',
+        name: 'Ultra-Soft Fiber Roll',
+        qty: 800,
+        unitPrice: 10.5,
+      },
+      {
+        sku: 'SKU-1025',
+        name: 'Water-Resistant Coating Web',
+        qty: 400,
+        unitPrice: 15.0,
+      },
     ],
     productionStage: 'Ready to Ship',
     commentsCount: 2,
-    emailCount: 2
+    emailCount: 2,
   },
   {
     id: 'PO-10027',
@@ -133,11 +163,16 @@ export const INITIAL_POS: PurchaseOrder[] = [
     delayedDays: 13,
     skus: ['SKU-9905'],
     items: [
-      { sku: 'SKU-9905', name: 'Microprocessor Control Board V2', qty: 250, unitPrice: 85.00 }
+      {
+        sku: 'SKU-9905',
+        name: 'Microprocessor Control Board V2',
+        qty: 250,
+        unitPrice: 85.0,
+      },
     ],
     productionStage: 'Materials',
     commentsCount: 6,
-    emailCount: 5
+    emailCount: 5,
   },
   {
     id: 'PO-10028',
@@ -150,22 +185,32 @@ export const INITIAL_POS: PurchaseOrder[] = [
     invoiceStatus: 'Approved',
     invoiceFile: 'invoice_po10028.pdf',
     invoiceDetails: {
-      amount: 48000.00,
+      amount: 48000.0,
       invoiceNumber: 'SZ-ELECTRON-9942',
       date: '2026-06-12',
-      ocrExtracted: true
+      ocrExtracted: true,
     },
     eta: '2026-07-01',
     creationDate: '2026-06-01',
     delayedDays: 0,
     skus: ['SKU-2041', 'SKU-2042'],
     items: [
-      { sku: 'SKU-2041', name: 'High-Speed USB-C Cable (1m)', qty: 1000, unitPrice: 18.00 },
-      { sku: 'SKU-2042', name: 'Quick-Charge Power Adaptor', qty: 1000, unitPrice: 30.00 }
+      {
+        sku: 'SKU-2041',
+        name: 'High-Speed USB-C Cable (1m)',
+        qty: 1000,
+        unitPrice: 18.0,
+      },
+      {
+        sku: 'SKU-2042',
+        name: 'Quick-Charge Power Adaptor',
+        qty: 1000,
+        unitPrice: 30.0,
+      },
     ],
     productionStage: 'Ready to Ship',
     commentsCount: 1,
-    emailCount: 3
+    emailCount: 3,
   },
   {
     id: 'PO-10029',
@@ -178,21 +223,26 @@ export const INITIAL_POS: PurchaseOrder[] = [
     invoiceStatus: 'Approved',
     invoiceFile: 'invoice_po10029.pdf',
     invoiceDetails: {
-      amount: 19600.00,
+      amount: 19600.0,
       invoiceNumber: 'INV-2026-7712',
       date: '2026-05-18',
-      ocrExtracted: true
+      ocrExtracted: true,
     },
     eta: '2026-06-15',
     creationDate: '2026-05-10',
     delayedDays: 0,
     skus: ['SKU-5501'],
     items: [
-      { sku: 'SKU-5501', name: 'Premium Heavy-Duty Casing', qty: 800, unitPrice: 24.50 }
+      {
+        sku: 'SKU-5501',
+        name: 'Premium Heavy-Duty Casing',
+        qty: 800,
+        unitPrice: 24.5,
+      },
     ],
     productionStage: 'Ready to Ship',
     commentsCount: 1,
-    emailCount: 2
+    emailCount: 2,
   },
   {
     id: 'PO-10030',
@@ -210,11 +260,16 @@ export const INITIAL_POS: PurchaseOrder[] = [
     delayedDays: 34,
     skus: ['SKU-9910'],
     items: [
-      { sku: 'SKU-9910', name: 'OLED Display Panels (5.5 inch)', qty: 1000, unitPrice: 42.00 }
+      {
+        sku: 'SKU-9910',
+        name: 'OLED Display Panels (5.5 inch)',
+        qty: 1000,
+        unitPrice: 42.0,
+      },
     ],
     productionStage: 'Assembly',
     commentsCount: 3,
-    emailCount: 8
+    emailCount: 8,
   },
   {
     id: 'PO-10031',
@@ -227,22 +282,27 @@ export const INITIAL_POS: PurchaseOrder[] = [
     invoiceStatus: 'Rejected',
     invoiceFile: 'invoice_po10031_err.pdf',
     invoiceDetails: {
-      amount: 32000.00,
+      amount: 32000.0,
       invoiceNumber: 'EC-99122-REJ',
       date: '2026-06-25',
-      ocrExtracted: false
+      ocrExtracted: false,
     },
     eta: '2026-07-20',
     creationDate: '2026-06-20',
     delayedDays: 0,
     skus: ['SKU-3091'],
     items: [
-      { sku: 'SKU-3091', name: 'CNC Precision Carved Gears', qty: 400, unitPrice: 80.00 }
+      {
+        sku: 'SKU-3091',
+        name: 'CNC Precision Carved Gears',
+        qty: 400,
+        unitPrice: 80.0,
+      },
     ],
     productionStage: 'Packaging',
     commentsCount: 2,
-    emailCount: 4
-  }
+    emailCount: 4,
+  },
 ];
 
 // Initial Email Tracking History
@@ -257,7 +317,7 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: '2026-06-20 11:15',
     linkClicks: 1,
     repliedAt: '2026-06-22 13:20',
-    attachmentName: 'production_timeline.pdf'
+    attachmentName: 'production_timeline.pdf',
   },
   {
     id: 'EML-102',
@@ -269,7 +329,7 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: '2026-06-17 08:44',
     linkClicks: 0,
     repliedAt: null,
-    attachmentName: 'drawing_spec_v3.dwg'
+    attachmentName: 'drawing_spec_v3.dwg',
   },
   {
     id: 'EML-103',
@@ -281,7 +341,7 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: '2026-06-23 15:40',
     linkClicks: 2,
     repliedAt: null,
-    attachmentName: 'DelayedPO_Report.csv'
+    attachmentName: 'DelayedPO_Report.csv',
   },
   {
     id: 'EML-104',
@@ -293,7 +353,7 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: '2026-05-25 11:02',
     linkClicks: 0,
     repliedAt: null,
-    attachmentName: null
+    attachmentName: null,
   },
   {
     id: 'EML-105',
@@ -305,7 +365,7 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: '2026-06-16 09:33',
     linkClicks: 3,
     repliedAt: '2026-06-18 10:15',
-    attachmentName: 'SubcontractorDelay_Reason.docx'
+    attachmentName: 'SubcontractorDelay_Reason.docx',
   },
   {
     id: 'EML-106',
@@ -317,8 +377,8 @@ export const INITIAL_EMAILS: EmailLog[] = [
     lastOpenTime: null,
     linkClicks: 0,
     repliedAt: null,
-    attachmentName: 'rejection_invoice_audit.xlsx'
-  }
+    attachmentName: 'rejection_invoice_audit.xlsx',
+  },
 ];
 
 // Initial Internal Comments
@@ -328,56 +388,63 @@ export const INITIAL_COMMENTS: Comment[] = [
     poId: 'PO-10025',
     user: 'John Smith',
     role: 'Vendor',
-    message: 'We are finishing materials preparation. Moving to assembly line by tomorrow.',
-    timestamp: '2026-06-16 10:05'
+    message:
+      'We are finishing materials preparation. Moving to assembly line by tomorrow.',
+    timestamp: '2026-06-16 10:05',
   },
   {
     id: 'COM-002',
     poId: 'PO-10025',
     user: 'John Doe',
     role: 'Purchasing',
-    message: 'Thank you John. Please confirm if ETA of July 25th remains secure.',
-    timestamp: '2026-06-16 11:15'
+    message:
+      'Thank you John. Please confirm if ETA of July 25th remains secure.',
+    timestamp: '2026-06-16 11:15',
   },
   {
     id: 'COM-003',
     poId: 'PO-10025',
     user: 'Emily Rose',
     role: 'Warehouse',
-    message: 'Noting container CNT-025 is reserved for this batch. Warehouse slot allocated.',
-    timestamp: '2026-06-20 14:20'
+    message:
+      'Noting container CNT-025 is reserved for this batch. Warehouse slot allocated.',
+    timestamp: '2026-06-20 14:20',
   },
   {
     id: 'COM-004',
     poId: 'PO-10025',
     user: 'Michael Chang',
     role: 'Finance',
-    message: 'Waiting for preliminary invoice from ABC to initiate LC credit approval.',
-    timestamp: '2026-06-22 09:12'
+    message:
+      'Waiting for preliminary invoice from ABC to initiate LC credit approval.',
+    timestamp: '2026-06-22 09:12',
   },
   {
     id: 'COM-005',
     poId: 'PO-10025',
     user: 'John Smith',
     role: 'Vendor',
-    message: 'LC parameters look good. Will upload invoice draft here by Monday.',
-    timestamp: '2026-06-24 16:30'
+    message:
+      'LC parameters look good. Will upload invoice draft here by Monday.',
+    timestamp: '2026-06-24 16:30',
   },
   {
     id: 'COM-006',
     poId: 'PO-10027',
     user: 'Liam Kuan',
     role: 'Vendor',
-    message: 'Awaiting semiconductor allocation from upstream supplier. Apologies for delay.',
-    timestamp: '2026-06-05 09:00'
+    message:
+      'Awaiting semiconductor allocation from upstream supplier. Apologies for delay.',
+    timestamp: '2026-06-05 09:00',
   },
   {
     id: 'COM-007',
     poId: 'PO-10027',
     user: 'John Doe',
     role: 'Purchasing',
-    message: 'This microprocessor delay halts our entire assembly. Can we expedite sourcing?',
-    timestamp: '2026-06-08 11:30'
+    message:
+      'This microprocessor delay halts our entire assembly. Can we expedite sourcing?',
+    timestamp: '2026-06-08 11:30',
   },
   {
     id: 'COM-008',
@@ -385,8 +452,8 @@ export const INITIAL_COMMENTS: Comment[] = [
     user: 'Emily Rose',
     role: 'Warehouse',
     message: 'Slot rescheduled. Logistics delay flagged to management.',
-    timestamp: '2026-06-12 15:45'
-  }
+    timestamp: '2026-06-12 15:45',
+  },
 ];
 
 // Initial Chat Messages (Linked by general channels)
@@ -396,41 +463,46 @@ export const INITIAL_CHAT: ChatMessage[] = [
     channel: 'purchasing',
     user: 'John Doe',
     role: 'Purchasing',
-    message: 'Hello team! Global Tech is experiencing substantial semiconductor delay. PO-10027 is pushed by 13 days.',
-    timestamp: '2026-07-03 08:30'
+    message:
+      'Hello team! Global Tech is experiencing substantial semiconductor delay. PO-10027 is pushed by 13 days.',
+    timestamp: '2026-07-03 08:30',
   },
   {
     id: 'CHT-002',
     channel: 'purchasing',
     user: 'Michael Chang',
     role: 'Finance',
-    message: 'Should we withhold LC release for their secondary order PO-10030 to mitigate risk?',
-    timestamp: '2026-07-03 08:45'
+    message:
+      'Should we withhold LC release for their secondary order PO-10030 to mitigate risk?',
+    timestamp: '2026-07-03 08:45',
   },
   {
     id: 'CHT-003',
     channel: 'warehouse',
     user: 'Emily Rose',
     role: 'Warehouse',
-    message: 'Receiving dock is extremely congested. CNT-099 (Shenzhen Electronics) arriving today, need finance clearance.',
-    timestamp: '2026-07-03 09:00'
+    message:
+      'Receiving dock is extremely congested. CNT-099 (Shenzhen Electronics) arriving today, need finance clearance.',
+    timestamp: '2026-07-03 09:00',
   },
   {
     id: 'CHT-004',
     channel: 'finance',
     user: 'Michael Chang',
     role: 'Finance',
-    message: 'Shenzhen Electronics invoice approved. Tax & customs paid. Emily, you are clear to accept CNT-099.',
-    timestamp: '2026-07-03 09:15'
+    message:
+      'Shenzhen Electronics invoice approved. Tax & customs paid. Emily, you are clear to accept CNT-099.',
+    timestamp: '2026-07-03 09:15',
   },
   {
     id: 'CHT-005',
     channel: 'management',
     user: 'Sarah Jenkins',
     role: 'Administrator',
-    message: 'Weekly KPI review: Delay rates went up 4% due to Global Tech. Sourcing team, please identify backup micro-IC vendors in Vietnam or Taiwan.',
-    timestamp: '2026-07-03 10:00'
-  }
+    message:
+      'Weekly KPI review: Delay rates went up 4% due to Global Tech. Sourcing team, please identify backup micro-IC vendors in Vietnam or Taiwan.',
+    timestamp: '2026-07-03 10:00',
+  },
 ];
 
 // Initial Notifications
@@ -439,37 +511,41 @@ export const INITIAL_NOTIFICATIONS: Notification[] = [
     id: 'NTF-001',
     type: 'delay',
     title: 'Critical Delay: PO-10030',
-    message: 'Global Tech Sourcing has delayed OLED panels shipment by 34 days.',
+    message:
+      'Global Tech Sourcing has delayed OLED panels shipment by 34 days.',
     timestamp: '2026-07-03 08:00',
     read: false,
-    poId: 'PO-10030'
+    poId: 'PO-10030',
   },
   {
     id: 'NTF-002',
     type: 'invoice',
     title: 'Invoice Action Required: PO-10031',
-    message: 'Invoice EC-99122-REJ was rejected by Finance. Please upload correction.',
+    message:
+      'Invoice EC-99122-REJ was rejected by Finance. Please upload correction.',
     timestamp: '2026-07-02 16:30',
     read: false,
-    poId: 'PO-10031'
+    poId: 'PO-10031',
   },
   {
     id: 'NTF-003',
     type: 'container',
     title: 'Container Arrival Today: CNT-099',
-    message: 'Container carrying Shenzhen Electronics USB-C cables has cleared port gate.',
+    message:
+      'Container carrying Shenzhen Electronics USB-C cables has cleared port gate.',
     timestamp: '2026-07-03 07:15',
     read: false,
-    poId: 'PO-10028'
+    poId: 'PO-10028',
   },
   {
     id: 'NTF-004',
     type: 'comment',
     title: 'New Comment on PO-10025',
-    message: 'Michael Chang (Finance) added a comment regarding LC Approval status.',
+    message:
+      'Michael Chang (Finance) added a comment regarding LC Approval status.',
     timestamp: '2026-07-02 11:12',
     read: true,
-    poId: 'PO-10025'
+    poId: 'PO-10025',
   },
   {
     id: 'NTF-005',
@@ -477,8 +553,8 @@ export const INITIAL_NOTIFICATIONS: Notification[] = [
     title: 'Sellercloud Sync Complete',
     message: 'Check completed. 0 new POs downloaded, 3 PO statuses updated.',
     timestamp: '2026-07-03 05:10',
-    read: true
-  }
+    read: true,
+  },
 ];
 
 // Initial Activity Logs
@@ -490,7 +566,7 @@ export const INITIAL_ACTIVITIES: ActivityLog[] = [
     role: 'Purchasing',
     message: 'Modified shipment tracking container to CNT-025 on PO-10025',
     type: 'PO Updated',
-    poId: 'PO-10025'
+    poId: 'PO-10025',
   },
   {
     id: 'ACT-002',
@@ -499,25 +575,27 @@ export const INITIAL_ACTIVITIES: ActivityLog[] = [
     role: 'Administrator',
     message: 'Sent follow-up reminder email to ABC Manufacturing for PO-10025',
     type: 'Email Sent',
-    poId: 'PO-10025'
+    poId: 'PO-10025',
   },
   {
     id: 'ACT-003',
     timestamp: '2026-07-03 10:20',
     user: 'Emily Rose',
     role: 'Warehouse',
-    message: 'Uploaded shipping invoice copy for PO-10026, triggering automatic OCR check',
+    message:
+      'Uploaded shipping invoice copy for PO-10026, triggering automatic OCR check',
     type: 'Invoice Uploaded',
-    poId: 'PO-10026'
+    poId: 'PO-10026',
   },
   {
     id: 'ACT-004',
     timestamp: '2026-07-03 10:35',
     user: 'Sophia Wang',
     role: 'Vendor',
-    message: 'Added progress update comment on PO-10028: "All materials validated, ship loading booked."',
+    message:
+      'Added progress update comment on PO-10028: "All materials validated, ship loading booked."',
     type: 'Vendor Comment',
-    poId: 'PO-10028'
+    poId: 'PO-10028',
   },
   {
     id: 'ACT-005',
@@ -525,8 +603,8 @@ export const INITIAL_ACTIVITIES: ActivityLog[] = [
     user: 'System Bot',
     role: 'Administrator',
     message: 'Triggered manual Sellercloud data sync session',
-    type: 'Sync'
-  }
+    type: 'Sync',
+  },
 ];
 
 // Initial Audit Logs (detailed accountability logs)
@@ -540,7 +618,7 @@ export const INITIAL_AUDITS: AuditLog[] = [
     previousValue: 'CNT-EMPTY',
     newValue: 'CNT-025',
     browser: 'Chrome 122.0.0.0 (Linux)',
-    ip: '192.168.1.144'
+    ip: '192.168.1.144',
   },
   {
     id: 'AUD-002',
@@ -551,7 +629,7 @@ export const INITIAL_AUDITS: AuditLog[] = [
     previousValue: 'Uploaded',
     newValue: 'Approved',
     browser: 'Safari 17.2 (macOS)',
-    ip: '172.56.21.99'
+    ip: '172.56.21.99',
   },
   {
     id: 'AUD-003',
@@ -562,8 +640,8 @@ export const INITIAL_AUDITS: AuditLog[] = [
     previousValue: 'John Smith (Oversight Manager)',
     newValue: 'John Smith (Direct Operations Lead)',
     browser: 'Firefox 121.1 (Windows 11)',
-    ip: '8.8.8.8'
-  }
+    ip: '8.8.8.8',
+  },
 ];
 
 // Initial Sync Logs
@@ -574,7 +652,7 @@ export const INITIAL_SYNCS: SellercloudSyncLog[] = [
     newOrdersCount: 0,
     updatedOrdersCount: 3,
     status: 'Success',
-    durationMs: 1420
+    durationMs: 1420,
   },
   {
     id: 'SYN-002',
@@ -582,7 +660,7 @@ export const INITIAL_SYNCS: SellercloudSyncLog[] = [
     newOrdersCount: 1,
     updatedOrdersCount: 1,
     status: 'Success',
-    durationMs: 1850
+    durationMs: 1850,
   },
   {
     id: 'SYN-003',
@@ -590,7 +668,7 @@ export const INITIAL_SYNCS: SellercloudSyncLog[] = [
     newOrdersCount: 0,
     updatedOrdersCount: 0,
     status: 'Success',
-    durationMs: 980
+    durationMs: 980,
   },
   {
     id: 'SYN-004',
@@ -598,8 +676,8 @@ export const INITIAL_SYNCS: SellercloudSyncLog[] = [
     newOrdersCount: 0,
     updatedOrdersCount: 1,
     status: 'Failed',
-    durationMs: 5000 // timeout
-  }
+    durationMs: 5000, // timeout
+  },
 ];
 
 // LocalStorage Helper to manage state easily in the client

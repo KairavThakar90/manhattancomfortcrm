@@ -1,9 +1,30 @@
 import React, { useState } from 'react';
-import { 
-  Search, Filter, Plus, FileSpreadsheet, FileUp, Download, Eye, 
-  Calendar, Layers, CheckCircle, AlertTriangle, MessageSquare, 
-  Clock, Mail, Sparkles, Send, X, Check, FileText, ChevronRight,
-  ArrowRight, Trash, CalendarDays, Upload, DollarSign
+import {
+  Search,
+  Filter,
+  Plus,
+  FileSpreadsheet,
+  FileUp,
+  Download,
+  Eye,
+  Calendar,
+  Layers,
+  CheckCircle,
+  AlertTriangle,
+  MessageSquare,
+  Clock,
+  Mail,
+  Sparkles,
+  Send,
+  X,
+  Check,
+  FileText,
+  ChevronRight,
+  ArrowRight,
+  Trash,
+  CalendarDays,
+  Upload,
+  DollarSign,
 } from 'lucide-react';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
 
@@ -18,8 +39,18 @@ interface POManagementProps {
   onUpdatePO: (updated: PurchaseOrder) => void;
   onAddComment: (comment: Comment) => void;
   onAddEmailLog: (email: EmailLog) => void;
-  onAddActivity: (msg: string, type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment') => void;
-  onAddAudit: (poId: string, action: string, prev: string, next: string, browser?: string, ip?: string) => void;
+  onAddActivity: (
+    msg: string,
+    type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment',
+  ) => void;
+  onAddAudit: (
+    poId: string,
+    action: string,
+    prev: string,
+    next: string,
+    browser?: string,
+    ip?: string,
+  ) => void;
 }
 
 export default function POManagement({
@@ -34,16 +65,18 @@ export default function POManagement({
   onAddComment,
   onAddEmailLog,
   onAddActivity,
-  onAddAudit
+  onAddAudit,
 }: POManagementProps) {
   // Navigation inside PO module
-  const [activeSubTab, setActiveSubTab] = useState<'grid' | 'kanban' | 'calendar'>('grid');
-  
+  const [activeSubTab, setActiveSubTab] = useState<
+    'grid' | 'kanban' | 'calendar'
+  >('grid');
+
   // Filtering and Searching
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [vendorFilter, setVendorFilter] = useState<string>('all');
-  
+
   // PO creation state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPO, setNewPO] = useState({
@@ -54,7 +87,7 @@ export default function POManagement({
     eta: '',
     sku: 'SKU-5501',
     itemName: 'Premium Heavy-Duty Casing',
-    unitPrice: 24.50
+    unitPrice: 24.5,
   });
 
   // Import State
@@ -63,7 +96,9 @@ export default function POManagement({
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
 
   // Detail drawer sub-sections
-  const [activeDrawerSection, setActiveDrawerSection] = useState<'details' | 'comments' | 'ocr' | 'emails'>('details');
+  const [activeDrawerSection, setActiveDrawerSection] = useState<
+    'details' | 'comments' | 'ocr' | 'emails'
+  >('details');
 
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
@@ -77,20 +112,30 @@ export default function POManagement({
   const [ocrSuccessMsg, setOcrSuccessMsg] = useState<string | null>(null);
 
   // Smart Search logic: search by PO number, Vendor, SKU, Container, or Invoice (Rule 11)
-  const filteredPOs = purchaseOrders.filter(po => {
-    const matchesSearch = 
+  const filteredPOs = purchaseOrders.filter((po) => {
+    const matchesSearch =
       po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.container.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (po.invoiceDetails?.invoiceNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.skus.some(sku => sku.toLowerCase().includes(searchQuery.toLowerCase()));
+      (po.invoiceDetails?.invoiceNumber || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      po.skus.some((sku) =>
+        sku.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
 
     const matchesStatus = statusFilter === 'all' || po.status === statusFilter;
-    const matchesVendor = vendorFilter === 'all' || po.vendorId === vendorFilter;
+    const matchesVendor =
+      vendorFilter === 'all' || po.vendorId === vendorFilter;
 
     // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
     if (userRole === 'Vendor') {
-      const vendorUser = vendors.find(v => v.email.toLowerCase().includes('john@') || v.email.toLowerCase().includes('emily@') || v.email.toLowerCase().includes('sophia@'));
+      const vendorUser = vendors.find(
+        (v) =>
+          v.email.toLowerCase().includes('john@') ||
+          v.email.toLowerCase().includes('emily@') ||
+          v.email.toLowerCase().includes('sophia@'),
+      );
       // ABC Manufacturing associated default
       return matchesSearch && matchesStatus && po.vendorId === 'VEND-001';
     }
@@ -98,61 +143,68 @@ export default function POManagement({
     return matchesSearch && matchesStatus && matchesVendor;
   });
 
-  const selectedPO = purchaseOrders.find(po => po.id === selectedPOId);
+  const selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
 
   // Comments for selected PO
-  const selectedPOComments = comments.filter(c => c.poId === selectedPOId);
+  const selectedPOComments = comments.filter((c) => c.poId === selectedPOId);
 
   // Email Logs for selected PO
-  const selectedPOEmails = emails.filter(e => e.poId === selectedPOId);
+  const selectedPOEmails = emails.filter((e) => e.poId === selectedPOId);
 
   // Execute manual CSV export (Rule 12)
   const handleExportCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "PO Number,Vendor,Status,Ordered Qty,Received Qty,Container,Invoice,ETA,Delayed Days\n";
-    
-    filteredPOs.forEach(po => {
-      csvContent += `${po.id},"${po.vendorName}",${po.status},${po.orderedQty},${po.receivedQty},${po.container || "N/A"},${po.invoiceStatus},${po.eta},${po.delayedDays}\n`;
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent +=
+      'PO Number,Vendor,Status,Ordered Qty,Received Qty,Container,Invoice,ETA,Delayed Days\n';
+
+    filteredPOs.forEach((po) => {
+      csvContent += `${po.id},"${po.vendorName}",${po.status},${po.orderedQty},${po.receivedQty},${po.container || 'N/A'},${po.invoiceStatus},${po.eta},${po.delayedDays}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `SupplyChainCRM_PO_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute(
+      'download',
+      `SupplyChainCRM_PO_Export_${new Date().toISOString().split('T')[0]}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    onAddActivity("Exported filtered Purchase Order database to CSV", "PO Updated");
+    onAddActivity(
+      'Exported filtered Purchase Order database to CSV',
+      'PO Updated',
+    );
   };
 
   // CSV Mock Import parsing (Rule 12)
   const handleImportCSV = (e: React.FormEvent) => {
     e.preventDefault();
     if (!importCsvText.trim()) {
-      setImportFeedback("Please paste valid CSV lines first.");
+      setImportFeedback('Please paste valid CSV lines first.');
       return;
     }
 
     try {
       const lines = importCsvText.split('\n');
       let successCount = 0;
-      
+
       lines.forEach((line, index) => {
-        if (index === 0 && line.toLowerCase().includes("po")) return; // skip header
+        if (index === 0 && line.toLowerCase().includes('po')) return; // skip header
         if (!line.trim()) return;
 
         const parts = line.split(',');
         if (parts.length >= 4) {
           const id = `PO-${Math.floor(10000 + Math.random() * 90000)}`;
           const vendorId = parts[0]?.trim() || 'VEND-001';
-          const vendor = vendors.find(v => v.id === vendorId) || vendors[0];
+          const vendor = vendors.find((v) => v.id === vendorId) || vendors[0];
           const status = (parts[1]?.trim() as any) || 'Production';
           const orderedQty = parseInt(parts[2]?.trim() || '500');
           const eta = parts[3]?.trim() || '2026-08-15';
           const sku = parts[4]?.trim() || 'SKU-5501';
 
-          const itemPrice = 25.00;
+          const itemPrice = 25.0;
           const po: PurchaseOrder = {
             id,
             vendorId: vendor.id,
@@ -168,10 +220,17 @@ export default function POManagement({
             creationDate: new Date().toISOString().split('T')[0],
             delayedDays: 0,
             skus: [sku],
-            items: [{ sku, name: 'Imported Parts Sourcing', qty: orderedQty, unitPrice: itemPrice }],
+            items: [
+              {
+                sku,
+                name: 'Imported Parts Sourcing',
+                qty: orderedQty,
+                unitPrice: itemPrice,
+              },
+            ],
             productionStage: 'Materials',
             commentsCount: 0,
-            emailCount: 0
+            emailCount: 0,
           };
 
           purchaseOrders.push(po); // push directly through state callback on app level
@@ -180,18 +239,27 @@ export default function POManagement({
       });
 
       if (successCount > 0) {
-        setImportFeedback(`Successfully imported ${successCount} new Purchase Orders!`);
-        onAddActivity(`Bulk imported ${successCount} Purchase Orders via CSV parser`, "PO Updated");
+        setImportFeedback(
+          `Successfully imported ${successCount} new Purchase Orders!`,
+        );
+        onAddActivity(
+          `Bulk imported ${successCount} Purchase Orders via CSV parser`,
+          'PO Updated',
+        );
         setTimeout(() => {
           setShowImportModal(false);
           setImportCsvText('');
           setImportFeedback(null);
         }, 1500);
       } else {
-        setImportFeedback("Error: CSV line parameters must match expected fields.");
+        setImportFeedback(
+          'Error: CSV line parameters must match expected fields.',
+        );
       }
     } catch {
-      setImportFeedback("Parsing failed. Check fields format. Expected format: vendor_id,status,quantity,eta_yyyy_mm_dd,sku");
+      setImportFeedback(
+        'Parsing failed. Check fields format. Expected format: vendor_id,status,quantity,eta_yyyy_mm_dd,sku',
+      );
     }
   };
 
@@ -199,11 +267,11 @@ export default function POManagement({
   const handleCreatePO = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPO.vendorId || !newPO.eta) {
-      alert("Please fill in Vendor selection and target delivery date.");
+      alert('Please fill in Vendor selection and target delivery date.');
       return;
     }
 
-    const vendor = vendors.find(v => v.id === newPO.vendorId);
+    const vendor = vendors.find((v) => v.id === newPO.vendorId);
     if (!vendor) return;
 
     const generatedId = `PO-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -223,16 +291,31 @@ export default function POManagement({
       delayedDays: 0,
       skus: [newPO.sku],
       items: [
-        { sku: newPO.sku, name: newPO.itemName, qty: Number(newPO.orderedQty), unitPrice: newPO.unitPrice }
+        {
+          sku: newPO.sku,
+          name: newPO.itemName,
+          qty: Number(newPO.orderedQty),
+          unitPrice: newPO.unitPrice,
+        },
       ],
       productionStage: 'Materials',
       commentsCount: 0,
-      emailCount: 0
+      emailCount: 0,
     };
 
     onUpdatePO(createdPO); // triggers callback
-    onAddActivity(`Created new Purchase Order ${generatedId} for ${vendor.name}`, "PO Updated");
-    onAddAudit(generatedId, 'Create Purchase Order', 'None', 'Created', 'Chrome 122', '127.0.0.1');
+    onAddActivity(
+      `Created new Purchase Order ${generatedId} for ${vendor.name}`,
+      'PO Updated',
+    );
+    onAddAudit(
+      generatedId,
+      'Create Purchase Order',
+      'None',
+      'Created',
+      'Chrome 122',
+      '127.0.0.1',
+    );
     setShowCreateModal(false);
   };
 
@@ -244,9 +327,10 @@ export default function POManagement({
 
     setTimeout(() => {
       const lateDays = selectedPO.delayedDays;
-      const delayedText = lateDays > 0 
-        ? `The shipment is currently delayed by ${lateDays} days, missing our original target date of ${selectedPO.eta}.`
-        : `We would like to request an updated status check regarding production timelines for our target ETA of ${selectedPO.eta}.`;
+      const delayedText =
+        lateDays > 0
+          ? `The shipment is currently delayed by ${lateDays} days, missing our original target date of ${selectedPO.eta}.`
+          : `We would like to request an updated status check regarding production timelines for our target ETA of ${selectedPO.eta}.`;
 
       const text = `Subject: URGENT: Timeline Follow-up - Purchase Order ${selectedPO.id}
 
@@ -283,13 +367,18 @@ Supply Chain CRM Coordinator`;
       lastOpenTime: null,
       linkClicks: 0,
       repliedAt: null,
-      attachmentName: null
+      attachmentName: null,
     };
 
     onAddEmailLog(newEmail);
-    onAddActivity(`Sent AI-Generated follow-up email to ${selectedPO.vendorName}`, "Email Sent");
+    onAddActivity(
+      `Sent AI-Generated follow-up email to ${selectedPO.vendorName}`,
+      'Email Sent',
+    );
     setAiEmailGenerated(null);
-    alert(`Email successfully pushed to queue for delivery to ${selectedPO.vendorName}.`);
+    alert(
+      `Email successfully pushed to queue for delivery to ${selectedPO.vendorName}.`,
+    );
   };
 
   // PDF Upload Mock OCR reader (Rule 17)
@@ -301,9 +390,12 @@ Supply Chain CRM Coordinator`;
     const file = e.target.files[0];
 
     setTimeout(() => {
-      const parsedAmount = selectedPO.items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+      const parsedAmount = selectedPO.items.reduce(
+        (sum, item) => sum + item.qty * item.unitPrice,
+        0,
+      );
       const invoiceNumber = `INV-OCR-${Math.floor(100000 + Math.random() * 900000)}`;
-      
+
       const updatedPO: PurchaseOrder = {
         ...selectedPO,
         invoiceStatus: 'Uploaded',
@@ -312,15 +404,27 @@ Supply Chain CRM Coordinator`;
           amount: parsedAmount,
           invoiceNumber,
           date: new Date().toISOString().split('T')[0],
-          ocrExtracted: true
-        }
+          ocrExtracted: true,
+        },
       };
 
       onUpdatePO(updatedPO);
       setIsUploadingOCR(false);
-      setOcrSuccessMsg(`Successfully extracted! Inv Number: ${invoiceNumber}, Amount: $${parsedAmount.toLocaleString()}`);
-      onAddActivity(`Uploaded invoice PDF & extracted details via OCR for ${selectedPO.id}`, "Invoice Uploaded");
-      onAddAudit(selectedPO.id, 'Invoice OCR Extraction', 'Pending', 'Uploaded', 'Chrome 122', '127.0.0.1');
+      setOcrSuccessMsg(
+        `Successfully extracted! Inv Number: ${invoiceNumber}, Amount: $${parsedAmount.toLocaleString()}`,
+      );
+      onAddActivity(
+        `Uploaded invoice PDF & extracted details via OCR for ${selectedPO.id}`,
+        'Invoice Uploaded',
+      );
+      onAddAudit(
+        selectedPO.id,
+        'Invoice OCR Extraction',
+        'Pending',
+        'Uploaded',
+        'Chrome 122',
+        '127.0.0.1',
+      );
     }, 1800);
   };
 
@@ -332,27 +436,44 @@ Supply Chain CRM Coordinator`;
     const comment: Comment = {
       id: `COM-${Math.floor(100 + Math.random() * 900)}`,
       poId: selectedPO.id,
-      user: userRole === 'Vendor' ? selectedPO.vendorName : 'Sourcing Lead (You)',
+      user:
+        userRole === 'Vendor' ? selectedPO.vendorName : 'Sourcing Lead (You)',
       role: userRole,
       message: newCommentText.trim(),
-      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
 
     onAddComment(comment);
-    onAddActivity(`Added discussion comment on ${selectedPO.id}`, "Vendor Comment");
+    onAddActivity(
+      `Added discussion comment on ${selectedPO.id}`,
+      'Vendor Comment',
+    );
     setNewCommentText('');
   };
 
   // Move a card on production board
-  const handleMoveKanban = (po: PurchaseOrder, newStage: typeof po.productionStage) => {
+  const handleMoveKanban = (
+    po: PurchaseOrder,
+    newStage: typeof po.productionStage,
+  ) => {
     const updated: PurchaseOrder = {
       ...po,
       productionStage: newStage,
-      status: newStage === 'Ready to Ship' ? 'In Transit' : po.status
+      status: newStage === 'Ready to Ship' ? 'In Transit' : po.status,
     };
     onUpdatePO(updated);
-    onAddActivity(`Moved ${po.id} production stage to ${newStage}`, "PO Updated");
-    onAddAudit(po.id, 'Production Stage Shift', po.productionStage, newStage, 'Chrome 122', '127.0.0.1');
+    onAddActivity(
+      `Moved ${po.id} production stage to ${newStage}`,
+      'PO Updated',
+    );
+    onAddAudit(
+      po.id,
+      'Production Stage Shift',
+      po.productionStage,
+      newStage,
+      'Chrome 122',
+      '127.0.0.1',
+    );
   };
 
   return (
@@ -363,17 +484,21 @@ Supply Chain CRM Coordinator`;
           <button
             onClick={() => setActiveSubTab('grid')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-              activeSubTab === 'grid' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              activeSubTab === 'grid'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
             <span>Master Grid View</span>
           </button>
-          
+
           <button
             onClick={() => setActiveSubTab('kanban')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-              activeSubTab === 'kanban' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              activeSubTab === 'kanban'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -383,7 +508,9 @@ Supply Chain CRM Coordinator`;
           <button
             onClick={() => setActiveSubTab('calendar')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-              activeSubTab === 'calendar' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+              activeSubTab === 'calendar'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             <CalendarDays className="h-3.5 w-3.5" />
@@ -400,7 +527,7 @@ Supply Chain CRM Coordinator`;
             <FileUp className="h-3.5 w-3.5" />
             <span>Import CSV</span>
           </button>
-          
+
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
@@ -459,8 +586,10 @@ Supply Chain CRM Coordinator`;
               className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700"
             >
               <option value="all">All Vendors</option>
-              {vendors.map(v => (
-                <option key={v.id} value={v.id}>{v.name}</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
               ))}
             </select>
           )}
@@ -485,49 +614,80 @@ Supply Chain CRM Coordinator`;
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPOs.map(po => (
-                  <tr 
-                    key={po.id} 
+                {filteredPOs.map((po) => (
+                  <tr
+                    key={po.id}
                     className={`hover:bg-slate-50/70 transition cursor-pointer ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
                     onClick={() => onSelectPO(po.id)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
-                        <span className="text-slate-900 font-bold font-mono text-xs">{po.id}</span>
+                        <span className="text-slate-900 font-bold font-mono text-xs">
+                          {po.id}
+                        </span>
                         {po.status === 'Delayed' && (
                           <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-700 font-medium">{po.vendorName}</td>
+                    <td className="px-6 py-4 text-slate-700 font-medium">
+                      {po.vendorName}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
-                        po.status === 'Production' ? 'bg-sky-50 text-sky-700' :
-                        po.status === 'In Transit' ? 'bg-indigo-50 text-indigo-700' :
-                        po.status === 'Port of Entry' ? 'bg-amber-50 text-amber-700' :
-                        po.status === 'Delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                          po.status === 'Production'
+                            ? 'bg-sky-50 text-sky-700'
+                            : po.status === 'In Transit'
+                              ? 'bg-indigo-50 text-indigo-700'
+                              : po.status === 'Port of Entry'
+                                ? 'bg-amber-50 text-amber-700'
+                                : po.status === 'Delivered'
+                                  ? 'bg-emerald-50 text-emerald-700'
+                                  : 'bg-rose-50 text-rose-700'
+                        }`}
+                      >
                         {po.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
-                      <span className="font-bold text-slate-800">{po.orderedQty}</span>
-                      <span className="text-slate-400"> / {po.receivedQty}</span>
+                      <span className="font-bold text-slate-800">
+                        {po.orderedQty}
+                      </span>
+                      <span className="text-slate-400">
+                        {' '}
+                        / {po.receivedQty}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">{po.container || <span className="text-slate-300">Pending</span>}</td>
+                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                      {po.container || (
+                        <span className="text-slate-300">Pending</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border ${
-                        po.invoiceStatus === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                        po.invoiceStatus === 'Uploaded' ? 'bg-sky-50 border-sky-100 text-sky-700' :
-                        po.invoiceStatus === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-slate-50 border-slate-200 text-slate-500'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border ${
+                          po.invoiceStatus === 'Approved'
+                            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                            : po.invoiceStatus === 'Uploaded'
+                              ? 'bg-sky-50 border-sky-100 text-sky-700'
+                              : po.invoiceStatus === 'Rejected'
+                                ? 'bg-rose-50 border-rose-100 text-rose-700'
+                                : 'bg-slate-50 border-slate-200 text-slate-500'
+                        }`}
+                      >
                         {po.invoiceStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-mono">{po.eta}</td>
+                    <td className="px-6 py-4 text-slate-600 font-mono">
+                      {po.eta}
+                    </td>
                     <td className="px-6 py-4 text-center">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onSelectPO(po.id); }}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectPO(po.id);
+                        }}
                         className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -538,8 +698,12 @@ Supply Chain CRM Coordinator`;
                 ))}
                 {filteredPOs.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 italic">
-                      No Purchase Orders found matching search or filter parameters.
+                    <td
+                      colSpan={8}
+                      className="px-6 py-12 text-center text-slate-400 italic"
+                    >
+                      No Purchase Orders found matching search or filter
+                      parameters.
                     </td>
                   </tr>
                 )}
@@ -552,49 +716,87 @@ Supply Chain CRM Coordinator`;
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {(['Materials', 'Assembly', 'Quality Check', 'Packaging', 'Ready to Ship'] as typeof purchaseOrders[0]['productionStage'][]).map(stage => {
-            const stagePOs = filteredPOs.filter(po => po.productionStage === stage);
+          {(
+            [
+              'Materials',
+              'Assembly',
+              'Quality Check',
+              'Packaging',
+              'Ready to Ship',
+            ] as (typeof purchaseOrders)[0]['productionStage'][]
+          ).map((stage) => {
+            const stagePOs = filteredPOs.filter(
+              (po) => po.productionStage === stage,
+            );
             return (
-              <div key={stage} className="bg-slate-100/50 p-4 rounded-xl border border-slate-200/50 flex flex-col min-h-[500px]">
+              <div
+                key={stage}
+                className="bg-slate-100/50 p-4 rounded-xl border border-slate-200/50 flex flex-col min-h-[500px]"
+              >
                 <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-                  <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">{stage}</h4>
+                  <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+                    {stage}
+                  </h4>
                   <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">
                     {stagePOs.length}
                   </span>
                 </div>
 
                 <div className="space-y-3 flex-1 overflow-y-auto">
-                  {stagePOs.map(po => (
-                    <div 
+                  {stagePOs.map((po) => (
+                    <div
                       key={po.id}
                       onClick={() => onSelectPO(po.id)}
                       className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-2 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold font-mono text-slate-900">{po.id}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
-                          po.status === 'Delayed' ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-600'
-                        }`}>
+                        <span className="text-xs font-bold font-mono text-slate-900">
+                          {po.id}
+                        </span>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                            po.status === 'Delayed'
+                              ? 'bg-rose-50 text-rose-600'
+                              : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
                           {po.status}
                         </span>
                       </div>
 
-                      <h5 className="text-xs font-medium text-slate-800 line-clamp-1">{po.vendorName}</h5>
-                      
+                      <h5 className="text-xs font-medium text-slate-800 line-clamp-1">
+                        {po.vendorName}
+                      </h5>
+
                       <div className="flex justify-between items-center text-[10px] text-slate-500">
-                        <span>Qty: <strong className="text-slate-800">{po.orderedQty}</strong></span>
-                        <span className="font-mono">ETA: {po.eta.slice(5)}</span>
+                        <span>
+                          Qty:{' '}
+                          <strong className="text-slate-800">
+                            {po.orderedQty}
+                          </strong>
+                        </span>
+                        <span className="font-mono">
+                          ETA: {po.eta.slice(5)}
+                        </span>
                       </div>
 
                       {/* Interactive click-to-move buttons to guarantee cross-iframe compatibility */}
                       <div className="border-t border-slate-100 pt-2 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-[9px] text-indigo-600 font-semibold">Change Stage:</span>
+                        <span className="text-[9px] text-indigo-600 font-semibold">
+                          Change Stage:
+                        </span>
                         <div className="flex gap-1">
                           {stage !== 'Materials' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const stages: typeof po.productionStage[] = ['Materials', 'Assembly', 'Quality Check', 'Packaging', 'Ready to Ship'];
+                                const stages: (typeof po.productionStage)[] = [
+                                  'Materials',
+                                  'Assembly',
+                                  'Quality Check',
+                                  'Packaging',
+                                  'Ready to Ship',
+                                ];
                                 const prevIdx = stages.indexOf(stage) - 1;
                                 handleMoveKanban(po, stages[prevIdx]);
                               }}
@@ -607,7 +809,13 @@ Supply Chain CRM Coordinator`;
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const stages: typeof po.productionStage[] = ['Materials', 'Assembly', 'Quality Check', 'Packaging', 'Ready to Ship'];
+                                const stages: (typeof po.productionStage)[] = [
+                                  'Materials',
+                                  'Assembly',
+                                  'Quality Check',
+                                  'Packaging',
+                                  'Ready to Ship',
+                                ];
                                 const nextIdx = stages.indexOf(stage) + 1;
                                 handleMoveKanban(po, stages[nextIdx]);
                               }}
@@ -637,44 +845,67 @@ Supply Chain CRM Coordinator`;
         <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-display font-bold text-slate-900 text-sm">Active Container Arrival Calendar</h3>
-              <p className="text-xs text-slate-500">Visualizing estimated container arrivals for active purchase orders (Schedules for July 2026).</p>
+              <h3 className="font-display font-bold text-slate-900 text-sm">
+                Active Container Arrival Calendar
+              </h3>
+              <p className="text-xs text-slate-500">
+                Visualizing estimated container arrivals for active purchase
+                orders (Schedules for July 2026).
+              </p>
             </div>
-            <span className="text-xs font-bold text-indigo-600 font-mono">July 2026</span>
+            <span className="text-xs font-bold text-indigo-600 font-mono">
+              July 2026
+            </span>
           </div>
 
           <div className="grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs">
             {/* Days of week */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-              <div key={d} className="py-2 text-slate-500 font-semibold">{d}</div>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+              <div key={d} className="py-2 text-slate-500 font-semibold">
+                {d}
+              </div>
             ))}
 
             {/* Empty days prior to July 2026 starting date (July 1st was Wednesday -> 3 empty days) */}
-            {[1, 2, 3].map(n => (
-              <div key={`empty-${n}`} className="bg-slate-50/50 rounded-lg min-h-[90px] p-1 text-slate-300"></div>
+            {[1, 2, 3].map((n) => (
+              <div
+                key={`empty-${n}`}
+                className="bg-slate-50/50 rounded-lg min-h-[90px] p-1 text-slate-300"
+              ></div>
             ))}
 
             {/* Calendar Days */}
-            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
               const dateStr = `2026-07-${day.toString().padStart(2, '0')}`;
-              const dayPOs = filteredPOs.filter(po => po.eta === dateStr && po.container);
+              const dayPOs = filteredPOs.filter(
+                (po) => po.eta === dateStr && po.container,
+              );
 
               return (
-                <div key={day} className="bg-white border border-slate-100 rounded-lg min-h-[90px] p-1.5 text-left flex flex-col justify-between hover:bg-slate-50/50 transition">
-                  <span className="text-[10px] font-bold font-mono text-slate-400">{day}</span>
-                  
+                <div
+                  key={day}
+                  className="bg-white border border-slate-100 rounded-lg min-h-[90px] p-1.5 text-left flex flex-col justify-between hover:bg-slate-50/50 transition"
+                >
+                  <span className="text-[10px] font-bold font-mono text-slate-400">
+                    {day}
+                  </span>
+
                   <div className="space-y-1 mt-1 flex-1 overflow-y-auto">
-                    {dayPOs.map(po => (
-                      <div 
+                    {dayPOs.map((po) => (
+                      <div
                         key={po.id}
                         onClick={() => onSelectPO(po.id)}
                         className={`text-[9px] p-1 rounded-sm border cursor-pointer leading-tight truncate ${
-                          po.status === 'Delayed' ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold' :
-                          po.status === 'In Transit' ? 'bg-indigo-50 border-indigo-100 text-indigo-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                          po.status === 'Delayed'
+                            ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold'
+                            : po.status === 'In Transit'
+                              ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                              : 'bg-emerald-50 border-emerald-100 text-emerald-700'
                         }`}
                         title={`${po.id}: ${po.vendorName} Container ${po.container}`}
                       >
-                        <strong className="font-mono">{po.id}</strong> ({po.container})
+                        <strong className="font-mono">{po.id}</strong> (
+                        {po.container})
                       </div>
                     ))}
                   </div>
@@ -695,21 +926,32 @@ Supply Chain CRM Coordinator`;
                 {selectedPO.id}
               </span>
               <div>
-                <h3 className="text-sm font-bold text-slate-800">{selectedPO.vendorName}</h3>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">Sourcing country: Vietnam • Created: {selectedPO.creationDate}</p>
+                <h3 className="text-sm font-bold text-slate-800">
+                  {selectedPO.vendorName}
+                </h3>
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                  Sourcing country: Vietnam • Created: {selectedPO.creationDate}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                selectedPO.status === 'Production' ? 'bg-sky-50 text-sky-700' :
-                selectedPO.status === 'In Transit' ? 'bg-indigo-50 text-indigo-700' :
-                selectedPO.status === 'Port of Entry' ? 'bg-amber-50 text-amber-700' :
-                selectedPO.status === 'Delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-              }`}>
+              <span
+                className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                  selectedPO.status === 'Production'
+                    ? 'bg-sky-50 text-sky-700'
+                    : selectedPO.status === 'In Transit'
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : selectedPO.status === 'Port of Entry'
+                        ? 'bg-amber-50 text-amber-700'
+                        : selectedPO.status === 'Delivered'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-rose-50 text-rose-700'
+                }`}
+              >
                 {selectedPO.status}
               </span>
-              <button 
+              <button
                 onClick={() => onSelectPO(null)}
                 className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
               >
@@ -720,19 +962,25 @@ Supply Chain CRM Coordinator`;
 
           {/* Tab Selection inside Drawer */}
           <div className="flex border-b border-slate-100 bg-slate-50/50">
-            {(['details', 'comments', 'ocr', 'emails'] as const).map(section => (
-              <button
-                key={section}
-                onClick={() => setActiveDrawerSection(section)}
-                className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
-                  activeDrawerSection === section 
-                    ? 'border-indigo-600 text-indigo-600 bg-white' 
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                {section === 'ocr' ? 'OCR Invoice Reader' : section === 'emails' ? 'Email History' : section}
-              </button>
-            ))}
+            {(['details', 'comments', 'ocr', 'emails'] as const).map(
+              (section) => (
+                <button
+                  key={section}
+                  onClick={() => setActiveDrawerSection(section)}
+                  className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
+                    activeDrawerSection === section
+                      ? 'border-indigo-600 text-indigo-600 bg-white'
+                      : 'border-transparent text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {section === 'ocr'
+                    ? 'OCR Invoice Reader'
+                    : section === 'emails'
+                      ? 'Email History'
+                      : section}
+                </button>
+              ),
+            )}
           </div>
 
           <div className="p-6">
@@ -741,23 +989,47 @@ Supply Chain CRM Coordinator`;
               <div className="space-y-6">
                 {/* Visual Production Timeline */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">Production Stage Timeline</h4>
+                  <h4 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                    Production Stage Timeline
+                  </h4>
                   <div className="flex items-center justify-between relative">
                     <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
-                    {['Materials', 'Assembly', 'Quality Check', 'Packaging', 'Ready to Ship'].map((stage, idx, arr) => {
-                      const currentIdx = arr.indexOf(selectedPO.productionStage);
+                    {[
+                      'Materials',
+                      'Assembly',
+                      'Quality Check',
+                      'Packaging',
+                      'Ready to Ship',
+                    ].map((stage, idx, arr) => {
+                      const currentIdx = arr.indexOf(
+                        selectedPO.productionStage,
+                      );
                       const isCompleted = idx < currentIdx;
                       const isActive = idx === currentIdx;
 
                       return (
-                        <div key={stage} className="flex flex-col items-center relative z-10 w-16 text-center">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition ${
-                            isCompleted ? 'bg-emerald-500 text-white' :
-                            isActive ? 'bg-indigo-600 text-white animate-pulse' : 'bg-white border-2 border-slate-200 text-slate-400'
-                          }`}>
-                            {isCompleted ? <Check className="h-4 w-4" /> : idx + 1}
+                        <div
+                          key={stage}
+                          className="flex flex-col items-center relative z-10 w-16 text-center"
+                        >
+                          <div
+                            className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition ${
+                              isCompleted
+                                ? 'bg-emerald-500 text-white'
+                                : isActive
+                                  ? 'bg-indigo-600 text-white animate-pulse'
+                                  : 'bg-white border-2 border-slate-200 text-slate-400'
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              idx + 1
+                            )}
                           </div>
-                          <span className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+                          <span
+                            className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}
+                          >
                             {stage}
                           </span>
                         </div>
@@ -771,30 +1043,59 @@ Supply Chain CRM Coordinator`;
                   <div className="space-y-3 md:col-span-2">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">Ordered Quantity</span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">{selectedPO.orderedQty} units</strong>
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          Ordered Quantity
+                        </span>
+                        <strong className="text-sm font-bold text-slate-800 font-mono">
+                          {selectedPO.orderedQty} units
+                        </strong>
                       </div>
                       <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">Received Quantity</span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">{selectedPO.receivedQty} units</strong>
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          Received Quantity
+                        </span>
+                        <strong className="text-sm font-bold text-slate-800 font-mono">
+                          {selectedPO.receivedQty} units
+                        </strong>
                       </div>
                       <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">Container ID</span>
-                        <strong className="text-sm font-bold text-indigo-700 font-mono">{selectedPO.container || 'Awaiting Vessel Booking'}</strong>
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          Container ID
+                        </span>
+                        <strong className="text-sm font-bold text-indigo-700 font-mono">
+                          {selectedPO.container || 'Awaiting Vessel Booking'}
+                        </strong>
                       </div>
                       <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">Delivery ETA</span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">{selectedPO.eta}</strong>
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          Delivery ETA
+                        </span>
+                        <strong className="text-sm font-bold text-slate-800 font-mono">
+                          {selectedPO.eta}
+                        </strong>
                       </div>
                     </div>
 
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                      <h5 className="text-xs font-bold text-slate-700 mb-2">Item Specifications Included</h5>
+                      <h5 className="text-xs font-bold text-slate-700 mb-2">
+                        Item Specifications Included
+                      </h5>
                       <div className="space-y-2">
-                        {selectedPO.items.map(item => (
-                          <div key={item.sku} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none">
-                            <span className="text-slate-500 font-mono">{item.sku} • <strong className="text-slate-700 font-sans">{item.name}</strong></span>
-                            <span className="font-mono text-slate-800 font-semibold">{item.qty} units • ${item.unitPrice.toFixed(2)} / ea</span>
+                        {selectedPO.items.map((item) => (
+                          <div
+                            key={item.sku}
+                            className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none"
+                          >
+                            <span className="text-slate-500 font-mono">
+                              {item.sku} •{' '}
+                              <strong className="text-slate-700 font-sans">
+                                {item.name}
+                              </strong>
+                            </span>
+                            <span className="font-mono text-slate-800 font-semibold">
+                              {item.qty} units • ${item.unitPrice.toFixed(2)} /
+                              ea
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -803,59 +1104,93 @@ Supply Chain CRM Coordinator`;
 
                   {/* Multi-stage Approval Workflows (Rule 17) */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Internal Approval Status</h4>
-                    
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Internal Approval Status
+                    </h4>
+
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                          selectedPO.invoiceStatus === 'Approved' ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'
-                        }`}>
+                        <div
+                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                            selectedPO.invoiceStatus === 'Approved'
+                              ? 'bg-indigo-600 border-indigo-600'
+                              : 'bg-white border-slate-300'
+                          }`}
+                        >
                           <Check className="h-3 w-3" />
                         </div>
                         <div>
-                          <h5 className="text-xs font-semibold text-slate-800">Purchasing Sign-off</h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">Sourcing validation & specification sheet check.</p>
+                          <h5 className="text-xs font-semibold text-slate-800">
+                            Purchasing Sign-off
+                          </h5>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Sourcing validation & specification sheet check.
+                          </p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                          selectedPO.invoiceStatus === 'Approved' ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'
-                        }`}>
+                        <div
+                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                            selectedPO.invoiceStatus === 'Approved'
+                              ? 'bg-indigo-600 border-indigo-600'
+                              : 'bg-white border-slate-300'
+                          }`}
+                        >
                           <Check className="h-3 w-3" />
                         </div>
                         <div>
-                          <h5 className="text-xs font-semibold text-slate-800">Finance Release</h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">LC Credit Approval & invoice validations matching.</p>
+                          <h5 className="text-xs font-semibold text-slate-800">
+                            Finance Release
+                          </h5>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            LC Credit Approval & invoice validations matching.
+                          </p>
                         </div>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                          selectedPO.receivedQty === selectedPO.orderedQty && selectedPO.orderedQty > 0 ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'
-                        }`}>
+                        <div
+                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                            selectedPO.receivedQty === selectedPO.orderedQty &&
+                            selectedPO.orderedQty > 0
+                              ? 'bg-indigo-600 border-indigo-600'
+                              : 'bg-white border-slate-300'
+                          }`}
+                        >
                           <Check className="h-3 w-3" />
                         </div>
                         <div>
-                          <h5 className="text-xs font-semibold text-slate-800">Warehouse Acceptance</h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">Fulfillment count matches specifications.</p>
+                          <h5 className="text-xs font-semibold text-slate-800">
+                            Warehouse Acceptance
+                          </h5>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Fulfillment count matches specifications.
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    {userRole === 'Administrator' && selectedPO.invoiceStatus === 'Uploaded' && (
-                      <button
-                        onClick={() => {
-                          const updated = { ...selectedPO, invoiceStatus: 'Approved' as const };
-                          onUpdatePO(updated);
-                          onAddActivity(`Approved invoice for ${selectedPO.id}`, "PO Updated");
-                        }}
-                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        <span>Approve Finance Invoice</span>
-                      </button>
-                    )}
+                    {userRole === 'Administrator' &&
+                      selectedPO.invoiceStatus === 'Uploaded' && (
+                        <button
+                          onClick={() => {
+                            const updated = {
+                              ...selectedPO,
+                              invoiceStatus: 'Approved' as const,
+                            };
+                            onUpdatePO(updated);
+                            onAddActivity(
+                              `Approved invoice for ${selectedPO.id}`,
+                              'PO Updated',
+                            );
+                          }}
+                          className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Approve Finance Invoice</span>
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>
@@ -865,26 +1200,40 @@ Supply Chain CRM Coordinator`;
             {activeDrawerSection === 'comments' && (
               <div className="space-y-4">
                 <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-2">
-                  {selectedPOComments.map(comment => (
-                    <div key={comment.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                  {selectedPOComments.map((comment) => (
+                    <div
+                      key={comment.id}
+                      className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
+                    >
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900">{comment.user}</span>
+                          <span className="text-xs font-bold text-slate-900">
+                            {comment.user}
+                          </span>
                           <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
                             {comment.role}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono">{comment.timestamp}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {comment.timestamp}
+                        </span>
                       </div>
-                      <p className="text-xs text-slate-700 leading-relaxed">{comment.message}</p>
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        {comment.message}
+                      </p>
                     </div>
                   ))}
                   {selectedPOComments.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-6">No discussions started yet. Begin the thread below.</p>
+                    <p className="text-xs text-slate-400 italic text-center py-6">
+                      No discussions started yet. Begin the thread below.
+                    </p>
                   )}
                 </div>
 
-                <form onSubmit={handlePostComment} className="flex gap-2 border-t border-slate-100 pt-3">
+                <form
+                  onSubmit={handlePostComment}
+                  className="flex gap-2 border-t border-slate-100 pt-3"
+                >
                   <input
                     type="text"
                     placeholder="Ask Emily (Warehouse) or Michael (Finance) for details..."
@@ -912,7 +1261,10 @@ Supply Chain CRM Coordinator`;
                     <span>AI-Powered OCR Invoice Analyzer</span>
                   </h4>
                   <p className="text-[11px] text-indigo-800 leading-relaxed">
-                    Upload a raw PDF invoice from the manufacturer. Aerocrm will automatically parse details like billing quantities, unit prices, and vendor info, matching them against this Purchase Order to prevent discrepancies.
+                    Upload a raw PDF invoice from the manufacturer. Aerocrm will
+                    automatically parse details like billing quantities, unit
+                    prices, and vendor info, matching them against this Purchase
+                    Order to prevent discrepancies.
                   </p>
                 </div>
 
@@ -926,14 +1278,20 @@ Supply Chain CRM Coordinator`;
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                    <span className="text-xs font-bold text-slate-700">Drag & drop or Click to browse</span>
-                    <span className="text-[10px] text-slate-400 mt-1">Supports PDF, PNG, JPEG up to 10MB</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      Drag & drop or Click to browse
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-1">
+                      Supports PDF, PNG, JPEG up to 10MB
+                    </span>
                   </div>
 
                   {/* OCR results panel */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
                     <div>
-                      <h5 className="text-xs font-bold text-slate-700 mb-2 uppercase">Extraction Audit Details</h5>
+                      <h5 className="text-xs font-bold text-slate-700 mb-2 uppercase">
+                        Extraction Audit Details
+                      </h5>
                       {isUploadingOCR ? (
                         <div className="space-y-2 animate-pulse py-4">
                           <div className="h-3 bg-slate-200 rounded-sm w-3/4" />
@@ -943,18 +1301,31 @@ Supply Chain CRM Coordinator`;
                         <div className="space-y-3 text-xs">
                           <div className="flex justify-between">
                             <span className="text-slate-400">Invoice Ref:</span>
-                            <span className="font-mono font-bold text-slate-800">{selectedPO.invoiceDetails.invoiceNumber}</span>
+                            <span className="font-mono font-bold text-slate-800">
+                              {selectedPO.invoiceDetails.invoiceNumber}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-400">Extracted Amount:</span>
-                            <span className="font-mono font-bold text-slate-800">${selectedPO.invoiceDetails.amount.toLocaleString()}</span>
+                            <span className="text-slate-400">
+                              Extracted Amount:
+                            </span>
+                            <span className="font-mono font-bold text-slate-800">
+                              $
+                              {selectedPO.invoiceDetails.amount.toLocaleString()}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-400">OCR Timestamp:</span>
-                            <span className="font-mono text-slate-600">{selectedPO.invoiceDetails.date}</span>
+                            <span className="text-slate-400">
+                              OCR Timestamp:
+                            </span>
+                            <span className="font-mono text-slate-600">
+                              {selectedPO.invoiceDetails.date}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-2">
-                            <span className="text-slate-500 font-semibold">Integrity Check:</span>
+                            <span className="text-slate-500 font-semibold">
+                              Integrity Check:
+                            </span>
                             <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px]">
                               <CheckCircle className="h-3.5 w-3.5" />
                               <span>100% Matches PO Items</span>
@@ -962,7 +1333,10 @@ Supply Chain CRM Coordinator`;
                           </div>
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 italic py-6">No invoice parsed yet. Upload an invoice to trigger OCR analysis.</p>
+                        <p className="text-xs text-slate-400 italic py-6">
+                          No invoice parsed yet. Upload an invoice to trigger
+                          OCR analysis.
+                        </p>
                       )}
                     </div>
 
@@ -981,8 +1355,13 @@ Supply Chain CRM Coordinator`;
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-700">Connected Vendor Email Engagement Logs</h4>
-                    <p className="text-[10px] text-slate-400">Track delivered outreach, opens, and replies directly inside PO context.</p>
+                    <h4 className="text-xs font-bold text-slate-700">
+                      Connected Vendor Email Engagement Logs
+                    </h4>
+                    <p className="text-[10px] text-slate-400">
+                      Track delivered outreach, opens, and replies directly
+                      inside PO context.
+                    </p>
                   </div>
 
                   <button
@@ -991,7 +1370,11 @@ Supply Chain CRM Coordinator`;
                     disabled={isGeneratingEmail}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>{isGeneratingEmail ? 'Writing...' : 'Generate AI Follow-up'}</span>
+                    <span>
+                      {isGeneratingEmail
+                        ? 'Writing...'
+                        : 'Generate AI Follow-up'}
+                    </span>
                   </button>
                 </div>
 
@@ -1003,7 +1386,7 @@ Supply Chain CRM Coordinator`;
                         <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
                         <span>Prepared AI Sourcing Template</span>
                       </span>
-                      <button 
+                      <button
                         onClick={() => setAiEmailGenerated(null)}
                         className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
                       >
@@ -1038,12 +1421,20 @@ Supply Chain CRM Coordinator`;
 
                 {/* Local PO outreach table */}
                 <div className="space-y-3">
-                  {selectedPOEmails.map(email => (
-                    <div key={email.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                  {selectedPOEmails.map((email) => (
+                    <div
+                      key={email.id}
+                      className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                    >
                       <div className="space-y-1">
-                        <h5 className="font-semibold text-slate-800">{email.subject}</h5>
+                        <h5 className="font-semibold text-slate-800">
+                          {email.subject}
+                        </h5>
                         <p className="text-[10px] text-slate-400 font-mono">
-                          Sent: {email.sentAt} • Status: <strong className="text-indigo-600">{email.status}</strong>
+                          Sent: {email.sentAt} • Status:{' '}
+                          <strong className="text-indigo-600">
+                            {email.status}
+                          </strong>
                         </p>
                       </div>
 
@@ -1052,13 +1443,17 @@ Supply Chain CRM Coordinator`;
                           Opens: {email.openCount}
                         </span>
                         {email.repliedAt && (
-                          <p className="text-[9px] text-emerald-600 font-semibold font-mono">Replied: {email.repliedAt.split(' ')[1]}</p>
+                          <p className="text-[9px] text-emerald-600 font-semibold font-mono">
+                            Replied: {email.repliedAt.split(' ')[1]}
+                          </p>
                         )}
                       </div>
                     </div>
                   ))}
                   {selectedPOEmails.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-4">No emails have been logged for this Purchase Order.</p>
+                    <p className="text-xs text-slate-400 italic text-center py-4">
+                      No emails have been logged for this Purchase Order.
+                    </p>
                   )}
                 </div>
               </div>
@@ -1072,8 +1467,10 @@ Supply Chain CRM Coordinator`;
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h3 className="font-display font-bold text-slate-900 text-base">Generate New Purchase Order</h3>
-              <button 
+              <h3 className="font-display font-bold text-slate-900 text-base">
+                Generate New Purchase Order
+              </h3>
+              <button
                 onClick={() => setShowCreateModal(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
               >
@@ -1083,7 +1480,9 @@ Supply Chain CRM Coordinator`;
 
             <form onSubmit={handleCreatePO} className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1">Target Manufacturing Vendor</label>
+                <label className="text-xs font-semibold text-slate-600 block mb-1">
+                  Target Manufacturing Vendor
+                </label>
                 <select
                   value={newPO.vendorId}
                   onChange={(e) => setNewPO.vendorId(e.target.value)}
@@ -1091,25 +1490,33 @@ Supply Chain CRM Coordinator`;
                   required
                 >
                   <option value="">-- Choose Vendor --</option>
-                  {vendors.map(v => (
-                    <option key={v.id} value={v.id}>{v.name} ({v.country})</option>
+                  {vendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} ({v.country})
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Ordered Quantity (Units)</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    Ordered Quantity (Units)
+                  </label>
                   <input
                     type="number"
                     value={newPO.orderedQty}
-                    onChange={(e) => setNewPO.orderedQty(Number(e.target.value))}
+                    onChange={(e) =>
+                      setNewPO.orderedQty(Number(e.target.value))
+                    }
                     className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Estimated Arrival ETA</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    Estimated Arrival ETA
+                  </label>
                   <input
                     type="date"
                     value={newPO.eta}
@@ -1122,7 +1529,9 @@ Supply Chain CRM Coordinator`;
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">SKU Number</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    SKU Number
+                  </label>
                   <input
                     type="text"
                     value={newPO.sku}
@@ -1131,7 +1540,9 @@ Supply Chain CRM Coordinator`;
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Fulfillment Container ID (Optional)</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    Fulfillment Container ID (Optional)
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g., CNT-095"
@@ -1144,7 +1555,9 @@ Supply Chain CRM Coordinator`;
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">Component Description</label>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    Component Description
+                  </label>
                   <input
                     type="text"
                     value={newPO.itemName}
@@ -1179,8 +1592,10 @@ Supply Chain CRM Coordinator`;
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h3 className="font-display font-bold text-slate-900 text-base">Bulk Sourcing PO CSV Importer</h3>
-              <button 
+              <h3 className="font-display font-bold text-slate-900 text-base">
+                Bulk Sourcing PO CSV Importer
+              </h3>
+              <button
                 onClick={() => setShowImportModal(false)}
                 className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
               >
@@ -1190,12 +1605,16 @@ Supply Chain CRM Coordinator`;
 
             <form onSubmit={handleImportCSV} className="space-y-4">
               <p className="text-xs text-slate-500 leading-relaxed">
-                Paste your spreadsheet rows below to import Purchase Orders in bulk. Follow the expected format carefully.
+                Paste your spreadsheet rows below to import Purchase Orders in
+                bulk. Follow the expected format carefully.
               </p>
 
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono text-[10px] text-slate-600 leading-tight">
-                <strong>Expected Fields:</strong> vendor_id, status, quantity, eta_yyyy_mm_dd, sku<br />
-                <strong>Example Row:</strong> VEND-001, Production, 750, 2026-08-30, SKU-5501
+                <strong>Expected Fields:</strong> vendor_id, status, quantity,
+                eta_yyyy_mm_dd, sku
+                <br />
+                <strong>Example Row:</strong> VEND-001, Production, 750,
+                2026-08-30, SKU-5501
               </div>
 
               <div>
@@ -1209,9 +1628,13 @@ Supply Chain CRM Coordinator`;
               </div>
 
               {importFeedback && (
-                <div className={`p-2.5 rounded-lg border font-semibold text-xs text-center ${
-                  importFeedback.includes("Successfully") ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700'
-                }`}>
+                <div
+                  className={`p-2.5 rounded-lg border font-semibold text-xs text-center ${
+                    importFeedback.includes('Successfully')
+                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                      : 'bg-rose-50 border-rose-100 text-rose-700'
+                  }`}
+                >
                   {importFeedback}
                 </div>
               )}

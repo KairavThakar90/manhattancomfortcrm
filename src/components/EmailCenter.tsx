@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
-import { 
-  Mail, Search, Filter, Plus, FileText, Send, CheckCircle, Clock, 
-  AlertTriangle, Eye, Sparkles, X, Check, BarChart3, ArrowUpRight
+import {
+  Mail,
+  Search,
+  Filter,
+  Plus,
+  FileText,
+  Send,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Eye,
+  Sparkles,
+  X,
+  Check,
+  BarChart3,
+  ArrowUpRight,
 } from 'lucide-react';
 import { EmailLog, PurchaseOrder, Vendor } from '../types';
 
@@ -10,7 +23,10 @@ interface EmailCenterProps {
   purchaseOrders: PurchaseOrder[];
   vendors: Vendor[];
   onAddEmailLog: (email: EmailLog) => void;
-  onAddActivity: (msg: string, type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment') => void;
+  onAddActivity: (
+    msg: string,
+    type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment',
+  ) => void;
 }
 
 export default function EmailCenter({
@@ -18,11 +34,11 @@ export default function EmailCenter({
   purchaseOrders,
   vendors,
   onAddEmailLog,
-  onAddActivity
+  onAddActivity,
 }: EmailCenterProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
+
   // Composer State
   const [showComposer, setShowComposer] = useState(false);
   const [composerForm, setComposerForm] = useState({
@@ -30,28 +46,45 @@ export default function EmailCenter({
     subject: '',
     body: '',
     templateId: '',
-    attachmentName: ''
+    attachmentName: '',
   });
 
   const [aiWriting, setAiWriting] = useState(false);
 
   // Email Templates for fast sourcing outreach
   const TEMPLATES = [
-    { id: 'delay', name: 'Delayed PO Follow-up', subject: 'Production Timeline Check: PO-[NUMBER]' },
-    { id: 'invoice', name: 'Missing Invoice Request', subject: 'Urgent: Missing Invoice PDF - PO-[NUMBER]' },
-    { id: 'drawing', name: 'Specification Check', subject: 'Drawings Specifications Approval Check - PO-[NUMBER]' },
-    { id: 'port', name: 'Container Logistics Check', subject: 'Port Customs Gate Release S&OP - PO-[NUMBER]' }
+    {
+      id: 'delay',
+      name: 'Delayed PO Follow-up',
+      subject: 'Production Timeline Check: PO-[NUMBER]',
+    },
+    {
+      id: 'invoice',
+      name: 'Missing Invoice Request',
+      subject: 'Urgent: Missing Invoice PDF - PO-[NUMBER]',
+    },
+    {
+      id: 'drawing',
+      name: 'Specification Check',
+      subject: 'Drawings Specifications Approval Check - PO-[NUMBER]',
+    },
+    {
+      id: 'port',
+      name: 'Container Logistics Check',
+      subject: 'Port Customs Gate Release S&OP - PO-[NUMBER]',
+    },
   ];
 
   // Filter and search email logs
-  const filteredEmails = emails.filter(email => {
-    const po = purchaseOrders.find(p => p.id === email.poId);
-    const matchesSearch = 
+  const filteredEmails = emails.filter((email) => {
+    const po = purchaseOrders.find((p) => p.id === email.poId);
+    const matchesSearch =
       email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       email.poId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (po?.vendorName || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || email.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'all' || email.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -59,17 +92,21 @@ export default function EmailCenter({
   // Apply template variables
   const handleSelectTemplate = (templateId: string) => {
     if (!composerForm.poId) {
-      alert("Please select a Purchase Order first to apply template parameters.");
+      alert(
+        'Please select a Purchase Order first to apply template parameters.',
+      );
       return;
     }
-    const po = purchaseOrders.find(p => p.id === composerForm.poId);
+    const po = purchaseOrders.find((p) => p.id === composerForm.poId);
     if (!po) return;
 
-    const template = TEMPLATES.find(t => t.id === templateId);
+    const template = TEMPLATES.find((t) => t.id === templateId);
     if (!template) return;
 
-    const formattedSubject = template.subject.replace('PO-[NUMBER]', po.id).replace('[NUMBER]', po.id);
-    let body = "";
+    const formattedSubject = template.subject
+      .replace('PO-[NUMBER]', po.id)
+      .replace('[NUMBER]', po.id);
+    let body = '';
 
     if (templateId === 'delay') {
       body = `Dear ${po.vendorName} Sourcing Team,
@@ -113,18 +150,20 @@ Warehouse Logistics`;
       ...composerForm,
       templateId,
       subject: formattedSubject,
-      body
+      body,
     });
   };
 
   // Generate Email using AI Sourcing parameters (Rule 10)
   const handleAIGenerate = () => {
     if (!composerForm.poId) {
-      alert("Please select a Purchase Order to allow our AI Sourcing Assistant to audit fields.");
+      alert(
+        'Please select a Purchase Order to allow our AI Sourcing Assistant to audit fields.',
+      );
       return;
     }
 
-    const po = purchaseOrders.find(p => p.id === composerForm.poId);
+    const po = purchaseOrders.find((p) => p.id === composerForm.poId);
     if (!po) return;
 
     setAiWriting(true);
@@ -146,10 +185,13 @@ Sourcing & S&OP Operations Assistant`;
       setComposerForm({
         ...composerForm,
         subject,
-        body
+        body,
       });
       setAiWriting(false);
-      onAddActivity(`AI assistant generated procurement email draft for ${po.id}`, "Email Sent");
+      onAddActivity(
+        `AI assistant generated procurement email draft for ${po.id}`,
+        'Email Sent',
+      );
     }, 1000);
   };
 
@@ -157,7 +199,9 @@ Sourcing & S&OP Operations Assistant`;
   const handleSendEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!composerForm.poId || !composerForm.subject || !composerForm.body) {
-      alert("Please complete the Subject, Body and associated Purchase Order details.");
+      alert(
+        'Please complete the Subject, Body and associated Purchase Order details.',
+      );
       return;
     }
 
@@ -171,22 +215,25 @@ Sourcing & S&OP Operations Assistant`;
       lastOpenTime: null,
       linkClicks: 0,
       repliedAt: null,
-      attachmentName: composerForm.attachmentName || null
+      attachmentName: composerForm.attachmentName || null,
     };
 
     onAddEmailLog(newEmail);
-    onAddActivity(`Dispatched Sourcing Email outreach: "${composerForm.subject}"`, "Email Sent");
-    
+    onAddActivity(
+      `Dispatched Sourcing Email outreach: "${composerForm.subject}"`,
+      'Email Sent',
+    );
+
     // Reset form
     setComposerForm({
       poId: '',
       subject: '',
       body: '',
       templateId: '',
-      attachmentName: ''
+      attachmentName: '',
     });
     setShowComposer(false);
-    alert("Outreach successfully pushed to SMTP pipeline.");
+    alert('Outreach successfully pushed to SMTP pipeline.');
   };
 
   return (
@@ -194,9 +241,13 @@ Sourcing & S&OP Operations Assistant`;
       {/* Outreach KPI Widget Dashboard (Rule 6) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">Total Sent Communications</span>
+          <span className="text-slate-400 text-xs font-semibold block">
+            Total Sent Communications
+          </span>
           <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">{emails.length * 3}</strong>
+            <strong className="text-2xl font-display font-bold text-slate-900">
+              {emails.length * 3}
+            </strong>
             <span className="text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-sm flex items-center">
               <ArrowUpRight className="h-3 w-3" />
               <span>+15% Load</span>
@@ -205,26 +256,44 @@ Sourcing & S&OP Operations Assistant`;
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">Average Opened Count</span>
+          <span className="text-slate-400 text-xs font-semibold block">
+            Average Opened Count
+          </span>
           <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-indigo-900">85.4%</strong>
-            <span className="text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-sm">Optimum</span>
+            <strong className="text-2xl font-display font-bold text-indigo-900">
+              85.4%
+            </strong>
+            <span className="text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-sm">
+              Optimum
+            </span>
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">Active Click-Through (CTR)</span>
+          <span className="text-slate-400 text-xs font-semibold block">
+            Active Click-Through (CTR)
+          </span>
           <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">42.8%</strong>
-            <span className="text-indigo-600 text-[10px] font-bold bg-indigo-50 px-2 py-0.5 rounded-sm">Top Tier</span>
+            <strong className="text-2xl font-display font-bold text-slate-900">
+              42.8%
+            </strong>
+            <span className="text-indigo-600 text-[10px] font-bold bg-indigo-50 px-2 py-0.5 rounded-sm">
+              Top Tier
+            </span>
           </div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">Sourcing Response Interval</span>
+          <span className="text-slate-400 text-xs font-semibold block">
+            Sourcing Response Interval
+          </span>
           <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">18.4 Hours</strong>
-            <span className="text-rose-500 text-[10px] font-bold bg-rose-50 px-2 py-0.5 rounded-sm">Needs S&OP Trim</span>
+            <strong className="text-2xl font-display font-bold text-slate-900">
+              18.4 Hours
+            </strong>
+            <span className="text-rose-500 text-[10px] font-bold bg-rose-50 px-2 py-0.5 rounded-sm">
+              Needs S&OP Trim
+            </span>
           </div>
         </div>
       </div>
@@ -283,10 +352,13 @@ Sourcing & S&OP Operations Assistant`;
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredEmails.map(email => {
-                const po = purchaseOrders.find(p => p.id === email.poId);
+              {filteredEmails.map((email) => {
+                const po = purchaseOrders.find((p) => p.id === email.poId);
                 return (
-                  <tr key={email.id} className="hover:bg-slate-50/70 transition">
+                  <tr
+                    key={email.id}
+                    className="hover:bg-slate-50/70 transition"
+                  >
                     <td className="px-6 py-4">
                       <span className="font-bold font-mono text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-sm">
                         {email.poId}
@@ -295,21 +367,35 @@ Sourcing & S&OP Operations Assistant`;
                     <td className="px-6 py-4 font-medium text-slate-800">
                       <div>
                         <span>{email.subject}</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{po?.vendorName}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {po?.vendorName}
+                        </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">{email.sentAt}</td>
+                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                      {email.sentAt}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        email.status === 'Replied' ? 'bg-emerald-50 text-emerald-700' :
-                        email.status === 'Opened' ? 'bg-indigo-50 text-indigo-700' :
-                        email.status === 'Delivered' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-600'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          email.status === 'Replied'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : email.status === 'Opened'
+                              ? 'bg-indigo-50 text-indigo-700'
+                              : email.status === 'Delivered'
+                                ? 'bg-sky-50 text-sky-700'
+                                : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
                         {email.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">{email.openCount}</td>
-                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">{email.linkClicks}</td>
+                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">
+                      {email.openCount}
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">
+                      {email.linkClicks}
+                    </td>
                     <td className="px-6 py-4 text-center text-slate-600 font-mono">
                       {email.repliedAt ? (
                         <span className="text-emerald-600 font-bold text-[10px] flex items-center justify-center gap-1">
@@ -317,7 +403,9 @@ Sourcing & S&OP Operations Assistant`;
                           <span>Replied</span>
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-[10px]">Awaiting reply</span>
+                        <span className="text-slate-400 text-[10px]">
+                          Awaiting reply
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-slate-500 font-mono text-[10px]">
@@ -344,8 +432,10 @@ Sourcing & S&OP Operations Assistant`;
           <div className="bg-white h-full max-w-lg w-full p-6 shadow-2xl flex flex-col justify-between border-l border-slate-100 animate-slideLeft">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-display font-bold text-slate-900 text-base">New Procurement Outreach</h3>
-                <button 
+                <h3 className="font-display font-bold text-slate-900 text-base">
+                  New Procurement Outreach
+                </h3>
+                <button
                   onClick={() => setShowComposer(false)}
                   className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
                 >
@@ -356,32 +446,40 @@ Sourcing & S&OP Operations Assistant`;
               {/* Form details */}
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">Target Purchase Order</label>
+                  <label className="font-semibold text-slate-600 block mb-1">
+                    Target Purchase Order
+                  </label>
                   <select
                     value={composerForm.poId}
-                    onChange={(e) => setComposerForm({ ...composerForm, poId: e.target.value })}
+                    onChange={(e) =>
+                      setComposerForm({ ...composerForm, poId: e.target.value })
+                    }
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800 font-semibold"
                     required
                   >
                     <option value="">-- Associate Sourcing PO --</option>
-                    {purchaseOrders.map(p => (
-                      <option key={p.id} value={p.id}>{p.id} - {p.vendorName}</option>
+                    {purchaseOrders.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.id} - {p.vendorName}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 {/* Templates selectors */}
                 <div>
-                  <label className="font-semibold text-slate-500 block mb-1.5">Apply Procurement Templates</label>
+                  <label className="font-semibold text-slate-500 block mb-1.5">
+                    Apply Procurement Templates
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {TEMPLATES.map(tmpl => (
+                    {TEMPLATES.map((tmpl) => (
                       <button
                         key={tmpl.id}
                         type="button"
                         onClick={() => handleSelectTemplate(tmpl.id)}
                         className={`p-2 rounded-lg border text-left font-semibold transition hover:border-indigo-400 text-[10px] ${
-                          composerForm.templateId === tmpl.id 
-                            ? 'bg-indigo-50 border-indigo-400 text-indigo-950' 
+                          composerForm.templateId === tmpl.id
+                            ? 'bg-indigo-50 border-indigo-400 text-indigo-950'
                             : 'bg-white border-slate-200 text-slate-600'
                         }`}
                       >
@@ -396,8 +494,13 @@ Sourcing & S&OP Operations Assistant`;
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4.5 w-4.5 text-indigo-600" />
                     <div>
-                      <h4 className="font-semibold text-indigo-950">AI Sourcing Draft Composer</h4>
-                      <p className="text-[9px] text-indigo-700 mt-0.5">Let AI review the selected PO and write follow-ups instantly.</p>
+                      <h4 className="font-semibold text-indigo-950">
+                        AI Sourcing Draft Composer
+                      </h4>
+                      <p className="text-[9px] text-indigo-700 mt-0.5">
+                        Let AI review the selected PO and write follow-ups
+                        instantly.
+                      </p>
                     </div>
                   </div>
 
@@ -413,12 +516,19 @@ Sourcing & S&OP Operations Assistant`;
 
                 {/* Subject */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">Subject outreach</label>
+                  <label className="font-semibold text-slate-600 block mb-1">
+                    Subject outreach
+                  </label>
                   <input
                     type="text"
                     placeholder="Enter SMTP Subject header..."
                     value={composerForm.subject}
-                    onChange={(e) => setComposerForm({ ...composerForm, subject: e.target.value })}
+                    onChange={(e) =>
+                      setComposerForm({
+                        ...composerForm,
+                        subject: e.target.value,
+                      })
+                    }
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:bg-white text-slate-800 font-medium"
                     required
                   />
@@ -426,11 +536,15 @@ Sourcing & S&OP Operations Assistant`;
 
                 {/* Body Textarea */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">Email Body Draft</label>
+                  <label className="font-semibold text-slate-600 block mb-1">
+                    Email Body Draft
+                  </label>
                   <textarea
                     placeholder="Provide detailed instructions to the manufacturer..."
                     value={composerForm.body}
-                    onChange={(e) => setComposerForm({ ...composerForm, body: e.target.value })}
+                    onChange={(e) =>
+                      setComposerForm({ ...composerForm, body: e.target.value })
+                    }
                     rows={8}
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:bg-white text-slate-800 leading-relaxed font-mono"
                     required
@@ -439,12 +553,19 @@ Sourcing & S&OP Operations Assistant`;
 
                 {/* Attachment */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">Add Procurement Attachment (Optional)</label>
+                  <label className="font-semibold text-slate-600 block mb-1">
+                    Add Procurement Attachment (Optional)
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g., technical_drawing_revision.pdf"
                     value={composerForm.attachmentName}
-                    onChange={(e) => setComposerForm({ ...composerForm, attachmentName: e.target.value })}
+                    onChange={(e) =>
+                      setComposerForm({
+                        ...composerForm,
+                        attachmentName: e.target.value,
+                      })
+                    }
                     className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
                   />
                 </div>

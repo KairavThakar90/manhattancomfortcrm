@@ -1,10 +1,13 @@
-export type UserRole = 'Administrator' | 'Purchasing' | 'Warehouse' | 'Finance' | 'Vendor';
+export type UserRole =
+  'Administrator' | 'Purchasing' | 'Warehouse' | 'Finance' | 'Vendor';
 
-export type POShippingStatus = 'Production' | 'In Transit' | 'Port of Entry' | 'Delivered' | 'Delayed';
+export type POShippingStatus =
+  'Production' | 'In Transit' | 'Port of Entry' | 'Delivered' | 'Delayed';
 
 export type InvoiceStatus = 'Pending' | 'Uploaded' | 'Approved' | 'Rejected';
 
-export type ProductionStage = 'Materials' | 'Assembly' | 'Quality Check' | 'Packaging' | 'Ready to Ship';
+export type ProductionStage =
+  'Materials' | 'Assembly' | 'Quality Check' | 'Packaging' | 'Ready to Ship';
 
 export interface POItem {
   sku: string;
@@ -101,7 +104,12 @@ export interface ActivityLog {
   user: string;
   role: string;
   message: string;
-  type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment' | 'Sync';
+  type:
+    | 'PO Updated'
+    | 'Email Sent'
+    | 'Invoice Uploaded'
+    | 'Vendor Comment'
+    | 'Sync';
   poId?: string;
 }
 
