@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { Layers, Lock, Mail, ChevronRight, Sparkles } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (email: string, password: string) => void;
+  loading?: boolean;
+  error?: string;
 }
 
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      onLogin();
+    if (email && password && !loading) {
+      onLogin(email, password);
     }
   };
 
@@ -39,6 +41,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-xl mb-4 text-center">
+              {error}
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
@@ -99,10 +106,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>Access Portal</span>
-            <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <span>{loading ? 'Authenticating...' : 'Access Portal'}</span>
+            {!loading && <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />}
           </button>
         </form>
       </div>

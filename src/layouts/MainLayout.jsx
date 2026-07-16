@@ -12,6 +12,7 @@ import {
   Layers,
   Shield,
   TrendingUp,
+  LogOut,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 
@@ -23,6 +24,7 @@ export default function MainLayout() {
     handleNotificationClick,
     handleMarkAllNotificationsRead,
     setSelectedPOId,
+    setIsAuthenticated,
   } = useCRM();
 
   const navigate = useNavigate();
@@ -35,6 +37,12 @@ export default function MainLayout() {
     const path = location.pathname.substring(1);
     if (!path) return 'DASHBOARD';
     return path.replace(/-/g, ' ');
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('isAuthenticated');
   };
 
   const navItems = [
@@ -154,16 +162,25 @@ export default function MainLayout() {
         </div>
 
         {/* User context footer */}
-        <div className="border-t border-indigo-900/60 pt-4 flex items-center gap-3 px-2">
-          <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs">
-            {userRole.slice(0, 1)}
+        <div className="border-t border-indigo-900/60 pt-4 flex items-center justify-between px-2">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs">
+              {userRole.slice(0, 1)}
+            </div>
+            <div className="text-xs">
+              <span className="block text-indigo-300 font-bold">You</span>
+              <span className="block text-[9px] bg-indigo-900 text-indigo-300 px-1.5 py-0.2 rounded-sm font-mono mt-0.5 uppercase tracking-wider font-extrabold">
+                {userRole} Privilege
+              </span>
+            </div>
           </div>
-          <div className="text-xs">
-            <span className="block text-indigo-300 font-bold">You</span>
-            <span className="block text-[9px] bg-indigo-900 text-indigo-300 px-1.5 py-0.2 rounded-sm font-mono mt-0.5 uppercase tracking-wider font-extrabold">
-              {userRole} Privilege
-            </span>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors"
+            title="Log out"
+          >
+            <LogOut className="h-4.5 w-4.5" />
+          </button>
         </div>
       </aside>
 
