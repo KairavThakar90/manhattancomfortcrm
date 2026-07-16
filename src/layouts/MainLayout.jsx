@@ -30,6 +30,7 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -169,15 +170,11 @@ export default function MainLayout() {
             </div>
             <div className="text-xs">
               <span className="block text-indigo-300 font-bold">You</span>
-              <span className="block text-[9px] bg-indigo-900 text-indigo-300 px-1.5 py-0.2 rounded-sm font-mono mt-0.5 uppercase tracking-wider font-extrabold">
-                {userRole} Privilege
-              </span>
             </div>
           </div>
           <button
             onClick={handleLogout}
             className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors"
-            title="Log out"
           >
             <LogOut className="h-4.5 w-4.5" />
           </button>
@@ -268,13 +265,34 @@ export default function MainLayout() {
             </div>
 
             {/* Quick Session user tag */}
-            <div className="flex items-center gap-2 text-xs border border-slate-100 p-1.5 pr-3 rounded-lg bg-slate-50/50">
-              <div className="h-6 w-6 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
-                {userRole.slice(0, 1)}
-              </div>
-              <span className="font-bold text-slate-800 text-[11px]">
-                {userRole} view
-              </span>
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 text-xs border border-slate-100 p-1.5 pr-3 rounded-lg bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <div className="h-6 w-6 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
+                  {userRole.slice(0, 1)}
+                </div>
+                <span className="font-bold text-slate-800 text-[11px]">
+                  {userRole} view
+                </span>
+              </button>
+
+              {/* USER DROPDOWN MENU */}
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="font-semibold">Log out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
