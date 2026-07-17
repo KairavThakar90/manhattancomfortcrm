@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -77,6 +77,14 @@ export default function POManagement({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [vendorFilter, setVendorFilter] = useState<string>('all');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, vendorFilter]);
+
   // PO creation state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newPO, setNewPO] = useState({
@@ -142,6 +150,13 @@ export default function POManagement({
 
     return matchesSearch && matchesStatus && matchesVendor;
   });
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredPOs.length / itemsPerPage) || 1;
+  const normalizedCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (normalizedCurrentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPOs = filteredPOs.slice(startIndex, endIndex);
 
   const selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
 
@@ -614,7 +629,7 @@ Supply Chain CRM Coordinator`;
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredPOs.map((po) => (
+                {paginatedPOs.map((po) => (
                   <tr
                     key={po.id}
                     className={`hover:bg-slate-50/70 transition cursor-pointer ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
@@ -710,6 +725,51 @@ Supply Chain CRM Coordinator`;
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Footer */}
+          {filteredPOs.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-500 font-medium text-xs select-none">
+              <div>
+                Showing <span className="text-slate-800 font-bold">{startIndex + 1}</span> to{' '}
+                <span className="text-slate-800 font-bold">
+                  {Math.min(endIndex, filteredPOs.length)}
+                </span>{' '}
+                of <span className="text-slate-800 font-bold">{filteredPOs.length}</span> entries
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={normalizedCurrentPage === 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                  <button
+                    key={pg}
+                    type="button"
+                    onClick={() => setCurrentPage(pg)}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                      normalizedCurrentPage === pg
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={normalizedCurrentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
