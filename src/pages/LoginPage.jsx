@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import LoginPageComponent from '../components/LoginPage';
 import { useCRM } from '../hooks/useCRM';
+import apiFetch from '../services/api';
 
 export default function LoginPage() {
   const { isAuthenticated, setIsAuthenticated } = useCRM();
@@ -12,16 +13,13 @@ export default function LoginPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleLogin = async (email, password) => {
+  const handleLogin = async (username, password) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await apiFetch('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username: username, password }),
       });
 
       const data = await response.json();

@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { Layers, Lock, Mail, ChevronRight, Sparkles } from 'lucide-react';
+import { Layers, Lock, User, ChevronRight, Sparkles } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (email: string, password: string) => void;
+  onLogin: (username: string, password: string) => void;
   loading?: boolean;
   error?: string;
 }
 
 export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password && !loading) {
-      onLogin(email, password);
+    if (username && password && !loading) {
+      onLogin(username, password);
     }
   };
 
@@ -49,19 +49,19 @@ export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
-                Email Address
+                Username
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-400 transition-colors">
-                  <Mail className="h-4.5 w-4.5" />
+                  <User className="h-4.5 w-4.5" />
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl pl-10 pr-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm font-medium"
-                  placeholder="admin@manhattancomfort.com"
+                  placeholder="Enter your username"
                 />
               </div>
             </div>
