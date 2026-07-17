@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import LoginPageComponent from '../components/LoginPage';
 import { useCRM } from '../hooks/useCRM';
-import apiFetch from '../services/api';
-import { AUTH_LOGIN } from '../utils/endpoints';
+import { login } from '../services/auth.service';
 
 export default function LoginPage() {
   const { isAuthenticated, setIsAuthenticated } = useCRM();
@@ -18,29 +17,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const formData = new URLSearchParams();
-      formData.append('username', username);
-      formData.append('password', password);
-
-      const response = await apiFetch(AUTH_LOGIN, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || 'Login failed. Please check your credentials.',
-        );
-      }
-
-      // If token is returned, store it
-      if (data.token || data.access_token) {
-        localStorage.setItem('token', data.token || data.access_token);
-      }
-
+      await login(username, password);
       setIsAuthenticated(true);
     } catch (err) {
       setError(err.message || 'An error occurred during login.');
