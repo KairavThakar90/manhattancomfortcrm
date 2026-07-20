@@ -511,6 +511,7 @@ export default function POManagementPage() {
         </div>
       )}
       <POManagement
+        loading={loading}
         purchaseOrders={purchaseOrders}
         vendors={vendors}
         comments={comments}
