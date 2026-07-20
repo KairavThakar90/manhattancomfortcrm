@@ -21,22 +21,16 @@ export default function LoginPage({
   const [rememberMe, setRememberMe] = useState(initialRememberMe || false);
 
   React.useEffect(() => {
-    if (initialUsername) {
-      setUsername(initialUsername);
-    }
+    initialUsername ? setUsername(initialUsername) : null;
   }, [initialUsername]);
 
   React.useEffect(() => {
-    if (initialRememberMe) {
-      setRememberMe(initialRememberMe);
-    }
+    initialRememberMe ? setRememberMe(initialRememberMe) : null;
   }, [initialRememberMe]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username && password && !loading) {
-      onLogin(username, password, rememberMe);
-    }
+    username && password && !loading ? onLogin(username, password, rememberMe) : null;
   };
 
   return (
@@ -62,11 +56,11 @@ export default function LoginPage({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
+          {error ? (
             <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-xl mb-4 text-center">
               {error}
             </div>
-          )}
+          ) : null}
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
@@ -133,9 +127,9 @@ export default function LoginPage({
             className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{loading ? 'Authenticating...' : 'Access Portal'}</span>
-            {!loading && (
+            {!loading ? (
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            )}
+            ) : null}
           </button>
         </form>
       </div>
