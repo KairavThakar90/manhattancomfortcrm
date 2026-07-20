@@ -23,11 +23,52 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     return localStorage.getItem('isAuthenticated') === 'true';
   });
 
+  const [userRole, setUserRole] = useState<UserRole>(() => {
+    return (localStorage.getItem('userRole') as UserRole) || 'Administrator';
+  });
+
+  const [user, setUser] = useState<any>(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   // Watch for auth changes to persist them
   useEffect(() => {
     localStorage.setItem('isAuthenticated', String(isAuthenticated));
+    if (isAuthenticated) {
+      const storedRole = localStorage.getItem('userRole');
+      if (storedRole) {
+        setUserRole(storedRole as UserRole);
+      }
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          // ignore
+        }
+      }
+    } else {
+      setUserRole('Administrator');
+      setUser(null);
+    }
   }, [isAuthenticated]);
-  const [userRole, setUserRole] = useState<UserRole>('Administrator');
+
+  useEffect(() => {
+    localStorage.setItem('userRole', userRole);
+  }, [userRole]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
@@ -108,7 +149,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const newLog: ActivityLog = {
       id: `ACT-${Math.floor(200 + Math.random() * 800)}`,
       timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
-      user: 'You',
+      user: user?.full_name || 'You',
       role: userRole,
       message: msg,
       type,
@@ -121,7 +162,9 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const newAudit: AuditLog = {
       id: `AUD-${Math.floor(100 + Math.random() * 900)}`,
       timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      user: `You (${userRole})`,
+      user: user?.full_name
+        ? `${user.full_name} (${userRole})`
+        : `You (${userRole})`,
       action: msg,
       poId: selectedPOId || undefined,
       previousValue: 'N/A',
@@ -145,7 +188,9 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const newAudit: AuditLog = {
       id: 'AUD-' + Math.floor(100 + Math.random() * 900),
       timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-      user: 'You (' + userRole + ')',
+      user: user?.full_name
+        ? `${user.full_name} (${userRole})`
+        : `You (${userRole})`,
       action,
       poId,
       previousValue: prev,
@@ -219,6 +264,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated,
         userRole,
         setUserRole,
+        user,
+        setUser,
         purchaseOrders,
         setPurchaseOrders,
         handleUpdatePOs,

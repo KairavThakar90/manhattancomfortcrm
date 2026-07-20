@@ -15,10 +15,12 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
+import { logout } from '../services/auth.service';
 
 export default function MainLayout() {
   const {
     userRole,
+    user,
     notifications,
     handleTriggerSync,
     handleNotificationClick,
@@ -40,10 +42,9 @@ export default function MainLayout() {
     return path.replace(/-/g, ' ');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('isAuthenticated');
+    await logout();
   };
 
   const navItems = [
@@ -165,11 +166,24 @@ export default function MainLayout() {
         {/* User context footer */}
         <div className="border-t border-indigo-900/60 pt-4 flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs">
-              {userRole.slice(0, 1)}
+            <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs uppercase">
+              {user?.full_name
+                ? user.full_name.slice(0, 1)
+                : userRole.slice(0, 1)}
             </div>
-            <div className="text-xs">
-              <span className="block text-indigo-300 font-bold">You</span>
+            <div className="text-xs max-w-[140px] truncate">
+              <span
+                className="block text-indigo-100 font-bold truncate text-[11px]"
+                title={user?.full_name || 'You'}
+              >
+                {user?.full_name || 'You'}
+              </span>
+              <span
+                className="block text-indigo-400 text-[10px] truncate"
+                title={user?.email || userRole}
+              >
+                {user?.email || userRole}
+              </span>
             </div>
           </div>
           <button
@@ -271,16 +285,31 @@ export default function MainLayout() {
                 className="flex items-center gap-2 text-xs border border-slate-100 p-1.5 pr-3 rounded-lg bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <div className="h-6 w-6 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
-                  {userRole.slice(0, 1)}
+                  {user?.full_name
+                    ? user.full_name.slice(0, 1)
+                    : userRole.slice(0, 1)}
                 </div>
                 <span className="font-bold text-slate-800 text-[11px]">
-                  {userRole} view
+                  {user?.full_name || userRole}
                 </span>
               </button>
 
               {/* USER DROPDOWN MENU */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn">
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn font-sans">
+                  {user && (
+                    <div className="px-4 py-2 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        {user.full_name}
+                      </p>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {user.email}
+                      </p>
+                      <span className="text-[9px] mt-1 bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded-sm inline-block uppercase tracking-wider">
+                        {userRole}
+                      </span>
+                    </div>
+                  )}
                   <button
                     onClick={() => {
                       setShowUserMenu(false);

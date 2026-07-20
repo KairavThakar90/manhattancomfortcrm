@@ -10,11 +10,48 @@ import {
 // Auth Service
 // ==========================================
 
+export interface LoginUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+}
+
 export interface LoginResponse {
-  access_token?: string;
-  token?: string;
-  token_type?: string;
-  user?: Record<string, unknown>;
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user: LoginUser;
+  token?: string; // fallback in case api sends it
+}
+
+import { UserRole } from '../types';
+
+/**
+ * Map backend user role to frontend UserRole.
+ */
+export function mapBackendRole(backendRole?: string): UserRole {
+  const roleLower = (backendRole || '').toLowerCase().trim();
+  if (roleLower === 'admin' || roleLower === 'administrator') {
+    return 'Administrator';
+  }
+  if (roleLower === 'purchasing' || roleLower === 'buyer') {
+    return 'Purchasing';
+  }
+  if (
+    roleLower === 'warehouse' ||
+    roleLower === 'logistic' ||
+    roleLower === 'logistics'
+  ) {
+    return 'Warehouse';
+  }
+  if (roleLower === 'finance' || roleLower === 'accounting') {
+    return 'Finance';
+  }
+  if (roleLower === 'vendor' || roleLower === 'supplier') {
+    return 'Vendor';
+  }
+  return 'Administrator'; // Default fallback
 }
 
 /**
@@ -33,17 +70,29 @@ export async function login(
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
-  // Store the token
+  // Store access token
   const token = data.access_token || data.token;
   if (token) {
     localStorage.setItem('token', token);
+  }
+
+  // Store refresh token
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+
+  // Store user details & mapped role
+  if (data.user) {
+    localStorage.setItem('user', JSON.stringify(data.user));
+    const mappedRole = mapBackendRole(data.user.role);
+    localStorage.setItem('userRole', mappedRole);
   }
 
   return data;
 }
 
 /**
- * Logout — clears stored token, optionally notifies backend.
+ * Logout — clears stored details, optionally notifies backend.
  */
 export async function logout(): Promise<void> {
   try {
@@ -52,6 +101,9 @@ export async function logout(): Promise<void> {
     // Silently fail — clear local state regardless
   }
   localStorage.removeItem('token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('userRole');
   localStorage.removeItem('isAuthenticated');
 }
 
@@ -64,6 +116,14 @@ export async function refreshToken(): Promise<LoginResponse> {
   const token = data.access_token || data.token;
   if (token) {
     localStorage.setItem('token', token);
+  }
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+  if (data.user) {
+    localStorage.setItem('user', JSON.stringify(data.user));
+    const mappedRole = mapBackendRole(data.user.role);
+    localStorage.setItem('userRole', mappedRole);
   }
 
   return data;
