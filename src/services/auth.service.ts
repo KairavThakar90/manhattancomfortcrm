@@ -96,7 +96,8 @@ export async function login(
  */
 export async function logout(): Promise<void> {
   try {
-    await apiClient.post(AUTH_LOGOUT);
+    const refreshToken = localStorage.getItem('refresh_token');
+    await apiClient.post(AUTH_LOGOUT, { refresh_token: refreshToken });
   } catch {
     // Silently fail — clear local state regardless
   }

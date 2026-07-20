@@ -143,7 +143,7 @@ export default function POManagement({
     }
   };
 
-  const [localPageSize, setLocalPageSize] = useState(25);
+  const [localPageSize, setLocalPageSize] = useState(10);
   const pageSize = propPageSize !== undefined ? propPageSize : localPageSize;
   const handlePageSizeChange = (size: number) => {
     if (propOnPageSizeChange) {
