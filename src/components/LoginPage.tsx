@@ -2,19 +2,40 @@ import React, { useState } from 'react';
 import { Layers, Lock, User, ChevronRight, Sparkles } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (username: string, password: string) => void;
+  onLogin: (username: string, password: string, rememberMe: boolean) => void;
   loading?: boolean;
   error?: string;
+  initialUsername?: string;
+  initialRememberMe?: boolean;
 }
 
-export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
-  const [username, setUsername] = useState('');
+export default function LoginPage({
+  onLogin,
+  loading,
+  error,
+  initialUsername = '',
+  initialRememberMe = false,
+}: LoginPageProps) {
+  const [username, setUsername] = useState(initialUsername || '');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(initialRememberMe || false);
+
+  React.useEffect(() => {
+    if (initialUsername) {
+      setUsername(initialUsername);
+    }
+  }, [initialUsername]);
+
+  React.useEffect(() => {
+    if (initialRememberMe) {
+      setRememberMe(initialRememberMe);
+    }
+  }, [initialRememberMe]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (username && password && !loading) {
-      onLogin(username, password);
+      onLogin(username, password, rememberMe);
     }
   };
 
@@ -90,6 +111,8 @@ export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/50 focus:ring-offset-slate-900 cursor-pointer"
               />
               <span className="text-xs text-slate-400 font-medium group-hover:text-slate-300 transition-colors">

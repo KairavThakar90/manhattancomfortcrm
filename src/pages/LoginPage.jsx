@@ -9,15 +9,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Restore the remembered username if present
+  const initialUsername = localStorage.getItem('rememberedUsername') || '';
+  const initialRememberMe = !!initialUsername;
+
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleLogin = async (username, password) => {
+  const handleLogin = async (username, password, rememberMe) => {
     setLoading(true);
     setError('');
     try {
       await login(username, password);
+      if (rememberMe) {
+        localStorage.setItem('rememberedUsername', username);
+      } else {
+        localStorage.removeItem('rememberedUsername');
+      }
       setIsAuthenticated(true);
     } catch (err) {
       setError(err.message || 'An error occurred during login.');
@@ -27,6 +36,12 @@ export default function LoginPage() {
   };
 
   return (
-    <LoginPageComponent onLogin={handleLogin} loading={loading} error={error} />
+    <LoginPageComponent
+      onLogin={handleLogin}
+      loading={loading}
+      error={error}
+      initialUsername={initialUsername}
+      initialRememberMe={initialRememberMe}
+    />
   );
 }
