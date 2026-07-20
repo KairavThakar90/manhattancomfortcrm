@@ -47,10 +47,16 @@ export default function POManagementPage() {
 
   // Lift state for server-side pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   const handleQueryChange = (val) => {
     setSearchQuery(val);
@@ -77,7 +83,7 @@ export default function POManagementPage() {
 
         const params = {
           page: currentPage,
-          page_size: 25,
+          page_size: pageSize,
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
@@ -257,7 +263,14 @@ export default function POManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, searchQuery, statusFilter, vendorFilter, userRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    currentPage,
+    pageSize,
+    searchQuery,
+    statusFilter,
+    vendorFilter,
+    userRole,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch single purchase order details dynamically on selection
   useEffect(() => {
@@ -512,6 +525,8 @@ export default function POManagementPage() {
         onAddAudit={handleAddAudit}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
         totalCount={totalCount}
         searchQuery={searchQuery}
         onSearchChange={handleQueryChange}

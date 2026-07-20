@@ -28,6 +28,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
+import Pagination from './common/Pagination';
 
 interface POManagementProps {
   purchaseOrders: PurchaseOrder[];
@@ -61,6 +62,8 @@ interface POManagementProps {
   onStatusFilterChange?: (val: string) => void;
   vendorFilter?: string;
   onVendorFilterChange?: (val: string) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
 }
 
 export default function POManagement({
@@ -85,6 +88,8 @@ export default function POManagement({
   onStatusFilterChange: propOnStatusFilterChange,
   vendorFilter: propVendorFilter,
   onVendorFilterChange: propOnVendorFilterChange,
+  pageSize: propPageSize,
+  onPageSizeChange: propOnPageSizeChange,
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
 
@@ -138,7 +143,18 @@ export default function POManagement({
     }
   };
 
-  const itemsPerPage = 25;
+  const [localPageSize, setLocalPageSize] = useState(25);
+  const pageSize = propPageSize !== undefined ? propPageSize : localPageSize;
+  const handlePageSizeChange = (size: number) => {
+    if (propOnPageSizeChange) {
+      propOnPageSizeChange(size);
+    } else {
+      setLocalPageSize(size);
+      setLocalCurrentPage(1);
+    }
+  };
+
+  const itemsPerPage = pageSize;
 
   useEffect(() => {
     handlePageChange(1);
@@ -687,7 +703,7 @@ Supply Chain CRM Coordinator`;
                   <th className="px-6 py-4">Vendor</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Ordered / Received Qty</th>
-                  <th className="px-6 py-4">Container ID</th>
+                  {/* <th className="px-6 py-4">Container ID</th> */}
                   <th className="px-6 py-4">Invoice Status</th>
                   <th className="px-6 py-4">Delivery ETA</th>
                   <th className="px-6 py-4 text-center">Actions</th>
@@ -739,11 +755,11 @@ Supply Chain CRM Coordinator`;
                         / {po.receivedQty}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                    {/* <td className="px-6 py-4 text-slate-500 font-mono text-xs">
                       {po.container || (
                         <span className="text-slate-300">Pending</span>
                       )}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4">
                       <span
                         className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border ${
@@ -793,65 +809,17 @@ Supply Chain CRM Coordinator`;
 
           {/* Pagination Footer */}
           {filteredPOs.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-500 font-medium text-xs select-none">
-              <div>
-                Showing{' '}
-                <span className="text-slate-800 font-bold">
-                  {startIndex + 1}
-                </span>{' '}
-                to{' '}
-                <span className="text-slate-800 font-bold">
-                  {propTotalCount !== undefined
-                    ? Math.min(startIndex + filteredPOs.length, propTotalCount)
-                    : Math.min(endIndex, filteredPOs.length)}
-                </span>{' '}
-                of{' '}
-                <span className="text-slate-800 font-bold">
-                  {propTotalCount !== undefined
-                    ? propTotalCount
-                    : filteredPOs.length}
-                </span>{' '}
-                entries
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  disabled={normalizedCurrentPage === 1}
-                  onClick={() =>
-                    handlePageChange((prev) => Math.max(prev - 1, 1))
-                  }
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
-                >
-                  Previous
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (pg) => (
-                    <button
-                      key={pg}
-                      type="button"
-                      onClick={() => handlePageChange(pg)}
-                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                        normalizedCurrentPage === pg
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      {pg}
-                    </button>
-                  ),
-                )}
-                <button
-                  type="button"
-                  disabled={normalizedCurrentPage === totalPages}
-                  onClick={() =>
-                    handlePageChange((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={normalizedCurrentPage}
+              totalCount={
+                propTotalCount !== undefined
+                  ? propTotalCount
+                  : filteredPOs.length
+              }
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
           )}
         </div>
       )}
