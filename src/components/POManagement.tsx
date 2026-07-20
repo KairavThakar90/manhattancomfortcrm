@@ -1027,74 +1027,81 @@ Supply Chain CRM Coordinator`;
         </div>
       )}
 
-      {/* PO DETAIL DRAWER PANEL (Rule 2) */}
+      {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO && (
-        <div className="bg-white rounded-xl border border-indigo-100 shadow-sm overflow-hidden animate-fadeIn">
-          {/* Header */}
-          <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
-                {selectedPO.id}
-              </span>
-              <div>
-                <h3 className="text-sm font-bold text-slate-800">
-                  {selectedPO.vendorName}
-                </h3>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                  Sourcing country: Vietnam • Created: {selectedPO.creationDate}
-                </p>
+        <div
+          onClick={() => onSelectPO(null)}
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-scaleUp flex flex-col"
+          >
+            {/* Header */}
+            <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
+              <div className="flex items-center gap-3">
+                <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                  {selectedPO.id}
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {selectedPO.vendorName}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    Sourcing country: Vietnam • Created: {selectedPO.creationDate}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedPO.status === 'Production'
+                      ? 'bg-sky-50 text-sky-700'
+                      : selectedPO.status === 'In Transit'
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : selectedPO.status === 'Port of Entry'
+                          ? 'bg-amber-50 text-amber-700'
+                          : selectedPO.status === 'Delivered'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-rose-50 text-rose-700'
+                  }`}
+                >
+                  {selectedPO.status}
+                </span>
+                <button
+                  onClick={() => onSelectPO(null)}
+                  className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                  selectedPO.status === 'Production'
-                    ? 'bg-sky-50 text-sky-700'
-                    : selectedPO.status === 'In Transit'
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : selectedPO.status === 'Port of Entry'
-                        ? 'bg-amber-50 text-amber-700'
-                        : selectedPO.status === 'Delivered'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-rose-50 text-rose-700'
-                }`}
-              >
-                {selectedPO.status}
-              </span>
-              <button
-                onClick={() => onSelectPO(null)}
-                className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            {/* Tab Selection inside Modal */}
+            <div className="flex border-b border-slate-100 bg-slate-50/50 sticky top-[69px] z-20">
+              {(['details', 'comments', 'ocr', 'emails'] as const).map(
+                (section) => (
+                  <button
+                    key={section}
+                    onClick={() => setActiveDrawerSection(section)}
+                    className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
+                      activeDrawerSection === section
+                        ? 'border-indigo-600 text-indigo-600 bg-white'
+                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {section === 'ocr'
+                      ? 'OCR Invoice Reader'
+                      : section === 'emails'
+                        ? 'Email History'
+                        : section}
+                  </button>
+                ),
+              )}
             </div>
-          </div>
 
-          {/* Tab Selection inside Drawer */}
-          <div className="flex border-b border-slate-100 bg-slate-50/50">
-            {(['details', 'comments', 'ocr', 'emails'] as const).map(
-              (section) => (
-                <button
-                  key={section}
-                  onClick={() => setActiveDrawerSection(section)}
-                  className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
-                    activeDrawerSection === section
-                      ? 'border-indigo-600 text-indigo-600 bg-white'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {section === 'ocr'
-                    ? 'OCR Invoice Reader'
-                    : section === 'emails'
-                      ? 'Email History'
-                      : section}
-                </button>
-              ),
-            )}
-          </div>
-
-          <div className="p-6">
+            <div className="p-6">
             {/* TAB: DETAILS */}
             {activeDrawerSection === 'details' && (
               <div className="space-y-6">
@@ -1613,6 +1620,7 @@ Supply Chain CRM Coordinator`;
             )}
           </div>
         </div>
+      </div>
       )}
 
       {/* MODAL: CREATE PURCHASE ORDER FORM (Rule 2) */}
