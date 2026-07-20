@@ -30,6 +30,7 @@ import {
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
+import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 
 interface POManagementProps {
   loading?: boolean;
@@ -679,18 +680,15 @@ Supply Chain CRM Coordinator`;
           </select>
 
           {userRole !== 'Vendor' && (
-            <select
-              value={vendorFilter}
-              onChange={(e) => setVendorFilter(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700"
-            >
-              <option value="all">All Vendors</option>
-              {vendors.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
+            <div className="w-40">
+              <VendorInfiniteDropdown
+                value={vendorFilter}
+                onChange={setVendorFilter}
+                showAllOption={true}
+                placeholder="All Vendors"
+                className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+              />
+            </div>
           )}
         </div>
       </div>
@@ -1573,19 +1571,12 @@ Supply Chain CRM Coordinator`;
                 <label className="text-xs font-semibold text-slate-600 block mb-1">
                   Target Manufacturing Vendor
                 </label>
-                <select
+                <VendorInfiniteDropdown
                   value={newPO.vendorId}
-                  onChange={(e) => setNewPO.vendorId(e.target.value)}
+                  onChange={(val) => setNewPO.vendorId(val)}
+                  placeholder="-- Choose Vendor --"
                   className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800"
-                  required
-                >
-                  <option value="">-- Choose Vendor --</option>
-                  {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name} ({v.country})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
