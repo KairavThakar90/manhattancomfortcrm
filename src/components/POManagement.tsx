@@ -823,7 +823,7 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 overflow-y-auto min-h-0 pb-4 relative">
+        <div className="flex-1 min-h-0 relative flex flex-col">
           {loading && (
             <LoadingOverlay
               message="Please wait a moment..."
