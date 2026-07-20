@@ -1,9 +1,5 @@
 import apiClient from './api';
-import {
-  BOARDS_LIST,
-  BOARDS_BY_ID,
-  BOARDS_UPDATE,
-} from '../utils/endpoints';
+import { BOARDS_LIST, BOARDS_BY_ID, BOARDS_UPDATE } from '../utils/endpoints';
 
 // ==========================================
 // Board / Kanban Service

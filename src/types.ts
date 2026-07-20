@@ -13,6 +13,7 @@ export interface POItem {
   sku: string;
   name: string;
   qty: number;
+  receivedQty?: number;
   unitPrice: number;
 }
 
@@ -25,6 +26,7 @@ export interface InvoiceDetails {
 
 export interface PurchaseOrder {
   id: string; // PO-10025
+  uuid?: string;
   vendorId: string;
   vendorName: string;
   status: POShippingStatus;

@@ -1,8 +1,5 @@
 import apiClient from './api';
-import {
-  DASHBOARD_STATS,
-  DASHBOARD_SUMMARY,
-} from '../utils/endpoints';
+import { DASHBOARD_STATS, DASHBOARD_SUMMARY } from '../utils/endpoints';
 
 // ==========================================
 // Dashboard Service

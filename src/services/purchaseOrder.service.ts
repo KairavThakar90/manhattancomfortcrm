@@ -53,9 +53,7 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
 }
 
 /** Fetch a single purchase order by ID */
-export async function getPurchaseOrderById(
-  id: string,
-): Promise<PurchaseOrder> {
+export async function getPurchaseOrderById(id: string): Promise<PurchaseOrder> {
   const { data } = await apiClient.get<PurchaseOrder>(PO_BY_ID(id));
   return data;
 }
@@ -82,10 +80,7 @@ export async function patchPurchaseOrder(
   id: string,
   payload: Partial<UpdatePOPayload>,
 ): Promise<PurchaseOrder> {
-  const { data } = await apiClient.patch<PurchaseOrder>(
-    PO_UPDATE(id),
-    payload,
-  );
+  const { data } = await apiClient.patch<PurchaseOrder>(PO_UPDATE(id), payload);
   return data;
 }
 

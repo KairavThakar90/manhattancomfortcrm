@@ -730,39 +730,53 @@ Supply Chain CRM Coordinator`;
           {filteredPOs.length > 0 && (
             <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-500 font-medium text-xs select-none">
               <div>
-                Showing <span className="text-slate-800 font-bold">{startIndex + 1}</span> to{' '}
+                Showing{' '}
+                <span className="text-slate-800 font-bold">
+                  {startIndex + 1}
+                </span>{' '}
+                to{' '}
                 <span className="text-slate-800 font-bold">
                   {Math.min(endIndex, filteredPOs.length)}
                 </span>{' '}
-                of <span className="text-slate-800 font-bold">{filteredPOs.length}</span> entries
+                of{' '}
+                <span className="text-slate-800 font-bold">
+                  {filteredPOs.length}
+                </span>{' '}
+                entries
               </div>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   disabled={normalizedCurrentPage === 1}
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
-                  <button
-                    key={pg}
-                    type="button"
-                    onClick={() => setCurrentPage(pg)}
-                    className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                      normalizedCurrentPage === pg
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                    }`}
-                  >
-                    {pg}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pg) => (
+                    <button
+                      key={pg}
+                      type="button"
+                      onClick={() => setCurrentPage(pg)}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                        normalizedCurrentPage === pg
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                      }`}
+                    >
+                      {pg}
+                    </button>
+                  ),
+                )}
                 <button
                   type="button"
                   disabled={normalizedCurrentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
                 >
                   Next
@@ -1137,27 +1151,69 @@ Supply Chain CRM Coordinator`;
                     </div>
 
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                      <h5 className="text-xs font-bold text-slate-700 mb-2">
-                        Item Specifications Included
+                      <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                        Item Specifications (Products)
                       </h5>
-                      <div className="space-y-2">
-                        {selectedPO.items.map((item) => (
-                          <div
-                            key={item.sku}
-                            className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none"
-                          >
-                            <span className="text-slate-500 font-mono">
-                              {item.sku} •{' '}
-                              <strong className="text-slate-700 font-sans">
-                                {item.name}
-                              </strong>
-                            </span>
-                            <span className="font-mono text-slate-800 font-semibold">
-                              {item.qty} units • ${item.unitPrice.toFixed(2)} /
-                              ea
-                            </span>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto rounded-lg border border-slate-100 bg-white">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px]">
+                              <th className="px-3 py-2">SKU</th>
+                              <th className="px-3 py-2">Product Name</th>
+                              <th className="px-3 py-2 text-right">
+                                Ordered Qty
+                              </th>
+                              <th className="px-3 py-2 text-right">
+                                Received Qty
+                              </th>
+                              <th className="px-3 py-2 text-right">
+                                Unit Price
+                              </th>
+                              <th className="px-3 py-2 text-right">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-700">
+                            {selectedPO.items && selectedPO.items.length > 0 ? (
+                              selectedPO.items.map((item) => (
+                                <tr
+                                  key={item.sku}
+                                  className="hover:bg-slate-50/50 transition"
+                                >
+                                  <td className="px-3 py-2 font-mono font-bold text-slate-500 whitespace-nowrap">
+                                    {item.sku}
+                                  </td>
+                                  <td className="px-3 py-2 font-medium text-slate-800 break-words max-w-[150px]">
+                                    {item.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium">
+                                    {item.qty.toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
+                                    {(item.receivedQty !== undefined
+                                      ? item.receivedQty
+                                      : 0
+                                    ).toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-medium">
+                                    ${item.unitPrice.toFixed(2)}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
+                                    ${(item.qty * item.unitPrice).toFixed(2)}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td
+                                  colSpan={5}
+                                  className="px-3 py-6 text-center text-slate-400 italic"
+                                >
+                                  No items specified for this purchase order.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>

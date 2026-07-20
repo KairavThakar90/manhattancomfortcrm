@@ -72,10 +72,7 @@ export async function patchProject(
   id: string,
   payload: Partial<UpdateProjectPayload>,
 ): Promise<Project> {
-  const { data } = await apiClient.patch<Project>(
-    PROJECTS_UPDATE(id),
-    payload,
-  );
+  const { data } = await apiClient.patch<Project>(PROJECTS_UPDATE(id), payload);
   return data;
 }
 

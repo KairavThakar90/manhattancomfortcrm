@@ -110,7 +110,9 @@ export default function LoginPage({ onLogin, loading, error }: LoginPageProps) {
             className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{loading ? 'Authenticating...' : 'Access Portal'}</span>
-            {!loading && <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />}
+            {!loading && (
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            )}
           </button>
         </form>
       </div>

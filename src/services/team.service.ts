@@ -1,9 +1,5 @@
 import apiClient from './api';
-import {
-  TEAMS_LIST,
-  TEAMS_BY_ID,
-  TEAMS_MEMBERS,
-} from '../utils/endpoints';
+import { TEAMS_LIST, TEAMS_BY_ID, TEAMS_MEMBERS } from '../utils/endpoints';
 
 // ==========================================
 // Team Service

@@ -5,6 +5,7 @@ import {
   getPurchaseOrders,
   createPurchaseOrder,
   patchPurchaseOrder,
+  getPurchaseOrderById,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -140,6 +141,10 @@ export default function POManagementPage() {
                       item.qty_ordered !== undefined
                         ? item.qty_ordered
                         : item.qty || 0,
+                    receivedQty:
+                      item.qty_received !== undefined
+                        ? item.qty_received
+                        : item.receivedQty || 0,
                     unitPrice:
                       item.unit_price !== undefined
                         ? item.unit_price
@@ -171,6 +176,98 @@ export default function POManagementPage() {
       cancelled = true;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch single purchase order details dynamically on selection
+  useEffect(() => {
+    if (!selectedPOId) return;
+
+    // Find the current PO in context to find its database UUID
+    const currentPO = purchaseOrders.find(
+      (p) => p.id === selectedPOId || p.uuid === selectedPOId,
+    );
+    if (!currentPO) return;
+
+    const dbId = currentPO.uuid || selectedPOId;
+    let cancelled = false;
+
+    async function fetchDetailedPO() {
+      try {
+        const poData = await getPurchaseOrderById(dbId);
+        if (!cancelled && poData) {
+          const vendor = vendors.find((v) => v.id === poData.vendor_id);
+          const vendorName =
+            vendor?.name ||
+            STATIC_VENDOR_MAP[poData.vendor_id] ||
+            poData.vendor_name ||
+            'N/A';
+
+          const orderedQty = poData.items
+            ? poData.items.reduce(
+                (sum, item) => sum + (item.qty_ordered || 0),
+                0,
+              )
+            : 0;
+          const receivedQty = poData.items
+            ? poData.items.reduce(
+                (sum, item) => sum + (item.qty_received || 0),
+                0,
+              )
+            : 0;
+
+          let status = 'Production';
+          if (poData.status_label) {
+            status = poData.status_label;
+          } else if (poData.status) {
+            status = poData.status;
+          }
+
+          const eta = poData.expected_delivery_date
+            ? poData.expected_delivery_date.split('T')[0]
+            : poData.eta || 'N/A';
+
+          const updatedPO = {
+            ...currentPO,
+            vendorName,
+            orderedQty,
+            receivedQty,
+            status,
+            eta,
+            items: poData.items
+              ? poData.items.map((item) => ({
+                  sku: item.sku || 'N/A',
+                  name: item.product_name || item.name || 'N/A',
+                  qty:
+                    item.qty_ordered !== undefined
+                      ? item.qty_ordered
+                      : item.qty || 0,
+                  receivedQty:
+                    item.qty_received !== undefined
+                      ? item.qty_received
+                      : item.receivedQty || 0,
+                  unitPrice:
+                    item.unit_price !== undefined
+                      ? item.unit_price
+                      : item.unitPrice || 0,
+                }))
+              : currentPO.items || [],
+          };
+
+          const updatedList = purchaseOrders.map((p) =>
+            p.id === currentPO.id ? updatedPO : p,
+          );
+          handleUpdatePOs(updatedList);
+        }
+      } catch (err) {
+        console.error('Failed to load detailed PO items from API:', err);
+      }
+    }
+
+    fetchDetailedPO();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPOId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Loading state
   if (loading && purchaseOrders.length === 0) {

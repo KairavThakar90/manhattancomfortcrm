@@ -110,7 +110,8 @@ export const REPORTS_EXPORT = '/reports/export';
 // Notification Endpoints
 // ------------------------------------------
 export const NOTIFICATIONS_LIST = '/notifications';
-export const NOTIFICATIONS_MARK_READ = (id: string) => `/notifications/${id}/read`;
+export const NOTIFICATIONS_MARK_READ = (id: string) =>
+  `/notifications/${id}/read`;
 export const NOTIFICATIONS_MARK_ALL_READ = '/notifications/read-all';
 
 // ------------------------------------------

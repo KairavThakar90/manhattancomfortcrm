@@ -1,5 +1,10 @@
 import apiClient from './api';
-import { AUTH_LOGIN, AUTH_LOGOUT, AUTH_ME, AUTH_REFRESH } from '../utils/endpoints';
+import {
+  AUTH_LOGIN,
+  AUTH_LOGOUT,
+  AUTH_ME,
+  AUTH_REFRESH,
+} from '../utils/endpoints';
 
 // ==========================================
 // Auth Service
