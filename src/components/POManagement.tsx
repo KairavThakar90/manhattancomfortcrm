@@ -573,9 +573,9 @@ Supply Chain CRM Coordinator`;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Tab Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4 flex-shrink-0">
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
           <button
             onClick={() => setActiveSubTab('grid')}
@@ -645,7 +645,7 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 flex-shrink-0">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
@@ -694,19 +694,21 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 1: MASTER GRID VIEW */}
       {activeSubTab === 'grid' && (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0">
+          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
-                  <th className="px-6 py-4">PO Number</th>
-                  <th className="px-6 py-4">Vendor</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Ordered / Received Qty</th>
-                  {/* <th className="px-6 py-4">Container ID</th> */}
-                  <th className="px-6 py-4">Invoice Status</th>
-                  <th className="px-6 py-4">Delivery ETA</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10">
+                  <th className="px-6 py-4 bg-slate-50">PO Number</th>
+                  <th className="px-6 py-4 bg-slate-50">Vendor</th>
+                  <th className="px-6 py-4 bg-slate-50">Status</th>
+                  <th className="px-6 py-4 bg-slate-50">
+                    Ordered / Received Qty
+                  </th>
+                  {/* <th className="px-6 py-4 bg-slate-50">Container ID</th> */}
+                  <th className="px-6 py-4 bg-slate-50">Invoice Status</th>
+                  <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
+                  <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -826,7 +828,7 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
           {(
             [
               'Materials',
@@ -953,7 +955,7 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 3: SHIPMENT CALENDAR */}
       {activeSubTab === 'calendar' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs">
+        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs flex-1 overflow-y-auto min-h-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-display font-bold text-slate-900 text-sm">
@@ -1035,10 +1037,10 @@ Supply Chain CRM Coordinator`;
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-scaleUp flex flex-col"
+            className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-5xl w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp"
           >
             {/* Header */}
-            <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between sticky top-0 z-20">
+            <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
               <div className="flex items-center gap-3">
                 <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
                   {selectedPO.id}
@@ -1048,7 +1050,8 @@ Supply Chain CRM Coordinator`;
                     {selectedPO.vendorName}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Sourcing country: Vietnam • Created: {selectedPO.creationDate}
+                    Sourcing country: Vietnam • Created:{' '}
+                    {selectedPO.creationDate}
                   </p>
                 </div>
               </div>
@@ -1079,7 +1082,7 @@ Supply Chain CRM Coordinator`;
             </div>
 
             {/* Tab Selection inside Modal */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50 sticky top-[69px] z-20">
+            <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
               {(['details', 'comments', 'ocr', 'emails'] as const).map(
                 (section) => (
                   <button
@@ -1101,526 +1104,537 @@ Supply Chain CRM Coordinator`;
               )}
             </div>
 
-            <div className="p-6">
-            {/* TAB: DETAILS */}
-            {activeDrawerSection === 'details' && (
-              <div className="space-y-6">
-                {/* Visual Production Timeline */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
-                    Production Stage Timeline
-                  </h4>
-                  <div className="flex items-center justify-between relative">
-                    <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
-                    {[
-                      'Materials',
-                      'Assembly',
-                      'Quality Check',
-                      'Packaging',
-                      'Ready to Ship',
-                    ].map((stage, idx, arr) => {
-                      const currentIdx = arr.indexOf(
-                        selectedPO.productionStage,
-                      );
-                      const isCompleted = idx < currentIdx;
-                      const isActive = idx === currentIdx;
+            <div className="p-6 flex-1 overflow-y-auto">
+              {/* TAB: DETAILS */}
+              {activeDrawerSection === 'details' && (
+                <div className="space-y-6">
+                  {/* Visual Production Timeline */}
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h4 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                      Production Stage Timeline
+                    </h4>
+                    <div className="flex items-center justify-between relative">
+                      <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
+                      {[
+                        'Materials',
+                        'Assembly',
+                        'Quality Check',
+                        'Packaging',
+                        'Ready to Ship',
+                      ].map((stage, idx, arr) => {
+                        const currentIdx = arr.indexOf(
+                          selectedPO.productionStage,
+                        );
+                        const isCompleted = idx < currentIdx;
+                        const isActive = idx === currentIdx;
 
-                      return (
-                        <div
-                          key={stage}
-                          className="flex flex-col items-center relative z-10 w-16 text-center"
-                        >
+                        return (
                           <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition ${
-                              isCompleted
-                                ? 'bg-emerald-500 text-white'
-                                : isActive
-                                  ? 'bg-indigo-600 text-white animate-pulse'
-                                  : 'bg-white border-2 border-slate-200 text-slate-400'
-                            }`}
+                            key={stage}
+                            className="flex flex-col items-center relative z-10 w-16 text-center"
                           >
-                            {isCompleted ? (
-                              <Check className="h-4 w-4" />
-                            ) : (
-                              idx + 1
-                            )}
+                            <div
+                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition ${
+                                isCompleted
+                                  ? 'bg-emerald-500 text-white'
+                                  : isActive
+                                    ? 'bg-indigo-600 text-white animate-pulse'
+                                    : 'bg-white border-2 border-slate-200 text-slate-400'
+                              }`}
+                            >
+                              {isCompleted ? (
+                                <Check className="h-4 w-4" />
+                              ) : (
+                                idx + 1
+                              )}
+                            </div>
+                            <span
+                              className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}
+                            >
+                              {stage}
+                            </span>
                           </div>
-                          <span
-                            className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}
-                          >
-                            {stage}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Stats Panel */}
-                  <div className="space-y-3 md:col-span-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">
-                          Ordered Quantity
-                        </span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">
-                          {selectedPO.orderedQty} units
-                        </strong>
-                      </div>
-                      <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">
-                          Received Quantity
-                        </span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">
-                          {selectedPO.receivedQty} units
-                        </strong>
-                      </div>
-                      <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">
-                          Container ID
-                        </span>
-                        <strong className="text-sm font-bold text-indigo-700 font-mono">
-                          {selectedPO.container || 'Awaiting Vessel Booking'}
-                        </strong>
-                      </div>
-                      <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                        <span className="text-[10px] text-slate-400 font-medium block">
-                          Delivery ETA
-                        </span>
-                        <strong className="text-sm font-bold text-slate-800 font-mono">
-                          {selectedPO.eta}
-                        </strong>
-                      </div>
+                        );
+                      })}
                     </div>
+                  </div>
 
-                    <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                      <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
-                        Item Specifications (Products)
-                      </h5>
-                      <div className="overflow-x-auto rounded-lg border border-slate-100 bg-white">
-                        <table className="w-full text-left text-xs border-collapse">
-                          <thead>
-                            <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px]">
-                              <th className="px-3 py-2">SKU</th>
-                              <th className="px-3 py-2">Product Name</th>
-                              <th className="px-3 py-2 text-right">
-                                Ordered Qty
-                              </th>
-                              <th className="px-3 py-2 text-right">
-                                Received Qty
-                              </th>
-                              <th className="px-3 py-2 text-right">
-                                Unit Price
-                              </th>
-                              <th className="px-3 py-2 text-right">Total</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 text-slate-700">
-                            {selectedPO.items && selectedPO.items.length > 0 ? (
-                              selectedPO.items.map((item) => (
-                                <tr
-                                  key={item.sku}
-                                  className="hover:bg-slate-50/50 transition"
-                                >
-                                  <td className="px-3 py-2 font-mono font-bold text-slate-500 whitespace-nowrap">
-                                    {item.sku}
-                                  </td>
-                                  <td className="px-3 py-2 font-medium text-slate-800 break-words max-w-[150px]">
-                                    {item.name}
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium">
-                                    {item.qty.toLocaleString()}
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
-                                    {(item.receivedQty !== undefined
-                                      ? item.receivedQty
-                                      : 0
-                                    ).toLocaleString()}
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-mono font-medium">
-                                    ${item.unitPrice.toFixed(2)}
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
-                                    ${(item.qty * item.unitPrice).toFixed(2)}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
+                    <div className="space-y-3 md:col-span-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Ordered Quantity
+                          </span>
+                          <strong className="text-sm font-bold text-slate-800 font-mono">
+                            {selectedPO.orderedQty} units
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Received Quantity
+                          </span>
+                          <strong className="text-sm font-bold text-slate-800 font-mono">
+                            {selectedPO.receivedQty} units
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Container ID
+                          </span>
+                          <strong className="text-sm font-bold text-indigo-700 font-mono">
+                            {selectedPO.container || 'Awaiting Vessel Booking'}
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Delivery ETA
+                          </span>
+                          <strong className="text-sm font-bold text-slate-800 font-mono">
+                            {selectedPO.eta}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                        <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                          Item Specifications (Products)
+                        </h5>
+                        <div className="overflow-x-auto overflow-y-auto max-h-[295px] rounded-lg border border-slate-100 bg-white">
+                          <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10">
+                                <th className="px-3 py-2 bg-slate-50">SKU</th>
+                                <th className="px-3 py-2 bg-slate-50">
+                                  Product Name
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-right">
+                                  Ordered Qty
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-right">
+                                  Received Qty
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-right">
+                                  Unit Price
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-right">
+                                  Total
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-700">
+                              {selectedPO.items &&
+                              selectedPO.items.length > 0 ? (
+                                selectedPO.items.map((item) => (
+                                  <tr
+                                    key={item.sku}
+                                    className="hover:bg-slate-50/50 transition"
+                                  >
+                                    <td className="px-3 py-2 font-mono font-bold text-slate-500 whitespace-nowrap">
+                                      {item.sku}
+                                    </td>
+                                    <td className="px-3 py-2 font-medium text-slate-800 break-words max-w-[150px]">
+                                      {item.name}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono font-medium">
+                                      {item.qty.toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
+                                      {(item.receivedQty !== undefined
+                                        ? item.receivedQty
+                                        : 0
+                                      ).toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono font-medium">
+                                      ${item.unitPrice.toFixed(2)}
+                                    </td>
+                                    <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
+                                      ${(item.qty * item.unitPrice).toFixed(2)}
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td
+                                    colSpan={5}
+                                    className="px-3 py-6 text-center text-slate-400 italic"
+                                  >
+                                    No items specified for this purchase order.
                                   </td>
                                 </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td
-                                  colSpan={5}
-                                  className="px-3 py-6 text-center text-slate-400 italic"
-                                >
-                                  No items specified for this purchase order.
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Multi-stage Approval Workflows (Rule 17) */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Internal Approval Status
-                    </h4>
-
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                            selectedPO.invoiceStatus === 'Approved'
-                              ? 'bg-indigo-600 border-indigo-600'
-                              : 'bg-white border-slate-300'
-                          }`}
-                        >
-                          <Check className="h-3 w-3" />
-                        </div>
-                        <div>
-                          <h5 className="text-xs font-semibold text-slate-800">
-                            Purchasing Sign-off
-                          </h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Sourcing validation & specification sheet check.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                            selectedPO.invoiceStatus === 'Approved'
-                              ? 'bg-indigo-600 border-indigo-600'
-                              : 'bg-white border-slate-300'
-                          }`}
-                        >
-                          <Check className="h-3 w-3" />
-                        </div>
-                        <div>
-                          <h5 className="text-xs font-semibold text-slate-800">
-                            Finance Release
-                          </h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            LC Credit Approval & invoice validations matching.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
-                            selectedPO.receivedQty === selectedPO.orderedQty &&
-                            selectedPO.orderedQty > 0
-                              ? 'bg-indigo-600 border-indigo-600'
-                              : 'bg-white border-slate-300'
-                          }`}
-                        >
-                          <Check className="h-3 w-3" />
-                        </div>
-                        <div>
-                          <h5 className="text-xs font-semibold text-slate-800">
-                            Warehouse Acceptance
-                          </h5>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Fulfillment count matches specifications.
-                          </p>
+                              )}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     </div>
 
-                    {userRole === 'Administrator' &&
-                      selectedPO.invoiceStatus === 'Uploaded' && (
-                        <button
-                          onClick={() => {
-                            const updated = {
-                              ...selectedPO,
-                              invoiceStatus: 'Approved' as const,
-                            };
-                            onUpdatePO(updated);
-                            onAddActivity(
-                              `Approved invoice for ${selectedPO.id}`,
-                              'PO Updated',
-                            );
-                          }}
-                          className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          <span>Approve Finance Invoice</span>
-                        </button>
-                      )}
-                  </div>
-                </div>
-              </div>
-            )}
+                    {/* Multi-stage Approval Workflows (Rule 17) - Temporarily hidden per user request */}
+                    {false && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+                        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Internal Approval Status
+                        </h4>
 
-            {/* TAB: COMMENTS DISCUSSION ENGINE */}
-            {activeDrawerSection === 'comments' && (
-              <div className="space-y-4">
-                <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-2">
-                  {selectedPOComments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900">
-                            {comment.user}
-                          </span>
-                          <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
-                            {comment.role}
-                          </span>
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                                selectedPO.invoiceStatus === 'Approved'
+                                  ? 'bg-indigo-600 border-indigo-600'
+                                  : 'bg-white border-slate-300'
+                              }`}
+                            >
+                              <Check className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-slate-800">
+                                Purchasing Sign-off
+                              </h5>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                Sourcing validation & specification sheet check.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                                selectedPO.invoiceStatus === 'Approved'
+                                  ? 'bg-indigo-600 border-indigo-600'
+                                  : 'bg-white border-slate-300'
+                              }`}
+                            >
+                              <Check className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-slate-800">
+                                Finance Release
+                              </h5>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                LC Credit Approval & invoice validations
+                                matching.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-0.5 h-4 w-4 rounded-md border flex items-center justify-center text-white ${
+                                selectedPO.receivedQty ===
+                                  selectedPO.orderedQty &&
+                                selectedPO.orderedQty > 0
+                                  ? 'bg-indigo-600 border-indigo-600'
+                                  : 'bg-white border-slate-300'
+                              }`}
+                            >
+                              <Check className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-slate-800">
+                                Warehouse Acceptance
+                              </h5>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                Fulfillment count matches specifications.
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {comment.timestamp}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-700 leading-relaxed">
-                        {comment.message}
-                      </p>
-                    </div>
-                  ))}
-                  {selectedPOComments.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-6">
-                      No discussions started yet. Begin the thread below.
-                    </p>
-                  )}
-                </div>
 
-                <form
-                  onSubmit={handlePostComment}
-                  className="flex gap-2 border-t border-slate-100 pt-3"
-                >
-                  <input
-                    type="text"
-                    placeholder="Ask Emily (Warehouse) or Michael (Finance) for details..."
-                    value={newCommentText}
-                    onChange={(e) => setNewCommentText(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
-                  >
-                    <Send className="h-3 w-3" />
-                    <span>Comment</span>
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* TAB: OCR INVOICE READER */}
-            {activeDrawerSection === 'ocr' && (
-              <div className="space-y-6">
-                <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                  <h4 className="text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-indigo-600" />
-                    <span>AI-Powered OCR Invoice Analyzer</span>
-                  </h4>
-                  <p className="text-[11px] text-indigo-800 leading-relaxed">
-                    Upload a raw PDF invoice from the manufacturer. Aerocrm will
-                    automatically parse details like billing quantities, unit
-                    prices, and vendor info, matching them against this Purchase
-                    Order to prevent discrepancies.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Drop area */}
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-indigo-400 transition cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept=".pdf,.png,.jpg"
-                      onChange={handleSimulatedPdfUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                    <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                    <span className="text-xs font-bold text-slate-700">
-                      Drag & drop or Click to browse
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-1">
-                      Supports PDF, PNG, JPEG up to 10MB
-                    </span>
-                  </div>
-
-                  {/* OCR results panel */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
-                    <div>
-                      <h5 className="text-xs font-bold text-slate-700 mb-2 uppercase">
-                        Extraction Audit Details
-                      </h5>
-                      {isUploadingOCR ? (
-                        <div className="space-y-2 animate-pulse py-4">
-                          <div className="h-3 bg-slate-200 rounded-sm w-3/4" />
-                          <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
-                        </div>
-                      ) : selectedPO.invoiceDetails ? (
-                        <div className="space-y-3 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">Invoice Ref:</span>
-                            <span className="font-mono font-bold text-slate-800">
-                              {selectedPO.invoiceDetails.invoiceNumber}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">
-                              Extracted Amount:
-                            </span>
-                            <span className="font-mono font-bold text-slate-800">
-                              $
-                              {selectedPO.invoiceDetails.amount.toLocaleString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">
-                              OCR Timestamp:
-                            </span>
-                            <span className="font-mono text-slate-600">
-                              {selectedPO.invoiceDetails.date}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-2">
-                            <span className="text-slate-500 font-semibold">
-                              Integrity Check:
-                            </span>
-                            <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px]">
+                        {userRole === 'Administrator' &&
+                          selectedPO.invoiceStatus === 'Uploaded' && (
+                            <button
+                              onClick={() => {
+                                const updated = {
+                                  ...selectedPO,
+                                  invoiceStatus: 'Approved' as const,
+                                };
+                                onUpdatePO(updated);
+                                onAddActivity(
+                                  `Approved invoice for ${selectedPO.id}`,
+                                  'PO Updated',
+                                );
+                              }}
+                              className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5"
+                            >
                               <CheckCircle className="h-3.5 w-3.5" />
-                              <span>100% Matches PO Items</span>
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400 italic py-6">
-                          No invoice parsed yet. Upload an invoice to trigger
-                          OCR analysis.
-                        </p>
-                      )}
-                    </div>
-
-                    {ocrSuccessMsg && (
-                      <div className="mt-2 text-[10px] text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-100 font-mono leading-tight">
-                        {ocrSuccessMsg}
+                              <span>Approve Finance Invoice</span>
+                            </button>
+                          )}
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* TAB: EMAIL HISTORY & AI GENERATOR */}
-            {activeDrawerSection === 'emails' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700">
-                      Connected Vendor Email Engagement Logs
+              {/* TAB: COMMENTS DISCUSSION ENGINE */}
+              {activeDrawerSection === 'comments' && (
+                <div className="space-y-4">
+                  <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-2">
+                    {selectedPOComments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900">
+                              {comment.user}
+                            </span>
+                            <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
+                              {comment.role}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {comment.timestamp}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed">
+                          {comment.message}
+                        </p>
+                      </div>
+                    ))}
+                    {selectedPOComments.length === 0 && (
+                      <p className="text-xs text-slate-400 italic text-center py-6">
+                        No discussions started yet. Begin the thread below.
+                      </p>
+                    )}
+                  </div>
+
+                  <form
+                    onSubmit={handlePostComment}
+                    className="flex gap-2 border-t border-slate-100 pt-3"
+                  >
+                    <input
+                      type="text"
+                      placeholder="Ask Emily (Warehouse) or Michael (Finance) for details..."
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                    >
+                      <Send className="h-3 w-3" />
+                      <span>Comment</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB: OCR INVOICE READER */}
+              {activeDrawerSection === 'ocr' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                    <h4 className="text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-indigo-600" />
+                      <span>AI-Powered OCR Invoice Analyzer</span>
                     </h4>
-                    <p className="text-[10px] text-slate-400">
-                      Track delivered outreach, opens, and replies directly
-                      inside PO context.
+                    <p className="text-[11px] text-indigo-800 leading-relaxed">
+                      Upload a raw PDF invoice from the manufacturer. Aerocrm
+                      will automatically parse details like billing quantities,
+                      unit prices, and vendor info, matching them against this
+                      Purchase Order to prevent discrepancies.
                     </p>
                   </div>
 
-                  <button
-                    onClick={generateAIFollowUp}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
-                    disabled={isGeneratingEmail}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>
-                      {isGeneratingEmail
-                        ? 'Writing...'
-                        : 'Generate AI Follow-up'}
-                    </span>
-                  </button>
-                </div>
-
-                {/* AI Email draft output preview */}
-                {aiEmailGenerated && (
-                  <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
-                        <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                        <span>Prepared AI Sourcing Template</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Drop area */}
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-indigo-400 transition cursor-pointer relative">
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg"
+                        onChange={handleSimulatedPdfUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                      <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                      <span className="text-xs font-bold text-slate-700">
+                        Drag & drop or Click to browse
                       </span>
-                      <button
-                        onClick={() => setAiEmailGenerated(null)}
-                        className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      <span className="text-[10px] text-slate-400 mt-1">
+                        Supports PDF, PNG, JPEG up to 10MB
+                      </span>
                     </div>
 
-                    <textarea
-                      value={aiEmailGenerated}
-                      onChange={(e) => setAiEmailGenerated(e.target.value)}
-                      rows={8}
-                      className="w-full bg-white p-3 text-xs border border-slate-200 rounded-lg font-mono leading-relaxed focus:outline-hidden"
-                    />
-
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setAiEmailGenerated(null)}
-                        className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md text-xs font-medium"
-                      >
-                        Discard Draft
-                      </button>
-                      <button
-                        onClick={handleSendAIEmail}
-                        className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
-                      >
-                        <Send className="h-3 w-3" />
-                        <span>Send to {selectedPO.vendorName}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Local PO outreach table */}
-                <div className="space-y-3">
-                  {selectedPOEmails.map((email) => (
-                    <div
-                      key={email.id}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-1">
-                        <h5 className="font-semibold text-slate-800">
-                          {email.subject}
+                    {/* OCR results panel */}
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                      <div>
+                        <h5 className="text-xs font-bold text-slate-700 mb-2 uppercase">
+                          Extraction Audit Details
                         </h5>
-                        <p className="text-[10px] text-slate-400 font-mono">
-                          Sent: {email.sentAt} • Status:{' '}
-                          <strong className="text-indigo-600">
-                            {email.status}
-                          </strong>
-                        </p>
-                      </div>
-
-                      <div className="text-right space-y-1">
-                        <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">
-                          Opens: {email.openCount}
-                        </span>
-                        {email.repliedAt && (
-                          <p className="text-[9px] text-emerald-600 font-semibold font-mono">
-                            Replied: {email.repliedAt.split(' ')[1]}
+                        {isUploadingOCR ? (
+                          <div className="space-y-2 animate-pulse py-4">
+                            <div className="h-3 bg-slate-200 rounded-sm w-3/4" />
+                            <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
+                          </div>
+                        ) : selectedPO.invoiceDetails ? (
+                          <div className="space-y-3 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">
+                                Invoice Ref:
+                              </span>
+                              <span className="font-mono font-bold text-slate-800">
+                                {selectedPO.invoiceDetails.invoiceNumber}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">
+                                Extracted Amount:
+                              </span>
+                              <span className="font-mono font-bold text-slate-800">
+                                $
+                                {selectedPO.invoiceDetails.amount.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">
+                                OCR Timestamp:
+                              </span>
+                              <span className="font-mono text-slate-600">
+                                {selectedPO.invoiceDetails.date}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-2">
+                              <span className="text-slate-500 font-semibold">
+                                Integrity Check:
+                              </span>
+                              <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px]">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                <span>100% Matches PO Items</span>
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic py-6">
+                            No invoice parsed yet. Upload an invoice to trigger
+                            OCR analysis.
                           </p>
                         )}
                       </div>
+
+                      {ocrSuccessMsg && (
+                        <div className="mt-2 text-[10px] text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-100 font-mono leading-tight">
+                          {ocrSuccessMsg}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {selectedPOEmails.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-4">
-                      No emails have been logged for this Purchase Order.
-                    </p>
-                  )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* TAB: EMAIL HISTORY & AI GENERATOR */}
+              {activeDrawerSection === 'emails' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700">
+                        Connected Vendor Email Engagement Logs
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Track delivered outreach, opens, and replies directly
+                        inside PO context.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={generateAIFollowUp}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
+                      disabled={isGeneratingEmail}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>
+                        {isGeneratingEmail
+                          ? 'Writing...'
+                          : 'Generate AI Follow-up'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* AI Email draft output preview */}
+                  {aiEmailGenerated && (
+                    <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                          <span>Prepared AI Sourcing Template</span>
+                        </span>
+                        <button
+                          onClick={() => setAiEmailGenerated(null)}
+                          className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <textarea
+                        value={aiEmailGenerated}
+                        onChange={(e) => setAiEmailGenerated(e.target.value)}
+                        rows={8}
+                        className="w-full bg-white p-3 text-xs border border-slate-200 rounded-lg font-mono leading-relaxed focus:outline-hidden"
+                      />
+
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setAiEmailGenerated(null)}
+                          className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md text-xs font-medium"
+                        >
+                          Discard Draft
+                        </button>
+                        <button
+                          onClick={handleSendAIEmail}
+                          className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
+                        >
+                          <Send className="h-3 w-3" />
+                          <span>Send to {selectedPO.vendorName}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Local PO outreach table */}
+                  <div className="space-y-3">
+                    {selectedPOEmails.map((email) => (
+                      <div
+                        key={email.id}
+                        className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                      >
+                        <div className="space-y-1">
+                          <h5 className="font-semibold text-slate-800">
+                            {email.subject}
+                          </h5>
+                          <p className="text-[10px] text-slate-400 font-mono">
+                            Sent: {email.sentAt} • Status:{' '}
+                            <strong className="text-indigo-600">
+                              {email.status}
+                            </strong>
+                          </p>
+                        </div>
+
+                        <div className="text-right space-y-1">
+                          <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">
+                            Opens: {email.openCount}
+                          </span>
+                          {email.repliedAt && (
+                            <p className="text-[9px] text-emerald-600 font-semibold font-mono">
+                              Replied: {email.repliedAt.split(' ')[1]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {selectedPOEmails.length === 0 && (
+                      <p className="text-xs text-slate-400 italic text-center py-4">
+                        No emails have been logged for this Purchase Order.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       {/* MODAL: CREATE PURCHASE ORDER FORM (Rule 2) */}

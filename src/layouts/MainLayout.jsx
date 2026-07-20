@@ -327,7 +327,9 @@ export default function MainLayout() {
         </header>
 
         {/* INTERNAL VIEWPORT PORTAL */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div
+          className={`flex-1 p-6 min-h-0 ${location.pathname === '/purchase-orders' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}
+        >
           <Outlet />
         </div>
       </main>

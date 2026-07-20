@@ -30,7 +30,9 @@ export default function LoginPage({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    username && password && !loading ? onLogin(username, password, rememberMe) : null;
+    username && password && !loading
+      ? onLogin(username, password, rememberMe)
+      : null;
   };
 
   return (
