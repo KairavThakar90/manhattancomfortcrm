@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Search,
   Filter,
@@ -54,7 +55,7 @@ interface POManagementProps {
 }
 
 export default function POManagement({
-  purchaseOrders,
+  purchaseOrders: propPurchaseOrders,
   vendors,
   comments,
   emails,
@@ -67,6 +68,13 @@ export default function POManagement({
   onAddActivity,
   onAddAudit,
 }: POManagementProps) {
+  const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
+
+  console.log('reduxPOs', reduxPOs);
+
+  const purchaseOrders =
+    reduxPOs && reduxPOs.length > 0 ? reduxPOs : propPurchaseOrders;
+
   // Navigation inside PO module
   const [activeSubTab, setActiveSubTab] = useState<
     'grid' | 'kanban' | 'calendar'

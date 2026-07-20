@@ -1,4 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { useDispatch } from 'react-redux';
+import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import { CRMStore } from '../data';
 import {
   UserRole,
@@ -16,6 +18,7 @@ import {
 export const CRMContext = createContext<any>(null);
 
 export const CRMProvider = ({ children }: { children: ReactNode }) => {
+  const dispatch = useDispatch();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('isAuthenticated') === 'true';
   });
@@ -37,7 +40,9 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
 
   useEffect(() => {
-    setPurchaseOrders(CRMStore.getPurchaseOrders());
+    const list = CRMStore.getPurchaseOrders();
+    setPurchaseOrders(list);
+    dispatch(setPurchaseOrdersList(list));
     setVendors(CRMStore.getVendors());
     setEmailLogs(CRMStore.getEmails());
     setComments(CRMStore.getComments());
@@ -46,11 +51,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     setActivityLogs(CRMStore.getActivities());
     setAuditLogs(CRMStore.getAudits());
     setSyncLogs(CRMStore.getSyncs());
-  }, []);
+  }, [dispatch]);
 
   const handleUpdatePOs = (newPOs: PurchaseOrder[]) => {
     setPurchaseOrders(newPOs);
     CRMStore.setPurchaseOrders(newPOs);
+    dispatch(setPurchaseOrdersList(newPOs));
   };
 
   const handleUpdateVendors = (updatedVendor: Vendor) => {

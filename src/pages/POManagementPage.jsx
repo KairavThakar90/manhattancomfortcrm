@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import POManagement from '../components/POManagement';
 import { useCRM } from '../hooks/useCRM';
 import {
@@ -9,14 +11,22 @@ import {
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
+const DB_VENDOR_ID_MAP = {
+  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'VEND-001',
+  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'VEND-002',
+  'e38f467c-f483-46a4-8172-bce5bb862247': 'VEND-003',
+  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'VEND-004',
+};
+
 const STATIC_VENDOR_MAP = {
-  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'N/A',
-  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'N/A',
-  'e38f467c-f483-46a4-8172-bce5bb862247': 'N/A',
-  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'N/A',
+  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'ABC Manufacturing',
+  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'XYZ Logistics & Textiles',
+  'e38f467c-f483-46a4-8172-bce5bb862247': 'Global Tech Sourcing',
+  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'Shenzhen Electronics Corp',
 };
 
 export default function POManagementPage() {
+  const dispatch = useDispatch();
   const {
     purchaseOrders,
     vendors,
@@ -43,12 +53,17 @@ export default function POManagementPage() {
       setLoading(true);
       setError('');
       try {
+        console.log('API FETCH getPurchaseOrders: starting fetch...');
         const poData = await getPurchaseOrders();
+        console.log('API FETCH getPurchaseOrders: success! Result:', poData);
 
         if (!cancelled && Array.isArray(poData)) {
-          // Normalize PO data to match the UI scheme
           const mappedPOs = poData.map((po) => {
-            const vendor = vendors.find((v) => v.id === po.vendor_id);
+            const frontVendorId =
+              DB_VENDOR_ID_MAP[po.vendor_id] || po.vendor_id || 'N/A';
+            const vendor = vendors.find(
+              (v) => v.id === frontVendorId || v.id === po.vendor_id,
+            );
             const vendorName =
               vendor?.name ||
               STATIC_VENDOR_MAP[po.vendor_id] ||
@@ -93,7 +108,7 @@ export default function POManagementPage() {
             }
 
             // Parse dates
-            const eta = po.expected_delivery_date
+            let eta = po.expected_delivery_date
               ? po.expected_delivery_date.split('T')[0]
               : po.eta || 'N/A';
 
@@ -101,10 +116,16 @@ export default function POManagementPage() {
               ? po.created_on.split('T')[0]
               : po.creationDate || 'N/A';
 
+            if (eta === 'N/A' && creationDate !== 'N/A') {
+              const d = new Date(creationDate);
+              d.setDate(d.getDate() + 30);
+              eta = d.toISOString().split('T')[0];
+            }
+
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
               uuid: po.id, // Stash real UUID for API calls
-              vendorId: po.vendor_id || po.vendorId || 'N/A',
+              vendorId: frontVendorId,
               vendorName,
               status,
               orderedQty,
@@ -158,8 +179,10 @@ export default function POManagementPage() {
           });
 
           handleUpdatePOs(mappedPOs);
+          dispatch(setPurchaseOrdersList(mappedPOs));
         }
       } catch (err) {
+        console.error('API FETCH getPurchaseOrders: failed!', err);
         if (!cancelled) {
           setError(err.message || 'Failed to fetch database records.');
         }
@@ -194,7 +217,11 @@ export default function POManagementPage() {
       try {
         const poData = await getPurchaseOrderById(dbId);
         if (!cancelled && poData) {
-          const vendor = vendors.find((v) => v.id === poData.vendor_id);
+          const frontVendorId =
+            DB_VENDOR_ID_MAP[poData.vendor_id] || poData.vendor_id || 'N/A';
+          const vendor = vendors.find(
+            (v) => v.id === frontVendorId || v.id === poData.vendor_id,
+          );
           const vendorName =
             vendor?.name ||
             STATIC_VENDOR_MAP[poData.vendor_id] ||
@@ -221,9 +248,19 @@ export default function POManagementPage() {
             status = poData.status;
           }
 
-          const eta = poData.expected_delivery_date
+          let eta = poData.expected_delivery_date
             ? poData.expected_delivery_date.split('T')[0]
             : poData.eta || 'N/A';
+
+          const creationDate = poData.created_on
+            ? poData.created_on.split('T')[0]
+            : poData.creationDate || 'N/A';
+
+          if (eta === 'N/A' && creationDate !== 'N/A') {
+            const d = new Date(creationDate);
+            d.setDate(d.getDate() + 30);
+            eta = d.toISOString().split('T')[0];
+          }
 
           const updatedPO = {
             ...currentPO,
@@ -256,6 +293,7 @@ export default function POManagementPage() {
             p.id === currentPO.id ? updatedPO : p,
           );
           handleUpdatePOs(updatedList);
+          dispatch(setPurchaseOrdersList(updatedList));
         }
       } catch (err) {
         console.error('Failed to load detailed PO items from API:', err);
@@ -315,6 +353,7 @@ export default function POManagementPage() {
       // Optimistic update of local state
       const updated = purchaseOrders.map((p) => (p.id === po.id ? po : p));
       handleUpdatePOs(updated);
+      dispatch(setPurchaseOrdersList(updated));
 
       try {
         await patchPurchaseOrder(dbId, {
@@ -342,6 +381,7 @@ export default function POManagementPage() {
 
       const updated = [...purchaseOrders, newLocalPO];
       handleUpdatePOs(updated);
+      dispatch(setPurchaseOrdersList(updated));
 
       try {
         const response = await createPurchaseOrder({
@@ -367,6 +407,7 @@ export default function POManagementPage() {
             p.id === mockId ? mappedCreated : p,
           );
           handleUpdatePOs(finalUpdated);
+          dispatch(setPurchaseOrdersList(finalUpdated));
         }
       } catch (err) {
         console.error('Failed to sync new PO to backend API:', err);

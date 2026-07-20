@@ -1,9 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
+import purchaseOrderReducer from './purchaseOrderSlice';
 
 export const store = configureStore({
   reducer: {
-    // Add your slices here
-    // auth: authReducer,
-    // dashboard: dashboardReducer,
+    purchaseOrders: purchaseOrderReducer,
   },
 });
