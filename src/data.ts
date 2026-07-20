@@ -473,8 +473,12 @@ export class CRMStore {
 
   static getPurchaseOrders(): PurchaseOrder[] {
     const pos = this.get<PurchaseOrder[]>('purchase_orders', INITIAL_POS);
-    // Remove only legacy mock POs (ID starting with PO-100 without a uuid)
-    return pos.filter((po) => !(po.id.startsWith('PO-100') && !po.uuid));
+    // Remove all dummy/mock POs that do not have a uuid
+    const filtered = pos.filter((po) => !!po.uuid);
+    if (filtered.length !== pos.length) {
+      this.setPurchaseOrders(filtered);
+    }
+    return filtered;
   }
 
   static setPurchaseOrders(pos: PurchaseOrder[]): void {

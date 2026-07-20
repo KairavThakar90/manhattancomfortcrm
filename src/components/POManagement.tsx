@@ -52,6 +52,15 @@ interface POManagementProps {
     browser?: string,
     ip?: string,
   ) => void;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  totalCount?: number;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (val: string) => void;
+  vendorFilter?: string;
+  onVendorFilterChange?: (val: string) => void;
 }
 
 export default function POManagement({
@@ -67,6 +76,15 @@ export default function POManagement({
   onAddEmailLog,
   onAddActivity,
   onAddAudit,
+  currentPage: propCurrentPage,
+  onPageChange: propOnPageChange,
+  totalCount: propTotalCount,
+  searchQuery: propSearchQuery,
+  onSearchChange: propOnSearchChange,
+  statusFilter: propStatusFilter,
+  onStatusFilterChange: propOnStatusFilterChange,
+  vendorFilter: propVendorFilter,
+  onVendorFilterChange: propOnVendorFilterChange,
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
 
@@ -81,16 +99,49 @@ export default function POManagement({
   >('grid');
 
   // Filtering and Searching
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [vendorFilter, setVendorFilter] = useState<string>('all');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
+  const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
+
+  const searchQuery =
+    propSearchQuery !== undefined ? propSearchQuery : localSearchQuery;
+  const setSearchQuery = propOnSearchChange
+    ? propOnSearchChange
+    : setLocalSearchQuery;
+
+  const statusFilter =
+    propStatusFilter !== undefined ? propStatusFilter : localStatusFilter;
+  const setStatusFilter = propOnStatusFilterChange
+    ? propOnStatusFilterChange
+    : setLocalStatusFilter;
+
+  const vendorFilter =
+    propVendorFilter !== undefined ? propVendorFilter : localVendorFilter;
+  const setVendorFilter = propOnVendorFilterChange
+    ? propOnVendorFilterChange
+    : setLocalVendorFilter;
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const currentPage =
+    propCurrentPage !== undefined ? propCurrentPage : localCurrentPage;
+
+  const handlePageChange = (newPage: number | ((prev: number) => number)) => {
+    if (propOnPageChange) {
+      if (typeof newPage === 'function') {
+        propOnPageChange(newPage(currentPage));
+      } else {
+        propOnPageChange(newPage);
+      }
+    } else {
+      setLocalCurrentPage(newPage);
+    }
+  };
+
   const itemsPerPage = 25;
 
   useEffect(() => {
-    setCurrentPage(1);
+    handlePageChange(1);
   }, [searchQuery, statusFilter, vendorFilter]);
 
   // PO creation state
@@ -160,11 +211,17 @@ export default function POManagement({
   });
 
   // Pagination calculation
-  const totalPages = Math.ceil(filteredPOs.length / itemsPerPage) || 1;
+  const totalPages =
+    propTotalCount !== undefined
+      ? Math.ceil(propTotalCount / itemsPerPage) || 1
+      : Math.ceil(filteredPOs.length / itemsPerPage) || 1;
   const normalizedCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (normalizedCurrentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedPOs = filteredPOs.slice(startIndex, endIndex);
+  const paginatedPOs =
+    propTotalCount !== undefined
+      ? filteredPOs
+      : filteredPOs.slice(startIndex, endIndex);
 
   const selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
 
@@ -744,11 +801,15 @@ Supply Chain CRM Coordinator`;
                 </span>{' '}
                 to{' '}
                 <span className="text-slate-800 font-bold">
-                  {Math.min(endIndex, filteredPOs.length)}
+                  {propTotalCount !== undefined
+                    ? Math.min(startIndex + filteredPOs.length, propTotalCount)
+                    : Math.min(endIndex, filteredPOs.length)}
                 </span>{' '}
                 of{' '}
                 <span className="text-slate-800 font-bold">
-                  {filteredPOs.length}
+                  {propTotalCount !== undefined
+                    ? propTotalCount
+                    : filteredPOs.length}
                 </span>{' '}
                 entries
               </div>
@@ -757,7 +818,7 @@ Supply Chain CRM Coordinator`;
                   type="button"
                   disabled={normalizedCurrentPage === 1}
                   onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    handlePageChange((prev) => Math.max(prev - 1, 1))
                   }
                   className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
                 >
@@ -768,7 +829,7 @@ Supply Chain CRM Coordinator`;
                     <button
                       key={pg}
                       type="button"
-                      onClick={() => setCurrentPage(pg)}
+                      onClick={() => handlePageChange(pg)}
                       className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
                         normalizedCurrentPage === pg
                           ? 'bg-indigo-600 text-white shadow-sm'
@@ -783,7 +844,7 @@ Supply Chain CRM Coordinator`;
                   type="button"
                   disabled={normalizedCurrentPage === totalPages}
                   onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    handlePageChange((prev) => Math.min(prev + 1, totalPages))
                   }
                   className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
                 >

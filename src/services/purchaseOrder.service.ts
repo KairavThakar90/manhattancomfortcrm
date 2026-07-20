@@ -46,9 +46,20 @@ export interface UpdatePOPayload {
   [key: string]: unknown;
 }
 
+export interface PaginatedResult<T> {
+  total: number;
+  page: number;
+  page_size: number;
+  results: T[];
+  [key: string]: any;
+}
+
 /** Fetch all purchase orders */
-export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
-  const { data } = await apiClient.get<PurchaseOrder[]>(PO_LIST);
+export async function getPurchaseOrders(params?: {
+  page?: number;
+  page_size?: number;
+}): Promise<PurchaseOrder[] | PaginatedResult<PurchaseOrder> | any> {
+  const { data } = await apiClient.get<any>(PO_LIST, { params });
   return data;
 }
 

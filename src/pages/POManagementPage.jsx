@@ -45,7 +45,27 @@ export default function POManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch purchase orders from API on mount
+  // Lift state for server-side pagination and filtering
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
+  const [totalCount, setTotalCount] = useState(0);
+
+  const handleQueryChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+  const handleStatusFilterChange = (val) => {
+    setStatusFilter(val);
+    setCurrentPage(1);
+  };
+  const handleVendorFilterChange = (val) => {
+    setVendorFilter(val);
+    setCurrentPage(1);
+  };
+
+  // Fetch purchase orders from API when page, search, or filters change
   useEffect(() => {
     let cancelled = false;
 
@@ -54,17 +74,56 @@ export default function POManagementPage() {
       setError('');
       try {
         console.log('API FETCH getPurchaseOrders: starting fetch...');
-        const poData = await getPurchaseOrders();
+
+        const params = {
+          page: currentPage,
+          page_size: 25,
+        };
+        if (searchQuery) params.search = searchQuery;
+        if (statusFilter !== 'all') params.status = statusFilter;
+
+        if (vendorFilter !== 'all') {
+          // Find the database UUID that maps to this front ID (e.g. 'VEND-001')
+          const dbVendorId =
+            Object.keys(DB_VENDOR_ID_MAP).find(
+              (key) => DB_VENDOR_ID_MAP[key] === vendorFilter,
+            ) || vendorFilter;
+          params.vendor_id = dbVendorId;
+        }
+
+        if (userRole === 'Vendor') {
+          params.vendor_id = '3f5551f4-186e-467d-9340-5b74d8e7b766'; // ABC Manufacturing default
+        }
+
+        const poData = await getPurchaseOrders(params);
         console.log('API FETCH getPurchaseOrders: success! Result:', poData);
 
-        if (!cancelled && Array.isArray(poData)) {
-          const mappedPOs = poData.map((po) => {
+        let results = [];
+        if (poData) {
+          if (Array.isArray(poData)) {
+            results = poData;
+            setTotalCount(poData.length);
+          } else if (poData.results && Array.isArray(poData.results)) {
+            results = poData.results;
+            if (typeof poData.total === 'number') {
+              setTotalCount(poData.total);
+            } else if (poData.meta?.total !== undefined) {
+              setTotalCount(poData.meta.total);
+            } else {
+              setTotalCount(poData.results.length);
+            }
+          }
+        }
+
+        if (!cancelled) {
+          const mappedPOs = results.map((po) => {
             const frontVendorId =
               DB_VENDOR_ID_MAP[po.vendor_id] || po.vendor_id || 'N/A';
             const vendor = vendors.find(
               (v) => v.id === frontVendorId || v.id === po.vendor_id,
             );
             const vendorName =
+              po.vendor?.name ||
               vendor?.name ||
               STATIC_VENDOR_MAP[po.vendor_id] ||
               po.vendor_name ||
@@ -198,7 +257,7 @@ export default function POManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentPage, searchQuery, statusFilter, vendorFilter, userRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch single purchase order details dynamically on selection
   useEffect(() => {
@@ -223,6 +282,7 @@ export default function POManagementPage() {
             (v) => v.id === frontVendorId || v.id === poData.vendor_id,
           );
           const vendorName =
+            poData.vendor?.name ||
             vendor?.name ||
             STATIC_VENDOR_MAP[poData.vendor_id] ||
             poData.vendor_name ||
@@ -383,9 +443,14 @@ export default function POManagementPage() {
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
 
+      const dbVendorId =
+        Object.keys(DB_VENDOR_ID_MAP).find(
+          (key) => DB_VENDOR_ID_MAP[key] === po.vendorId,
+        ) || po.vendorId;
+
       try {
         const response = await createPurchaseOrder({
-          vendor_id: po.vendorId,
+          vendor_id: dbVendorId,
           expected_delivery_date: po.eta,
           items: po.items?.map((it) => ({
             sku: it.sku,
@@ -445,6 +510,15 @@ export default function POManagementPage() {
         onAddEmailLog={handleAddEmailLog}
         onAddActivity={handleAddActivity}
         onAddAudit={handleAddAudit}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        totalCount={totalCount}
+        searchQuery={searchQuery}
+        onSearchChange={handleQueryChange}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        vendorFilter={vendorFilter}
+        onVendorFilterChange={handleVendorFilterChange}
       />
     </>
   );
