@@ -43,6 +43,7 @@ export default function POManagementPage() {
   } = useCRM();
 
   const [loading, setLoading] = useState(true);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [error, setError] = useState('');
 
   // Lift state for server-side pagination and filtering
@@ -71,6 +72,7 @@ export default function POManagementPage() {
     setCurrentPage(1);
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   // Fetch purchase orders from API when page, search, or filters change
   useEffect(() => {
     let cancelled = false;
@@ -196,10 +198,7 @@ export default function POManagementPage() {
               orderedQty,
               receivedQty,
               container: po.container || 'N/A',
-              invoiceStatus:
-                po.invoice_date || po.invoiceStatus === 'Uploaded'
-                  ? 'Uploaded'
-                  : 'Pending',
+              invoiceStatus: po.invoice_status || po.invoiceStatus || null,
               invoiceFile:
                 po.invoiceFile ||
                 (po.invoice_date
@@ -254,6 +253,7 @@ export default function POManagementPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+          setHasLoadedInitial(true);
         }
       }
     }
@@ -270,7 +270,7 @@ export default function POManagementPage() {
     statusFilter,
     vendorFilter,
     userRole,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  ]);
 
   // Fetch single purchase order details dynamically on selection
   useEffect(() => {
@@ -378,10 +378,11 @@ export default function POManagementPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedPOId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedPOId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Loading state
-  if (loading && purchaseOrders.length === 0) {
+  if (loading && !hasLoadedInitial) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
@@ -393,7 +394,7 @@ export default function POManagementPage() {
   }
 
   // Error state (only if no data to show)
-  if (error && purchaseOrders.length === 0) {
+  if (error && !hasLoadedInitial) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="flex items-center gap-2 text-rose-500">

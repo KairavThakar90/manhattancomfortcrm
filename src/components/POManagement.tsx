@@ -716,8 +716,7 @@ Supply Chain CRM Coordinator`;
                 {paginatedPOs.map((po) => (
                   <tr
                     key={po.id}
-                    className={`hover:bg-slate-50/70 transition cursor-pointer ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
-                    onClick={() => onSelectPO(po.id)}
+                    className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
@@ -770,7 +769,7 @@ Supply Chain CRM Coordinator`;
                                 : 'bg-slate-50 border-slate-200 text-slate-500'
                         }`}
                       >
-                        {po.invoiceStatus}
+                        {po.invoiceStatus || 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 font-mono">
@@ -831,208 +830,220 @@ Supply Chain CRM Coordinator`;
               className="bg-slate-50/60"
             />
           )}
-          {(
-            [
-              'Materials',
-              'Assembly',
-              'Quality Check',
-              'Packaging',
-              'Ready to Ship',
-            ] as (typeof purchaseOrders)[0]['productionStage'][]
-          ).map((stage) => {
-            const stagePOs = filteredPOs.filter(
-              (po) => po.productionStage === stage,
-            );
-            return (
-              <div
-                key={stage}
-                className="bg-slate-100/50 p-4 rounded-xl border border-slate-200/50 flex flex-col min-h-[500px]"
-              >
-                <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-                  <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
-                    {stage}
-                  </h4>
-                  <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">
-                    {stagePOs.length}
-                  </span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
+            {(
+              [
+                'Materials',
+                'Assembly',
+                'Quality Check',
+                'Packaging',
+                'Ready to Ship',
+              ] as (typeof purchaseOrders)[0]['productionStage'][]
+            ).map((stage) => {
+              const stagePOs = filteredPOs.filter(
+                (po) => po.productionStage === stage,
+              );
+              return (
+                <div
+                  key={stage}
+                  className="bg-slate-100/50 p-4 rounded-xl border border-slate-200/50 flex flex-col min-h-[500px]"
+                >
+                  <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
+                    <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+                      {stage}
+                    </h4>
+                    <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                      {stagePOs.length}
+                    </span>
+                  </div>
 
-                <div className="space-y-3 flex-1 overflow-y-auto">
-                  {stagePOs.map((po) => (
-                    <div
-                      key={po.id}
-                      onClick={() => onSelectPO(po.id)}
-                      className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-2 relative group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold font-mono text-slate-900">
-                          {po.id}
-                        </span>
-                        <span
-                          className={`text-[9px] px-1.5 py-0.5 rounded-full ${
-                            po.status === 'Delayed'
-                              ? 'bg-rose-50 text-rose-600'
-                              : 'bg-slate-100 text-slate-600'
-                          }`}
-                        >
-                          {po.status}
-                        </span>
-                      </div>
-
-                      <h5 className="text-xs font-medium text-slate-800 line-clamp-1">
-                        {po.vendorName}
-                      </h5>
-
-                      <div className="flex justify-between items-center text-[10px] text-slate-500">
-                        <span>
-                          Qty:{' '}
-                          <strong className="text-slate-800">
-                            {po.orderedQty}
-                          </strong>
-                        </span>
-                        <span className="font-mono">
-                          ETA: {po.eta.slice(5)}
-                        </span>
-                      </div>
-
-                      {/* Interactive click-to-move buttons to guarantee cross-iframe compatibility */}
-                      <div className="border-t border-slate-100 pt-2 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="text-[9px] text-indigo-600 font-semibold">
-                          Change Stage:
-                        </span>
-                        <div className="flex gap-1">
-                          {stage !== 'Materials' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const stages: (typeof po.productionStage)[] = [
-                                  'Materials',
-                                  'Assembly',
-                                  'Quality Check',
-                                  'Packaging',
-                                  'Ready to Ship',
-                                ];
-                                const prevIdx = stages.indexOf(stage) - 1;
-                                handleMoveKanban(po, stages[prevIdx]);
-                              }}
-                              className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-sm text-[9px] font-bold"
-                            >
-                              ←
-                            </button>
-                          )}
-                          {stage !== 'Ready to Ship' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const stages: (typeof po.productionStage)[] = [
-                                  'Materials',
-                                  'Assembly',
-                                  'Quality Check',
-                                  'Packaging',
-                                  'Ready to Ship',
-                                ];
-                                const nextIdx = stages.indexOf(stage) + 1;
-                                handleMoveKanban(po, stages[nextIdx]);
-                              }}
-                              className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
-                            >
-                              →
-                            </button>
-                          )}
+                  <div className="space-y-3 flex-1 overflow-y-auto">
+                    {stagePOs.map((po) => (
+                      <div
+                        key={po.id}
+                        onClick={() => onSelectPO(po.id)}
+                        className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-2 relative group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-slate-800">
+                            {po.id}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded-xs text-[9px] font-bold ${
+                              po.status === 'Delayed'
+                                ? 'bg-rose-50 text-rose-700'
+                                : po.status === 'In Transit'
+                                  ? 'bg-indigo-50 text-indigo-700'
+                                  : 'bg-emerald-50 text-emerald-700'
+                            }`}
+                          >
+                            {po.status}
+                          </span>
                         </div>
+
+                        <div>
+                          <p className="text-[11px] font-bold text-slate-700 truncate">
+                            {po.vendorName}
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                            ETA: {po.eta}
+                          </p>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[9px]">
+                          <span className="text-slate-500 font-mono">
+                            Qty:{' '}
+                            <strong className="text-slate-800 font-bold">
+                              {po.orderedQty}
+                            </strong>
+                          </span>
+                          <span className="text-[8px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm font-mono truncate max-w-[70px]">
+                            {po.container || 'No Vessel'}
+                          </span>
+                        </div>
+
+                        {/* Kanban Quick Transition arrows for Admin/Staff */}
+                        {userRole !== 'Vendor' && (
+                          <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition flex gap-1 bg-white pl-1.5 shadow-sm rounded-sm">
+                            {stage !== 'Materials' && (
+                              <button
+                                title="Move Previous Stage"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const stages: (typeof po.productionStage)[] =
+                                    [
+                                      'Materials',
+                                      'Assembly',
+                                      'Quality Check',
+                                      'Packaging',
+                                      'Ready to Ship',
+                                    ];
+                                  const idx = stages.indexOf(stage);
+                                  handleMoveKanban(po, stages[idx - 1]);
+                                }}
+                                className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
+                              >
+                                ←
+                              </button>
+                            )}
+                            {stage !== 'Ready to Ship' && (
+                              <button
+                                title="Move Next Stage"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const stages: (typeof po.productionStage)[] =
+                                    [
+                                      'Materials',
+                                      'Assembly',
+                                      'Quality Check',
+                                      'Packaging',
+                                      'Ready to Ship',
+                                    ];
+                                  const idx = stages.indexOf(stage);
+                                  handleMoveKanban(po, stages[idx + 1]);
+                                }}
+                                className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
+                              >
+                                →
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                  {stagePOs.length === 0 && (
-                    <div className="h-32 rounded-lg border border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-400 italic">
-                      No orders in stage
-                    </div>
-                  )}
+                    ))}
+                    {stagePOs.length === 0 && (
+                      <div className="h-32 rounded-lg border border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-400 italic">
+                        No orders in stage
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* SUB-VIEW 3: SHIPMENT CALENDAR */}
       {activeSubTab === 'calendar' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs flex-1 overflow-y-auto min-h-0 relative">
+        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs flex-1 min-h-0 relative flex flex-col">
           {loading && (
             <LoadingOverlay
               message="Please wait a moment..."
               className="rounded-xl"
             />
           )}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-display font-bold text-slate-900 text-sm">
-                Active Container Arrival Calendar
-              </h3>
-              <p className="text-xs text-slate-500">
-                Visualizing estimated container arrivals for active purchase
-                orders (Schedules for July 2026).
-              </p>
-            </div>
-            <span className="text-xs font-bold text-indigo-600 font-mono">
-              July 2026
-            </span>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs">
-            {/* Days of week */}
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="py-2 text-slate-500 font-semibold">
-                {d}
+          <div className="overflow-y-auto flex-1 min-h-0 pr-1">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-display font-bold text-slate-900 text-sm">
+                  Active Container Arrival Calendar
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Visualizing estimated container arrivals for active purchase
+                  orders (Schedules for July 2026).
+                </p>
               </div>
-            ))}
+              <span className="text-xs font-bold text-indigo-600 font-mono">
+                July 2026
+              </span>
+            </div>
 
-            {/* Empty days prior to July 2026 starting date (July 1st was Wednesday -> 3 empty days) */}
-            {[1, 2, 3].map((n) => (
-              <div
-                key={`empty-${n}`}
-                className="bg-slate-50/50 rounded-lg min-h-[90px] p-1 text-slate-300"
-              ></div>
-            ))}
-
-            {/* Calendar Days */}
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-              const dateStr = `2026-07-${day.toString().padStart(2, '0')}`;
-              const dayPOs = filteredPOs.filter(
-                (po) => po.eta === dateStr && po.container,
-              );
-
-              return (
-                <div
-                  key={day}
-                  className="bg-white border border-slate-100 rounded-lg min-h-[90px] p-1.5 text-left flex flex-col justify-between hover:bg-slate-50/50 transition"
-                >
-                  <span className="text-[10px] font-bold font-mono text-slate-400">
-                    {day}
-                  </span>
-
-                  <div className="space-y-1 mt-1 flex-1 overflow-y-auto">
-                    {dayPOs.map((po) => (
-                      <div
-                        key={po.id}
-                        onClick={() => onSelectPO(po.id)}
-                        className={`text-[9px] p-1 rounded-sm border cursor-pointer leading-tight truncate ${
-                          po.status === 'Delayed'
-                            ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold'
-                            : po.status === 'In Transit'
-                              ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
-                              : 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                        }`}
-                        title={`${po.id}: ${po.vendorName} Container ${po.container}`}
-                      >
-                        <strong className="font-mono">{po.id}</strong> (
-                        {po.container})
-                      </div>
-                    ))}
-                  </div>
+            <div className="grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs">
+              {/* Days of week */}
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                <div key={d} className="py-2 text-slate-500 font-semibold">
+                  {d}
                 </div>
-              );
-            })}
+              ))}
+
+              {/* Empty days prior to July 2026 starting date (July 1st was Wednesday -> 3 empty days) */}
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={`empty-${n}`}
+                  className="bg-slate-50/50 rounded-lg min-h-[90px] p-1 text-slate-300"
+                ></div>
+              ))}
+
+              {/* Calendar Days */}
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                const dateStr = `2026-07-${day.toString().padStart(2, '0')}`;
+                const dayPOs = filteredPOs.filter(
+                  (po) => po.eta === dateStr && po.container,
+                );
+
+                return (
+                  <div
+                    key={day}
+                    className="bg-white border border-slate-100 rounded-lg min-h-[90px] p-1.5 text-left flex flex-col justify-between hover:bg-slate-50/50 transition"
+                  >
+                    <span className="text-[10px] font-bold font-mono text-slate-400">
+                      {day}
+                    </span>
+
+                    <div className="space-y-1 mt-1 flex-1 overflow-y-auto">
+                      {dayPOs.map((po) => (
+                        <div
+                          key={po.id}
+                          onClick={() => onSelectPO(po.id)}
+                          className={`text-[9px] p-1 rounded-sm border cursor-pointer leading-tight truncate ${
+                            po.status === 'Delayed'
+                              ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold'
+                              : po.status === 'In Transit'
+                                ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                                : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                          }`}
+                          title={`${po.id}: ${po.vendorName} Container ${po.container}`}
+                        >
+                          <strong className="font-mono">{po.id}</strong> (
+                          {po.container})
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

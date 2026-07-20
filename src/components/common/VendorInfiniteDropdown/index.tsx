@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import apiClient from '../../../services/api';
+import { useDispatch, useSelector } from 'react-redux';
 import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { fetchVendorsPage, setVendorSearch } from '../../../store/vendorSlice';
 
 const DB_VENDOR_ID_MAP: Record<string, string> = {
   '3f5551f4-186e-467d-9340-5b74d8e7b766': 'VEND-001',
@@ -44,79 +45,40 @@ export default function VendorInfiniteDropdown({
 }: VendorInfiniteDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [vendors, setVendors] = useState<VendorItem[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const dispatch = useDispatch<any>();
+  const vendors = useSelector((state: any) => state.vendors.list) || [];
+  const page = useSelector((state: any) => state.vendors.page) || 1;
+  const loading = useSelector((state: any) => state.vendors.loading) || false;
+  const hasMore = useSelector((state: any) => state.vendors.hasMore) !== false;
+
   useEffect(() => {
     if (isOpen) {
-      setPage(1);
-      setVendors([]);
-      setHasMore(true);
-      fetchData(1, searchTerm);
+      dispatch(setVendorSearch(searchTerm));
+      dispatch(
+        (fetchVendorsPage as any)({
+          page: 1,
+          pageSize: 15,
+          search: searchTerm,
+        }),
+      );
     }
-  }, [isOpen, searchTerm]);
-
-  const fetchData = async (pageNum: number, searchVal: string) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const { data } = await apiClient.get<any>('/vendors', {
-        params: {
-          page: pageNum,
-          page_size: 15,
-          search: searchVal,
-        },
-      });
-
-      let items: VendorItem[] = [];
-      let more = false;
-
-      if (Array.isArray(data)) {
-        const filtered = data
-          .map((v: any) => ({
-            id: v.id,
-            name: v.name,
-            country: v.country,
-          }))
-          .filter((v: VendorItem) =>
-            v.name?.toLowerCase().includes(searchVal.toLowerCase()),
-          );
-        const limit = 15;
-        const start = (pageNum - 1) * limit;
-        const end = start + limit;
-        items = filtered.slice(start, end);
-        more = end < filtered.length;
-      } else if (data && typeof data === 'object') {
-        const results = data.results || data.vendors || [];
-        items = results.map((v: any) => ({
-          id: v.id,
-          name: v.name,
-          country: v.country,
-        }));
-        const total = data.total || results.length;
-        more = pageNum * 15 < total;
-      }
-
-      setVendors((prev) => (pageNum === 1 ? items : [...prev, ...items]));
-      setHasMore(more);
-    } catch (err) {
-      console.error('Error fetching vendors for dropdown:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isOpen, searchTerm, dispatch]);
 
   const handleScroll = () => {
     if (!listRef.current || loading || !hasMore) return;
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
     if (scrollHeight - scrollTop <= clientHeight + 30) {
       const nextPage = page + 1;
-      setPage(nextPage);
-      fetchData(nextPage, searchTerm);
+      dispatch(
+        (fetchVendorsPage as any)({
+          page: nextPage,
+          pageSize: 15,
+          search: searchTerm,
+        }),
+      );
     }
   };
 
