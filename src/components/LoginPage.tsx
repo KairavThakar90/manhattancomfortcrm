@@ -19,6 +19,8 @@ export default function LoginPage({
   const [username, setUsername] = useState(initialUsername || '');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(initialRememberMe || false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   React.useEffect(() => {
     initialUsername ? setUsername(initialUsername) : null;
@@ -30,9 +32,31 @@ export default function LoginPage({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    username && password && !loading
-      ? onLogin(username, password, rememberMe)
-      : null;
+    setEmailError('');
+    setPasswordError('');
+
+    let hasError = false;
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      setEmailError('Please enter a valid email address.');
+      hasError = true;
+    }
+
+    // Password validation (must be at least 6 characters)
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters.');
+      hasError = true;
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    if (username && password && !loading) {
+      onLogin(username, password, rememberMe);
+    }
   };
 
   return (
@@ -57,7 +81,7 @@ export default function LoginPage({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {error ? (
             <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-xl mb-4 text-center">
               {error}
@@ -66,21 +90,29 @@ export default function LoginPage({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
-                Username
+                Email Address
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-400 transition-colors">
                   <User className="h-4.5 w-4.5" />
                 </div>
                 <input
-                  type="text"
+                  type="email"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
                   className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl pl-10 pr-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm font-medium"
-                  placeholder="Enter your username"
+                  placeholder="Enter your email address"
                 />
               </div>
+              {emailError && (
+                <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             <div>
@@ -95,11 +127,19 @@ export default function LoginPage({
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
                   className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl pl-10 pr-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm font-medium"
                   placeholder="••••••••"
                 />
               </div>
+              {passwordError && (
+                <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                  {passwordError}
+                </p>
+              )}
             </div>
           </div>
 
