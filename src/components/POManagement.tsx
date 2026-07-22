@@ -591,6 +591,7 @@ Supply Chain CRM Coordinator`;
             <span>Master Grid View</span>
           </button>
 
+
           <button
             onClick={() => setActiveSubTab('kanban')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
@@ -647,8 +648,9 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 flex-shrink-0">
-        <div className="relative flex-1">
+      <div className={`bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 ${activeSubTab === 'kanban' ? 'justify-end' : 'justify-between'}`}>
+        {activeSubTab !== 'kanban' && (
+          <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -658,6 +660,7 @@ Supply Chain CRM Coordinator`;
             className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
           />
         </div>
+        )}
 
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1">
@@ -819,6 +822,8 @@ Supply Chain CRM Coordinator`;
         </div>
       )}
 
+
+
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
         <div className="flex-1 min-h-0 relative flex flex-col">
@@ -828,18 +833,17 @@ Supply Chain CRM Coordinator`;
               className="bg-slate-50/60"
             />
           )}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
             {(
               [
-                'Materials',
-                'Assembly',
-                'Quality Check',
-                'Packaging',
-                'Ready to Ship',
-              ] as (typeof purchaseOrders)[0]['productionStage'][]
+                '1. New',
+                '2. Invoice Delayed',
+                '3. Delivery Delayed',
+                '4. Remaining Order Items',
+              ] as string[]
             ).map((stage) => {
               const stagePOs = filteredPOs.filter(
-                (po) => po.productionStage === stage,
+                (po) => po.status === stage || (stage === '1. New' && po.status === 'New')
               );
               return (
                 <div
@@ -903,42 +907,40 @@ Supply Chain CRM Coordinator`;
                         {/* Kanban Quick Transition arrows for Admin/Staff */}
                         {userRole !== 'Vendor' && (
                           <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition flex gap-1 bg-white pl-1.5 shadow-sm rounded-sm">
-                            {stage !== 'Materials' && (
+                            {stage !== '1. New' && (
                               <button
                                 title="Move Previous Stage"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const stages: (typeof po.productionStage)[] =
+                                  const stages: string[] =
                                     [
-                                      'Materials',
-                                      'Assembly',
-                                      'Quality Check',
-                                      'Packaging',
-                                      'Ready to Ship',
+                                      '1. New',
+                                      '2. Invoice Delayed',
+                                      '3. Delivery Delayed',
+                                      '4. Remaining Order Items',
                                     ];
                                   const idx = stages.indexOf(stage);
-                                  handleMoveKanban(po, stages[idx - 1]);
+                                  handleMoveKanban(po, stages[idx - 1] as any);
                                 }}
                                 className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
                               >
                                 ←
                               </button>
                             )}
-                            {stage !== 'Ready to Ship' && (
+                            {stage !== '4. Remaining Order Items' && (
                               <button
                                 title="Move Next Stage"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const stages: (typeof po.productionStage)[] =
+                                  const stages: string[] =
                                     [
-                                      'Materials',
-                                      'Assembly',
-                                      'Quality Check',
-                                      'Packaging',
-                                      'Ready to Ship',
+                                      '1. New',
+                                      '2. Invoice Delayed',
+                                      '3. Delivery Delayed',
+                                      '4. Remaining Order Items',
                                     ];
                                   const idx = stages.indexOf(stage);
-                                  handleMoveKanban(po, stages[idx + 1]);
+                                  handleMoveKanban(po, stages[idx + 1] as any);
                                 }}
                                 className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
                               >
