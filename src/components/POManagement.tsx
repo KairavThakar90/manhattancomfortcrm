@@ -601,7 +601,7 @@ Supply Chain CRM Coordinator`;
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
-            <span>Kanban Board Stages</span>
+            <span>Delay Overview</span>
           </button>
 
           <button
@@ -648,7 +648,14 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className={`bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 ${activeSubTab === 'kanban' ? 'justify-end' : 'justify-between'}`}>
+      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
+        {activeSubTab === 'kanban' && (
+          <div className="flex-1">
+            <h3 className="font-display font-bold text-slate-900 text-sm">
+              Purchase Order Overview
+            </h3>
+          </div>
+        )}
         {activeSubTab !== 'kanban' && (
           <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -663,11 +670,11 @@ Supply Chain CRM Coordinator`;
         )}
 
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <Filter className="h-3.5 w-3.5 text-slate-400" />
             <span className="text-xs font-medium text-slate-500">Status:</span>
           </div>
-          {/* <select
+          <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700"
@@ -681,14 +688,20 @@ Supply Chain CRM Coordinator`;
           </select> */}
 
           {userRole !== 'Vendor' && (
-            <div className="w-40">
-              <VendorInfiniteDropdown
-                value={vendorFilter}
-                onChange={setVendorFilter}
-                showAllOption={true}
-                placeholder="All Vendors"
-                className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
-              />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-500">Vendor:</span>
+              </div>
+              <div className="w-40">
+                <VendorInfiniteDropdown
+                  value={vendorFilter}
+                  onChange={setVendorFilter}
+                  showAllOption={true}
+                  placeholder="All Vendors"
+                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -703,11 +716,13 @@ Supply Chain CRM Coordinator`;
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10">
                   <th className="px-6 py-4 bg-slate-50">PO Number</th>
+                    <th className="px-6 py-4 bg-slate-50">Order Id</th>
                   <th className="px-6 py-4 bg-slate-50">Vendor</th>
-                  <th className="px-6 py-4 bg-slate-50">Status</th>
+                  <th className="px-6 py-4 bg-slate-50">PO Items</th>
                   <th className="px-6 py-4 bg-slate-50">
                     Ordered / Received Qty
                   </th>
+                 
                   <th className="px-6 py-4 bg-slate-50">Invoice Status</th>
                   <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
                   <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
@@ -720,6 +735,16 @@ Supply Chain CRM Coordinator`;
                     className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
                   >
                     <td className="px-6 py-4">
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-900 font-bold font-mono text-xs">
+                          {po.id}
+                        </span>
+                        {po.status === 'Delayed' && (
+                          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                        )}
+                      </div>
+                    </td>
+                      <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
                         <span className="text-slate-900 font-bold font-mono text-xs">
                           {po.id}
@@ -1234,6 +1259,9 @@ Supply Chain CRM Coordinator`;
                                 <th className="px-3 py-2 bg-slate-50 text-right">
                                   Received Qty
                                 </th>
+                                 <th className="px-3 py-2 bg-slate-50 text-right">
+                                  Remaining Qty
+                                </th>
                                 <th className="px-3 py-2 bg-slate-50 text-right">
                                   Unit Price
                                 </th>
@@ -1260,6 +1288,12 @@ Supply Chain CRM Coordinator`;
                                       {item.qty.toLocaleString()}
                                     </td>
                                     <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
+                                      {(item.receivedQty !== undefined
+                                        ? item.receivedQty
+                                        : 0
+                                      ).toLocaleString()}
+                                    </td>
+                                     <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
                                       {(item.receivedQty !== undefined
                                         ? item.receivedQty
                                         : 0
