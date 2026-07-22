@@ -603,18 +603,6 @@ Supply Chain CRM Coordinator`;
             <Layers className="h-3.5 w-3.5" />
             <span>Delay Overview</span>
           </button>
-
-          <button
-            onClick={() => setActiveSubTab('calendar')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
-              activeSubTab === 'calendar'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            <span>Shipment Calendar</span>
-          </button>
         </div>
 
         {/* Global actions: Create PO, Import, Export */}
@@ -635,7 +623,7 @@ Supply Chain CRM Coordinator`;
             <span>Export CSV</span>
           </button>
 
-          {userRole !== 'Vendor' && (
+          {/* {userRole !== 'Vendor' && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-1 px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-xs font-medium transition shadow-xs"
@@ -643,7 +631,7 @@ Supply Chain CRM Coordinator`;
               <Plus className="h-3.5 w-3.5" />
               <span>Create Purchase Order</span>
             </button>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -989,89 +977,6 @@ Supply Chain CRM Coordinator`;
         </div>
       )}
 
-      {/* SUB-VIEW 3: SHIPMENT CALENDAR */}
-      {activeSubTab === 'calendar' && (
-        <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-xs flex-1 min-h-0 relative flex flex-col">
-          {loading && (
-            <LoadingOverlay
-              message="Please wait a moment..."
-              className="rounded-xl"
-            />
-          )}
-          <div className="overflow-y-auto flex-1 min-h-0 pr-1">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">
-                  Active Container Arrival Calendar
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Visualizing estimated container arrivals for active purchase
-                  orders (Schedules for July 2026).
-                </p>
-              </div>
-              <span className="text-xs font-bold text-indigo-600 font-mono">
-                July 2026
-              </span>
-            </div>
-
-            <div className="grid grid-cols-7 gap-1 bg-slate-100 p-1 rounded-xl text-center text-xs">
-              {/* Days of week */}
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                <div key={d} className="py-2 text-slate-500 font-semibold">
-                  {d}
-                </div>
-              ))}
-
-              {/* Empty days prior to July 2026 starting date (July 1st was Wednesday -> 3 empty days) */}
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={`empty-${n}`}
-                  className="bg-slate-50/50 rounded-lg min-h-[90px] p-1 text-slate-300"
-                ></div>
-              ))}
-
-              {/* Calendar Days */}
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                const dateStr = `2026-07-${day.toString().padStart(2, '0')}`;
-                const dayPOs = filteredPOs.filter(
-                  (po) => po.eta === dateStr && po.container,
-                );
-
-                return (
-                  <div
-                    key={day}
-                    className="bg-white border border-slate-100 rounded-lg min-h-[90px] p-1.5 text-left flex flex-col justify-between hover:bg-slate-50/50 transition"
-                  >
-                    <span className="text-[10px] font-bold font-mono text-slate-400">
-                      {day}
-                    </span>
-
-                    <div className="space-y-1 mt-1 flex-1 overflow-y-auto">
-                      {dayPOs.map((po) => (
-                        <div
-                          key={po.id}
-                          onClick={() => onSelectPO(po.id)}
-                          className={`text-[9px] p-1 rounded-sm border cursor-pointer leading-tight truncate ${
-                            po.status === 'Delayed'
-                              ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold'
-                              : po.status === 'In Transit'
-                                ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
-                                : 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                          }`}
-                          title={`${po.id}: ${po.vendorName} Container ${po.container}`}
-                        >
-                          <strong className="font-mono">{po.id}</strong> (
-                          {po.container})
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO && (
@@ -1113,7 +1018,7 @@ Supply Chain CRM Coordinator`;
 
             {/* Tab Selection inside Modal */}
             <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
-              {(['details', 'comments', 'ocr', 'emails'] as const).map(
+              {(['details', 'comments', ] as const).map(
                 (section) => (
                   <button
                     key={section}
@@ -1124,11 +1029,7 @@ Supply Chain CRM Coordinator`;
                         : 'border-transparent text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    {section === 'ocr'
-                      ? 'OCR Invoice Reader'
-                      : section === 'emails'
-                        ? 'Email History'
-                        : section}
+                    {section}
                   </button>
                 ),
               )}
@@ -1138,57 +1039,6 @@ Supply Chain CRM Coordinator`;
               {/* TAB: DETAILS */}
               {activeDrawerSection === 'details' && (
                 <div className="space-y-6">
-                  {/* Visual Production Timeline */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <h4 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
-                      Production Stage Timeline
-                    </h4>
-                    <div className="flex items-center justify-between relative">
-                      <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 -translate-y-1/2 z-0" />
-                      {[
-                        'Materials',
-                        'Assembly',
-                        'Quality Check',
-                        'Packaging',
-                        'Ready to Ship',
-                      ].map((stage, idx, arr) => {
-                        const currentIdx = arr.indexOf(
-                          selectedPO.productionStage,
-                        );
-                        const isCompleted = idx < currentIdx;
-                        const isActive = idx === currentIdx;
-
-                        return (
-                          <div
-                            key={stage}
-                            className="flex flex-col items-center relative z-10 w-16 text-center"
-                          >
-                            <div
-                              className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shadow-xs transition ${
-                                isCompleted
-                                  ? 'bg-emerald-500 text-white'
-                                  : isActive
-                                    ? 'bg-indigo-600 text-white animate-pulse'
-                                    : 'bg-white border-2 border-slate-200 text-slate-400'
-                              }`}
-                            >
-                              {isCompleted ? (
-                                <Check className="h-4 w-4" />
-                              ) : (
-                                idx + 1
-                              )}
-                            </div>
-                            <span
-                              className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}
-                            >
-                              {stage}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
                     <div className="space-y-3 md:col-span-3">
@@ -1365,105 +1215,7 @@ Supply Chain CRM Coordinator`;
                 </div>
               )}
 
-              {/* TAB: OCR INVOICE READER */}
-              {activeDrawerSection === 'ocr' && (
-                <div className="space-y-6">
-                  <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                    <h4 className="text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
-                      <Sparkles className="h-4 w-4 text-indigo-600" />
-                      <span>AI-Powered OCR Invoice Analyzer</span>
-                    </h4>
-                    <p className="text-[11px] text-indigo-800 leading-relaxed">
-                      Upload a raw PDF invoice from the manufacturer. Aerocrm
-                      will automatically parse details like billing quantities,
-                      unit prices, and vendor info, matching them against this
-                      Purchase Order to prevent discrepancies.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Drop area */}
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:border-indigo-400 transition cursor-pointer relative">
-                      <input
-                        type="file"
-                        accept=".pdf,.png,.jpg"
-                        onChange={handleSimulatedPdfUpload}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                      <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                      <span className="text-xs font-bold text-slate-700">
-                        Drag & drop or Click to browse
-                      </span>
-                      <span className="text-[10px] text-slate-400 mt-1">
-                        Supports PDF, PNG, JPEG up to 10MB
-                      </span>
-                    </div>
-
-                    {/* OCR results panel */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
-                      <div>
-                        <h5 className="text-xs font-bold text-slate-700 mb-2 uppercase">
-                          Extraction Audit Details
-                        </h5>
-                        {isUploadingOCR ? (
-                          <div className="space-y-2 animate-pulse py-4">
-                            <div className="h-3 bg-slate-200 rounded-sm w-3/4" />
-                            <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
-                          </div>
-                        ) : selectedPO.invoiceDetails ? (
-                          <div className="space-y-3 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">
-                                Invoice Ref:
-                              </span>
-                              <span className="font-mono font-bold text-slate-800">
-                                {selectedPO.invoiceDetails.invoiceNumber}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">
-                                Extracted Amount:
-                              </span>
-                              <span className="font-mono font-bold text-slate-800">
-                                $
-                                {selectedPO.invoiceDetails.amount.toLocaleString()}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">
-                                OCR Timestamp:
-                              </span>
-                              <span className="font-mono text-slate-600">
-                                {selectedPO.invoiceDetails.date}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center border-t border-slate-200 pt-2 mt-2">
-                              <span className="text-slate-500 font-semibold">
-                                Integrity Check:
-                              </span>
-                              <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px]">
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                <span>100% Matches PO Items</span>
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic py-6">
-                            No invoice parsed yet. Upload an invoice to trigger
-                            OCR analysis.
-                          </p>
-                        )}
-                      </div>
-
-                      {ocrSuccessMsg && (
-                        <div className="mt-2 text-[10px] text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-100 font-mono leading-tight">
-                          {ocrSuccessMsg}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+             
 
               {/* TAB: EMAIL HISTORY & AI GENERATOR */}
               {activeDrawerSection === 'emails' && (
