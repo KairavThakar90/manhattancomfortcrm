@@ -1138,21 +1138,7 @@ Supply Chain CRM Coordinator`;
               </div>
 
               <div className="flex items-center gap-2">
-                <span
-                  className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                    selectedPO.status === 'Production'
-                      ? 'bg-sky-50 text-sky-700'
-                      : selectedPO.status === 'In Transit'
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : selectedPO.status === 'Port of Entry'
-                          ? 'bg-amber-50 text-amber-700'
-                          : selectedPO.status === 'Delivered'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-rose-50 text-rose-700'
-                  }`}
-                >
-                  {selectedPO.status}
-                </span>
+                
                 <button
                   onClick={() => onSelectPO(null)}
                   className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
