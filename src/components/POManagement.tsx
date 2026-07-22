@@ -718,12 +718,10 @@ Supply Chain CRM Coordinator`;
                   <th className="px-6 py-4 bg-slate-50">PO Number</th>
                     <th className="px-6 py-4 bg-slate-50">Order Id</th>
                   <th className="px-6 py-4 bg-slate-50">Vendor</th>
-                  <th className="px-6 py-4 bg-slate-50">Status</th>
                   <th className="px-6 py-4 bg-slate-50">PO Items</th>
                   <th className="px-6 py-4 bg-slate-50">
                     Ordered / Received Qty
                   </th>
-                 
                   <th className="px-6 py-4 bg-slate-50">Invoice Status</th>
                   <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
                    <th className="px-6 py-4 bg-slate-50">Container Number</th>
@@ -755,46 +753,11 @@ Supply Chain CRM Coordinator`;
                     <td className="px-6 py-4 text-slate-700 font-medium">
                       {po.vendorName}
                     </td>
+                  
                     <td className="px-6 py-4">
-                      {!po.status || po.status === 'N/A' ? (
-                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-                          N/A
-                        </span>
-                      ) : (
-                        <span
-                          className={`px-2 py-1 rounded-full text-[10px] font-bold ${
-                            po.status === 'Production'
-                              ? 'bg-sky-50 text-sky-700'
-                              : po.status === 'In Transit'
-                                ? 'bg-indigo-50 text-indigo-700'
-                                : po.status === 'Port of Entry'
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : po.status === 'Delivered'
-                                    ? 'bg-emerald-50 text-emerald-700'
-                                    : 'bg-rose-50 text-rose-700'
-                          }`}
-                        >
-                          {po.status}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {po.items?.length > 0 ? (
-                        <div className="flex flex-col">
-                          <span className="text-slate-800 font-medium text-[11px] truncate max-w-[120px]" title={po.items[0].name}>
-                            {po.items[0].name}
-                          </span>
-                          {po.items.length > 1 && (
-                            <span className="text-slate-400 text-[10px] mt-0.5 font-medium">
-                              +{po.items.length - 1} more items
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                         <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
                         N/A
                       </span>
-                      )}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       <span className="font-bold text-slate-800">
