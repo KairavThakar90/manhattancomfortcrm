@@ -99,9 +99,7 @@ export default function POManagement({
 
   console.log('reduxPOs', reduxPOs);
 
-  const purchaseOrders =
-    reduxPOs && reduxPOs.length > 0 ? reduxPOs : propPurchaseOrders;
-
+  const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
   const [activeSubTab, setActiveSubTab] = useState<
     'grid' | 'kanban' | 'calendar'
@@ -333,7 +331,7 @@ export default function POManagement({
             emailCount: 0,
           };
 
-          purchaseOrders.push(po); // push directly through state callback on app level
+          onUpdatePO(po);
           successCount++;
         }
       });

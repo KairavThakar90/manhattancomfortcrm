@@ -149,45 +149,16 @@ export default function POManagementPage() {
               : 0;
 
             // Map status codes or labels to standard UI status:
-            // 'Production' | 'In Transit' | 'Delivered' | 'Delayed'
-            let status = 'Production';
-            if (po.status_label) {
-              status = po.status_label;
-            } else if (po.status) {
-              status = po.status;
-            } else {
-              switch (po.purchase_order_status_code) {
-                case 0:
-                  status = 'Production';
-                  break;
-                case 1:
-                  status = 'In Transit';
-                  break;
-                case 2:
-                  status = 'Delivered';
-                  break;
-                case 3:
-                  status = 'Delayed';
-                  break;
-                default:
-                  status = 'Production';
-              }
-            }
+            let status = po.status_label || 'N/A';
 
             // Parse dates
             let eta = po.expected_delivery_date
               ? po.expected_delivery_date.split('T')[0]
-              : po.eta || 'N/A';
+              : 'N/A';
 
             const creationDate = po.created_on
               ? po.created_on.split('T')[0]
-              : po.creationDate || 'N/A';
-
-            if (eta === 'N/A' && creationDate !== 'N/A') {
-              const d = new Date(creationDate);
-              d.setDate(d.getDate() + 30);
-              eta = d.toISOString().split('T')[0];
-            }
+              : 'N/A';
 
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
@@ -314,26 +285,15 @@ export default function POManagementPage() {
               )
             : 0;
 
-          let status = 'Production';
-          if (poData.status_label) {
-            status = poData.status_label;
-          } else if (poData.status) {
-            status = poData.status;
-          }
+          let status = poData.status_label || 'N/A';
 
           let eta = poData.expected_delivery_date
             ? poData.expected_delivery_date.split('T')[0]
-            : poData.eta || 'N/A';
+            : 'N/A';
 
           const creationDate = poData.created_on
             ? poData.created_on.split('T')[0]
-            : poData.creationDate || 'N/A';
-
-          if (eta === 'N/A' && creationDate !== 'N/A') {
-            const d = new Date(creationDate);
-            d.setDate(d.getDate() + 30);
-            eta = d.toISOString().split('T')[0];
-          }
+            : 'N/A';
 
           const updatedPO = {
             ...currentPO,
