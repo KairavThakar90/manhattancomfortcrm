@@ -664,7 +664,7 @@ Supply Chain CRM Coordinator`;
             <Filter className="h-3.5 w-3.5 text-slate-400" />
             <span className="text-xs font-medium text-slate-500">Status:</span>
           </div>
-          <select
+          {/* <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700"
@@ -675,7 +675,7 @@ Supply Chain CRM Coordinator`;
             <option value="Port of Entry">Port of Entry</option>
             <option value="Delivered">Delivered</option>
             <option value="Delayed">Delayed</option>
-          </select>
+          </select> */}
 
           {userRole !== 'Vendor' && (
             <div className="w-40">
