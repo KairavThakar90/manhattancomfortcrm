@@ -1081,7 +1081,7 @@ Supply Chain CRM Coordinator`;
                         <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
                           Item Specifications (Products)
                         </h5>
-                        <div className="overflow-x-auto overflow-y-auto max-h-[295px] rounded-lg border border-slate-100 bg-white">
+                        <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-lg border border-slate-100 bg-white">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10">
