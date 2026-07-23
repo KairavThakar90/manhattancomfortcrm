@@ -163,12 +163,14 @@ export default function POManagementPage() {
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
               uuid: po.id, // Stash real UUID for API calls
+              orderId: po.order_number || 'N/A',
               vendorId: frontVendorId,
               vendorName,
               status,
               orderedQty,
               receivedQty,
               container: po.container || 'N/A',
+              containerNames: po.container_names || [],
               invoiceStatus: po.invoice_status || po.invoiceStatus || null,
               invoiceFile:
                 po.invoiceFile ||
@@ -186,6 +188,7 @@ export default function POManagementPage() {
                     }
                   : null),
               eta,
+              expected_delivery_date: eta,
               creationDate,
               delayedDays: po.delayedDays || 0,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
@@ -302,6 +305,9 @@ export default function POManagementPage() {
             receivedQty,
             status,
             eta,
+            expected_delivery_date: eta,
+            containerNames:
+              poData.container_names || currentPO.containerNames || [],
             items: poData.items
               ? poData.items.map((item) => ({
                   sku: item.sku || 'N/A',

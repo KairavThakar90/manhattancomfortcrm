@@ -27,16 +27,19 @@ export interface InvoiceDetails {
 export interface PurchaseOrder {
   id: string; // PO-10025
   uuid?: string;
+  orderId?: string;
   vendorId: string;
   vendorName: string;
   status: POShippingStatus;
   orderedQty: number;
   receivedQty: number;
   container: string;
+  containerNames?: string[];
   invoiceStatus: InvoiceStatus;
   invoiceFile: string | null;
   invoiceDetails: InvoiceDetails | null;
   eta: string;
+  expected_delivery_date?: string;
   creationDate: string;
   delayedDays: number;
   skus: string[];

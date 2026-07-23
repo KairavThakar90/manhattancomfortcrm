@@ -733,9 +733,14 @@ Supply Chain CRM Coordinator`;
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {/* Placeholder for missing 'Order Id' data */}
-                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-                        N/A
+                      <span
+                        className={
+                          !po.orderId || po.orderId === 'N/A'
+                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                            : 'text-[11px] font-bold text-slate-700'
+                        }
+                      >
+                        {po.orderId || 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-700 font-medium">
@@ -743,8 +748,15 @@ Supply Chain CRM Coordinator`;
                     </td>
                   
                     <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-                        N/A
+                      <span 
+                        title={po.items && po.items.length > 0 ? po.items.map(item => item.name).join(', ') : 'N/A'}
+                        className={
+                          !po.items || po.items.length === 0
+                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                            : 'text-[11px] font-bold text-slate-700'
+                        }
+                      >
+                        {po.items && po.items.length > 0 ? po.items.length : 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
@@ -772,16 +784,25 @@ Supply Chain CRM Coordinator`;
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 font-mono">
-                      {!po.eta || po.eta === 'N/A' ? (
-                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-                          N/A
-                        </span>
-                      ) : (
-                        po.eta
-                      )}
+                      <span
+                        className={
+                          !po.expected_delivery_date || po.expected_delivery_date === 'N/A'
+                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                            : 'text-[11px] font-bold text-slate-700'
+                        }
+                      >
+                        {po.expected_delivery_date || 'N/A'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 font-mono text-xs">
-                      {!po.container || po.container === 'N/A' ? (
+                      {po.containerNames && po.containerNames.length > 0 ? (
+                        <span 
+                          className="truncate max-w-[150px] inline-block align-bottom" 
+                          title={po.containerNames.join(', ')}
+                        >
+                          {po.containerNames.join(', ')}
+                        </span>
+                      ) : (!po.container || po.container === 'N/A') ? (
                         <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
                           N/A
                         </span>
@@ -999,7 +1020,7 @@ Supply Chain CRM Coordinator`;
                     {selectedPO.vendorName}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Sourcing country: Vietnam • Created:{' '}
+                    Order ID: {selectedPO.orderId || 'N/A'} • Created:{' '}
                     {selectedPO.creationDate}
                   </p>
                 </div>
