@@ -1080,7 +1080,7 @@ Supply Chain CRM Coordinator`;
                             {selectedPO.receivedQty} units
                           </strong>
                         </div>
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                        {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Container IDs
                           </span>
@@ -1097,7 +1097,7 @@ Supply Chain CRM Coordinator`;
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {selectedPO.expected_delivery_date || selectedPO.eta || 'N/A'}
                           </strong>
-                        </div>
+                        </div> */}
                       </div>
 
                       <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
@@ -1128,7 +1128,10 @@ Supply Chain CRM Coordinator`;
                                   Total
                                 </th>
                                 <th className="px-3 py-2 bg-slate-50 text-left">
-                                  Containers
+                                  Container/Items Count
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-left">
+                                  Delivery ETA
                                 </th>
                               </tr>
                             </thead>
@@ -1177,12 +1180,15 @@ Supply Chain CRM Coordinator`;
                                         'Unassigned'
                                       )}
                                     </td>
+                                    <td className="px-3 py-2 text-left font-mono text-[11px] font-bold text-slate-600">
+                                      {item.expected_delivery_date || 'N/A'}
+                                    </td>
                                   </tr>
                                 ))
                               ) : (
                                 <tr>
                                   <td
-                                    colSpan={8}
+                                    colSpan={9}
                                     className="px-3 py-6 text-center text-slate-400 italic"
                                   >
                                     No items specified for this purchase order.

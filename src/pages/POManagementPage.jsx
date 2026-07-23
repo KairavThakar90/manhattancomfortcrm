@@ -208,6 +208,9 @@ export default function POManagementPage() {
                       item.unit_price !== undefined
                         ? item.unit_price
                         : item.unitPrice || 0,
+                    expected_delivery_date: item.expected_delivery_date
+                      ? item.expected_delivery_date.split('T')[0]
+                      : null,
                     containers: item.containers || [],
                   }))
                 : po.items || [],
@@ -331,6 +334,9 @@ export default function POManagementPage() {
                       item.unit_price !== undefined
                         ? item.unit_price
                         : item.unitPrice || 0,
+                    expected_delivery_date: item.expected_delivery_date
+                      ? item.expected_delivery_date.split('T')[0]
+                      : currentItem?.expected_delivery_date || null,
                     containers:
                       item.containers && item.containers.length > 0
                         ? item.containers

@@ -24,6 +24,7 @@ export interface POItem {
   qty: number;
   receivedQty?: number;
   unitPrice: number;
+  expected_delivery_date?: string;
   containers?: POItemContainer[];
 }
 
