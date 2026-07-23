@@ -9,12 +9,22 @@ export type InvoiceStatus = 'Pending' | 'Uploaded' | 'Approved' | 'Rejected';
 export type ProductionStage =
   'Materials' | 'Assembly' | 'Quality Check' | 'Packaging' | 'Ready to Ship';
 
+export interface POItemContainer {
+  id?: string;
+  sellercloud_container_id?: number;
+  container_name?: string;
+  estimated_arrival_date?: string;
+  received_date?: string;
+  qty_in_container: number;
+}
+
 export interface POItem {
   sku: string;
   name: string;
   qty: number;
   receivedQty?: number;
   unitPrice: number;
+  containers?: POItemContainer[];
 }
 
 export interface InvoiceDetails {

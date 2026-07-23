@@ -208,6 +208,7 @@ export default function POManagementPage() {
                       item.unit_price !== undefined
                         ? item.unit_price
                         : item.unitPrice || 0,
+                    containers: item.containers || [],
                   }))
                 : po.items || [],
               productionStage: po.productionStage || 'Assembly',
@@ -307,24 +308,35 @@ export default function POManagementPage() {
             eta,
             expected_delivery_date: eta,
             containerNames:
-              poData.container_names || currentPO.containerNames || [],
+              poData.container_names && poData.container_names.length > 0
+                ? poData.container_names
+                : currentPO.containerNames || [],
             items: poData.items
-              ? poData.items.map((item) => ({
-                  sku: item.sku || 'N/A',
-                  name: item.product_name || item.name || 'N/A',
-                  qty:
-                    item.qty_ordered !== undefined
-                      ? item.qty_ordered
-                      : item.qty || 0,
-                  receivedQty:
-                    item.qty_received !== undefined
-                      ? item.qty_received
-                      : item.receivedQty || 0,
-                  unitPrice:
-                    item.unit_price !== undefined
-                      ? item.unit_price
-                      : item.unitPrice || 0,
-                }))
+              ? poData.items.map((item) => {
+                  const currentItem = currentPO.items?.find(
+                    (i) => i.sku === item.sku,
+                  );
+                  return {
+                    sku: item.sku || 'N/A',
+                    name: item.product_name || item.name || 'N/A',
+                    qty:
+                      item.qty_ordered !== undefined
+                        ? item.qty_ordered
+                        : item.qty || 0,
+                    receivedQty:
+                      item.qty_received !== undefined
+                        ? item.qty_received
+                        : item.receivedQty || 0,
+                    unitPrice:
+                      item.unit_price !== undefined
+                        ? item.unit_price
+                        : item.unitPrice || 0,
+                    containers:
+                      item.containers && item.containers.length > 0
+                        ? item.containers
+                        : currentItem?.containers || [],
+                  };
+                })
               : currentPO.items || [],
           };
 

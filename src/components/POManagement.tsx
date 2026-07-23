@@ -710,9 +710,9 @@ Supply Chain CRM Coordinator`;
                   <th className="px-6 py-4 bg-slate-50">
                     Ordered / Received Qty
                   </th>
-                  <th className="px-6 py-4 bg-slate-50">Invoice Status</th>
+                  {/* <th className="px-6 py-4 bg-slate-50">Invoice Status</th> */}
                   <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
-                   <th className="px-6 py-4 bg-slate-50">Container Number</th>
+                   <th className="px-6 py-4 bg-slate-50">Container Count</th>
                   <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
                 </tr>
               </thead>
@@ -768,7 +768,7 @@ Supply Chain CRM Coordinator`;
                         / {po.receivedQty}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       <span
                         className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border ${
                           po.invoiceStatus === 'Approved'
@@ -782,7 +782,7 @@ Supply Chain CRM Coordinator`;
                       >
                         {po.invoiceStatus || 'N/A'}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 text-slate-600 font-mono">
                       <span
                         className={
@@ -797,17 +797,17 @@ Supply Chain CRM Coordinator`;
                     <td className="px-6 py-4 text-slate-600 font-mono text-xs">
                       {po.containerNames && po.containerNames.length > 0 ? (
                         <span 
-                          className="truncate max-w-[150px] inline-block align-bottom" 
                           title={po.containerNames.join(', ')}
+                          className="text-[11px] font-bold text-slate-700"
                         >
-                          {po.containerNames.join(', ')}
+                          {po.containerNames.length} 
                         </span>
                       ) : (!po.container || po.container === 'N/A') ? (
                         <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
                           N/A
                         </span>
                       ) : (
-                        <span>{po.container}</span>
+                        <span className="truncate max-w-[150px] inline-block align-bottom">{po.container}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -1082,10 +1082,12 @@ Supply Chain CRM Coordinator`;
                         </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
-                            Container ID
+                            Container IDs
                           </span>
-                          <strong className="text-sm font-bold text-indigo-700 font-mono">
-                            {selectedPO.container || 'Awaiting Vessel Booking'}
+                          <strong className="text-xs font-bold text-indigo-700 font-mono block truncate" title={selectedPO.containerNames?.join(', ') || selectedPO.container || 'Awaiting Vessel Booking'}>
+                            {selectedPO.containerNames && selectedPO.containerNames.length > 0 
+                               ? selectedPO.containerNames.join(', ') 
+                               : selectedPO.container || 'Awaiting Vessel Booking'}
                           </strong>
                         </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
@@ -1093,7 +1095,7 @@ Supply Chain CRM Coordinator`;
                             Delivery ETA
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.eta}
+                            {selectedPO.expected_delivery_date || selectedPO.eta || 'N/A'}
                           </strong>
                         </div>
                       </div>
@@ -1124,6 +1126,9 @@ Supply Chain CRM Coordinator`;
                                 </th>
                                 <th className="px-3 py-2 bg-slate-50 text-right">
                                   Total
+                                </th>
+                                <th className="px-3 py-2 bg-slate-50 text-left">
+                                  Containers
                                 </th>
                               </tr>
                             </thead>
@@ -1159,12 +1164,25 @@ Supply Chain CRM Coordinator`;
                                     <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
                                       ${(item.qty * item.unitPrice).toFixed(2)}
                                     </td>
+                                    <td className="px-3 py-2 text-left text-[10px] font-mono text-slate-500">
+                                      {item.containers && item.containers.length > 0 ? (
+                                        <div className="flex flex-col gap-0.5">
+                                          {item.containers.map((c, i) => (
+                                            <span key={i} className="bg-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
+                                              {c.container_name || 'Unnamed'} <strong className="text-slate-600">({c.qty_in_container})</strong>
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        'Unassigned'
+                                      )}
+                                    </td>
                                   </tr>
                                 ))
                               ) : (
                                 <tr>
                                   <td
-                                    colSpan={5}
+                                    colSpan={8}
                                     className="px-3 py-6 text-center text-slate-400 italic"
                                   >
                                     No items specified for this purchase order.
