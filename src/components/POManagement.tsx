@@ -1063,7 +1063,15 @@ Supply Chain CRM Coordinator`;
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
                     <div className="space-y-3 md:col-span-3">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-4 gap-4">
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Order ID
+                          </span>
+                          <strong className="text-sm font-bold text-slate-800 font-mono">
+                            {selectedPO.orderId || 'N/A'}
+                          </strong>
+                        </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Ordered Quantity
@@ -1078,6 +1086,14 @@ Supply Chain CRM Coordinator`;
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {selectedPO.receivedQty} units
+                          </strong>
+                        </div>
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <span className="text-[10px] text-slate-400 font-medium block">
+                            Remaining Quantity
+                          </span>
+                          <strong className="text-sm font-bold text-slate-800 font-mono">
+                            {Math.max(0, selectedPO.orderedQty - selectedPO.receivedQty)} units
                           </strong>
                         </div>
                         {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
@@ -1131,7 +1147,7 @@ Supply Chain CRM Coordinator`;
                                   Container/Items Count
                                 </th>
                                 <th className="px-3 py-2 bg-slate-50 text-left">
-                                  Delivery ETA
+                                  Container Details
                                 </th>
                               </tr>
                             </thead>
@@ -1141,7 +1157,11 @@ Supply Chain CRM Coordinator`;
                                 selectedPO.items.map((item) => (
                                   <tr
                                     key={item.sku}
-                                    className="hover:bg-slate-50/50 transition"
+                                    className={`transition ${
+                                      Math.max(0, item.qty - (item.receivedQty || 0)) > 0
+                                        ? 'bg-amber-50/50 hover:bg-amber-100/50'
+                                        : 'hover:bg-slate-50/50'
+                                    }`}
                                   >
                                     <td className="px-3 py-2 font-mono font-bold text-slate-500 whitespace-nowrap">
                                       {item.sku}
@@ -1158,7 +1178,7 @@ Supply Chain CRM Coordinator`;
                                         : 0
                                       ).toLocaleString()}
                                     </td>
-                                     <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
+                                     <td className={`px-3 py-2 text-right font-mono ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`}>
                                       {Math.max(0, item.qty - (item.receivedQty || 0)).toLocaleString()}
                                     </td>
                                     <td className="px-3 py-2 text-right font-mono font-medium">
@@ -1180,8 +1200,22 @@ Supply Chain CRM Coordinator`;
                                         'Unassigned'
                                       )}
                                     </td>
-                                    <td className="px-3 py-2 text-left font-mono text-[11px] font-bold text-slate-600">
-                                      {item.expected_delivery_date || 'N/A'}
+                                    <td className="px-3 py-2 text-left font-mono text-[11px] text-slate-500">
+                                      {item.containers && item.containers.length > 0 ? (
+                                        <div className="flex flex-col gap-0.5">
+                                          {item.containers.map((c, i) => {
+                                            const rawDate = c.estimated_arrival_date || c.received_date;
+                                            const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
+                                            return (
+                                              <span key={i} className="bg-slate-50 border border-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
+                                                ETA: <strong className="text-indigo-600">{displayDate}</strong>
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        'N/A'
+                                      )}
                                     </td>
                                   </tr>
                                 ))
