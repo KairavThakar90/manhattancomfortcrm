@@ -105,7 +105,7 @@ export default function ContainerFlowPage() {
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-y-auto w-full">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
             <Package className="h-4 w-4" />
