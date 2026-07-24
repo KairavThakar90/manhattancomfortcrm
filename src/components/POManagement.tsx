@@ -793,12 +793,25 @@ Supply Chain CRM Coordinator`;
                     </td>
                     <td className="px-6 py-4">
                       {(() => {
-                        if (po.invoiceDetails?.date) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">Generated</span>;
-                        if (!po.creationDate || po.creationDate === 'N/A') return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>;
-                        const orderDate = new Date(po.creationDate);
+                        const invoiceDate = (po as any).invoice_date || po.invoiceDetails?.date;
+                        const createdOn = (po as any).created_on || po.creationDate;
+                        
+                        if (invoiceDate) {
+                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">Generated</span>;
+                        }
+
+                        if (!createdOn || createdOn === 'N/A') {
+                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>;
+                        }
+
+                        const orderDate = new Date(createdOn);
                         const today = new Date();
                         const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
-                        if (diffDays > 10) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">Delayed</span>;
+                        
+                        if (diffDays > 10) {
+                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">Delay</span>;
+                        }
+                        
                         return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-amber-50 border-amber-100 text-amber-700">Pending</span>;
                       })()}
                     </td>

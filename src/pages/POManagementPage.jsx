@@ -151,10 +151,16 @@ export default function POManagementPage() {
             // Map status codes or labels to standard UI status:
             let status = po.status_label || 'N/A';
 
-            // Parse dates
-            let eta = po.expected_delivery_date
-              ? po.expected_delivery_date.split('T')[0]
-              : 'N/A';
+            // Calculate eta based on invoice_date and container_lead_time_days
+            let eta = 'N/A';
+            const leadDays = po.container_lead_time_days || po.containerLeadTimeDays;
+            if (po.invoice_date && leadDays) {
+              const invoiceDate = new Date(po.invoice_date);
+              invoiceDate.setDate(invoiceDate.getDate() + Number(leadDays));
+              eta = invoiceDate.toISOString().split('T')[0];
+            } else if (po.expected_delivery_date) {
+              eta = po.expected_delivery_date.split('T')[0];
+            }
 
             const creationDate = po.created_on
               ? po.created_on.split('T')[0]
