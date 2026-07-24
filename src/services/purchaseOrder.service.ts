@@ -99,3 +99,9 @@ export async function patchPurchaseOrder(
 export async function deletePurchaseOrder(id: string): Promise<void> {
   await apiClient.delete(PO_DELETE(id));
 }
+
+/** Update PO Lead Time */
+export async function updatePOLeadTime(poId: string, leadTimeDays: number): Promise<any> {
+  const { data } = await apiClient.patch(`/purchase-orders/${poId}/lead-time?container_lead_time_days=${leadTimeDays}`);
+  return data;
+}

@@ -28,6 +28,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
+import { updatePOLeadTime } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
@@ -109,6 +110,7 @@ export default function POManagement({
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
+  const [leadTimeDays, setLeadTimeDays] = useState<string>('');
 
   const searchQuery =
     propSearchQuery !== undefined ? propSearchQuery : localSearchQuery;
@@ -704,13 +706,15 @@ Supply Chain CRM Coordinator`;
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10">
                   <th className="px-6 py-4 bg-slate-50">PO Number</th>
-                    <th className="px-6 py-4 bg-slate-50">Order Id</th>
+                  <th className="px-6 py-4 bg-slate-50">Order Id</th>
                   <th className="px-6 py-4 bg-slate-50">Vendor</th>
                   <th className="px-6 py-4 bg-slate-50">PO Items</th>
                   <th className="px-6 py-4 bg-slate-50">
                     Ordered / Received Qty
                   </th>
                   {/* <th className="px-6 py-4 bg-slate-50">Invoice Status</th> */}
+                  <th className="px-6 py-4 bg-slate-50">Invoice Date</th>
+                  <th className="px-6 py-4 bg-slate-50">Invoice Delay Status</th>
                   <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
                    <th className="px-6 py-4 bg-slate-50">Container Count</th>
                   <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
@@ -740,7 +744,7 @@ Supply Chain CRM Coordinator`;
                             : 'text-[11px] font-bold text-slate-700'
                         }
                       >
-                        {po.orderId || 'N/A'}
+                        {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-700 font-medium">
@@ -767,6 +771,24 @@ Supply Chain CRM Coordinator`;
                         {' '}
                         / {po.receivedQty}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {po.invoiceDetails?.date ? (
+                        <span className="text-[11px] font-bold text-slate-700">{po.invoiceDetails.date}</span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {(() => {
+                        if (po.invoiceDetails?.date) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">Generated</span>;
+                        if (!po.creationDate || po.creationDate === 'N/A') return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>;
+                        const orderDate = new Date(po.creationDate);
+                        const today = new Date();
+                        const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+                        if (diffDays > 10) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">Delayed</span>;
+                        return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-amber-50 border-amber-100 text-amber-700">Pending</span>;
+                      })()}
                     </td>
                     {/* <td className="px-6 py-4">
                       <span
@@ -1063,7 +1085,7 @@ Supply Chain CRM Coordinator`;
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
                     <div className="space-y-3 md:col-span-3">
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-5 gap-4">
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Order ID
@@ -1095,6 +1117,36 @@ Supply Chain CRM Coordinator`;
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {Math.max(0, selectedPO.orderedQty - selectedPO.receivedQty)} units
                           </strong>
+                        </div>
+                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <label className="text-[10px] text-slate-400 font-medium block mb-1">
+                            Enter lead days for po order
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              value={leadTimeDays}
+                              onChange={(e) => setLeadTimeDays(e.target.value)}
+                              className="w-full text-sm font-bold text-slate-800 font-mono bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                              placeholder="0"
+                            />
+                            <button
+                              onClick={async () => {
+                                if (!leadTimeDays) return;
+                                try {
+                                  await updatePOLeadTime(selectedPO.uuid || selectedPO.id, Number(leadTimeDays));
+                                  onAddActivity(`Updated lead time to ${leadTimeDays} days for PO ${selectedPO.id}`, 'PO Updated');
+                                  alert('Lead time updated successfully!');
+                                } catch (error) {
+                                  console.error(error);
+                                  alert('Failed to update lead time.');
+                                }
+                              }}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors"
+                            >
+                              Save
+                            </button>
+                          </div>
                         </div>
                         {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
