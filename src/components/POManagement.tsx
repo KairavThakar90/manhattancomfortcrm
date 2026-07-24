@@ -27,6 +27,7 @@ import {
   Upload,
   DollarSign,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
 import { updatePOLeadTime } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
@@ -111,6 +112,17 @@ export default function POManagement({
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
+
+  useEffect(() => {
+    if (selectedPOId) {
+      const po = purchaseOrders.find((p: any) => p.id === selectedPOId);
+      if (po && po.containerLeadTimeDays) {
+        setLeadTimeDays(po.containerLeadTimeDays.toString());
+      } else {
+        setLeadTimeDays('');
+      }
+    }
+  }, [selectedPOId, purchaseOrders]);
 
   const searchQuery =
     propSearchQuery !== undefined ? propSearchQuery : localSearchQuery;
@@ -1136,15 +1148,15 @@ Supply Chain CRM Coordinator`;
                                 try {
                                   await updatePOLeadTime(selectedPO.uuid || selectedPO.id, Number(leadTimeDays));
                                   onAddActivity(`Updated lead time to ${leadTimeDays} days for PO ${selectedPO.id}`, 'PO Updated');
-                                  alert('Lead time updated successfully!');
+                                  toast.success('Lead time updated successfully!');
                                 } catch (error) {
                                   console.error(error);
-                                  alert('Failed to update lead time.');
+                                  toast.error('Failed to update lead time.');
                                 }
                               }}
                               className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors"
                             >
-                              Save
+                              {selectedPO.containerLeadTimeDays ? 'Update' : 'Save'}
                             </button>
                           </div>
                         </div>

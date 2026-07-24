@@ -58,6 +58,7 @@ export interface PurchaseOrder {
   productionStage: ProductionStage;
   commentsCount: number;
   emailCount: number;
+  containerLeadTimeDays?: number | null;
 }
 
 export interface Vendor {

@@ -190,6 +190,7 @@ export default function POManagementPage() {
               eta,
               expected_delivery_date: eta,
               creationDate,
+              containerLeadTimeDays: po.container_lead_time_days || po.containerLeadTimeDays || null,
               delayedDays: po.delayedDays || 0,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
