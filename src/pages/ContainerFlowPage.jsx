@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Package, Plus, Save, Box, AlertCircle, ChevronDown } from 'lucide-react';
+import { Package, Plus, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export default function ContainerFlowPage() {
@@ -11,7 +11,7 @@ export default function ContainerFlowPage() {
   const [containerName, setContainerName] = useState('');
   
   // Items tracking
-  const [selectedItems, setSelectedItems] = useState([]); // Array of { sku, name, allocateQty, maxQty }
+  const [selectedItems, setSelectedItems] = useState([]);
   
   // Derived data
   const selectedPO = useMemo(() => {
@@ -20,7 +20,6 @@ export default function ContainerFlowPage() {
 
   const availableItems = useMemo(() => {
     if (!selectedPO || !selectedPO.items) return [];
-    // Filter out items already selected
     return selectedPO.items.filter(
       (item) => !selectedItems.some((sItem) => sItem.sku === item.sku)
     );
@@ -57,7 +56,6 @@ export default function ContainerFlowPage() {
       prev.map((item) => {
         if (item.sku === sku) {
           let numVal = val === '' ? '' : Number(val);
-          // Allow them to type any number, we will validate inline instead of auto-capping
           return { ...item, allocateQty: numVal };
         }
         return item;
@@ -91,7 +89,6 @@ export default function ContainerFlowPage() {
       return;
     }
 
-    // Save simulation
     console.log('Saving Container Flow Data:', {
       poId: selectedPOId,
       containerName,
@@ -99,11 +96,11 @@ export default function ContainerFlowPage() {
     });
 
     toast.success('Container created and items allocated successfully!');
-    
-    // Reset form after save
     setContainerName('');
     setSelectedItems([]);
   };
+
+  const currentStep = !selectedPOId ? 1 : (!containerName.trim() ? 2 : 3);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-y-auto w-full">
@@ -131,8 +128,43 @@ export default function ContainerFlowPage() {
         </button>
       </div>
 
+      {/* Visual Stepper */}
+      <div className="w-full max-w-4xl mx-auto px-4 mt-6 mb-2">
+        <div className="flex items-center justify-between relative">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full z-0"></div>
+          <div 
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-indigo-500 rounded-full z-0 transition-all duration-500 ease-in-out" 
+            style={{ width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' }}
+          ></div>
+
+          {/* Step 1 */}
+          <div className="relative z-10 flex flex-col items-center group">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 1 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 1 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}>
+              {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : '1'}
+            </div>
+            <span className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 1 ? 'text-indigo-900' : 'text-slate-400'}`}>Select PO</span>
+          </div>
+
+          {/* Step 2 */}
+          <div className="relative z-10 flex flex-col items-center group">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 2 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 2 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}>
+              {currentStep > 2 ? <CheckCircle2 className="h-4 w-4" /> : '2'}
+            </div>
+            <span className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 2 ? 'text-indigo-900' : 'text-slate-400'}`}>Container Details</span>
+          </div>
+
+          {/* Step 3 */}
+          <div className="relative z-10 flex flex-col items-center group">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep === 3 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}>
+              3
+            </div>
+            <span className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep === 3 ? 'text-indigo-900' : 'text-slate-400'}`}>Allocate Items</span>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content Area */}
-      <div className="p-4 max-w-5xl mx-auto w-full space-y-4">
+      <div className="p-4 max-w-5xl mx-auto w-full space-y-4 pb-10">
         
         {/* Step 1: Select PO */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
@@ -154,7 +186,6 @@ export default function ContainerFlowPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" />
           </div>
         </div>
 
@@ -209,7 +240,7 @@ export default function ContainerFlowPage() {
                       onChange={(e) => {
                         if (e.target.value) {
                           handleAddItem(e.target.value);
-                          e.target.value = ''; // reset after selection
+                          e.target.value = ''; 
                         }
                       }}
                       className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
@@ -221,27 +252,33 @@ export default function ContainerFlowPage() {
                         </option>
                       ))}
                     </select>
-                    <Plus className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 )}
               </div>
 
               {selectedItems.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 p-8 text-center">
-                  <Box className="h-12 w-12 text-slate-300 mb-3" />
-                  <h3 className="text-slate-700 font-bold mb-1">No items added</h3>
-                  <p className="text-sm text-slate-500 max-w-[250px]">
-                    Select items from the dropdown above to add them to this container.
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-lg">
+                  <Package className="h-10 w-10 text-slate-300 mb-3" />
+                  <h3 className="text-sm font-bold text-slate-700 mb-1">No items selected</h3>
+                  <p className="text-xs text-slate-500 max-w-sm">
+                    Select a PO from the dropdown above to start adding items to this container.
                   </p>
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto pr-2">
+                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                   <div className="space-y-3">
                     {selectedItems.map((item) => (
-                      <div key={item.sku} className="group relative flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-200 hover:shadow-sm transition-all">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-mono text-sm font-bold text-slate-800 truncate">{item.sku}</h4>
-                          <p className="text-xs text-slate-500 truncate mt-0.5">{item.name}</p>
+                      <div key={item.sku} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 transition-colors">
+                        <div className="flex items-start gap-3 overflow-hidden">
+                          <div className="mt-0.5">
+                            <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                              <Package className="h-4 w-4" />
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-800 truncate" title={item.sku}>{item.sku}</p>
+                            <p className="text-xs text-slate-500 truncate mt-0.5">{item.name}</p>
+                          </div>
                         </div>
                         
                         <div className="flex items-start gap-3">
@@ -268,7 +305,7 @@ export default function ContainerFlowPage() {
                               <span className="text-[10px] text-rose-500 font-bold mt-1">Exceeds max ({item.maxQty})</span>
                             )}
                             {item.allocateQty !== '' && item.allocateQty <= 0 && (
-                              <span className="text-[10px] text-rose-500 font-bold mt-1">Must be > 0</span>
+                              <span className="text-[10px] text-rose-500 font-bold mt-1">Must be &gt; 0</span>
                             )}
                           </div>
                           <button
@@ -277,7 +314,7 @@ export default function ContainerFlowPage() {
                             title="Remove item"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
                         </div>
@@ -289,7 +326,6 @@ export default function ContainerFlowPage() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
