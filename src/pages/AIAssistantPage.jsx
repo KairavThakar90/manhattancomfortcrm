@@ -2,6 +2,7 @@ import React from 'react';
 import AIAssistant from '../components/AIAssistant';
 import { useCRM } from '../hooks/useCRM';
 import { useNavigate } from 'react-router-dom';
+import { navPathsMap } from '../utils/navigation';
 
 export default function AIAssistantPage() {
   const { purchaseOrders, vendors, setSelectedPOId } = useCRM();
@@ -17,17 +18,7 @@ export default function AIAssistantPage() {
       }}
       onNavigateToTab={(tab) => {
         let path = '/dashboard';
-        const routesMap = {
-          'purchase-orders': '/purchase-orders',
-          'container-flow': '/container-flow',
-          vendors: '/sourcing-vendors',
-          'email-center': '/sourcing-email-hub',
-          chat: '/workspace-team-chat',
-          'ai-assistant': '/sop-ai-assistant',
-          reports: '/reports-analytics',
-          'system-admin': '/security-admin',
-        };
-        if (routesMap[tab]) path = routesMap[tab];
+        if (navPathsMap[tab]) path = navPathsMap[tab];
 
         if (tab !== 'purchase-orders') setSelectedPOId(null);
         navigate(path);
