@@ -3,6 +3,7 @@ import React, { lazy } from 'react';
 // Lazy loading the pages
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 const POManagementPage = lazy(() => import('../pages/POManagementPage'));
+const ContainerFlowPage = lazy(() => import('../pages/ContainerFlowPage'));
 const VendorManagementPage = lazy(
   () => import('../pages/VendorManagementPage'),
 );
@@ -15,6 +16,7 @@ const AdminPanelPage = lazy(() => import('../pages/AdminPanelPage'));
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },
   { path: '/purchase-orders', element: React.createElement(POManagementPage) },
+  { path: '/container-flow', element: React.createElement(ContainerFlowPage) },
   {
     path: '/sourcing-vendors',
     element: React.createElement(VendorManagementPage),

@@ -13,6 +13,7 @@ import {
   Shield,
   TrendingUp,
   LogOut,
+  Package,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { logout } from '../services/auth.service';
@@ -59,6 +60,12 @@ export default function MainLayout() {
       path: '/purchase-orders',
       label: 'Purchase Orders',
       icon: FileSpreadsheet,
+    },
+    {
+      id: 'container-flow',
+      path: '/container-flow',
+      label: 'Container Management',
+      icon: Package,
     },
     {
       id: 'vendors',

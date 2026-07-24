@@ -19,6 +19,7 @@ export default function AIAssistantPage() {
         let path = '/dashboard';
         const routesMap = {
           'purchase-orders': '/purchase-orders',
+          'container-flow': '/container-flow',
           vendors: '/sourcing-vendors',
           'email-center': '/sourcing-email-hub',
           chat: '/workspace-team-chat',
