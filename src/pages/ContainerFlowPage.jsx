@@ -20,8 +20,14 @@ import {
 import { toast } from 'react-toastify';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
-import { getPurchaseOrders } from '../services/purchaseOrder.service';
-import { getContainers } from '../services/container.service';
+import {
+  getPurchaseOrders,
+  getPurchaseOrderById,
+} from '../services/purchaseOrder.service';
+import {
+  getContainers,
+  getContainerPOItems,
+} from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
 export default function ContainerFlowPage() {
@@ -104,7 +110,24 @@ export default function ContainerFlowPage() {
   );
 
   const poDropdownItems = useMemo(() => {
-    return poList.map((po) => {
+    // Show Redux data first, merge with API poList
+    const map = new Map();
+    if (Array.isArray(purchaseOrders)) {
+      purchaseOrders.forEach((po) => map.set(po.id, po));
+    }
+    if (Array.isArray(poList)) {
+      poList.forEach((po) => map.set(po.id, po));
+    }
+
+    const displayList = poSearch ? poList : Array.from(map.values());
+
+    // Ensure selected PO is always in the list
+    if (selectedPOId && !displayList.some((p) => p.id === selectedPOId)) {
+      const reduxPO = purchaseOrders.find((p) => p.id === selectedPOId);
+      if (reduxPO) displayList.unshift(reduxPO);
+    }
+
+    return displayList.map((po) => {
       const vendorName =
         po.vendor?.name ||
         STATIC_VENDOR_MAP[po.vendor_id] ||
@@ -115,10 +138,17 @@ export default function ContainerFlowPage() {
 
       return {
         value: po.id,
-        label: `${po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.order_number || po.id} - ${vendorName}`,
+        label: `${po.sellercloud_po_id ? `PO-${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : po.order_number || po.id} - ${vendorName}`,
       };
     });
-  }, [poList, vendorsList, STATIC_VENDOR_MAP]);
+  }, [
+    poList,
+    purchaseOrders,
+    poSearch,
+    vendorsList,
+    STATIC_VENDOR_MAP,
+    selectedPOId,
+  ]);
 
   // ====== Container Infinite Scroll Logic ======
   const reduxContainers = useSelector((state) => state.containers?.list || []);
@@ -127,6 +157,7 @@ export default function ContainerFlowPage() {
     reduxContainersRef.current = reduxContainers;
   }, [reduxContainers]);
 
+  const [containerList, setContainerList] = useState([]);
   const [containerPage, setContainerPage] = useState(1);
   const [containerSearch, setContainerSearch] = useState('');
   const [containerLoading, setContainerLoading] = useState(false);
@@ -141,8 +172,12 @@ export default function ContainerFlowPage() {
         if (results.length < 25) setContainerHasMore(false);
         else setContainerHasMore(true);
 
-        const prevRedux = append ? reduxContainersRef.current : [];
-        dispatch(setContainersList([...prevRedux, ...results]));
+        setContainerList((prev) => (append ? [...prev, ...results] : results));
+
+        if (!search && page === 1 && !append) {
+          const prevRedux = []; // Overwrite redux on initial mount
+          dispatch(setContainersList([...prevRedux, ...results]));
+        }
       } catch (err) {
         console.error('Failed to fetch containers', err);
       } finally {
@@ -173,8 +208,43 @@ export default function ContainerFlowPage() {
   };
 
   const containerDropdownItems = useMemo(() => {
-    if (!Array.isArray(reduxContainers)) return [];
-    const derived = reduxContainers.map((c) => {
+    // Show redux data first, then after set field show matching list
+    const map = new Map();
+    if (Array.isArray(reduxContainers)) {
+      reduxContainers.forEach((c) =>
+        map.set(c.id || c.container_name || c.name || c.container_number, c),
+      );
+    }
+    if (Array.isArray(containerList)) {
+      containerList.forEach((c) =>
+        map.set(c.id || c.container_name || c.name || c.container_number, c),
+      );
+    }
+
+    let displayList = containerSearch
+      ? containerList
+      : Array.from(map.values());
+
+    if (
+      containerName &&
+      !displayList.some(
+        (c) =>
+          (c.container_name || c.name || c.container_number || c.id) ===
+          containerName,
+      ) &&
+      !isManualContainerEntry
+    ) {
+      const existing = Array.from(map.values()).find(
+        (c) =>
+          (c.container_name || c.name || c.container_number || c.id) ===
+          containerName,
+      );
+      if (existing) {
+        displayList = [existing, ...displayList];
+      }
+    }
+
+    const derived = displayList.map((c) => {
       const displayValue =
         c.container_name ||
         c.name ||
@@ -187,24 +257,40 @@ export default function ContainerFlowPage() {
         label: displayValue,
       };
     });
-    derived.unshift({
+
+    const uniqueDerived = [];
+    const valSet = new Set();
+    derived.forEach((item) => {
+      if (!valSet.has(item.value)) {
+        valSet.add(item.value);
+        uniqueDerived.push(item);
+      }
+    });
+
+    uniqueDerived.unshift({
       value: '__CREATE_NEW__',
       label: '+ Add New Container Manually',
     });
     // Allow custom creation if not matching
     if (
       containerSearch &&
-      !derived.some(
+      !uniqueDerived.some(
         (c) => c.label.toLowerCase() === containerSearch.toLowerCase(),
       )
     ) {
-      derived.unshift({
+      uniqueDerived.unshift({
         value: containerSearch,
         label: `+ Create "${containerSearch}"`,
       });
     }
-    return derived;
-  }, [reduxContainers, containerSearch]);
+    return uniqueDerived;
+  }, [
+    reduxContainers,
+    containerList,
+    containerSearch,
+    containerName,
+    isManualContainerEntry,
+  ]);
 
   // Derived data
   const selectedPO = useMemo(() => {
@@ -215,12 +301,58 @@ export default function ContainerFlowPage() {
     );
   }, [selectedPOId, poList, purchaseOrders]);
 
+  const [fetchedPOItems, setFetchedPOItems] = useState([]);
+  const [loadingPOItems, setLoadingPOItems] = useState(false);
+
+  useEffect(() => {
+    async function fetchItems() {
+      if (!selectedPO) {
+        setFetchedPOItems([]);
+        return;
+      }
+      const rawPoId = selectedPO.sellercloud_po_id || selectedPO.id;
+      if (!rawPoId) return;
+      const poId = rawPoId.toString().replace(/^PO-/, '');
+
+      try {
+        setLoadingPOItems(true);
+        const data = await getContainerPOItems(poId);
+        let items = Array.isArray(data) ? data : data.results || [];
+
+        // If no container items exist, fetch the full PO to retrieve all available items
+        if (items.length === 0) {
+          try {
+            const fullPo = await getPurchaseOrderById(selectedPO.id);
+            if (fullPo && fullPo.items) {
+              items = fullPo.items;
+            } else if (selectedPO.items) {
+              items = selectedPO.items;
+            }
+          } catch (e) {
+            console.error('Failed to get full PO fallback', e);
+            if (selectedPO.items) items = selectedPO.items;
+          }
+        }
+
+        setFetchedPOItems(items);
+      } catch (err) {
+        console.error('Failed to fetch detailed PO items', err);
+        setFetchedPOItems(selectedPO.items || []);
+      } finally {
+        setLoadingPOItems(false);
+      }
+    }
+    fetchItems();
+  }, [selectedPO]);
+
   const availableItems = useMemo(() => {
-    if (!selectedPO || !selectedPO.items) return [];
-    return selectedPO.items.filter(
+    const items =
+      fetchedPOItems.length > 0 ? fetchedPOItems : selectedPO?.items || [];
+    if (!items) return [];
+    return items.filter(
       (item) => !selectedItems.some((sItem) => sItem.sku === item.sku),
     );
-  }, [selectedPO, selectedItems]);
+  }, [selectedPO, selectedItems, fetchedPOItems]);
 
   const allContainers = useMemo(() => {
     const map = new Map();
@@ -342,8 +474,14 @@ export default function ContainerFlowPage() {
     const item = availableItems.find((i) => i.sku === sku);
     if (item) {
       const remainingQty =
-        (item.qty_ordered || item.qty || 0) -
-        (item.qty_received || item.receivedQty || 0);
+        item.remaining_qty !== undefined
+          ? item.remaining_qty
+          : (item.qty_ordered || item.qty || 0) -
+            (item.qty_in_container ||
+              item.qty_received ||
+              item.receivedQty ||
+              0);
+
       setSelectedItems([
         ...selectedItems,
         {
@@ -387,11 +525,13 @@ export default function ContainerFlowPage() {
       return;
     }
 
-    const invalidItems = selectedItems.filter(
-      (item) => !item.allocateQty || item.allocateQty <= 0,
+    const itemsToSave = selectedItems.filter(
+      (item) => item.allocateQty && item.allocateQty > 0,
     );
-    if (invalidItems.length > 0) {
-      toast.error('All items must have a quantity greater than 0.');
+    if (itemsToSave.length === 0) {
+      toast.error(
+        'Please allocate at least one item with a quantity greater than 0.',
+      );
       return;
     }
 
@@ -407,7 +547,7 @@ export default function ContainerFlowPage() {
     const newContainer = {
       name: containerName.trim(),
       poIds: [selectedPOId],
-      totalItems: selectedItems.reduce(
+      totalItems: itemsToSave.reduce(
         (acc, curr) => acc + (curr.allocateQty || 0),
         0,
       ),
@@ -416,7 +556,7 @@ export default function ContainerFlowPage() {
         selectedPO?.expected_delivery_date ||
         selectedPO?.eta ||
         'Pending',
-      items: selectedItems,
+      items: itemsToSave,
     };
 
     if (isEditMode) {
@@ -856,7 +996,7 @@ export default function ContainerFlowPage() {
                         Currently allocating items for{' '}
                         <span className="font-mono font-bold">
                           {selectedPO.sellercloud_po_id
-                            ? `PO-${selectedPO.sellercloud_po_id}`
+                            ? `PO-${selectedPO.sellercloud_po_id.toString().replace(/^PO-/, '')}`
                             : selectedPO.id}
                         </span>
                         .
@@ -879,23 +1019,37 @@ export default function ContainerFlowPage() {
                   </h2>
                 </div>
 
-                {availableItems.length > 0 && (
-                  <div className="relative w-56">
+                {(availableItems.length > 0 || loadingPOItems) && (
+                  <div className="relative w-64">
                     <select
+                      value=""
                       onChange={(e) => {
                         if (e.target.value) {
                           handleAddItem(e.target.value);
                           e.target.value = '';
                         }
                       }}
-                      className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      disabled={loadingPOItems}
+                      className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
                     >
-                      <option value="">+ Add item from PO...</option>
-                      {availableItems.map((item) => (
-                        <option key={item.sku} value={item.sku}>
-                          {item.sku} - {item.product_name || item.name}
-                        </option>
-                      ))}
+                      <option value="" disabled hidden>
+                        {loadingPOItems
+                          ? 'Loading items...'
+                          : isEditMode
+                            ? '+ Add item from PO...'
+                            : '+ Add items'}
+                      </option>
+                      {!loadingPOItems &&
+                        availableItems.map((item) => {
+                          return (
+                            <option key={item.sku} value={item.sku}>
+                              {item.sku}{' '}
+                              {item.product_name || item.name
+                                ? `- ${item.product_name || item.name}`
+                                : ''}
+                            </option>
+                          );
+                        })}
                     </select>
                   </div>
                 )}
@@ -947,7 +1101,7 @@ export default function ContainerFlowPage() {
                             <div className="flex items-center gap-2">
                               <input
                                 type="number"
-                                min="1"
+                                min="0"
                                 max={item.maxQty}
                                 value={
                                   item.allocateQty === ''
@@ -959,7 +1113,7 @@ export default function ContainerFlowPage() {
                                 }
                                 className={`w-20 px-2 py-1 text-right font-mono font-bold text-sm bg-slate-50 border rounded focus:outline-none focus:ring-1 ${
                                   item.allocateQty > item.maxQty ||
-                                  item.allocateQty <= 0
+                                  item.allocateQty < 0
                                     ? 'border-rose-300 focus:ring-rose-500 bg-rose-50 text-rose-700'
                                     : 'border-slate-200 focus:ring-indigo-500 text-slate-800'
                                 }`}
@@ -976,9 +1130,9 @@ export default function ContainerFlowPage() {
                               </span>
                             )}
                             {item.allocateQty !== '' &&
-                              item.allocateQty <= 0 && (
+                              item.allocateQty < 0 && (
                                 <span className="text-[10px] text-rose-500 font-bold mt-1">
-                                  Must be &gt; 0
+                                  Must be &gt;= 0
                                 </span>
                               )}
                           </div>

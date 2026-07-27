@@ -129,3 +129,4 @@ export const ADMIN_ROLES = '/admin/roles';
 export const ADMIN_AUDIT_LOGS = '/admin/audit-logs';
 
 export const CONTAINERS_LIST = '/containers';
+export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) => `/containers/po-items/${sellercloud_po_id}`;
