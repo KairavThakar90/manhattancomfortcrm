@@ -12,7 +12,7 @@ import {
   createPurchaseOrder,
   patchPurchaseOrder,
   getPurchaseOrderById,
-  getPurchaseOrdersAllFilters,
+  getPurchaseOrdersByFilter,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -251,9 +251,15 @@ export default function POManagementPage() {
 
           // Fetch Kanban specific statuses concurrently
           try {
-            const allFiltersRes = await getPurchaseOrdersAllFilters(
-              params.vendor_id,
-            );
+            const [newRes, invRes, delRes, remRes] = await Promise.all([
+              getPurchaseOrdersByFilter(
+                'new_without_invoice',
+                params.vendor_id,
+              ),
+              getPurchaseOrdersByFilter('invoice_delayed', params.vendor_id),
+              getPurchaseOrdersByFilter('delivery_overdue', params.vendor_id),
+              getPurchaseOrdersByFilter('remaining_items', params.vendor_id),
+            ]);
 
             const extractArray = (res) => {
               if (Array.isArray(res)) return res;
@@ -264,18 +270,10 @@ export default function POManagementPage() {
 
             dispatch(
               setKanbanList({
-                new_without_invoice: mapPOData(
-                  extractArray(allFiltersRes?.new_without_invoice || []),
-                ),
-                invoice_delayed: mapPOData(
-                  extractArray(allFiltersRes?.invoice_delayed || []),
-                ),
-                delivery_overdue: mapPOData(
-                  extractArray(allFiltersRes?.delivery_overdue || []),
-                ),
-                remaining_items: mapPOData(
-                  extractArray(allFiltersRes?.remaining_items || []),
-                ),
+                new_without_invoice: mapPOData(extractArray(newRes)),
+                invoice_delayed: mapPOData(extractArray(invRes)),
+                delivery_overdue: mapPOData(extractArray(delRes)),
+                remaining_items: mapPOData(extractArray(remRes)),
               }),
             );
           } catch (kanbanErr) {

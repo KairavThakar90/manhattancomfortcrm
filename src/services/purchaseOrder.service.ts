@@ -5,7 +5,7 @@ import {
   PO_CREATE,
   PO_UPDATE,
   PO_DELETE,
-  PO_FILTERS_ALL,
+  PO_FILTERS_BY_TYPE,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -20,16 +20,41 @@ export interface PurchaseOrderItem {
 }
 
 export interface PurchaseOrder {
-  id: string;
+  id: string; // Used for UI display, generated if new
+  uuid?: string; // Django DB ID if it exists
+  orderId?: string;
   vendorId: string;
   vendorName: string;
-  status: string;
+  status:
+    | 'New'
+    | 'Production'
+    | 'Ready to Ship'
+    | 'In Transit'
+    | 'Delivered'
+    | 'Delayed'; // UI Specific Status
   orderedQty: number;
   receivedQty: number;
   container: string;
+  containerNames?: string[];
+  invoiceStatus: 'Pending' | 'Uploaded' | 'Paid' | 'Delayed' | null;
+  invoiceFile: string | null;
+  invoiceDetails: {
+    amount: number;
+    invoiceNumber: string;
+    date: string;
+    ocrExtracted: boolean;
+  } | null;
   eta: string;
+  expected_delivery_date?: string;
+  creationDate: string;
+  created_on?: string; // DB raw date
+  delayedDays: number; // calculated field
+  skus: string[];
   items: PurchaseOrderItem[];
-  [key: string]: unknown;
+  productionStage: string;
+  commentsCount: number;
+  emailCount: number;
+  containerLeadTimeDays?: number | null;
 }
 
 export interface CreatePOPayload {
@@ -57,20 +82,25 @@ export interface PaginatedResult<T> {
 
 /** Fetch all purchase orders */
 export async function getPurchaseOrders(params?: {
+  search?: string;
+  vendor_id?: string;
+  status_label?: string;
+  ordering?: string;
   page?: number;
   page_size?: number;
+  limit?: number;
 }): Promise<PurchaseOrder[] | PaginatedResult<PurchaseOrder> | any> {
   const { data } = await apiClient.get<any>(PO_LIST, { params });
   return data;
 }
 
-/** Fetch all purchase orders filters */
-export async function getPurchaseOrdersAllFilters(vendorId?: string) {
+/** Fetch purchase orders by kanban filter */
+export async function getPurchaseOrdersByFilter(filterType: string, vendorId?: string) {
   const params: any = {};
   if (vendorId) {
     params.vendor_id = vendorId;
   }
-  const { data } = await apiClient.get(PO_FILTERS_ALL, { params });
+  const { data } = await apiClient.get(PO_FILTERS_BY_TYPE(filterType), { params });
   return data;
 }
 

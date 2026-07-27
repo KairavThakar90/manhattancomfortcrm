@@ -36,7 +36,7 @@ export const PO_BY_ID = (id: string) => `/purchase-orders/${id}`;
 export const PO_CREATE = '/purchase-orders';
 export const PO_UPDATE = (id: string) => `/purchase-orders/${id}`;
 export const PO_DELETE = (id: string) => `/purchase-orders/${id}`;
-export const PO_FILTERS_ALL = '/purchase-orders/filters/all';
+export const PO_FILTERS_BY_TYPE = (type: string) => `/purchase-orders/filters/${type}`;
 
 // ------------------------------------------
 // Vendor Endpoints
