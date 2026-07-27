@@ -305,6 +305,19 @@ export default function POManagement({
 
   const selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
 
+  // Items Pagination for selected PO (Rule 23)
+  const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
+  const itemsPageSize = 10;
+  
+  useEffect(() => {
+    setItemsCurrentPage(1);
+  }, [selectedPOId]);
+
+  const totalItemsCount = selectedPO?.items?.length || 0;
+  const paginatedItems = selectedPO?.items 
+    ? selectedPO.items.slice((itemsCurrentPage - 1) * itemsPageSize, itemsCurrentPage * itemsPageSize) 
+    : [];
+
   // Comments for selected PO
   const selectedPOComments = comments.filter((c) => c.poId === selectedPOId);
 
@@ -1200,14 +1213,14 @@ Supply Chain CRM Coordinator`;
               )}
             </div>
 
-            <div className="p-6 flex-1 overflow-y-auto">
+            <div className="p-6 flex-1 flex flex-col min-h-0">
               {/* TAB: DETAILS */}
               {activeDrawerSection === 'details' && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
                     {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
-                    <div className="space-y-3 md:col-span-3">
-                      <div className="grid grid-cols-5 gap-4">
+                    <div className="space-y-3 md:col-span-3 flex flex-col min-h-0">
+                      <div className="grid grid-cols-5 gap-4 shrink-0">
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Order ID
@@ -1290,11 +1303,11 @@ Supply Chain CRM Coordinator`;
                         </div> */}
                       </div>
 
-                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                        <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
+                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex-1 flex flex-col min-h-0 mt-3">
+                        <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
                           Item Specifications (Products)
                         </h5>
-                        <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-lg border border-slate-100 bg-white">
+                        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg border border-slate-100 bg-white">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10">
@@ -1326,9 +1339,9 @@ Supply Chain CRM Coordinator`;
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-slate-700">
-                              {selectedPO.items &&
-                              selectedPO.items.length > 0 ? (
-                                selectedPO.items.map((item) => (
+                              {paginatedItems &&
+                              paginatedItems.length > 0 ? (
+                                paginatedItems.map((item) => (
                                   <tr
                                     key={item.sku}
                                     className={`transition ${
@@ -1458,6 +1471,19 @@ Supply Chain CRM Coordinator`;
                             maxWidth: '300px'
                           }}
                         />
+                        {/* Items Pagination Footer */}
+                        {totalItemsCount > itemsPageSize && (
+                          <div className="mt-4 shrink-0">
+                            <Pagination
+                              currentPage={itemsCurrentPage}
+                              totalCount={totalItemsCount}
+                              pageSize={itemsPageSize}
+                              onPageChange={setItemsCurrentPage}
+                              onPageSizeChange={() => {}}
+                              hidePageSizeSelector={true}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

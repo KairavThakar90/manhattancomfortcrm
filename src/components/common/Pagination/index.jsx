@@ -6,6 +6,7 @@ export default function Pagination({
   pageSize,
   onPageChange,
   onPageSizeChange,
+  hidePageSizeSelector = false,
 }) {
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const normalizedCurrentPage = Math.min(currentPage, totalPages);
@@ -28,7 +29,7 @@ export default function Pagination({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-500 font-medium text-xs gap-4 select-none">
       {/* Left side: Showing X to Y of Z */}
-      <div className="text-slate-500 font-medium order-2 sm:order-1">
+      <div className="text-slate-500 font-medium order-2 sm:order-1 flex-1">
         Showing{' '}
         <span className="text-slate-800 font-bold">
           {totalCount === 0 ? 0 : startIndex + 1}
@@ -38,22 +39,24 @@ export default function Pagination({
       </div>
 
       {/* Middle: Page Size Selector (5, 10, 25 only) */}
-      <div className="flex items-center gap-2 order-1 sm:order-2">
-        <span className="text-slate-500">Show</span>
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="bg-white border border-slate-200 text-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-indigo-500 transition cursor-pointer"
-        >
-          <option value={5}>5</option>
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-        </select>
-        <span className="text-slate-500 font-medium">entries per page</span>
-      </div>
+      {!hidePageSizeSelector && (
+        <div className="flex items-center gap-2 order-1 sm:order-2 flex-1 justify-center">
+          <span className="text-slate-500">Show</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="bg-white border border-slate-200 text-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-indigo-500 transition cursor-pointer"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+          </select>
+          <span className="text-slate-500 font-medium">entries per page</span>
+        </div>
+      )}
 
       {/* Right side: Page navigation */}
-      <div className="flex items-center gap-1.5 order-3">
+      <div className="flex items-center gap-1.5 order-3 flex-1 justify-end">
         <button
           type="button"
           disabled={normalizedCurrentPage === 1}
