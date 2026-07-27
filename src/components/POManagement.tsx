@@ -774,6 +774,17 @@ Supply Chain CRM Coordinator`;
                     </div>
                   </th>
                   <th className="px-6 py-4 bg-slate-50">Order Id</th>
+                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('creationDate')}>
+                    <div className="flex items-center gap-1">
+                      <div className="flex flex-col">
+                        <span>Order Date</span>
+                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+                      </div>
+                      <span className="text-slate-400 group-hover:text-indigo-600">
+                        {activeSortConfig.key === 'creationDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+                      </span>
+                    </div>
+                  </th>
                   <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('vendorName')}>
                     <div className="flex items-center gap-1">
                       Vendor
@@ -799,7 +810,7 @@ Supply Chain CRM Coordinator`;
                   <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('eta')}>
                     <div className="flex items-center gap-1">
                       <div className="flex flex-col">
-                        <span>Delivery ETA</span>
+                        <span>Scheduled Delivery</span>
                         <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
                       </div>
                       <span className="text-slate-400 group-hover:text-indigo-600">
@@ -837,6 +848,13 @@ Supply Chain CRM Coordinator`;
                       >
                         {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {po.creationDate && po.creationDate !== 'N/A' ? (
+                        <span className="text-[11px] font-bold text-slate-700">{po.creationDate}</span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-slate-700 font-medium">
                       {po.vendorName}
@@ -876,7 +894,7 @@ Supply Chain CRM Coordinator`;
                         const createdOn = (po as any).created_on || po.creationDate;
                         
                         if (invoiceDate) {
-                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">Generated</span>;
+                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">On Time</span>;
                         }
 
                         if (!createdOn || createdOn === 'N/A') {

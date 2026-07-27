@@ -98,6 +98,7 @@ export default function POManagementPage() {
             vendorName: 'vendor_name',
             invoiceDate: 'invoice_date',
             eta: 'expected_delivery_date',
+            creationDate: 'created_on',
           };
           params.ordering =
             sortConfig.direction === 'desc'
