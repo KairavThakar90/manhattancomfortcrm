@@ -1,5 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Package,
   Plus,
@@ -12,7 +18,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
+import { getPurchaseOrders } from '../services/purchaseOrder.service';
+import { getContainers } from '../services/container.service';
+import { setContainersList } from '../store/containerSlice';
+
 export default function ContainerFlowPage() {
+  const dispatch = useDispatch();
   const rawPurchaseOrders = useSelector((state) => state.purchaseOrders?.list);
   const purchaseOrders = useMemo(
     () => rawPurchaseOrders || [],
@@ -34,10 +46,167 @@ export default function ContainerFlowPage() {
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
 
+  // ====== PO Infinite Scroll Logic ======
+  const [poList, setPoList] = useState([]);
+  const [poPage, setPoPage] = useState(1);
+  const [poSearch, setPoSearch] = useState('');
+  const [poLoading, setPoLoading] = useState(false);
+  const [poHasMore, setPoHasMore] = useState(true);
+
+  const fetchPOs = useCallback(async (page, search, append = true) => {
+    try {
+      setPoLoading(true);
+      const data = await getPurchaseOrders({ page, page_size: 25, search });
+      const results = Array.isArray(data) ? data : data.results || [];
+      if (results.length < 25) setPoHasMore(false);
+      else setPoHasMore(true);
+
+      setPoList((prev) => (append ? [...prev, ...results] : results));
+    } catch (err) {
+      console.error('Failed to fetch POs for dropdown', err);
+    } finally {
+      setPoLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchPOs(1, '', false);
+    }, 0);
+  }, [fetchPOs]);
+
+  const loadMorePOs = () => {
+    if (!poLoading && poHasMore) {
+      const nextPage = poPage + 1;
+      setPoPage(nextPage);
+      fetchPOs(nextPage, poSearch, true);
+    }
+  };
+
+  const handlePoSearch = (query) => {
+    setPoSearch(query);
+    setPoPage(1);
+    fetchPOs(1, query, false);
+  };
+
+  const vendorsList = useSelector((state) => state.vendors?.list || []);
+  const STATIC_VENDOR_MAP = useMemo(
+    () => ({
+      '3f5551f4-186e-467d-9340-5b74d8e7b766': 'ABC Manufacturing',
+      '4ce542cd-5b23-4653-a884-53391edd9f0f': 'XYZ Logistics & Textiles',
+      'e38f467c-f483-46a4-8172-bce5bb862247': 'Global Tech Sourcing',
+      'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'Shenzhen Electronics Corp',
+    }),
+    [],
+  );
+
+  const poDropdownItems = useMemo(() => {
+    return poList.map((po) => {
+      const vendorName =
+        po.vendor?.name ||
+        STATIC_VENDOR_MAP[po.vendor_id] ||
+        vendorsList.find((v) => v.id === po.vendor_id)?.name ||
+        po.vendorName ||
+        po.vendor_name ||
+        'Unknown Vendor';
+
+      return {
+        value: po.id,
+        label: `${po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.order_number || po.id} - ${vendorName}`,
+      };
+    });
+  }, [poList, vendorsList, STATIC_VENDOR_MAP]);
+
+  // ====== Container Infinite Scroll Logic ======
+  const reduxContainers = useSelector((state) => state.containers?.list || []);
+  const reduxContainersRef = useRef(reduxContainers);
+  useEffect(() => {
+    reduxContainersRef.current = reduxContainers;
+  }, [reduxContainers]);
+
+  const [containerPage, setContainerPage] = useState(1);
+  const [containerSearch, setContainerSearch] = useState('');
+  const [containerLoading, setContainerLoading] = useState(false);
+  const [containerHasMore, setContainerHasMore] = useState(true);
+
+  const fetchContainerAPI = useCallback(
+    async (page, search, append = true) => {
+      try {
+        setContainerLoading(true);
+        const data = await getContainers({ page, page_size: 25, search });
+        const results = Array.isArray(data) ? data : data.results || [];
+        if (results.length < 25) setContainerHasMore(false);
+        else setContainerHasMore(true);
+
+        const prevRedux = append ? reduxContainersRef.current : [];
+        dispatch(setContainersList([...prevRedux, ...results]));
+      } catch (err) {
+        console.error('Failed to fetch containers', err);
+      } finally {
+        setContainerLoading(false);
+      }
+    },
+    [dispatch],
+  );
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchContainerAPI(1, '', false);
+    }, 0);
+  }, [fetchContainerAPI]);
+
+  const loadMoreContainers = () => {
+    if (!containerLoading && containerHasMore) {
+      const nextPage = containerPage + 1;
+      setContainerPage(nextPage);
+      fetchContainerAPI(nextPage, containerSearch, true);
+    }
+  };
+
+  const handleContainerSearch = (query) => {
+    setContainerSearch(query);
+    setContainerPage(1);
+    fetchContainerAPI(1, query, false);
+  };
+
+  const containerDropdownItems = useMemo(() => {
+    if (!Array.isArray(reduxContainers)) return [];
+    const derived = reduxContainers.map((c) => {
+      const displayValue =
+        c.container_name ||
+        c.name ||
+        c.container_number ||
+        c.containerNumber ||
+        c.id ||
+        'Unnamed Container';
+      return {
+        value: displayValue,
+        label: displayValue,
+      };
+    });
+    // Allow custom creation if not matching
+    if (
+      containerSearch &&
+      !derived.some(
+        (c) => c.label.toLowerCase() === containerSearch.toLowerCase(),
+      )
+    ) {
+      derived.unshift({
+        value: containerSearch,
+        label: `+ Create "${containerSearch}"`,
+      });
+    }
+    return derived;
+  }, [reduxContainers, containerSearch]);
+
   // Derived data
   const selectedPO = useMemo(() => {
-    return purchaseOrders.find((po) => po.id === selectedPOId) || null;
-  }, [selectedPOId, purchaseOrders]);
+    return (
+      poList.find((po) => po.id === selectedPOId) ||
+      purchaseOrders.find((po) => po.id === selectedPOId) ||
+      null
+    );
+  }, [selectedPOId, poList, purchaseOrders]);
 
   const availableItems = useMemo(() => {
     if (!selectedPO || !selectedPO.items) return [];
@@ -140,8 +309,8 @@ export default function ContainerFlowPage() {
     );
   }, [purchaseOrders, localContainers, deletedContainers]);
 
-  const handlePOChange = (e) => {
-    setSelectedPOId(e.target.value);
+  const handlePOChange = (val) => {
+    setSelectedPOId(val);
     setContainerName('');
     setOriginalContainerName('');
     setSelectedItems([]);
@@ -528,19 +697,17 @@ export default function ContainerFlowPage() {
           </div>
 
           <div className="relative">
-            <select
+            <InfiniteScrollDropdown
               value={selectedPOId}
               onChange={handlePOChange}
-              className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
-            >
-              <option value="">-- Choose a Purchase Order --</option>
-              {purchaseOrders.map((po) => (
-                <option key={po.id} value={po.id}>
-                  {po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id}{' '}
-                  - {po.vendorName || po.vendor_name || 'Unknown Vendor'}
-                </option>
-              ))}
-            </select>
+              onSearch={handlePoSearch}
+              onLoadMore={loadMorePOs}
+              hasMore={poHasMore}
+              isLoading={poLoading}
+              items={poDropdownItems}
+              placeholder="-- Choose a Purchase Order --"
+              searchPlaceholder="Search POs..."
+            />
           </div>
         </div>
 
@@ -562,12 +729,16 @@ export default function ContainerFlowPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Container Number / Name
                   </label>
-                  <input
-                    type="text"
+                  <InfiniteScrollDropdown
                     value={containerName}
-                    onChange={(e) => setContainerName(e.target.value)}
+                    onChange={(val) => setContainerName(val)}
+                    onSearch={handleContainerSearch}
+                    onLoadMore={loadMoreContainers}
+                    hasMore={containerHasMore}
+                    isLoading={containerLoading}
+                    items={containerDropdownItems}
                     placeholder="e.g. TCNU 1234567"
-                    className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-slate-800"
+                    searchPlaceholder="Search or create containers..."
                   />
                 </div>
 

@@ -127,3 +127,5 @@ export const SYNC_HISTORY = '/sync/history';
 export const ADMIN_SETTINGS = '/admin/settings';
 export const ADMIN_ROLES = '/admin/roles';
 export const ADMIN_AUDIT_LOGS = '/admin/audit-logs';
+
+export const CONTAINERS_LIST = '/containers';
