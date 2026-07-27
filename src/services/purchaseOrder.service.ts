@@ -6,6 +6,7 @@ import {
   PO_UPDATE,
   PO_DELETE,
   PO_FILTERS_ALL,
+  PO_EXPORT_CSV,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -92,6 +93,14 @@ export async function getPurchaseOrders(params?: {
 }): Promise<PurchaseOrder[] | PaginatedResult<PurchaseOrder> | any> {
   const { data } = await apiClient.get<any>(PO_LIST, { params });
   return data;
+}
+
+/** Export POs to CSV */
+export async function exportPurchaseOrdersCSV(payload?: any) {
+  const response = await apiClient.post(PO_EXPORT_CSV, payload, {
+    responseType: 'blob', // crucial for downloading files
+  });
+  return response.data;
 }
 
 /** Fetch all purchase orders filters */

@@ -34,7 +34,7 @@ import {
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
-import { updatePOLeadTime } from '../services/purchaseOrder.service';
+import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
@@ -108,7 +108,7 @@ export default function POManagement({
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders.list);
   const kanbanList = useSelector((state: any) => state.purchaseOrders.kanbanList || {});
-  const allListPOs = useSelector((state: any) => state.purchaseOrders.allList || []);
+
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -243,7 +243,6 @@ export default function POManagement({
   const sortedPOs = [...purchaseOrders.filter((po) => {
     const matchesSearch =
       po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.container.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (po.invoiceDetails?.invoiceNumber || '')
         .toLowerCase()
@@ -253,62 +252,13 @@ export default function POManagement({
       );
 
     const matchesStatus = statusFilter === 'all' || po.status === statusFilter;
-    const matchesVendor =
-      vendorFilter === 'all' || po.vendorId === vendorFilter;
 
     // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
     if (userRole === 'Vendor') {
-      const vendorUser = vendors.find(
-        (v) =>
-          v.email.toLowerCase().includes('john@') ||
-          v.email.toLowerCase().includes('emily@') ||
-          v.email.toLowerCase().includes('sophia@'),
-      );
-      // ABC Manufacturing associated default
       return matchesSearch && matchesStatus && po.vendorId === 'VEND-001';
     }
 
-    return matchesSearch && matchesStatus && matchesVendor;
-  })].sort((a, b) => {
-    if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
-    
-    let aValue: any;
-    let bValue: any;
-    
-    if (activeSortConfig.key === 'invoiceDate') {
-      aValue = a.invoiceDetails?.date || (a as any).invoice_date || '';
-      bValue = b.invoiceDetails?.date || (b as any).invoice_date || '';
-    } else {
-      aValue = a[activeSortConfig.key as keyof PurchaseOrder] || '';
-      bValue = b[activeSortConfig.key as keyof PurchaseOrder] || '';
-    }
-
-    if (aValue < bValue) return activeSortConfig.direction === 'asc' ? -1 : 1;
-    if (aValue > bValue) return activeSortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const allSortedPOs = [...allListPOs.filter((po) => {
-    const matchesSearch =
-      po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.container.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (po.invoiceDetails?.invoiceNumber || '')
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      po.skus.some((sku: string) =>
-        sku.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-
-    const matchesStatus = statusFilter === 'all' || po.status === statusFilter;
-    const matchesVendor =
-      vendorFilter === 'all' || po.vendorId === vendorFilter;
-
-    if (userRole === 'Vendor') {
-      return matchesSearch && matchesStatus && po.vendorId === 'VEND-001';
-    }
-
-    return matchesSearch && matchesStatus && matchesVendor;
+    return matchesSearch && matchesStatus;
   })].sort((a, b) => {
     if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
     
@@ -364,33 +314,84 @@ export default function POManagement({
   // Email Logs for selected PO
   const selectedPOEmails = emails.filter((e) => e.poId === selectedPOId);
 
-  // Execute manual CSV export (Rule 12)
-  const handleExportCSV = () => {
-    let csvContent = 'data:text/csv;charset=utf-8,';
-    csvContent +=
-      'PO Number,Vendor,Status,Ordered Qty,Received Qty,Container,Invoice,ETA,Delayed Days\n';
+  // Execute CSV export using backend API (Rule 12)
+  const handleExportCSV = async () => {
+    try {
+      const toastId = toast.loading('Gathering Purchase Orders...');
+      
+      const params: any = {};
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== 'all') params.status_label = statusFilter;
+      if (vendorFilter !== 'all') {
+        const dbVendorId = vendorFilter;
+        // NOTE: In POManagementPage it translates 'VEND-001' to db ID. 
+        // We'll pass the filter directly, assuming it matches what backend needs.
+        params.vendor_id = vendorFilter;
+      }
+      if (userRole === 'Vendor') {
+        params.vendor_id = '3f5551f4-186e-467d-9340-5b74d8e7b766';
+      }
 
-    const itemsToExport = allSortedPOs.length > 0 ? allSortedPOs : filteredPOs;
+      // Fetch all matching POs
+      let fetchPage = 1;
+      const allPoNumbers: number[] = [];
 
-    itemsToExport.forEach((po) => {
-      csvContent += `${po.id},"${po.vendorName}",${po.status},${po.orderedQty},${po.receivedQty},${po.container || 'N/A'},${po.invoiceStatus},${po.eta},${po.delayedDays}\n`;
-    });
+      while (true) {
+        const response = await getPurchaseOrders({
+          ...params,
+          page: fetchPage,
+          page_size: 100,
+        });
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute(
-      'download',
-      `SupplyChainCRM_PO_Export_${new Date().toISOString().split('T')[0]}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        if (response && Array.isArray(response)) {
+          response.forEach(po => {
+            const num = Number(po.sellercloud_po_id || po.po_number || po.id);
+            if (!isNaN(num)) allPoNumbers.push(num);
+          });
+          break;
+        } else if (response && response.results && Array.isArray(response.results)) {
+          response.results.forEach((po: any) => {
+            const num = Number(po.sellercloud_po_id || po.po_number || po.id);
+            if (!isNaN(num)) allPoNumbers.push(num);
+          });
+          if (!response.next && response.results.length < 100) {
+            break;
+          }
+          fetchPage++;
+        } else {
+          break;
+        }
+      }
 
-    onAddActivity(
-      'Exported filtered Purchase Order database to CSV',
-      'PO Updated',
-    );
+      if (allPoNumbers.length === 0) {
+        toast.update(toastId, { render: 'No data to export', type: 'info', isLoading: false, autoClose: 3000 });
+        return;
+      }
+
+      toast.update(toastId, { render: `Exporting ${allPoNumbers.length} records...` });
+
+      // Pass gathered PO numbers to the export API
+      const blob = await exportPurchaseOrdersCSV({ po_ids: allPoNumbers });
+
+      const downloadUrl = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute(
+        'download',
+        `SupplyChainCRM_PO_Export_${new Date().toISOString().split('T')[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.update(toastId, { render: 'Export successful!', type: 'success', isLoading: false, autoClose: 3000 });
+      onAddActivity('Exported PO list via backend API', 'PO Updated');
+    } catch (error) {
+      console.error('Export failed', error);
+      toast.dismiss();
+      toast.error('Failed to export CSV. Please try again.');
+    }
   };
 
   // CSV Mock Import parsing (Rule 12)
@@ -842,13 +843,8 @@ Supply Chain CRM Coordinator`;
                       </span>
                     </div>
                   </th>
-                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('vendorName')}>
-                    <div className="flex items-center gap-1">
-                      Vendor
-                      <span className="text-slate-400 group-hover:text-indigo-600">
-                        {activeSortConfig.key === 'vendorName' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
-                      </span>
-                    </div>
+                  <th className="px-6 py-4 bg-slate-50">
+                    Vendor
                   </th>
                   <th className="px-6 py-4 bg-slate-50">PO Items</th>
                   <th className="px-6 py-4 bg-slate-50">Ordered / Received Qty</th>
@@ -1136,52 +1132,6 @@ Supply Chain CRM Coordinator`;
                             {po.container || 'No Vessel'}
                           </span>
                         </div>
-
-                        {/* Kanban Quick Transition arrows for Admin/Staff */}
-                        {userRole !== 'Vendor' && (
-                          <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition flex gap-1 bg-white pl-1.5 shadow-sm rounded-sm">
-                            {stage !== '1. New' && (
-                              <button
-                                title="Move Previous Stage"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const stages: string[] =
-                                    [
-                                      '1. New',
-                                      '2. Invoice Delayed',
-                                      '3. Delivery Delayed',
-                                      '4. Remaining Order Items',
-                                    ];
-                                  const idx = stages.indexOf(stage);
-                                  handleMoveKanban(po, stages[idx - 1] as any);
-                                }}
-                                className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
-                              >
-                                ←
-                              </button>
-                            )}
-                            {stage !== '4. Remaining Order Items' && (
-                              <button
-                                title="Move Next Stage"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const stages: string[] =
-                                    [
-                                      '1. New',
-                                      '2. Invoice Delayed',
-                                      '3. Delivery Delayed',
-                                      '4. Remaining Order Items',
-                                    ];
-                                  const idx = stages.indexOf(stage);
-                                  handleMoveKanban(po, stages[idx + 1] as any);
-                                }}
-                                className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
-                              >
-                                →
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </div>
                     ))}
                     {stagePOs.length === 0 && (
