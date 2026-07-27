@@ -797,7 +797,12 @@ export default function ContainerFlowPage() {
         </div>
         <button
           onClick={handleSave}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
+          disabled={selectedItems.length === 0}
+          className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 text-white ${
+            selectedItems.length === 0
+              ? 'bg-slate-400 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700'
+          }`}
         >
           <Save className="h-3.5 w-3.5" />
           {isEditMode ? 'Update Container' : 'Save Container'}
@@ -805,7 +810,7 @@ export default function ContainerFlowPage() {
       </div>
 
       {/* Visual Stepper */}
-      <div className="w-full max-w-4xl mx-auto px-4 mt-6 mb-2">
+      <div className="w-full max-w-6xl mx-auto px-4 mt-6 mb-2">
         <div className="flex items-center justify-between relative">
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full z-0"></div>
           <div
@@ -861,7 +866,7 @@ export default function ContainerFlowPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="p-4 max-w-5xl mx-auto w-full space-y-4 pb-10">
+      <div className="p-4 max-w-7xl mx-auto w-full space-y-4 pb-10">
         {/* Step 1: Select PO */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -1008,7 +1013,7 @@ export default function ContainerFlowPage() {
             </div>
 
             {/* Step 3: Item Allocation */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-2 flex flex-col h-full min-h-[300px]">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-2 flex flex-col h-[525px]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
