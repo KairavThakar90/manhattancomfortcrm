@@ -48,6 +48,7 @@ export default function POManagementPage() {
 
   // Lift state for server-side pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -72,7 +73,6 @@ export default function POManagementPage() {
     setCurrentPage(1);
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps */
   // Fetch purchase orders from API when page, search, or filters change
   useEffect(() => {
     let cancelled = false;
@@ -153,7 +153,8 @@ export default function POManagementPage() {
 
             // Calculate eta based on invoice_date and container_lead_time_days
             let eta = 'N/A';
-            const leadDays = po.container_lead_time_days || po.containerLeadTimeDays;
+            const leadDays =
+              po.container_lead_time_days || po.containerLeadTimeDays;
             if (po.invoice_date && leadDays) {
               const invoiceDate = new Date(po.invoice_date);
               invoiceDate.setDate(invoiceDate.getDate() + Number(leadDays));
@@ -196,7 +197,8 @@ export default function POManagementPage() {
               eta,
               expected_delivery_date: eta,
               creationDate,
-              containerLeadTimeDays: po.container_lead_time_days || po.containerLeadTimeDays || null,
+              containerLeadTimeDays:
+                po.container_lead_time_days || po.containerLeadTimeDays || null,
               delayedDays: po.delayedDays || 0,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
@@ -248,6 +250,7 @@ export default function POManagementPage() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentPage,
     pageSize,
@@ -255,6 +258,7 @@ export default function POManagementPage() {
     statusFilter,
     vendorFilter,
     userRole,
+    refreshTrigger,
   ]);
 
   // Fetch single purchase order details dynamically on selection
@@ -369,8 +373,8 @@ export default function POManagementPage() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPOId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Loading state
   if (loading && !hasLoadedInitial) {
@@ -426,6 +430,8 @@ export default function POManagementPage() {
           eta: po.eta,
           container: po.container,
           productionStage: po.productionStage,
+          container_lead_time_days:
+            po.containerLeadTimeDays || po.container_lead_time_days || null,
           items: po.items?.map((it) => ({
             sku: it.sku,
             product_name: it.name,
@@ -433,6 +439,9 @@ export default function POManagementPage() {
             unit_price: it.unitPrice,
           })),
         });
+
+        // Background call to purchase order API
+        setRefreshTrigger((prev) => prev + 1);
       } catch (err) {
         console.error('Failed to sync PO update to backend API:', err);
       }
