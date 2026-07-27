@@ -1,5 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useId,
+} from 'react';
 import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 export default function InfiniteScrollDropdown({
   value,
@@ -16,6 +25,8 @@ export default function InfiniteScrollDropdown({
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
   const observerRef = useRef(null);
+  const internalId = useId();
+  const tooltipId = 'dropdown-tooltip-' + internalId.replace(/:/g, '');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,6 +117,8 @@ export default function InfiniteScrollDropdown({
                   key={item.value}
                   ref={isLast ? lastItemRef : null}
                   type="button"
+                  data-tooltip-id={tooltipId}
+                  data-tooltip-content={item.label}
                   onClick={() => {
                     onChange(item.value, item);
                     setIsOpen(false);
@@ -127,6 +140,20 @@ export default function InfiniteScrollDropdown({
             )}
           </div>
         </div>
+      )}
+      {isOpen && (
+        <Tooltip
+          id={tooltipId}
+          place="right"
+          delayShow={400}
+          style={{
+            zIndex: 100,
+            maxWidth: '300px',
+            fontSize: '13px',
+            backgroundColor: '#4f46e5',
+            color: '#ffffff',
+          }}
+        />
       )}
     </div>
   );

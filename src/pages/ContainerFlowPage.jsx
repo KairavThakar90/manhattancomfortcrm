@@ -354,6 +354,26 @@ export default function ContainerFlowPage() {
     );
   }, [selectedPO, selectedItems, fetchedPOItems]);
 
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
+
+  const itemDropdownItems = useMemo(() => {
+    return availableItems
+      .filter((item) => {
+        if (!itemSearchQuery) return true;
+        const itemName = item.product_name || item.name || '';
+        const lowerSearch = itemSearchQuery.toLowerCase();
+        return (
+          item.sku.toLowerCase().includes(lowerSearch) ||
+          itemName.toLowerCase().includes(lowerSearch)
+        );
+      })
+      .map((item) => ({
+        value: item.sku,
+        label:
+          `${item.sku} ${item.product_name || item.name ? `- ${item.product_name || item.name}` : ''}`.trim(),
+      }));
+  }, [availableItems, itemSearchQuery]);
+
   const allContainers = useMemo(() => {
     const map = new Map();
     purchaseOrders.forEach((po) => {
@@ -1026,36 +1046,27 @@ export default function ContainerFlowPage() {
 
                 {(availableItems.length > 0 || loadingPOItems) && (
                   <div className="relative w-64">
-                    <select
+                    <InfiniteScrollDropdown
                       value=""
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAddItem(e.target.value);
-                          e.target.value = '';
+                      onChange={(val) => {
+                        if (val) {
+                          handleAddItem(val);
                         }
                       }}
-                      disabled={loadingPOItems}
-                      className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="" disabled hidden>
-                        {loadingPOItems
+                      onSearch={(query) => setItemSearchQuery(query)}
+                      onLoadMore={() => {}}
+                      hasMore={false}
+                      isLoading={loadingPOItems}
+                      items={itemDropdownItems}
+                      placeholder={
+                        loadingPOItems
                           ? 'Loading items...'
                           : isEditMode
                             ? '+ Add item from PO...'
-                            : '+ Add items'}
-                      </option>
-                      {!loadingPOItems &&
-                        availableItems.map((item) => {
-                          return (
-                            <option key={item.sku} value={item.sku}>
-                              {item.sku}{' '}
-                              {item.product_name || item.name
-                                ? `- ${item.product_name || item.name}`
-                                : ''}
-                            </option>
-                          );
-                        })}
-                    </select>
+                            : '+ Add items'
+                      }
+                      searchPlaceholder="Search items by SKU or Name..."
+                    />
                   </div>
                 )}
               </div>
