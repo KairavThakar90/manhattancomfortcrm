@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import {
   setPurchaseOrdersList,
   setKanbanList,
+  setAllPurchaseOrders,
 } from '../store/purchaseOrderSlice';
 import POManagement from '../components/POManagement';
 import { useCRM } from '../hooks/useCRM';
@@ -279,6 +280,46 @@ export default function POManagementPage() {
             );
           } catch (kanbanErr) {
             console.error('Failed to fetch kanban data', kanbanErr);
+          }
+
+          // Fetch all for export (background)
+          try {
+            let allResults = [];
+            let fetchPage = 1;
+
+            while (true) {
+              const allParams = {
+                ...params,
+                page: fetchPage,
+                page_size: 100, // Safe page size
+              };
+              const response = await getPurchaseOrders(allParams);
+
+              if (response && Array.isArray(response)) {
+                allResults = response;
+                break; // Not paginated
+              } else if (
+                response &&
+                response.results &&
+                Array.isArray(response.results)
+              ) {
+                allResults.push(...response.results);
+                // Check if there is next page
+                if (!response.next && response.results.length < 100) {
+                  break;
+                }
+                fetchPage++;
+              } else {
+                break;
+              }
+            }
+            dispatch(setAllPurchaseOrders(mapPOData(allResults)));
+            console.log(
+              'Fetched all POs for export, total:',
+              allResults.length,
+            );
+          } catch (allErr) {
+            console.error('Failed to fetch all POs for export', allErr);
           }
         }
       } catch (err) {

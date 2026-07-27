@@ -106,9 +106,9 @@ export default function POManagement({
   sortConfig: propSortConfig,
   onSortChange: propOnSortChange,
 }: POManagementProps) {
-  const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
-
+  const reduxPOs = useSelector((state: any) => state.purchaseOrders.list);
   const kanbanList = useSelector((state: any) => state.purchaseOrders.kanbanList || {});
+  const allListPOs = useSelector((state: any) => state.purchaseOrders.allList || []);
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -288,6 +288,46 @@ export default function POManagement({
     return 0;
   });
 
+  const allSortedPOs = [...allListPOs.filter((po) => {
+    const matchesSearch =
+      po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      po.container.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (po.invoiceDetails?.invoiceNumber || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      po.skus.some((sku: string) =>
+        sku.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+    const matchesStatus = statusFilter === 'all' || po.status === statusFilter;
+    const matchesVendor =
+      vendorFilter === 'all' || po.vendorId === vendorFilter;
+
+    if (userRole === 'Vendor') {
+      return matchesSearch && matchesStatus && po.vendorId === 'VEND-001';
+    }
+
+    return matchesSearch && matchesStatus && matchesVendor;
+  })].sort((a, b) => {
+    if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
+    
+    let aValue: any;
+    let bValue: any;
+    
+    if (activeSortConfig.key === 'invoiceDate') {
+      aValue = a.invoiceDetails?.date || (a as any).invoice_date || '';
+      bValue = b.invoiceDetails?.date || (b as any).invoice_date || '';
+    } else {
+      aValue = a[activeSortConfig.key as keyof PurchaseOrder] || '';
+      bValue = b[activeSortConfig.key as keyof PurchaseOrder] || '';
+    }
+
+    if (aValue < bValue) return activeSortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return activeSortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   const filteredPOs = sortedPOs;
 
   // Pagination calculation
@@ -330,7 +370,9 @@ export default function POManagement({
     csvContent +=
       'PO Number,Vendor,Status,Ordered Qty,Received Qty,Container,Invoice,ETA,Delayed Days\n';
 
-    filteredPOs.forEach((po) => {
+    const itemsToExport = allSortedPOs.length > 0 ? allSortedPOs : filteredPOs;
+
+    itemsToExport.forEach((po) => {
       csvContent += `${po.id},"${po.vendorName}",${po.status},${po.orderedQty},${po.receivedQty},${po.container || 'N/A'},${po.invoiceStatus},${po.eta},${po.delayedDays}\n`;
     });
 
@@ -682,13 +724,13 @@ Supply Chain CRM Coordinator`;
 
         {/* Global actions: Create PO, Import, Export */}
         <div className="flex items-center gap-2 flex-wrap">
-          <button
+          {/* <button
             onClick={() => setShowImportModal(true)}
             className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
           >
             <FileUp className="h-3.5 w-3.5" />
             <span>Import CSV</span>
-          </button>
+          </button> */}
 
           <button
             onClick={handleExportCSV}
