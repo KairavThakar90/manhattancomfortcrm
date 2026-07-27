@@ -25,6 +25,7 @@ export default function ContainerFlowPage() {
   // State for the flow
   const [selectedPOId, setSelectedPOId] = useState('');
   const [containerName, setContainerName] = useState('');
+  const [originalContainerName, setOriginalContainerName] = useState('');
 
   const [localContainers, setLocalContainers] = useState([]);
   const [deletedContainers, setDeletedContainers] = useState(new Set());
@@ -130,7 +131,11 @@ export default function ContainerFlowPage() {
       arrivalDate: c.arrivalDate,
     }));
 
-    return [...localContainers, ...derived].filter(
+    // Local containers take precedence over derived containers
+    const localNames = new Set(localContainers.map((c) => c.name));
+    const filteredDerived = derived.filter((c) => !localNames.has(c.name));
+
+    return [...localContainers, ...filteredDerived].filter(
       (c) => !deletedContainers.has(c.name),
     );
   }, [purchaseOrders, localContainers, deletedContainers]);
@@ -138,6 +143,7 @@ export default function ContainerFlowPage() {
   const handlePOChange = (e) => {
     setSelectedPOId(e.target.value);
     setContainerName('');
+    setOriginalContainerName('');
     setSelectedItems([]);
   };
 
@@ -220,16 +226,37 @@ export default function ContainerFlowPage() {
     };
 
     if (isEditMode) {
-      setLocalContainers((prev) =>
-        prev.map((c) => (c.name === containerName.trim() ? newContainer : c)),
-      );
+      setLocalContainers((prev) => {
+        const exists = prev.some((c) => c.name === originalContainerName);
+        if (exists) {
+          return prev.map((c) =>
+            c.name === originalContainerName ? newContainer : c,
+          );
+        } else {
+          return [newContainer, ...prev];
+        }
+      });
       toast.success('Container updated successfully!');
     } else {
       setLocalContainers((prev) => [newContainer, ...prev]);
       toast.success('Container created and items allocated successfully!');
     }
 
+    setDeletedContainers((prev) => {
+      const next = new Set(prev);
+      next.delete(containerName.trim());
+      if (
+        isEditMode &&
+        originalContainerName &&
+        originalContainerName !== containerName.trim()
+      ) {
+        next.add(originalContainerName);
+      }
+      return next;
+    });
+
     setContainerName('');
+    setOriginalContainerName('');
     setSelectedItems([]);
     setSelectedPOId('');
     setShowList(true); // Switch back to Assign Container Table
@@ -239,6 +266,7 @@ export default function ContainerFlowPage() {
     setIsEditMode(false);
     setSelectedPOId('');
     setContainerName('');
+    setOriginalContainerName('');
     setSelectedItems([]);
     setShowList(false);
   };
@@ -259,6 +287,7 @@ export default function ContainerFlowPage() {
 
   const handleEditContainer = (container) => {
     setContainerName(container.name);
+    setOriginalContainerName(container.name);
 
     const poId = container.poIds[0] || '';
     setSelectedPOId(poId);
