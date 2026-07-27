@@ -732,13 +732,15 @@ Supply Chain CRM Coordinator`;
             <span>Import CSV</span>
           </button> */}
 
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
-          >
-            <FileSpreadsheet className="h-3.5 w-3.5" />
-            <span>Export CSV</span>
-          </button>
+          {activeSubTab !== 'kanban' && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>Export CSV</span>
+            </button>
+          )}
 
           {/* {userRole !== 'Vendor' && (
             <button

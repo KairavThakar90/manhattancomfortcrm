@@ -12,7 +12,7 @@ import {
   createPurchaseOrder,
   patchPurchaseOrder,
   getPurchaseOrderById,
-  getPurchaseOrdersByFilter,
+  getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -251,31 +251,75 @@ export default function POManagementPage() {
 
           // Fetch Kanban specific statuses concurrently
           try {
-            const [newRes, invRes, delRes, remRes] = await Promise.all([
-              getPurchaseOrdersByFilter(
-                'new_without_invoice',
-                params.vendor_id,
-              ),
-              getPurchaseOrdersByFilter('invoice_delayed', params.vendor_id),
-              getPurchaseOrdersByFilter('delivery_overdue', params.vendor_id),
-              getPurchaseOrdersByFilter('remaining_items', params.vendor_id),
-            ]);
+            const allFiltersRes = await getPurchaseOrdersAllFilters(
+              params.vendor_id,
+            );
 
-            const extractArray = (res) => {
-              if (Array.isArray(res)) return res;
-              if (res?.results && Array.isArray(res.results))
-                return res.results;
-              return [];
+            const safeMap = (arr) => {
+              if (!Array.isArray(arr)) return [];
+              const mappedArr = mapPOData(arr);
+              if (vendorFilter === 'all' && userRole !== 'Vendor')
+                return mappedArr;
+
+              const targetVendor =
+                userRole === 'Vendor' ? 'VEND-001' : vendorFilter;
+              return mappedArr.filter(
+                (po) =>
+                  po.vendorId === targetVendor || po.vendor_id === targetVendor,
+              );
             };
 
-            dispatch(
-              setKanbanList({
-                new_without_invoice: mapPOData(extractArray(newRes)),
-                invoice_delayed: mapPOData(extractArray(invRes)),
-                delivery_overdue: mapPOData(extractArray(delRes)),
-                remaining_items: mapPOData(extractArray(remRes)),
-              }),
-            );
+            if (
+              allFiltersRes &&
+              !Array.isArray(allFiltersRes) &&
+              (allFiltersRes.new_arrivals || allFiltersRes.invoice_delayed)
+            ) {
+              dispatch(
+                setKanbanList({
+                  new_without_invoice: safeMap(
+                    allFiltersRes.new_arrivals?.data || [],
+                  ),
+                  invoice_delayed: safeMap(
+                    allFiltersRes.invoice_delayed?.data || [],
+                  ),
+                  delivery_overdue: safeMap(
+                    allFiltersRes.delivery_overdue?.data || [],
+                  ),
+                  remaining_items: safeMap(
+                    allFiltersRes.remaining_items?.data || [],
+                  ),
+                }),
+              );
+            } else {
+              // Fallback if the backend returned a flat array or something else
+              let rawArr = [];
+              if (Array.isArray(allFiltersRes)) rawArr = allFiltersRes;
+              else if (allFiltersRes?.results) rawArr = allFiltersRes.results;
+
+              const mapped = safeMap(rawArr);
+              dispatch(
+                setKanbanList({
+                  new_without_invoice: mapped.filter(
+                    (po) => po.status === 'New' || po.status === '1. New',
+                  ),
+                  invoice_delayed: mapped.filter(
+                    (po) =>
+                      po.status === 'Invoice Delayed' ||
+                      po.status === '2. Invoice Delayed',
+                  ),
+                  delivery_overdue: mapped.filter(
+                    (po) =>
+                      po.status === 'Delivery Delayed' ||
+                      po.status === '3. Delivery Delayed',
+                  ),
+                  remaining_items: mapped.filter(
+                    (po) =>
+                      po.status === 'Remaining Order Items' ||
+                      po.status === '4. Remaining Order Items',
+                  ),
+                }),
+              );
+            }
           } catch (kanbanErr) {
             console.error('Failed to fetch kanban data', kanbanErr);
           }

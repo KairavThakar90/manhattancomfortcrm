@@ -5,7 +5,7 @@ import {
   PO_CREATE,
   PO_UPDATE,
   PO_DELETE,
-  PO_FILTERS_BY_TYPE,
+  PO_FILTERS_ALL,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -94,13 +94,13 @@ export async function getPurchaseOrders(params?: {
   return data;
 }
 
-/** Fetch purchase orders by kanban filter */
-export async function getPurchaseOrdersByFilter(filterType: string, vendorId?: string) {
+/** Fetch all purchase orders filters */
+export async function getPurchaseOrdersAllFilters(vendorId?: string) {
   const params: any = {};
   if (vendorId) {
     params.vendor_id = vendorId;
   }
-  const { data } = await apiClient.get(PO_FILTERS_BY_TYPE(filterType), { params });
+  const { data } = await apiClient.get(PO_FILTERS_ALL, { params });
   return data;
 }
 
