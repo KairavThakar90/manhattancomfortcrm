@@ -29,8 +29,10 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
 import { updatePOLeadTime } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
@@ -1317,11 +1319,49 @@ Supply Chain CRM Coordinator`;
                                         : 'hover:bg-slate-50/50'
                                     }`}
                                   >
-                                    <td className="px-3 py-2 font-mono font-bold text-slate-500 whitespace-nowrap">
-                                      {item.sku}
+                                    <td className="px-3 py-2 max-w-[120px]">
+                                      <div className="flex items-center gap-1 group">
+                                        <span 
+                                          className="font-mono font-bold text-slate-500 truncate cursor-pointer"
+                                          data-tooltip-id="po-item-tooltip"
+                                          data-tooltip-content={item.sku}
+                                        >
+                                          {item.sku}
+                                        </span>
+                                        <button
+                                          title="Copy SKU"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigator.clipboard.writeText(item.sku);
+                                            toast.success('SKU copied!');
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                        </button>
+                                      </div>
                                     </td>
-                                    <td className="px-3 py-2 font-medium text-slate-800 break-words max-w-[150px]">
-                                      {item.name}
+                                    <td className="px-3 py-2 max-w-[150px]">
+                                      <div className="flex items-start gap-1 group">
+                                        <span 
+                                          className="font-medium text-slate-800 line-clamp-1 cursor-pointer"
+                                          data-tooltip-id="po-item-tooltip"
+                                          data-tooltip-content={item.name}
+                                        >
+                                          {item.name}
+                                        </span>
+                                        <button
+                                          title="Copy Product Name"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigator.clipboard.writeText(item.name);
+                                            toast.success('Product Name copied!');
+                                          }}
+                                          className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                        </button>
+                                      </div>
                                     </td>
                                     <td className="px-3 py-2 text-right font-mono font-medium">
                                       {item.qty.toLocaleString()}
@@ -1386,6 +1426,20 @@ Supply Chain CRM Coordinator`;
                             </tbody>
                           </table>
                         </div>
+                        <Tooltip
+                          id="po-item-tooltip"
+                          place="top"
+                          style={{
+                            backgroundColor: '#4f46e5',
+                            color: '#ffffff',
+                            fontWeight: 500,
+                            fontSize: '11px',
+                            zIndex: 100,
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            maxWidth: '300px'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
