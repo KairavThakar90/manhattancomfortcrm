@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
+import {
+  setPurchaseOrdersList,
+  setKanbanList,
+} from '../store/purchaseOrderSlice';
 import POManagement from '../components/POManagement';
 import { useCRM } from '../hooks/useCRM';
 import {
@@ -8,6 +11,7 @@ import {
   createPurchaseOrder,
   patchPurchaseOrder,
   getPurchaseOrderById,
+  getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -139,8 +143,8 @@ export default function POManagementPage() {
           }
         }
 
-        if (!cancelled) {
-          const mappedPOs = results.map((po) => {
+        const mapPOData = (rawPOs) =>
+          rawPOs.map((po) => {
             const frontVendorId =
               DB_VENDOR_ID_MAP[po.vendor_id] || po.vendor_id || 'N/A';
             const vendor = vendors.find(
@@ -153,7 +157,6 @@ export default function POManagementPage() {
               po.vendor_name ||
               'N/A';
 
-            // Aggregate ordered and received quantities from items
             const orderedQty = po.items
               ? po.items.reduce((sum, item) => sum + (item.qty_ordered || 0), 0)
               : 0;
@@ -163,11 +166,7 @@ export default function POManagementPage() {
                   0,
                 )
               : 0;
-
-            // Map status codes or labels to standard UI status:
             let status = po.status_label || 'N/A';
-
-            // Calculate eta based on invoice_date and container_lead_time_days
             let eta = 'N/A';
             const leadDays =
               po.container_lead_time_days || po.containerLeadTimeDays;
@@ -178,14 +177,13 @@ export default function POManagementPage() {
             } else if (po.expected_delivery_date) {
               eta = po.expected_delivery_date.split('T')[0];
             }
-
             const creationDate = po.created_on
               ? po.created_on.split('T')[0]
               : 'N/A';
 
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
-              uuid: po.id, // Stash real UUID for API calls
+              uuid: po.id,
               orderId: po.order_number || 'N/A',
               vendorId: frontVendorId,
               vendorName,
@@ -245,8 +243,43 @@ export default function POManagementPage() {
             };
           });
 
+        if (!cancelled) {
+          const mappedPOs = mapPOData(results);
           handleUpdatePOs(mappedPOs);
           dispatch(setPurchaseOrdersList(mappedPOs));
+
+          // Fetch Kanban specific statuses concurrently
+          try {
+            const allFiltersRes = await getPurchaseOrdersAllFilters(
+              params.vendor_id,
+            );
+
+            const extractArray = (res) => {
+              if (Array.isArray(res)) return res;
+              if (res?.results && Array.isArray(res.results))
+                return res.results;
+              return [];
+            };
+
+            dispatch(
+              setKanbanList({
+                new_without_invoice: mapPOData(
+                  extractArray(allFiltersRes?.new_without_invoice || []),
+                ),
+                invoice_delayed: mapPOData(
+                  extractArray(allFiltersRes?.invoice_delayed || []),
+                ),
+                delivery_overdue: mapPOData(
+                  extractArray(allFiltersRes?.delivery_overdue || []),
+                ),
+                remaining_items: mapPOData(
+                  extractArray(allFiltersRes?.remaining_items || []),
+                ),
+              }),
+            );
+          } catch (kanbanErr) {
+            console.error('Failed to fetch kanban data', kanbanErr);
+          }
         }
       } catch (err) {
         console.error('API FETCH getPurchaseOrders: failed!', err);

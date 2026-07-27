@@ -5,6 +5,7 @@ import {
   PO_CREATE,
   PO_UPDATE,
   PO_DELETE,
+  PO_FILTERS_ALL,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -60,6 +61,16 @@ export async function getPurchaseOrders(params?: {
   page_size?: number;
 }): Promise<PurchaseOrder[] | PaginatedResult<PurchaseOrder> | any> {
   const { data } = await apiClient.get<any>(PO_LIST, { params });
+  return data;
+}
+
+/** Fetch all purchase orders filters */
+export async function getPurchaseOrdersAllFilters(vendorId?: string) {
+  const params: any = {};
+  if (vendorId) {
+    params.vendor_id = vendorId;
+  }
+  const { data } = await apiClient.get(PO_FILTERS_ALL, { params });
   return data;
 }
 

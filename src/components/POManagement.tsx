@@ -108,7 +108,7 @@ export default function POManagement({
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
 
-  console.log('reduxPOs', reduxPOs);
+  const kanbanList = useSelector((state: any) => state.purchaseOrders.kanbanList || {});
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -1027,15 +1027,13 @@ Supply Chain CRM Coordinator`;
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
             {(
               [
-                '1. New',
-                '2. Invoice Delayed',
-                '3. Delivery Delayed',
-                '4. Remaining Order Items',
-              ] as string[]
-            ).map((stage) => {
-              const stagePOs = filteredPOs.filter(
-                (po) => po.status === stage || (stage === '1. New' && po.status === 'New')
-              );
+                { name: '1. New', key: 'new_without_invoice' },
+                { name: '2. Invoice Delayed', key: 'invoice_delayed' },
+                { name: '3. Delivery Delayed', key: 'delivery_overdue' },
+                { name: '4. Remaining Order Items', key: 'remaining_items' },
+              ]
+            ).map(({ name: stage, key }) => {
+              const stagePOs = kanbanList[key] || [];
               return (
                 <div
                   key={stage}

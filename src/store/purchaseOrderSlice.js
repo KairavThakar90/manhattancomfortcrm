@@ -4,6 +4,12 @@ const purchaseOrderSlice = createSlice({
   name: 'purchaseOrders',
   initialState: {
     list: [],
+    kanbanList: {
+      new_without_invoice: [],
+      invoice_delayed: [],
+      delivery_overdue: [],
+      remaining_items: [],
+    },
   },
   reducers: {
     setPurchaseOrdersList: (state, action) => {
@@ -13,8 +19,12 @@ const purchaseOrderSlice = createSlice({
       );
       state.list = action.payload;
     },
+    setKanbanList: (state, action) => {
+      state.kanbanList = { ...state.kanbanList, ...action.payload };
+    },
   },
 });
 
-export const { setPurchaseOrdersList } = purchaseOrderSlice.actions;
+export const { setPurchaseOrdersList, setKanbanList } =
+  purchaseOrderSlice.actions;
 export default purchaseOrderSlice.reducer;
