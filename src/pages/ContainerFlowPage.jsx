@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
+  Calendar,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -38,6 +39,8 @@ export default function ContainerFlowPage() {
   const [selectedPOId, setSelectedPOId] = useState('');
   const [containerName, setContainerName] = useState('');
   const [originalContainerName, setOriginalContainerName] = useState('');
+  const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
+  const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
 
   const [localContainers, setLocalContainers] = useState([]);
   const [deletedContainers, setDeletedContainers] = useState(new Set());
@@ -184,6 +187,10 @@ export default function ContainerFlowPage() {
         label: displayValue,
       };
     });
+    derived.unshift({
+      value: '__CREATE_NEW__',
+      label: '+ Add New Container Manually',
+    });
     // Allow custom creation if not matching
     if (
       containerSearch &&
@@ -314,6 +321,21 @@ export default function ContainerFlowPage() {
     setContainerName('');
     setOriginalContainerName('');
     setSelectedItems([]);
+
+    const po =
+      poList.find((p) => p.id === val) ||
+      purchaseOrders.find((p) => p.id === val);
+    if (
+      po &&
+      (po.expected_delivery_date || po.eta) &&
+      (po.expected_delivery_date || po.eta) !== 'Pending' &&
+      (po.expected_delivery_date || po.eta) !== 'N/A'
+    ) {
+      const dateStr = (po.expected_delivery_date || po.eta).split('T')[0];
+      setEstimatedArrivalDate(dateStr);
+    } else {
+      setEstimatedArrivalDate('');
+    }
   };
 
   const handleAddItem = (sku) => {
@@ -390,7 +412,10 @@ export default function ContainerFlowPage() {
         0,
       ),
       arrivalDate:
-        selectedPO?.expected_delivery_date || selectedPO?.eta || 'Pending',
+        estimatedArrivalDate ||
+        selectedPO?.expected_delivery_date ||
+        selectedPO?.eta ||
+        'Pending',
       items: selectedItems,
     };
 
@@ -436,6 +461,8 @@ export default function ContainerFlowPage() {
     setSelectedPOId('');
     setContainerName('');
     setOriginalContainerName('');
+    setEstimatedArrivalDate('');
+    setIsManualContainerEntry(true); // Default manual on create
     setSelectedItems([]);
     setShowList(false);
   };
@@ -457,6 +484,16 @@ export default function ContainerFlowPage() {
   const handleEditContainer = (container) => {
     setContainerName(container.name);
     setOriginalContainerName(container.name);
+    if (
+      container.arrivalDate &&
+      container.arrivalDate !== 'Pending' &&
+      container.arrivalDate !== 'N/A'
+    ) {
+      setEstimatedArrivalDate(container.arrivalDate);
+    } else {
+      setEstimatedArrivalDate('');
+    }
+    setIsManualContainerEntry(false);
 
     const poId = container.poIds[0] || '';
     setSelectedPOId(poId);
@@ -726,20 +763,86 @@ export default function ContainerFlowPage() {
 
               <div className="space-y-3">
                 <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Container Number / Name
+                    </label>
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsManualContainerEntry(!isManualContainerEntry);
+                          setContainerName('');
+                        }}
+                        className="text-[10px] text-indigo-600 font-bold hover:underline"
+                      >
+                        {isManualContainerEntry
+                          ? 'Select Existing'
+                          : 'Enter Manually'}
+                      </button>
+                    )}
+                  </div>
+                  {isManualContainerEntry ? (
+                    <input
+                      type="text"
+                      value={containerName}
+                      onChange={(e) => setContainerName(e.target.value)}
+                      placeholder="e.g. TCNU 1234567"
+                      className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-slate-800"
+                    />
+                  ) : (
+                    <InfiniteScrollDropdown
+                      value={containerName}
+                      onChange={(val) => {
+                        if (val === '__CREATE_NEW__') {
+                          setIsManualContainerEntry(true);
+                          setContainerName('');
+                        } else {
+                          setContainerName(val);
+                        }
+                      }}
+                      onSearch={handleContainerSearch}
+                      onLoadMore={loadMoreContainers}
+                      hasMore={containerHasMore}
+                      isLoading={containerLoading}
+                      items={containerDropdownItems}
+                      placeholder="e.g. TCNU 1234567"
+                      searchPlaceholder="Search or create containers..."
+                    />
+                  )}
+                </div>
+
+                <div className="mt-3">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Container Number / Name
+                    Estimated Arrival Date
                   </label>
-                  <InfiniteScrollDropdown
-                    value={containerName}
-                    onChange={(val) => setContainerName(val)}
-                    onSearch={handleContainerSearch}
-                    onLoadMore={loadMoreContainers}
-                    hasMore={containerHasMore}
-                    isLoading={containerLoading}
-                    items={containerDropdownItems}
-                    placeholder="e.g. TCNU 1234567"
-                    searchPlaceholder="Search or create containers..."
-                  />
+                  <div className="relative focus-within:ring-2 focus-within:ring-indigo-500 rounded-md">
+                    <input
+                      type="text"
+                      placeholder="yyyy-mm-dd"
+                      value={estimatedArrivalDate}
+                      readOnly
+                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md outline-none font-medium ${
+                        !estimatedArrivalDate
+                          ? 'text-slate-400 font-normal'
+                          : 'text-slate-800'
+                      }`}
+                    />
+                    <Calendar
+                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] pointer-events-none ${
+                        !estimatedArrivalDate
+                          ? 'text-slate-500'
+                          : 'text-slate-800'
+                      }`}
+                    />
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={estimatedArrivalDate}
+                      onChange={(e) => setEstimatedArrivalDate(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
                 </div>
 
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mt-3">
