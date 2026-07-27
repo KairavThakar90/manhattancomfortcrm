@@ -7,12 +7,17 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowLeft,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export default function ContainerFlowPage() {
-  const purchaseOrders =
-    useSelector((state) => state.purchaseOrders?.list) || [];
+  const rawPurchaseOrders = useSelector((state) => state.purchaseOrders?.list);
+  const purchaseOrders = useMemo(
+    () => rawPurchaseOrders || [],
+    [rawPurchaseOrders],
+  );
 
   // State for toggling between views
   const [showList, setShowList] = useState(true);
@@ -21,8 +26,9 @@ export default function ContainerFlowPage() {
   const [selectedPOId, setSelectedPOId] = useState('');
   const [containerName, setContainerName] = useState('');
 
-  // Local state to store saved containers
   const [localContainers, setLocalContainers] = useState([]);
+  const [deletedContainers, setDeletedContainers] = useState(new Set());
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
@@ -124,8 +130,10 @@ export default function ContainerFlowPage() {
       arrivalDate: c.arrivalDate,
     }));
 
-    return [...localContainers, ...derived];
-  }, [purchaseOrders, localContainers]);
+    return [...localContainers, ...derived].filter(
+      (c) => !deletedContainers.has(c.name),
+    );
+  }, [purchaseOrders, localContainers, deletedContainers]);
 
   const handlePOChange = (e) => {
     setSelectedPOId(e.target.value);
@@ -208,21 +216,62 @@ export default function ContainerFlowPage() {
       ),
       arrivalDate:
         selectedPO?.expected_delivery_date || selectedPO?.eta || 'Pending',
+      items: selectedItems,
     };
 
-    setLocalContainers((prev) => [newContainer, ...prev]);
+    if (isEditMode) {
+      setLocalContainers((prev) =>
+        prev.map((c) => (c.name === containerName.trim() ? newContainer : c)),
+      );
+      toast.success('Container updated successfully!');
+    } else {
+      setLocalContainers((prev) => [newContainer, ...prev]);
+      toast.success('Container created and items allocated successfully!');
+    }
 
-    console.log('Saving Container Flow Data:', {
-      poId: selectedPOId,
-      containerName,
-      items: selectedItems,
-    });
-
-    toast.success('Container created and items allocated successfully!');
     setContainerName('');
     setSelectedItems([]);
     setSelectedPOId('');
     setShowList(true); // Switch back to Assign Container Table
+  };
+
+  const handleCreateContainer = () => {
+    setIsEditMode(false);
+    setSelectedPOId('');
+    setContainerName('');
+    setSelectedItems([]);
+    setShowList(false);
+  };
+
+  const handleDeleteContainer = (container) => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete container ${container.name}?`,
+      )
+    ) {
+      setLocalContainers((prev) =>
+        prev.filter((c) => c.name !== container.name),
+      );
+      setDeletedContainers((prev) => new Set(prev).add(container.name));
+      toast.success('Container deleted successfully');
+    }
+  };
+
+  const handleEditContainer = (container) => {
+    setContainerName(container.name);
+
+    const poId = container.poIds[0] || '';
+    setSelectedPOId(poId);
+
+    const localMatch = localContainers.find((lc) => lc.name === container.name);
+    if (localMatch && localMatch.items) {
+      setSelectedItems(localMatch.items);
+    } else {
+      setSelectedItems([]);
+    }
+
+    setIsEditMode(true);
+    setShowList(false);
   };
 
   const currentStep = !selectedPOId ? 1 : !containerName.trim() ? 2 : 3;
@@ -246,7 +295,7 @@ export default function ContainerFlowPage() {
             </div>
           </div>
           <button
-            onClick={() => setShowList(false)}
+            onClick={handleCreateContainer}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -272,13 +321,16 @@ export default function ContainerFlowPage() {
                     <th className="px-6 py-4 bg-slate-50 text-center">
                       Status
                     </th>
+                    <th className="px-6 py-4 bg-slate-50 text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {allContainers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="5"
+                        colSpan="6"
                         className="px-6 py-12 text-center text-slate-400 italic text-sm"
                       >
                         No containers assigned yet. Click &quot;Add
@@ -314,6 +366,24 @@ export default function ContainerFlowPage() {
                             <CheckCircle2 className="w-3 h-3" /> Assigned
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEditContainer(c)}
+                              className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
+                              title="Edit Container"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContainer(c)}
+                              className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                              title="Delete Container"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -343,7 +413,7 @@ export default function ContainerFlowPage() {
           </div>
           <div>
             <h1 className="text-lg font-display font-bold text-slate-800">
-              Add Container Flow
+              {isEditMode ? 'Edit Container Flow' : 'Add Container Flow'}
             </h1>
             <p className="text-xs text-slate-500 font-medium">
               Create and manage container allocations for Purchase Orders
@@ -355,7 +425,7 @@ export default function ContainerFlowPage() {
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
         >
           <Save className="h-3.5 w-3.5" />
-          Save Container
+          {isEditMode ? 'Update Container' : 'Save Container'}
         </button>
       </div>
 
