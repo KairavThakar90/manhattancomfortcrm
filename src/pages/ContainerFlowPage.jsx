@@ -1065,7 +1065,7 @@ export default function ContainerFlowPage() {
                             ? '+ Add item from PO...'
                             : '+ Add items'
                       }
-                      searchPlaceholder="Search items by SKU or Name..."
+                      searchPlaceholder="Search items..."
                     />
                   </div>
                 )}

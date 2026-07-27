@@ -54,6 +54,7 @@ export default function POManagementPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -89,6 +90,20 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
+
+        if (sortConfig.key && sortConfig.direction) {
+          // Map front-end keys to backend column names if necessary
+          const sortMap = {
+            id: 'sellercloud_po_id',
+            vendorName: 'vendor_name',
+            invoiceDate: 'invoice_date',
+            eta: 'expected_delivery_date',
+          };
+          params.ordering =
+            sortConfig.direction === 'desc'
+              ? `-${sortMap[sortConfig.key] || sortConfig.key}`
+              : sortMap[sortConfig.key] || sortConfig.key;
+        }
 
         if (vendorFilter !== 'all') {
           // Find the database UUID that maps to this front ID (e.g. 'VEND-001')
@@ -259,6 +274,7 @@ export default function POManagementPage() {
     vendorFilter,
     userRole,
     refreshTrigger,
+    sortConfig,
   ]);
 
   // Fetch single purchase order details dynamically on selection
@@ -536,6 +552,8 @@ export default function POManagementPage() {
         onStatusFilterChange={handleStatusFilterChange}
         vendorFilter={vendorFilter}
         onVendorFilterChange={handleVendorFilterChange}
+        sortConfig={sortConfig}
+        onSortChange={(key, direction) => setSortConfig({ key, direction })}
       />
     </>
   );

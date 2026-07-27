@@ -26,6 +26,9 @@ import {
   CalendarDays,
   Upload,
   DollarSign,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
@@ -69,6 +72,8 @@ interface POManagementProps {
   onVendorFilterChange?: (val: string) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
+  sortConfig?: { key: string | null; direction: 'asc' | 'desc' | null };
+  onSortChange?: (key: string | null, direction: 'asc' | 'desc' | null) => void;
 }
 
 export default function POManagement({
@@ -96,6 +101,8 @@ export default function POManagement({
   onVendorFilterChange: propOnVendorFilterChange,
   pageSize: propPageSize,
   onPageSizeChange: propOnPageSizeChange,
+  sortConfig: propSortConfig,
+  onSortChange: propOnSortChange,
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders?.list);
 
@@ -210,8 +217,28 @@ export default function POManagement({
   const [isUploadingOCR, setIsUploadingOCR] = useState(false);
   const [ocrSuccessMsg, setOcrSuccessMsg] = useState<string | null>(null);
 
-  // Smart Search logic: search by PO number, Vendor, SKU, Container, or Invoice (Rule 11)
-  const filteredPOs = purchaseOrders.filter((po) => {
+  const [localSortConfig, setLocalSortConfig] = useState<{
+    key: keyof PurchaseOrder | 'invoiceDate' | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ key: null, direction: null });
+
+  const activeSortConfig = propSortConfig !== undefined ? propSortConfig : localSortConfig;
+
+  const handleSort = (key: keyof PurchaseOrder | 'invoiceDate') => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+    if (activeSortConfig.key === key) {
+      if (activeSortConfig.direction === 'asc') direction = 'desc';
+      else if (activeSortConfig.direction === 'desc') direction = null;
+    }
+    
+    if (propOnSortChange) {
+      propOnSortChange(direction ? key : null, direction);
+    } else {
+      setLocalSortConfig({ key: direction ? key : null, direction });
+    }
+  };
+
+  const sortedPOs = [...purchaseOrders.filter((po) => {
     const matchesSearch =
       po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -240,7 +267,26 @@ export default function POManagement({
     }
 
     return matchesSearch && matchesStatus && matchesVendor;
+  })].sort((a, b) => {
+    if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
+    
+    let aValue: any;
+    let bValue: any;
+    
+    if (activeSortConfig.key === 'invoiceDate') {
+      aValue = a.invoiceDetails?.date || (a as any).invoice_date || '';
+      bValue = b.invoiceDetails?.date || (b as any).invoice_date || '';
+    } else {
+      aValue = a[activeSortConfig.key as keyof PurchaseOrder] || '';
+      bValue = b[activeSortConfig.key as keyof PurchaseOrder] || '';
+    }
+
+    if (aValue < bValue) return activeSortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return activeSortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
   });
+
+  const filteredPOs = sortedPOs;
 
   // Pagination calculation
   const totalPages =
@@ -717,18 +763,49 @@ Supply Chain CRM Coordinator`;
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10">
-                  <th className="px-6 py-4 bg-slate-50">PO Number</th>
-                  <th className="px-6 py-4 bg-slate-50">Order Id</th>
-                  <th className="px-6 py-4 bg-slate-50">Vendor</th>
-                  <th className="px-6 py-4 bg-slate-50">PO Items</th>
-                  <th className="px-6 py-4 bg-slate-50">
-                    Ordered / Received Qty
+                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('id')}>
+                    <div className="flex items-center gap-1">
+                      PO Number
+                      <span className="text-slate-400 group-hover:text-indigo-600">
+                        {activeSortConfig.key === 'id' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+                      </span>
+                    </div>
                   </th>
-                  {/* <th className="px-6 py-4 bg-slate-50">Invoice Status</th> */}
-                  <th className="px-6 py-4 bg-slate-50">Invoice Date</th>
+                  <th className="px-6 py-4 bg-slate-50">Order Id</th>
+                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('vendorName')}>
+                    <div className="flex items-center gap-1">
+                      Vendor
+                      <span className="text-slate-400 group-hover:text-indigo-600">
+                        {activeSortConfig.key === 'vendorName' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 bg-slate-50">PO Items</th>
+                  <th className="px-6 py-4 bg-slate-50">Ordered / Received Qty</th>
+                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('invoiceDate')}>
+                    <div className="flex items-center gap-1">
+                      <div className="flex flex-col">
+                        <span>Invoice Date</span>
+                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+                      </div>
+                      <span className="text-slate-400 group-hover:text-indigo-600">
+                        {activeSortConfig.key === 'invoiceDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+                      </span>
+                    </div>
+                  </th>
                   <th className="px-6 py-4 bg-slate-50">Invoice Delay Status</th>
-                  <th className="px-6 py-4 bg-slate-50">Delivery ETA</th>
-                   <th className="px-6 py-4 bg-slate-50">Container Count</th>
+                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('eta')}>
+                    <div className="flex items-center gap-1">
+                      <div className="flex flex-col">
+                        <span>Delivery ETA</span>
+                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+                      </div>
+                      <span className="text-slate-400 group-hover:text-indigo-600">
+                        {activeSortConfig.key === 'eta' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 bg-slate-50">Container Count</th>
                   <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
                 </tr>
               </thead>
