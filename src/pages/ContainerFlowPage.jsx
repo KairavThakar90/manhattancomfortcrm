@@ -579,6 +579,22 @@ export default function ContainerFlowPage() {
       items: itemsToSave,
     };
 
+    // Construct the payload that would be sent to an API and log it to console
+    const apiPayload = {
+      container_name: newContainer.name,
+      estimated_arrival_date: estimatedArrivalDate || null,
+      po_id: selectedPOId,
+      details: itemsToSave.map((item) => ({
+        sku: item.sku,
+        qty: item.allocateQty,
+        product_name: item.name,
+      })),
+    };
+
+    console.log('--- Container API Payload (Mock) ---');
+    console.log(JSON.stringify([apiPayload], null, 2));
+    console.log('------------------------------------');
+
     if (isEditMode) {
       setLocalContainers((prev) => {
         const exists = prev.some((c) => c.name === originalContainerName);
@@ -669,7 +685,7 @@ export default function ContainerFlowPage() {
     setShowList(false);
   };
 
-  const currentStep = !selectedPOId ? 1 : !containerName.trim() ? 2 : 3;
+  const currentStep = !selectedPOId ? 1 : selectedItems.length === 0 ? 2 : 3;
 
   if (showList) {
     return (
@@ -825,7 +841,7 @@ export default function ContainerFlowPage() {
           }`}
         >
           <Save className="h-3.5 w-3.5" />
-          {isEditMode ? 'Update Container' : 'Save Container'}
+          {isEditMode ? 'Update Container' : 'Create Container'}
         </button>
       </div>
 
@@ -865,7 +881,7 @@ export default function ContainerFlowPage() {
             <span
               className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 2 ? 'text-indigo-900' : 'text-slate-400'}`}
             >
-              Container Details
+              Allocate Items
             </span>
           </div>
 
@@ -879,7 +895,7 @@ export default function ContainerFlowPage() {
             <span
               className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep === 3 ? 'text-indigo-900' : 'text-slate-400'}`}
             >
-              Allocate Items
+              Container Details
             </span>
           </div>
         </div>
@@ -915,129 +931,12 @@ export default function ContainerFlowPage() {
 
         {selectedPO && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            {/* Step 2: Container Details */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
-                  2
-                </span>
-                <h2 className="text-base font-bold text-slate-800">
-                  Container Details
-                </h2>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Container Number / Name
-                    </label>
-                    {isEditMode && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsManualContainerEntry(!isManualContainerEntry);
-                          setContainerName('');
-                        }}
-                        className="text-[10px] text-indigo-600 font-bold hover:underline"
-                      >
-                        {isManualContainerEntry
-                          ? 'Select Existing'
-                          : 'Enter Manually'}
-                      </button>
-                    )}
-                  </div>
-                  {isManualContainerEntry ? (
-                    <input
-                      type="text"
-                      value={containerName}
-                      onChange={(e) => setContainerName(e.target.value)}
-                      placeholder="e.g. TCNU 1234567"
-                      className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-slate-800"
-                    />
-                  ) : (
-                    <InfiniteScrollDropdown
-                      value={containerName}
-                      onChange={(val) => {
-                        if (val === '__CREATE_NEW__') {
-                          setIsManualContainerEntry(true);
-                          setContainerName('');
-                        } else {
-                          setContainerName(val);
-                        }
-                      }}
-                      onSearch={handleContainerSearch}
-                      onLoadMore={loadMoreContainers}
-                      hasMore={containerHasMore}
-                      isLoading={containerLoading}
-                      items={containerDropdownItems}
-                      placeholder="e.g. TCNU 1234567"
-                      searchPlaceholder="Search or create containers..."
-                    />
-                  )}
-                </div>
-
-                <div className="mt-3">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Estimated Arrival Date
-                  </label>
-                  <div className="relative focus-within:ring-2 focus-within:ring-indigo-500 rounded-md">
-                    <input
-                      type="text"
-                      placeholder="yyyy-mm-dd"
-                      value={estimatedArrivalDate}
-                      readOnly
-                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md outline-none font-medium ${
-                        !estimatedArrivalDate
-                          ? 'text-slate-400 font-normal'
-                          : 'text-slate-800'
-                      }`}
-                    />
-                    <Calendar
-                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] pointer-events-none ${
-                        !estimatedArrivalDate
-                          ? 'text-slate-500'
-                          : 'text-slate-800'
-                      }`}
-                    />
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={estimatedArrivalDate}
-                      onChange={(e) => setEstimatedArrivalDate(e.target.value)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mt-3">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-xs font-bold text-blue-900">
-                        PO Status
-                      </h4>
-                      <p className="text-[10px] text-blue-700 mt-0.5">
-                        Currently allocating items for{' '}
-                        <span className="font-mono font-bold">
-                          {selectedPO.sellercloud_po_id
-                            ? `PO-${selectedPO.sellercloud_po_id.toString().replace(/^PO-/, '')}`
-                            : selectedPO.id}
-                        </span>
-                        .
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3: Item Allocation */}
+            {/* Step 2: Item Allocation */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-2 flex flex-col h-[525px]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
-                    3
+                    2
                   </span>
                   <h2 className="text-base font-bold text-slate-800">
                     Allocate Items
@@ -1177,6 +1076,123 @@ export default function ContainerFlowPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Step 3: Container Details */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                  3
+                </span>
+                <h2 className="text-base font-bold text-slate-800">
+                  Container Details
+                </h2>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Container Number / Name
+                    </label>
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsManualContainerEntry(!isManualContainerEntry);
+                          setContainerName('');
+                        }}
+                        className="text-[10px] text-indigo-600 font-bold hover:underline"
+                      >
+                        {isManualContainerEntry
+                          ? 'Select Existing'
+                          : 'Enter Manually'}
+                      </button>
+                    )}
+                  </div>
+                  {isManualContainerEntry ? (
+                    <input
+                      type="text"
+                      value={containerName}
+                      onChange={(e) => setContainerName(e.target.value)}
+                      placeholder="e.g. TCNU 1234567"
+                      className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-slate-800"
+                    />
+                  ) : (
+                    <InfiniteScrollDropdown
+                      value={containerName}
+                      onChange={(val) => {
+                        if (val === '__CREATE_NEW__') {
+                          setIsManualContainerEntry(true);
+                          setContainerName('');
+                        } else {
+                          setContainerName(val);
+                        }
+                      }}
+                      onSearch={handleContainerSearch}
+                      onLoadMore={loadMoreContainers}
+                      hasMore={containerHasMore}
+                      isLoading={containerLoading}
+                      items={containerDropdownItems}
+                      placeholder="e.g. TCNU 1234567"
+                      searchPlaceholder="Search or create containers..."
+                    />
+                  )}
+                </div>
+
+                <div className="mt-3">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Estimated Arrival Date
+                  </label>
+                  <div className="relative focus-within:ring-2 focus-within:ring-indigo-500 rounded-md">
+                    <input
+                      type="text"
+                      placeholder="yyyy-mm-dd"
+                      value={estimatedArrivalDate}
+                      readOnly
+                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md outline-none font-medium ${
+                        !estimatedArrivalDate
+                          ? 'text-slate-400 font-normal'
+                          : 'text-slate-800'
+                      }`}
+                    />
+                    <Calendar
+                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] pointer-events-none ${
+                        !estimatedArrivalDate
+                          ? 'text-slate-500'
+                          : 'text-slate-800'
+                      }`}
+                    />
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={estimatedArrivalDate}
+                      onChange={(e) => setEstimatedArrivalDate(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mt-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-blue-900">
+                        PO Status
+                      </h4>
+                      <p className="text-[10px] text-blue-700 mt-0.5">
+                        Currently allocating items for{' '}
+                        <span className="font-mono font-bold">
+                          {selectedPO.sellercloud_po_id
+                            ? `PO-${selectedPO.sellercloud_po_id.toString().replace(/^PO-/, '')}`
+                            : selectedPO.id}
+                        </span>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
