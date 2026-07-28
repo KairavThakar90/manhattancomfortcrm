@@ -27,6 +27,9 @@ import {
 import {
   getContainers,
   getContainerPOItems,
+  createContainer,
+  updateContainer,
+  deleteContainer,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
@@ -40,6 +43,8 @@ export default function ContainerFlowPage() {
 
   // State for toggling between views
   const [showList, setShowList] = useState(true);
+  const [listPage, setListPage] = useState(1);
+  const [listPageSize] = useState(25);
 
   // State for the flow
   const [selectedPOId, setSelectedPOId] = useState('');
@@ -51,6 +56,7 @@ export default function ContainerFlowPage() {
   const [localContainers, setLocalContainers] = useState([]);
   const [deletedContainers, setDeletedContainers] = useState(new Set());
   const [isEditMode, setIsEditMode] = useState(false);
+  const [editingContainerId, setEditingContainerId] = useState(null);
 
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
@@ -375,10 +381,73 @@ export default function ContainerFlowPage() {
   }, [availableItems, itemSearchQuery]);
 
   const allContainers = useMemo(() => {
-    // Removed frontend PO aggregation logic.
-    // Table now only displays locally created/updated containers.
-    return localContainers.filter((c) => !deletedContainers.has(c.name));
-  }, [localContainers, deletedContainers]);
+    // Map redux containers to the expected table format
+    const apiContainers = reduxContainers.map((c) => {
+      const poIds =
+        c.purchase_orders?.map((p) => p.po_number || p.sellercloud_po_id) || [];
+      if (poIds.length === 0 && c.po_id) poIds.push(c.po_id);
+
+      const totalItems =
+        c.total_qty_in_container ||
+        c.details?.reduce(
+          (acc, curr) => acc + (curr.qty || curr.allocateQty || 0),
+          0,
+        ) ||
+        c.totalItems ||
+        c.total_items ||
+        0;
+
+      let rawDate = c.estimated_arrival_date || c.arrivalDate;
+      let formattedDate = 'Pending';
+      if (rawDate && rawDate !== 'Pending' && rawDate !== 'N/A') {
+        formattedDate = String(rawDate).split('T')[0];
+      }
+
+      const rawRecvDate = c.received_date;
+      let formattedRecvDate = 'N/A';
+      if (rawRecvDate && rawRecvDate !== 'Pending' && rawRecvDate !== 'N/A') {
+        formattedRecvDate = String(rawRecvDate).split('T')[0];
+      }
+
+      return {
+        id: c.id,
+        name:
+          c.container_name ||
+          c.name ||
+          c.container_number ||
+          'Unnamed Container',
+        poIds: poIds.length > 0 ? poIds : ['N/A'],
+        totalItems: totalItems,
+        arrivalDate: formattedDate,
+        items: c.details || c.items || [],
+        isApiOriginated: true,
+        raw: c,
+        total_items: c.total_items || 0,
+        total_qty_in_container: c.total_qty_received || 0,
+        total_qty_received: c.total_qty_in_container || 0,
+        is_received: !!c.is_received,
+        received_date: formattedRecvDate,
+      };
+    });
+
+    // Filter out deleted local containers
+    const filteredLocal = localContainers.filter(
+      (c) => !deletedContainers.has(c.name),
+    );
+
+    // Combine local changes with API list (local takes precedence if same name)
+    const combined = [...filteredLocal];
+    for (const api of apiContainers) {
+      if (
+        !combined.some((lc) => lc.name === api.name) &&
+        !deletedContainers.has(api.name)
+      ) {
+        combined.push(api);
+      }
+    }
+
+    return combined;
+  }, [localContainers, deletedContainers, reduxContainers]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -443,7 +512,7 @@ export default function ContainerFlowPage() {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedPOId) {
       toast.error('Please select a Purchase Order first.');
       return;
@@ -475,25 +544,9 @@ export default function ContainerFlowPage() {
       return;
     }
 
-    // Save to local container table view
-    const newContainer = {
-      name: containerName.trim(),
-      poIds: [selectedPOId],
-      totalItems: itemsToSave.reduce(
-        (acc, curr) => acc + (curr.allocateQty || 0),
-        0,
-      ),
-      arrivalDate:
-        estimatedArrivalDate ||
-        selectedPO?.expected_delivery_date ||
-        selectedPO?.eta ||
-        'Pending',
-      items: itemsToSave,
-    };
-
-    // Construct the payload that would be sent to an API and log it to console
+    // Construct the payload that would be sent to an API
     const apiPayload = {
-      container_name: newContainer.name,
+      container_name: containerName.trim(),
       estimated_arrival_date: estimatedArrivalDate || null,
       po_id: selectedPOId,
       details: itemsToSave.map((item) => ({
@@ -503,25 +556,54 @@ export default function ContainerFlowPage() {
       })),
     };
 
-    console.log('--- Container API Payload (Mock) ---');
-    console.log(JSON.stringify([apiPayload], null, 2));
-    console.log('------------------------------------');
+    try {
+      if (isEditMode && editingContainerId) {
+        await updateContainer(editingContainerId, apiPayload);
+        toast.success('Container updated successfully!');
+      } else {
+        await createContainer(apiPayload);
+        toast.success('Container created and items allocated successfully!');
+      }
 
-    if (isEditMode) {
-      setLocalContainers((prev) => {
-        const exists = prev.some((c) => c.name === originalContainerName);
-        if (exists) {
-          return prev.map((c) =>
-            c.name === originalContainerName ? newContainer : c,
-          );
-        } else {
-          return [newContainer, ...prev];
-        }
-      });
-      toast.success('Container updated successfully!');
-    } else {
-      setLocalContainers((prev) => [newContainer, ...prev]);
-      toast.success('Container created and items allocated successfully!');
+      // Refresh the API list
+      fetchContainerAPI(1, '', false);
+    } catch (error) {
+      console.error('Error saving container', error);
+      toast.error(
+        'Failed to save container data to server. Saving locally instead.',
+      );
+
+      // Fallback local save functionality
+      const newContainer = {
+        id: editingContainerId || `local-${Date.now()}`,
+        name: containerName.trim(),
+        poIds: [selectedPOId],
+        totalItems: itemsToSave.reduce(
+          (acc, curr) => acc + (curr.allocateQty || 0),
+          0,
+        ),
+        arrivalDate:
+          estimatedArrivalDate ||
+          selectedPO?.expected_delivery_date ||
+          selectedPO?.eta ||
+          'Pending',
+        items: itemsToSave,
+      };
+
+      if (isEditMode) {
+        setLocalContainers((prev) => {
+          const exists = prev.some((c) => c.name === originalContainerName);
+          if (exists) {
+            return prev.map((c) =>
+              c.name === originalContainerName ? newContainer : c,
+            );
+          } else {
+            return [newContainer, ...prev];
+          }
+        });
+      } else {
+        setLocalContainers((prev) => [newContainer, ...prev]);
+      }
     }
 
     setDeletedContainers((prev) => {
@@ -539,6 +621,7 @@ export default function ContainerFlowPage() {
 
     setContainerName('');
     setOriginalContainerName('');
+    setEditingContainerId(null);
     setSelectedItems([]);
     setSelectedPOId('');
     setShowList(true); // Switch back to Assign Container Table
@@ -546,6 +629,7 @@ export default function ContainerFlowPage() {
 
   const handleCreateContainer = () => {
     setIsEditMode(false);
+    setEditingContainerId(null);
     setSelectedPOId('');
     setContainerName('');
     setOriginalContainerName('');
@@ -555,21 +639,35 @@ export default function ContainerFlowPage() {
     setShowList(false);
   };
 
-  const handleDeleteContainer = (container) => {
+  const handleDeleteContainer = async (container) => {
     if (
       window.confirm(
         `Are you sure you want to delete container ${container.name}?`,
       )
     ) {
-      setLocalContainers((prev) =>
-        prev.filter((c) => c.name !== container.name),
-      );
-      setDeletedContainers((prev) => new Set(prev).add(container.name));
-      toast.success('Container deleted successfully');
+      if (container.isApiOriginated && container.id) {
+        try {
+          await deleteContainer(container.id);
+          toast.success('Container deleted successfully from server');
+          fetchContainerAPI(1, '', false);
+        } catch (error) {
+          console.error('Error deleting container', error);
+          toast.error(
+            'Failed to delete container on server. Marking as deleted locally.',
+          );
+          setDeletedContainers((prev) => new Set(prev).add(container.name));
+        }
+      } else {
+        setLocalContainers((prev) =>
+          prev.filter((c) => c.name !== container.name),
+        );
+        toast.success('Local container deleted successfully');
+      }
     }
   };
 
   const handleEditContainer = (container) => {
+    setEditingContainerId(container.id || null);
     setContainerName(container.name);
     setOriginalContainerName(container.name);
     if (
@@ -636,14 +734,14 @@ export default function ContainerFlowPage() {
                     <th className="px-6 py-4 bg-slate-50">
                       Container ID / Name
                     </th>
-                    <th className="px-6 py-4 bg-slate-50">Assigned POs</th>
-                    <th className="px-6 py-4 bg-slate-50">
-                      Total Items Allocated
+                    <th className="px-4 py-4 bg-slate-50">Total Items</th>
+                    <th className="px-4 py-4 bg-slate-50">Total Qty</th>
+                    <th className="px-4 py-4 bg-slate-50">Total Received</th>
+                    <th className="px-4 py-4 bg-slate-50">ETA (Delivery)</th>
+                    <th className="px-4 py-4 bg-slate-50 text-center">
+                      Is Received?
                     </th>
-                    <th className="px-6 py-4 bg-slate-50">ETA (Delivery)</th>
-                    <th className="px-6 py-4 bg-slate-50 text-center">
-                      Status
-                    </th>
+                    <th className="px-4 py-4 bg-slate-50">Received Date</th>
                     <th className="px-6 py-4 bg-slate-50 text-right">
                       Actions
                     </th>
@@ -653,7 +751,7 @@ export default function ContainerFlowPage() {
                   {allContainers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="6"
+                        colSpan="8"
                         className="px-6 py-12 text-center text-slate-400 italic text-sm"
                       >
                         No containers assigned yet. Click &quot;Add
@@ -661,58 +759,106 @@ export default function ContainerFlowPage() {
                       </td>
                     </tr>
                   ) : (
-                    allContainers.map((c, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-slate-50/75 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-mono font-bold text-slate-800">
-                          {c.name}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-indigo-600 text-xs break-words max-w-[300px]">
-                          {c.poIds
-                            .map((po) =>
-                              po.startsWith('PO-') ? po : `PO-${po}`,
-                            )
-                            .join(', ')}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-slate-700">
-                          {c.totalItems > 0
-                            ? c.totalItems.toLocaleString()
-                            : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 font-medium text-xs">
-                          {c.arrivalDate}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" /> Assigned
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleEditContainer(c)}
-                              className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
-                              title="Edit Container"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContainer(c)}
-                              className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
-                              title="Delete Container"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    allContainers
+                      .slice(
+                        (listPage - 1) * listPageSize,
+                        listPage * listPageSize,
+                      )
+                      .map((c, i) => (
+                        <tr
+                          key={i}
+                          className="hover:bg-slate-50/75 transition-colors"
+                        >
+                          <td className="px-6 py-4 font-mono font-bold text-slate-800">
+                            {c.name}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-slate-700">
+                            {c.total_items}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-slate-700">
+                            {c.total_qty_in_container}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-indigo-600">
+                            {c.total_qty_received}
+                          </td>
+                          <td className="px-4 py-4 text-slate-600 font-medium text-xs">
+                            {c.arrivalDate}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            {c.is_received ? (
+                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" /> Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
+                                No
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-slate-600 font-medium text-xs">
+                            {c.received_date}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleEditContainer(c)}
+                                className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
+                                title="Edit Container"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContainer(c)}
+                                className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                                title="Delete Container"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {allContainers.length > 0 && (
+              <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-medium">
+                  Showing{' '}
+                  {Math.min(
+                    (listPage - 1) * listPageSize + 1,
+                    allContainers.length,
+                  )}{' '}
+                  to {Math.min(listPage * listPageSize, allContainers.length)}{' '}
+                  of {allContainers.length} containers
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setListPage((p) => Math.max(1, p - 1))}
+                    disabled={listPage === 1}
+                    className="px-3 py-1 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs font-bold text-slate-700 px-2">
+                    Page {listPage} of{' '}
+                    {Math.ceil(allContainers.length / listPageSize)}
+                  </span>
+                  <button
+                    onClick={() => setListPage((p) => p + 1)}
+                    disabled={
+                      listPage >= Math.ceil(allContainers.length / listPageSize)
+                    }
+                    className="px-3 py-1 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
