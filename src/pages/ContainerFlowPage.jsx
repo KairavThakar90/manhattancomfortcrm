@@ -375,98 +375,10 @@ export default function ContainerFlowPage() {
   }, [availableItems, itemSearchQuery]);
 
   const allContainers = useMemo(() => {
-    const map = new Map();
-    purchaseOrders.forEach((po) => {
-      // 1. handle top-po container string
-      if (
-        po.container &&
-        po.container !== 'N/A' &&
-        po.container !== 'Pending' &&
-        po.container !== 'Awaiting Vessel Booking'
-      ) {
-        const names = po.container
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-        names.forEach((name) => {
-          if (!map.has(name)) {
-            map.set(name, {
-              name,
-              poIds: new Set(),
-              totalItems: 0,
-              arrivalDate: po.eta || 'N/A',
-            });
-          }
-          map.get(name).poIds.add(po.id);
-        });
-      }
-      if (po.containerNames) {
-        po.containerNames.forEach((name) => {
-          if (!map.has(name)) {
-            map.set(name, {
-              name,
-              poIds: new Set(),
-              totalItems: 0,
-              arrivalDate: po.eta || 'N/A',
-            });
-          }
-          map.get(name).poIds.add(po.id);
-        });
-      }
-
-      // 2. PO items container arrays
-      if (po.items) {
-        po.items.forEach((item) => {
-          if (item.containers && item.containers.length > 0) {
-            item.containers.forEach((c) => {
-              if (c.container_name) {
-                const name = c.container_name;
-                if (!map.has(name)) {
-                  map.set(name, {
-                    name,
-                    poIds: new Set(),
-                    totalItems: 0,
-                    arrivalDate: c.estimated_arrival_date || po.eta || 'N/A',
-                  });
-                }
-                map.get(name).poIds.add(po.id);
-                map.get(name).totalItems += c.qty_in_container || 0;
-              }
-            });
-          } else if (
-            po.container &&
-            po.container !== 'N/A' &&
-            po.container !== 'Pending'
-          ) {
-            const splitNames = po.container
-              .split(',')
-              .map((s) => s.trim())
-              .filter(Boolean);
-            splitNames.forEach((name) => {
-              if (map.has(name)) {
-                map.get(name).totalItems += item.qty_ordered || item.qty || 0;
-              }
-            });
-          }
-        });
-      }
-    });
-
-    const derived = Array.from(map.values()).map((c) => ({
-      name: c.name,
-      poIds: Array.from(c.poIds),
-      totalItems: c.totalItems,
-      arrivalDate: c.arrivalDate,
-    }));
-
-    // Local containers take precedence over derived containers
-    const localNames = new Set(localContainers.map((c) => c.name));
-    const filteredDerived = derived.filter((c) => !localNames.has(c.name));
-
-    return [...localContainers, ...filteredDerived].filter(
-      (c) => !deletedContainers.has(c.name),
-    );
-  }, [purchaseOrders, localContainers, deletedContainers]);
+    // Removed frontend PO aggregation logic.
+    // Table now only displays locally created/updated containers.
+    return localContainers.filter((c) => !deletedContainers.has(c.name));
+  }, [localContainers, deletedContainers]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
