@@ -1016,7 +1016,7 @@ Supply Chain CRM Coordinator`;
                         className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
                       >
                         <Eye className="h-3.5 w-3.5" />
-                        <span>Profile</span>
+                        <span>Order Insights</span>
                       </button>
                     </td>
                   </tr>
