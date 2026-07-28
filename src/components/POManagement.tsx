@@ -882,12 +882,22 @@ Supply Chain CRM Coordinator`;
                     className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
-                        <span className="text-slate-900 font-bold font-mono text-xs">
-                          {po.id}
-                        </span>
-                        {po.status === 'Delayed' && (
-                          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className="flex items-center gap-1 max-w-[100px] overflow-hidden whitespace-nowrap text-ellipsis">
+                          <span 
+                            className="text-slate-900 font-bold font-mono text-[10px] truncate"
+                            title={po.id}
+                          >
+                            {po.id}
+                          </span>
+                          {po.status === 'Delayed' && (
+                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                          )}
+                        </div>
+                        {po.containerLeadTimeDays && (
+                          <span className="text-slate-500 font-mono text-[9px]">
+                            Lead Days: {po.containerLeadTimeDays}d
+                          </span>
                         )}
                       </div>
                     </td>
@@ -1169,7 +1179,7 @@ Supply Chain CRM Coordinator`;
                     {selectedPO.vendorName}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Order ID: {selectedPO.orderId || 'N/A'} • Created:{' '}
+                    Order ID: {(!selectedPO.orderId || selectedPO.orderId === 'N/A') ? 'Stock' : selectedPO.orderId} • Created:{' '}
                     {selectedPO.creationDate}
                   </p>
                 </div>
@@ -1188,7 +1198,7 @@ Supply Chain CRM Coordinator`;
 
             {/* Tab Selection inside Modal */}
             <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
-              {(['details', 'comments', ] as const).map(
+              {(['details'] as const).map(
                 (section) => (
                   <button
                     key={section}
@@ -1218,7 +1228,7 @@ Supply Chain CRM Coordinator`;
                             Order ID
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.orderId || 'N/A'}
+                            {(!selectedPO.orderId || selectedPO.orderId === 'N/A') ? 'Stock' : selectedPO.orderId}
                           </strong>
                         </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
