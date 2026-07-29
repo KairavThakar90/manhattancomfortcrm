@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Bell, RefreshCw, Layers, LogOut } from 'lucide-react';
+import {
+  Bell,
+  RefreshCw,
+  Layers,
+  LogOut,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { logout } from '../services/auth.service';
 import { navItems } from '../utils/navigation';
@@ -21,6 +28,7 @@ export default function MainLayout() {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -52,21 +60,44 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
       {/* 1. INTERACTIVE NAVIGATION SIDEBAR */}
-      <aside className="w-68 bg-indigo-950 text-indigo-200 flex flex-col justify-between p-5 border-r border-indigo-900 flex-shrink-0 select-none">
+      <aside
+        className={`bg-indigo-950 text-indigo-200 flex flex-col justify-between border-r border-indigo-900 flex-shrink-0 select-none transition-all duration-300 ease-in-out ${
+          sidebarOpen ? 'w-64 p-5' : 'w-16 p-3'
+        }`}
+      >
         <div className="space-y-6">
-          {/* Brand Badge */}
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-9 w-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xs font-bold border border-indigo-500">
-              <Layers className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="font-display font-extrabold text-white text-sm tracking-tight">
-                Manhattan Comfort
-              </h1>
-              <span className="text-[10px] text-indigo-400 font-mono tracking-widest uppercase font-bold">
-                PO & CRM
-              </span>
-            </div>
+          {/* Top bar: Brand + Hamburger always in top corner */}
+          <div
+            className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}
+          >
+            {sidebarOpen && (
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xs font-bold border border-indigo-500 flex-shrink-0">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="font-display font-extrabold text-white text-sm tracking-tight truncate">
+                    Manhattan Comfort
+                  </h1>
+                  <span className="text-[10px] text-indigo-400 font-mono tracking-widest uppercase font-bold">
+                    PO &amp; CRM
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Collapse/Expand button — always in the top corner */}
+            <button
+              onClick={() => setSidebarOpen((o) => !o)}
+              className="flex-shrink-0 p-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-800/60 transition-colors cursor-pointer"
+              title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              {sidebarOpen ? (
+                <ChevronsLeft className="h-5 w-5" />
+              ) : (
+                <ChevronsRight className="h-5 w-5" />
+              )}
+            </button>
           </div>
 
           {/* Nav Links */}
@@ -78,8 +109,13 @@ export default function MainLayout() {
                   key={tab.id}
                   to={tab.path}
                   onClick={() => handleNavClick(tab.id, tab.path)}
+                  title={!sidebarOpen ? tab.label : undefined}
                   className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition ${
+                    `w-full flex items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition ${
+                      sidebarOpen
+                        ? 'px-3.5 py-2.5'
+                        : 'px-2.5 py-2.5 justify-center'
+                    } ${
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm font-bold border border-indigo-500'
                         : 'hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300'
@@ -89,9 +125,11 @@ export default function MainLayout() {
                   {({ isActive }) => (
                     <>
                       <IconComp
-                        className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-indigo-400'}`}
+                        className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-indigo-400'}`}
                       />
-                      <span>{tab.label}</span>
+                      {sidebarOpen && (
+                        <span className="truncate">{tab.label}</span>
+                      )}
                     </>
                   )}
                 </NavLink>
@@ -101,34 +139,51 @@ export default function MainLayout() {
         </div>
 
         {/* User context footer */}
-        <div className="border-t border-indigo-900/60 pt-4 flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs uppercase">
-              {user?.full_name
-                ? user.full_name.slice(0, 1)
-                : userRole.slice(0, 1)}
-            </div>
-            <div className="text-xs max-w-[140px] truncate">
-              <span
-                className="block text-indigo-100 font-bold truncate text-[11px]"
-                title={user?.full_name || 'You'}
+        <div
+          className={`border-t border-indigo-900/60 pt-4 flex items-center ${
+            sidebarOpen ? 'justify-between px-2' : 'justify-center'
+          }`}
+        >
+          {sidebarOpen ? (
+            <>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs uppercase flex-shrink-0">
+                  {user?.full_name
+                    ? user.full_name.slice(0, 1)
+                    : userRole.slice(0, 1)}
+                </div>
+                <div className="text-xs min-w-0">
+                  <span
+                    className="block text-indigo-100 font-bold truncate text-[11px]"
+                    title={user?.full_name || 'You'}
+                  >
+                    {user?.full_name || 'You'}
+                  </span>
+                  <span
+                    className="block text-indigo-400 text-[10px] truncate"
+                    title={user?.email || userRole}
+                  >
+                    {user?.email || userRole}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors flex-shrink-0"
+                title="Log out"
               >
-                {user?.full_name || 'You'}
-              </span>
-              <span
-                className="block text-indigo-400 text-[10px] truncate"
-                title={user?.email || userRole}
-              >
-                {user?.email || userRole}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors"
-          >
-            <LogOut className="h-4.5 w-4.5" />
-          </button>
+                <LogOut className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleLogout}
+              title="Log out"
+              className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </aside>
 
