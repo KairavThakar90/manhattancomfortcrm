@@ -126,6 +126,12 @@ export default function POManagement({
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
 
+  const formatUtcTimestamp = (ts: any) => {
+    if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const d = new Date(ts);
+    return isNaN(d.getTime()) ? ts : d.toISOString().slice(0, 16).replace('T', ' ');
+  };
+
   useEffect(() => {
     if (selectedPOId) {
       const po = purchaseOrders.find((p: any) => p.id === selectedPOId);
@@ -144,9 +150,9 @@ export default function POManagement({
             id: c.id || `COM-${Math.random()}`,
             poId: selectedPOId,
             user: c.user_name || c.user || c.author || 'User',
-            role: c.role || 'Member',
+            role: c.role || 'Administrator',
             message: c.comment || c.message || c.text || '',
-            timestamp: c.created_at || c.timestamp || new Date().toISOString().slice(0, 16),
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
           }));
           setFetchedComments(mappedComments);
         })
@@ -673,10 +679,10 @@ Supply Chain CRM Coordinator`;
     }, 1800);
   };
 
-  // Add a discussion comment — calls real API
-  const handlePostComment = async (e: React.FormEvent) => {
+  // Add a discussion comment — WhatsApp style 'fire and forget'
+  const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO || !newCommentText.trim() || isPostingComment) return;
+    if (!selectedPO || !newCommentText.trim()) return;
 
     const messageText = newCommentText.trim();
 
@@ -684,31 +690,50 @@ Supply Chain CRM Coordinator`;
     const optimisticComment: Comment = {
       id: `COM-OPT-${Date.now()}`,
       poId: selectedPO.id,
-      user:
-        userRole === 'Vendor' ? selectedPO.vendorName : 'Sourcing Lead (You)',
+      user: userRole === 'Vendor' ? selectedPO.vendorName : 'Sourcing Lead (You)',
       role: userRole,
       message: messageText,
       timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
+    
     onAddComment(optimisticComment);
     setFetchedComments((prev) => [...prev, optimisticComment]);
     setNewCommentText('');
 
-    // Post to API in background
-    setIsPostingComment(true);
-    try {
-      const targetId = selectedPO.uuid || selectedPO.id;
-      await postPOComment(targetId, messageText);
-      onAddActivity(
-        `Added discussion comment on ${selectedPO.id}`,
-        'Vendor Comment',
-      );
-    } catch (err) {
-      console.error('Failed to save comment to server:', err);
-      toast.error('Comment posted locally but failed to save on server.');
-    } finally {
-      setIsPostingComment(false);
-    }
+    // Fire-and-forget background sync (No UI locks!)
+    const targetId = selectedPO.uuid || selectedPO.id;
+    
+    postPOComment(targetId, messageText)
+      .then(() => {
+        onAddActivity(`Added discussion comment on ${selectedPO.id}`, 'Vendor Comment');
+        
+        // Re-fetch invisibly to sync real DB record
+        return getPurchaseOrderById(targetId);
+      })
+      .then((detailData: any) => {
+        if (!detailData) return;
+        const rawComments = detailData.comments || [];
+        const mappedComments = rawComments.map((c: any) => ({
+          id: c.id || `COM-${Math.random()}`,
+          poId: selectedPO.id,
+          user: c.user_name || c.user || c.author || 'User',
+          role: c.role || 'Administrator',
+          message: c.comment || c.message || c.text || '',
+          timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+        }));
+        
+        // Only update if we didn't just switch away to another PO
+        setFetchedComments((current) => {
+           // We might have multiple optimistics in flight. For absolute safety WhatsApp-style, 
+           // we just replace the whole array with the fresh backend truth.
+           return mappedComments;
+        });
+      })
+      .catch((err) => {
+        console.error('Failed to save comment to server:', err);
+        // Silently fail UI or show a tiny toast, but don't disrupt user
+        toast.error('Network sync error: Comment may not have saved.', { autoClose: 2000 });
+      });
   };
 
   // Move a card on production board
@@ -763,7 +788,7 @@ Supply Chain CRM Coordinator`;
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
-            <span>Delay Overview</span>
+            <span>kanban Overview</span>
           </button>
         </div>
 
@@ -1540,12 +1565,7 @@ Supply Chain CRM Coordinator`;
               {activeDrawerSection === 'comments' && (
                 <div className="flex-1 flex flex-col min-h-0 gap-4">
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
-                    {isLoadingComments && (
-                      <p className="text-xs text-slate-400 italic text-center py-6">
-                        Loading discussions...
-                      </p>
-                    )}
-                    {!isLoadingComments && selectedPOComments.map((comment) => (
+                    {selectedPOComments.map((comment) => (
                       <div
                         key={comment.id}
                         className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
@@ -1568,7 +1588,7 @@ Supply Chain CRM Coordinator`;
                         </p>
                       </div>
                     ))}
-                    {!isLoadingComments && selectedPOComments.length === 0 && (
+                    {selectedPOComments.length === 0 && (
                       <p className="text-xs text-slate-400 italic text-center py-6">
                         No discussions started yet. Begin the thread below.
                       </p>
@@ -1581,7 +1601,7 @@ Supply Chain CRM Coordinator`;
                   >
                     <input
                       type="text"
-                      placeholder="Ask Emily (Warehouse) or Michael (Finance) for details..."
+                      placeholder="Type a message..."
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
