@@ -717,7 +717,7 @@ Supply Chain CRM Coordinator`;
     setNewCommentText('');
 
     // Fire-and-forget background sync (No UI locks!)
-    const targetId = selectedPO.uuid || selectedPO.id;
+    const targetId = selectedPO.id.replace(/^PO-/i, '');
     
     postPOComment(targetId, messageText)
       .then(() => {
@@ -1375,8 +1375,8 @@ Supply Chain CRM Coordinator`;
                               onClick={async () => {
                                 if (!leadTimeDays) return;
                                 try {
-                                  await updatePOLeadTime(selectedPO.uuid || selectedPO.id, Number(leadTimeDays));
-                                  onAddActivity(`Updated lead time to ${leadTimeDays} days for PO ${selectedPO.id}`, 'PO Updated');
+                                  await updatePOLeadTime(selectedPO.id.replace(/^PO-/i, ''), Number(leadTimeDays));
+                                  onAddActivity(`Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`, 'PO Updated');
                                   toast.success('Lead time updated successfully!');
                                 } catch (error) {
                                   console.error(error);

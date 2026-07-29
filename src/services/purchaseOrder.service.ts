@@ -159,7 +159,7 @@ export async function updatePOLeadTime(poId: string, leadTimeDays: number): Prom
 
 /** Post a comment on a Purchase Order */
 export async function postPOComment(poId: string, message: string): Promise<any> {
-  const { data } = await apiClient.post(PO_COMMENTS(poId), { message });
+  const { data } = await apiClient.post(PO_COMMENTS(poId), { comment: message });
   return data;
 }
 
