@@ -21,10 +21,7 @@ import { toast } from 'react-toastify';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
-import {
-  getPurchaseOrders,
-  getPurchaseOrderById,
-} from '../services/purchaseOrder.service';
+import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
   getContainerPOItems,
@@ -355,27 +352,18 @@ export default function ContainerFlowPage() {
       try {
         setLoadingPOItems(true);
         const data = await getContainerPOItems(poId);
-        let items = Array.isArray(data) ? data : data.results || [];
+        let items = Array.isArray(data)
+          ? data
+          : data.results || data.data || data.items || [];
 
-        // If no container items exist, fetch the full PO to retrieve all available items
-        if (items.length === 0) {
-          try {
-            const fullPo = await getPurchaseOrderById(selectedPO.id);
-            if (fullPo && fullPo.items) {
-              items = fullPo.items;
-            } else if (selectedPO.items) {
-              items = selectedPO.items;
-            }
-          } catch (e) {
-            console.error('Failed to get full PO fallback', e);
-            if (selectedPO.items) items = selectedPO.items;
-          }
+        if (items.length === 0 && selectedPO.items) {
+          items = selectedPO.items;
         }
 
         setFetchedPOItems(items);
       } catch (err) {
         console.error('Failed to fetch detailed PO items', err);
-        setFetchedPOItems(selectedPO.items || []);
+        setFetchedPOItems(selectedPO?.items || []);
       } finally {
         setLoadingPOItems(false);
       }
@@ -518,6 +506,12 @@ export default function ContainerFlowPage() {
       setSelectedItems([
         ...selectedItems,
         {
+          id:
+            item.po_item_id ||
+            item.id ||
+            item.uuid ||
+            item.poItemId ||
+            item.po_item_uuid,
           sku: item.sku,
           name: item.product_name || item.name || 'Unknown Item',
           allocateQty: 0,
@@ -579,12 +573,13 @@ export default function ContainerFlowPage() {
     // Construct the payload that would be sent to an API
     const apiPayload = {
       container_name: containerName.trim(),
-      estimated_arrival_date: estimatedArrivalDate || null,
-      po_id: selectedPOId,
-      details: itemsToSave.map((item) => ({
-        sku: item.sku,
-        qty: item.allocateQty,
-        product_name: item.name,
+      estimated_arrival_date: estimatedArrivalDate
+        ? `${estimatedArrivalDate}T00:00:00Z`
+        : null,
+      received_date: null,
+      items: itemsToSave.map((item) => ({
+        po_item_id: item.id || item.po_item_id || item.uuid || item.poItemId,
+        qty_in_container: item.allocateQty,
       })),
     };
 
