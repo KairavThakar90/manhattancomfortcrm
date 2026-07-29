@@ -34,7 +34,7 @@ import {
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
-import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment } from '../services/purchaseOrder.service';
+import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment, getPurchaseOrderById } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
@@ -122,6 +122,10 @@ export default function POManagement({
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
 
+  // Comments state fetched from detail API
+  const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+
   useEffect(() => {
     if (selectedPOId) {
       const po = purchaseOrders.find((p: any) => p.id === selectedPOId);
@@ -130,6 +134,29 @@ export default function POManagement({
       } else {
         setLeadTimeDays('');
       }
+
+      const targetId = po?.uuid || selectedPOId;
+      setIsLoadingComments(true);
+      getPurchaseOrderById(targetId)
+        .then((detailData: any) => {
+          const rawComments = detailData?.comments || [];
+          const mappedComments = rawComments.map((c: any) => ({
+            id: c.id || `COM-${Math.random()}`,
+            poId: selectedPOId,
+            user: c.user_name || c.user || c.author || 'User',
+            role: c.role || 'Member',
+            message: c.comment || c.message || c.text || '',
+            timestamp: c.created_at || c.timestamp || new Date().toISOString().slice(0, 16),
+          }));
+          setFetchedComments(mappedComments);
+        })
+        .catch(err => {
+          console.error('Failed to fetch PO details for comments', err);
+          setFetchedComments([]);
+        })
+        .finally(() => {
+          setIsLoadingComments(false);
+        });
     }
   }, [selectedPOId, purchaseOrders]);
 
@@ -345,8 +372,8 @@ export default function POManagement({
     ? selectedPO.items.slice((itemsCurrentPage - 1) * itemsPageSize, itemsCurrentPage * itemsPageSize) 
     : [];
 
-  // Comments for selected PO
-  const selectedPOComments = comments.filter((c) => c.poId === selectedPOId);
+  // Comments for selected PO (Dynamically loaded from detail API)
+  const selectedPOComments = fetchedComments;
 
   // Email Logs for selected PO
   const selectedPOEmails = emails.filter((e) => e.poId === selectedPOId);
@@ -664,12 +691,14 @@ Supply Chain CRM Coordinator`;
       timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
     onAddComment(optimisticComment);
+    setFetchedComments((prev) => [...prev, optimisticComment]);
     setNewCommentText('');
 
     // Post to API in background
     setIsPostingComment(true);
     try {
-      await postPOComment(selectedPO.id, messageText);
+      const targetId = selectedPO.uuid || selectedPO.id;
+      await postPOComment(targetId, messageText);
       onAddActivity(
         `Added discussion comment on ${selectedPO.id}`,
         'Vendor Comment',
@@ -1511,7 +1540,12 @@ Supply Chain CRM Coordinator`;
               {activeDrawerSection === 'comments' && (
                 <div className="flex-1 flex flex-col min-h-0 gap-4">
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
-                    {selectedPOComments.map((comment) => (
+                    {isLoadingComments && (
+                      <p className="text-xs text-slate-400 italic text-center py-6">
+                        Loading discussions...
+                      </p>
+                    )}
+                    {!isLoadingComments && selectedPOComments.map((comment) => (
                       <div
                         key={comment.id}
                         className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
@@ -1534,7 +1568,7 @@ Supply Chain CRM Coordinator`;
                         </p>
                       </div>
                     ))}
-                    {selectedPOComments.length === 0 && (
+                    {!isLoadingComments && selectedPOComments.length === 0 && (
                       <p className="text-xs text-slate-400 italic text-center py-6">
                         No discussions started yet. Begin the thread below.
                       </p>
