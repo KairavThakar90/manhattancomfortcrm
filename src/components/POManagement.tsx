@@ -203,6 +203,49 @@ export default function POManagement({
   const [importCsvText, setImportCsvText] = useState('');
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
 
+  // Export State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFilterStatus, setExportFilterStatus] = useState<string>('');
+  const [exportColumns, setExportColumns] = useState<string[]>([
+    'PO ID',
+    'PO Title',
+    'Vendor',
+    'Created On',
+    'Status Code',
+    'Total Amount',
+  ]);
+
+  const PO_LEVEL_COLUMNS = [
+    'PO ID',
+    'PO Title',
+    'Vendor',
+    'Status Code',
+    'Receiving Status',
+    'Created On',
+    'Date Ordered',
+    'Expected Delivery',
+    'Invoice Date',
+    'Lead Time (days)',
+    'Total Amount',
+    'Currency',
+  ];
+
+  const ITEM_LEVEL_COLUMNS = [
+    'Item ID',
+    'SKU',
+    'Product Name',
+    'Qty Ordered',
+    'Qty Received',
+    'Qty in Container',
+    'Unit Price',
+    'Cases Ordered',
+    'Units per Case',
+    'Case Price',
+    'Item Expected Delivery',
+  ];
+
+  const CONTAINER_LEVEL_COLUMNS = ['Container Name', 'Container ETA'];
+
   // Detail drawer sub-sections
   const [activeDrawerSection, setActiveDrawerSection] = useState<
     'details' | 'comments' | 'ocr' | 'emails'
@@ -316,63 +359,28 @@ export default function POManagement({
   const selectedPOEmails = emails.filter((e) => e.poId === selectedPOId);
 
   // Execute CSV export using backend API (Rule 12)
-  const handleExportCSV = async () => {
+  const handleExportCSVClick = () => {
+    setShowExportModal(true);
+  };
+
+  const executeExportCSV = async () => {
+    if (exportColumns.length === 0) {
+      toast.error('Please select at least one column to export.');
+      return;
+    }
+
     try {
-      const toastId = toast.loading('Gathering Purchase Orders...');
-      
-      const params: any = {};
-      if (searchQuery) params.search = searchQuery;
-      if (statusFilter !== 'all') params.status_label = statusFilter;
-      if (vendorFilter !== 'all') {
-        const dbVendorId = vendorFilter;
-        // NOTE: In POManagementPage it translates 'VEND-001' to db ID. 
-        // We'll pass the filter directly, assuming it matches what backend needs.
-        params.vendor_id = vendorFilter;
-      }
-      if (userRole === 'Vendor') {
-        params.vendor_id = '3f5551f4-186e-467d-9340-5b74d8e7b766';
+      const toastId = toast.loading('Generating CSV Export...');
+
+      const payload: any = {
+        columns: exportColumns,
+      };
+
+      if (exportFilterStatus) {
+        payload.filter_status = exportFilterStatus;
       }
 
-      // Fetch all matching POs
-      let fetchPage = 1;
-      const allPoNumbers: number[] = [];
-
-      while (true) {
-        const response = await getPurchaseOrders({
-          ...params,
-          page: fetchPage,
-          page_size: 100,
-        });
-
-        if (response && Array.isArray(response)) {
-          response.forEach(po => {
-            const num = Number(po.sellercloud_po_id || po.po_number || po.id);
-            if (!isNaN(num)) allPoNumbers.push(num);
-          });
-          break;
-        } else if (response && response.results && Array.isArray(response.results)) {
-          response.results.forEach((po: any) => {
-            const num = Number(po.sellercloud_po_id || po.po_number || po.id);
-            if (!isNaN(num)) allPoNumbers.push(num);
-          });
-          if (!response.next && response.results.length < 100) {
-            break;
-          }
-          fetchPage++;
-        } else {
-          break;
-        }
-      }
-
-      if (allPoNumbers.length === 0) {
-        toast.update(toastId, { render: 'No data to export', type: 'info', isLoading: false, autoClose: 3000 });
-        return;
-      }
-
-      toast.update(toastId, { render: `Exporting ${allPoNumbers.length} records...` });
-
-      // Pass gathered PO numbers to the export API
-      const blob = await exportPurchaseOrdersCSV({ po_ids: allPoNumbers });
+      const blob = await exportPurchaseOrdersCSV(payload);
 
       const downloadUrl = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
@@ -388,6 +396,7 @@ export default function POManagement({
 
       toast.update(toastId, { render: 'Export successful!', type: 'success', isLoading: false, autoClose: 3000 });
       onAddActivity('Exported PO list via backend API', 'PO Updated');
+      setShowExportModal(false);
     } catch (error) {
       console.error('Export failed', error);
       toast.dismiss();
@@ -749,7 +758,7 @@ Supply Chain CRM Coordinator`;
 
           {activeSubTab !== 'kanban' && (
             <button
-              onClick={handleExportCSV}
+              onClick={handleExportCSVClick}
               className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
@@ -1863,6 +1872,128 @@ Supply Chain CRM Coordinator`;
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EXPORT CSV FORM */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-xl w-full animate-scaleUp max-h-[90vh] flex flex-col">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+              <h3 className="font-display font-bold text-slate-900 text-base">
+                Export Purchase Orders
+              </h3>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-6">
+              {/* Filter Status */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 block mb-2">Filter Data</label>
+                <select
+                  value={exportFilterStatus}
+                  onChange={(e) => setExportFilterStatus(e.target.value)}
+                  className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-hidden focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                >
+                  <option value="">No Filter (All Data)</option>
+                  <option value="invoice_delayed">Invoice Delayed (Missing &gt; 10 days)</option>
+                  <option value="delivery_delayed">Delivery Delayed (ETA Passed)</option>
+                  <option value="lefts_items">Incomplete Receiving (Lefts Items)</option>
+                </select>
+              </div>
+
+              {/* Columns Selection */}
+              <div>
+                <label className="text-sm font-bold text-slate-700 block mb-2">Select Columns</label>
+                <p className="text-xs text-slate-500 mb-4">Choose the fields to include in your CSV export. Including Item-Level columns will output one row per item.</p>
+                
+                <div className="space-y-5">
+                  <div>
+                    <h4 className="text-xs font-bold text-indigo-700 mb-2.5 uppercase tracking-wide border-b border-indigo-100 pb-1">PO-Level Columns</h4>
+                    <div className="grid grid-cols-2 gap-2.5">
+                       {PO_LEVEL_COLUMNS.map(col => (
+                         <label key={col} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none">
+                           <input 
+                             type="checkbox" 
+                             checked={exportColumns.includes(col)}
+                             onChange={(e) => {
+                               if (e.target.checked) setExportColumns(C => [...C, col]);
+                               else setExportColumns(C => C.filter(c => c !== col));
+                             }}
+                             className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                           />
+                           {col}
+                         </label>
+                       ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-emerald-700 mb-2.5 uppercase tracking-wide border-b border-emerald-100 pb-1">Item-Level Columns</h4>
+                    <div className="grid grid-cols-2 gap-2.5">
+                       {ITEM_LEVEL_COLUMNS.map(col => (
+                         <label key={col} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none">
+                           <input 
+                             type="checkbox" 
+                             checked={exportColumns.includes(col)}
+                             onChange={(e) => {
+                               if (e.target.checked) setExportColumns(C => [...C, col]);
+                               else setExportColumns(C => C.filter(c => c !== col));
+                             }}
+                             className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                           />
+                           {col}
+                         </label>
+                       ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-sky-700 mb-2.5 uppercase tracking-wide border-b border-sky-100 pb-1">Container-Level Columns</h4>
+                    <div className="grid grid-cols-2 gap-2.5">
+                       {CONTAINER_LEVEL_COLUMNS.map(col => (
+                         <label key={col} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none">
+                           <input 
+                             type="checkbox" 
+                             checked={exportColumns.includes(col)}
+                             onChange={(e) => {
+                               if (e.target.checked) setExportColumns(C => [...C, col]);
+                               else setExportColumns(C => C.filter(c => c !== col));
+                             }}
+                             className="rounded text-sky-600 focus:ring-sky-500 border-slate-300"
+                           />
+                           {col}
+                         </label>
+                       ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 p-5 shrink-0 bg-slate-50/50 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeExportCSV}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5"
+              >
+                <Download className="h-4 w-4" />
+                Generate CSV
+              </button>
+            </div>
           </div>
         </div>
       )}
