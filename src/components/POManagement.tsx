@@ -1590,7 +1590,7 @@ Supply Chain CRM Coordinator`;
                     ))}
                     {selectedPOComments.length === 0 && (
                       <p className="text-xs text-slate-400 italic text-center py-6">
-                        No discussions started yet. Begin the thread below.
+                        No comments
                       </p>
                     )}
                   </div>
