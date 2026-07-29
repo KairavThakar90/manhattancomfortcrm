@@ -59,6 +59,8 @@ export interface PurchaseOrder {
   commentsCount: number;
   emailCount: number;
   containerLeadTimeDays?: number | null;
+  sellercloud_link?: string | null;
+  delta_sellercloud_link?: string | null;
 }
 
 export interface Vendor {

@@ -244,6 +244,7 @@ export default function POManagementPage() {
               commentsCount: po.commentsCount || 0,
               emailCount: po.emailCount || 0,
               sellercloud_link: po.sellercloud_link || null,
+              delta_sellercloud_link: po.delta_sellercloud_link || null,
             };
           });
 

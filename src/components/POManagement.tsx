@@ -991,15 +991,27 @@ Supply Chain CRM Coordinator`;
                   >
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1 items-start">
-                        <div className="flex items-center gap-1 max-w-[100px] overflow-hidden whitespace-nowrap text-ellipsis">
+                        <div className="flex items-center gap-1.5 max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
                           <span 
                             className="text-slate-900 font-bold font-mono text-[10px] truncate"
                             title={po.id}
                           >
                             {po.id}
                           </span>
+                          {po.delta_sellercloud_link && (
+                            <a
+                              title="Open in Sellercloud (Purchasing)"
+                              href={po.delta_sellercloud_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
                           {po.status === 'Delayed' && (
-                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
                           )}
                         </div>
                         {po.containerLeadTimeDays && (
@@ -1010,15 +1022,29 @@ Supply Chain CRM Coordinator`;
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={
-                          !po.orderId || po.orderId === 'N/A'
-                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
-                            : 'text-[11px] font-bold text-slate-700'
-                        }
-                      >
-                        {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={
+                            !po.orderId || po.orderId === 'N/A'
+                              ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                              : 'text-[11px] font-bold text-slate-700'
+                          }
+                        >
+                          {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
+                        </span>
+                        {po.sellercloud_link && (
+                          <a
+                            title="Open in Sellercloud (Order)"
+                            href={po.sellercloud_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {po.creationDate && po.creationDate !== 'N/A' ? (
