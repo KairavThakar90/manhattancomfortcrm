@@ -429,8 +429,8 @@ export default function ContainerFlowPage() {
         isApiOriginated: true,
         raw: c,
         total_items: c.total_items || 0,
-        total_qty_in_container: c.total_qty_received || 0,
-        total_qty_received: c.total_qty_in_container || 0,
+        total_qty_in_container: c.total_qty_in_container || 0,
+        total_qty_received: c.total_qty_received || 0,
         is_received: !!c.is_received,
         received_date: formattedRecvDate,
       };
