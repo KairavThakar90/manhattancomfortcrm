@@ -1509,8 +1509,8 @@ Supply Chain CRM Coordinator`;
 
               {/* TAB: COMMENTS DISCUSSION ENGINE */}
               {activeDrawerSection === 'comments' && (
-                <div className="space-y-4">
-                  <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-2">
+                <div className="flex-1 flex flex-col min-h-0 gap-4">
+                  <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
                     {selectedPOComments.map((comment) => (
                       <div
                         key={comment.id}
@@ -1543,7 +1543,7 @@ Supply Chain CRM Coordinator`;
 
                   <form
                     onSubmit={handlePostComment}
-                    className="flex gap-2 border-t border-slate-100 pt-3"
+                    className="flex gap-2 border-t border-slate-100 pt-3 shrink-0"
                   >
                     <input
                       type="text"
@@ -1567,7 +1567,7 @@ Supply Chain CRM Coordinator`;
 
               {/* TAB: EMAIL HISTORY & AI GENERATOR */}
               {activeDrawerSection === 'emails' && (
-                <div className="space-y-6">
+                <div className="flex-1 flex flex-col min-h-0 gap-6 overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-xs font-bold text-slate-700">
