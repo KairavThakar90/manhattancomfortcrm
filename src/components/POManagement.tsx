@@ -278,6 +278,12 @@ export default function POManagement({
     'details' | 'comments' | 'ocr' | 'emails'
   >('details');
 
+  useEffect(() => {
+    if (selectedPOId) {
+      setActiveDrawerSection('details');
+    }
+  }, [selectedPOId]);
+
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
   const [isPostingComment, setIsPostingComment] = useState(false);
@@ -364,7 +370,16 @@ export default function POManagement({
       ? filteredPOs
       : filteredPOs.slice(startIndex, endIndex);
 
-  const selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
+  let selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
+  if (!selectedPO && kanbanList) {
+    for (const key of Object.keys(kanbanList)) {
+      const found = kanbanList[key].find((po: any) => po.id === selectedPOId);
+      if (found) {
+        selectedPO = found;
+        break;
+      }
+    }
+  }
 
   // Items Pagination for selected PO (Rule 23)
   const [itemsCurrentPage, setItemsCurrentPage] = useState(1);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   setPurchaseOrdersList,
   setKanbanList,
@@ -354,14 +354,31 @@ export default function POManagementPage() {
     sortConfig,
   ]);
 
+  const kanbanList = useSelector(
+    (state) => state.purchaseOrders.kanbanList || {},
+  );
+
   // Fetch single purchase order details dynamically on selection
   useEffect(() => {
     if (!selectedPOId) return;
 
     // Find the current PO in context to find its database UUID
-    const currentPO = purchaseOrders.find(
+    let currentPO = purchaseOrders.find(
       (p) => p.id === selectedPOId || p.uuid === selectedPOId,
     );
+
+    if (!currentPO && kanbanList) {
+      for (const key of Object.keys(kanbanList)) {
+        const found = kanbanList[key].find(
+          (p) => p.id === selectedPOId || p.uuid === selectedPOId,
+        );
+        if (found) {
+          currentPO = found;
+          break;
+        }
+      }
+    }
+
     if (!currentPO) return;
 
     const dbId = currentPO.uuid || selectedPOId;
@@ -453,6 +470,11 @@ export default function POManagementPage() {
           const updatedList = purchaseOrders.map((p) =>
             p.id === currentPO.id ? updatedPO : p,
           );
+
+          if (!purchaseOrders.some((p) => p.id === currentPO.id)) {
+            updatedList.push(updatedPO);
+          }
+
           handleUpdatePOs(updatedList);
           dispatch(setPurchaseOrdersList(updatedList));
         }
