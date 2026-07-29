@@ -134,7 +134,9 @@ export default function POManagementPage() {
             setTotalCount(poData.length);
           } else if (poData.results && Array.isArray(poData.results)) {
             results = poData.results;
-            if (typeof poData.total === 'number') {
+            if (typeof poData.count === 'number') {
+              setTotalCount(poData.count);
+            } else if (typeof poData.total === 'number') {
               setTotalCount(poData.total);
             } else if (poData.meta?.total !== undefined) {
               setTotalCount(poData.meta.total);

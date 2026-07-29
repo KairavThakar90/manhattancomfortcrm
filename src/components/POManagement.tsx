@@ -360,15 +360,16 @@ export default function POManagement({
   const filteredPOs = sortedPOs;
 
   // Pagination calculation
-  const totalPages =
-    propTotalCount !== undefined
-      ? Math.ceil(propTotalCount / itemsPerPage) || 1
-      : Math.ceil(filteredPOs.length / itemsPerPage) || 1;
+  const isLocalFilteringActive = Boolean(searchQuery || statusFilter !== 'all');
+  const validTotalCount = (propTotalCount !== undefined && !isLocalFilteringActive) ? propTotalCount : filteredPOs.length;
+  
+  const totalPages = Math.ceil(validTotalCount / itemsPerPage) || 1;
   const normalizedCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (normalizedCurrentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  
   const paginatedPOs =
-    propTotalCount !== undefined
+    (propTotalCount !== undefined && !isLocalFilteringActive)
       ? filteredPOs
       : filteredPOs.slice(startIndex, endIndex);
 
@@ -1156,11 +1157,7 @@ Supply Chain CRM Coordinator`;
           {filteredPOs.length > 0 && (
             <Pagination
               currentPage={normalizedCurrentPage}
-              totalCount={
-                propTotalCount !== undefined
-                  ? propTotalCount
-                  : filteredPOs.length
-              }
+              totalCount={validTotalCount}
               pageSize={pageSize}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
