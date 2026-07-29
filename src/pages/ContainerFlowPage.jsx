@@ -499,13 +499,15 @@ export default function ContainerFlowPage() {
     const item = availableItems.find((i) => i.sku === sku);
     if (item) {
       const remainingQty =
-        item.remaining_qty !== undefined
-          ? item.remaining_qty
-          : (item.qty_ordered || item.qty || 0) -
-            (item.qty_in_container ||
-              item.qty_received ||
-              item.receivedQty ||
-              0);
+        item.qty_remaining !== undefined
+          ? item.qty_remaining
+          : item.remaining_qty !== undefined
+            ? item.remaining_qty
+            : (item.qty_ordered || item.qty || 0) -
+              (item.qty_in_container ||
+                item.qty_received ||
+                item.receivedQty ||
+                0);
 
       setSelectedItems([
         ...selectedItems,
@@ -757,7 +759,12 @@ export default function ContainerFlowPage() {
             name: item.product_name || item.name || 'Unknown Item',
             allocateQty:
               item.qty_in_container || item.qty || item.allocateQty || 0,
-            maxQty: item.qty_ordered || item.maxQty || 9999,
+            maxQty:
+              item.qty_remaining !== undefined
+                ? item.qty_remaining
+                : item.remaining_qty !== undefined
+                  ? item.remaining_qty
+                  : item.qty_ordered || item.maxQty || 9999,
           })),
         );
       } else {
