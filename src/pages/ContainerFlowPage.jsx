@@ -17,6 +17,8 @@ import {
   Trash2,
   Calendar,
   Copy,
+  Eye,
+  X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -24,6 +26,7 @@ import 'react-tooltip/dist/react-tooltip.css';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
+import ContainerDetailsModal from '../components/ContainerDetailsModal';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -58,6 +61,7 @@ export default function ContainerFlowPage() {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
+  const [viewingContainerDetails, setViewingContainerDetails] = useState(null);
 
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
@@ -610,6 +614,50 @@ export default function ContainerFlowPage() {
     }
   };
 
+  const handleViewContainer = async (container) => {
+    if (!container.id) {
+      toast.error('Invalid container ID');
+      return;
+    }
+
+    console.log(
+      'Action: Opening View Container Details Modal for',
+      container.id,
+    );
+
+    // Instantly pop open the modal using the basic data we already have from the table
+    const initialMappedContainer = {
+      ...container,
+      details: container.items || [],
+      po_id: container.poIds?.[0] || 'N/A',
+    };
+
+    setViewingContainerDetails(initialMappedContainer);
+
+    try {
+      // Background fetch to hydrate the view with rich details
+      const detailsResp = await getContainerDetails(container.id);
+      const data = Array.isArray(detailsResp) ? detailsResp[0] : detailsResp;
+
+      setViewingContainerDetails((prev) => ({
+        ...prev,
+        ...container,
+        details: data?.details || data?.items || container.items || [],
+        po_id:
+          data?.po_id ||
+          data?.purchase_orders?.[0]?.id ||
+          container.poIds?.[0] ||
+          'N/A',
+      }));
+    } catch (e) {
+      console.error(
+        'Failed to view full container details (fallback applied):',
+        e,
+      );
+      toast.warning('Displaying basic container details (server unavailable)');
+    }
+  };
+
   const handleEditContainer = async (container) => {
     if (!container.id) {
       toast.error('Invalid container ID');
@@ -812,19 +860,13 @@ export default function ContainerFlowPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Temporarily hiding edit and delete, replacing with View */}
                             <button
-                              onClick={() => handleEditContainer(c)}
-                              className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
-                              title="Edit Container"
+                              onClick={() => handleViewContainer(c)}
+                              className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+                              title="View Details"
                             >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContainer(c)}
-                              className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
-                              title="Delete Container"
-                            >
-                              <Trash2 className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -861,6 +903,12 @@ export default function ContainerFlowPage() {
             padding: '8px 12px',
           }}
           className="z-50 text-xs shadow-md"
+        />
+
+        {/* View Container Overlay Modal — must be inside this return block */}
+        <ContainerDetailsModal
+          container={viewingContainerDetails}
+          onClose={() => setViewingContainerDetails(null)}
         />
       </div>
     );
@@ -1257,6 +1305,12 @@ export default function ContainerFlowPage() {
           </div>
         )}
       </div>
+
+      {/* View Container Overlay Modal */}
+      <ContainerDetailsModal
+        container={viewingContainerDetails}
+        onClose={() => setViewingContainerDetails(null)}
+      />
     </div>
   );
 }
