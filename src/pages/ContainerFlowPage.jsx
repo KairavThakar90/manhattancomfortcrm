@@ -96,22 +96,17 @@ export default function ContainerFlowPage() {
       label: wh.name || wh.warehouse_name || wh.id,
     }));
   }, [warehousesList, warehouseSearch]);
-  // ====== PO Infinite Scroll Logic ======
+  // ====== PO Dropdown Logic ======
   const [poList, setPoList] = useState([]);
-  const [poPage, setPoPage] = useState(1);
   const [poSearch, setPoSearch] = useState('');
   const [poLoading, setPoLoading] = useState(false);
-  const [poHasMore, setPoHasMore] = useState(true);
 
-  const fetchPOs = useCallback(async (page, search, append = true) => {
+  const fetchPOs = useCallback(async () => {
     try {
       setPoLoading(true);
-      const data = await getPurchaseOrders({ page, page_size: 25, search });
+      const data = await getPurchaseOrders({ page_size: 200, dropdown: true });
       const results = Array.isArray(data) ? data : data.results || [];
-      if (results.length < 25) setPoHasMore(false);
-      else setPoHasMore(true);
-
-      setPoList((prev) => (append ? [...prev, ...results] : results));
+      setPoList(results);
     } catch (err) {
       console.error('Failed to fetch POs for dropdown', err);
     } finally {
@@ -121,22 +116,12 @@ export default function ContainerFlowPage() {
 
   useEffect(() => {
     setTimeout(() => {
-      fetchPOs(1, '', false);
+      fetchPOs();
     }, 0);
   }, [fetchPOs]);
 
-  const loadMorePOs = () => {
-    if (!poLoading && poHasMore) {
-      const nextPage = poPage + 1;
-      setPoPage(nextPage);
-      fetchPOs(nextPage, poSearch, true);
-    }
-  };
-
   const handlePoSearch = (query) => {
     setPoSearch(query);
-    setPoPage(1);
-    fetchPOs(1, query, false);
   };
 
   const vendorsList = useSelector((state) => state.vendors?.list || []);
@@ -150,11 +135,38 @@ export default function ContainerFlowPage() {
       poList.forEach((po) => map.set(po.id, po));
     }
 
-    const displayList = poSearch ? poList : Array.from(map.values());
+    let displayList = Array.from(map.values());
+
+    if (poSearch) {
+      const q = poSearch.toLowerCase();
+      displayList = displayList.filter((po) => {
+        const vendorName =
+          po.vendor?.name ||
+          vendorsList.find((v) => v.id === po.vendor_id)?.name ||
+          po.vendorName ||
+          po.vendor_name ||
+          'Unknown Vendor';
+
+        const poNumber = po.sellercloud_po_id
+          ? `PO-${po.sellercloud_po_id.toString().replace(/^PO-/, '')}`
+          : po.order_number || po.id;
+
+        return (
+          poNumber?.toString().toLowerCase().includes(q) ||
+          vendorName?.toLowerCase().includes(q) ||
+          po.id?.toString().toLowerCase().includes(q)
+        );
+      });
+    }
 
     // Ensure selected PO is always in the list
-    if (selectedPOId && !displayList.some((p) => p.id === selectedPOId)) {
-      const reduxPO = purchaseOrders.find((p) => p.id === selectedPOId);
+    if (
+      selectedPOId &&
+      !displayList.some((p) => String(p.id) === String(selectedPOId))
+    ) {
+      const reduxPO = purchaseOrders.find(
+        (p) => String(p.id) === String(selectedPOId),
+      );
       if (reduxPO) displayList.unshift(reduxPO);
     }
 
@@ -1089,8 +1101,8 @@ export default function ContainerFlowPage() {
               value={selectedPOId}
               onChange={handlePOChange}
               onSearch={handlePoSearch}
-              onLoadMore={loadMorePOs}
-              hasMore={poHasMore}
+              onLoadMore={() => {}}
+              hasMore={false}
               isLoading={poLoading}
               items={poDropdownItems}
               disabled={isEditMode}

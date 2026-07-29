@@ -28,6 +28,10 @@ export default function ContainerDetailsModal({ container, onClose }) {
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-sm text-slate-500 font-medium">
                   {container.name || 'Unnamed'}
+                  {container.warehouse_name &&
+                  container.warehouse_name !== 'N/A'
+                    ? ` (${container.warehouse_name})`
+                    : ''}
                 </span>
               </div>
             </div>
