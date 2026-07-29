@@ -22,10 +22,6 @@ export default function ContainerDetailsModal({ container, onClose }) {
                 <span className="text-sm text-slate-500 font-medium">
                   {container.name || 'Unnamed'}
                 </span>
-                <span className="text-slate-300">•</span>
-                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 tracking-wider truncate max-w-[120px]">
-                  {container.id?.split('-')[0] + '...'}
-                </span>
               </div>
             </div>
           </div>
@@ -83,54 +79,49 @@ export default function ContainerDetailsModal({ container, onClose }) {
           </div>
 
           {/* Items Table */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm shadow-slate-100/50 flex flex-col flex-1 min-h-0">
-            <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/80 flex items-center justify-between shrink-0">
-              <h4 className="text-sm font-bold text-slate-800">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)] flex-1 flex flex-col min-h-0 mt-2">
+            <div className="flex items-center justify-between shrink-0 mb-4">
+              <h4 className="text-sm font-bold text-slate-900 shrink-0">
                 Allocated Items
               </h4>
-              <span className="bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                {container.details?.length || 0} Line Items
-              </span>
             </div>
 
             {container.details && container.details.length > 0 ? (
-              <Table className="border-t-0 border-x-0 border-b-0 rounded-none shadow-none flex-1 overflow-auto">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 font-bold">
-                  <tr>
-                    <th className="px-5 py-3.5 w-1/3 sticky top-0 bg-slate-50 border-b border-slate-200 shadow-sm z-10">
-                      SKU
-                    </th>
-                    <th className="px-5 py-3.5 sticky top-0 bg-slate-50 border-b border-slate-200 shadow-sm z-10">
-                      Product Name
-                    </th>
-                    <th className="px-5 py-3.5 text-right w-32 sticky top-0 bg-slate-50 border-b border-slate-200 shadow-sm z-10">
-                      Qty Assigned
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {container.details.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-5 py-3.5 align-top">
-                        <span className="font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                          {item.sku || 'Unknown'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 align-top text-slate-600 leading-snug">
-                        {item.product_name || item.name || '-'}
-                      </td>
-                      <td className="px-5 py-3.5 align-top text-right">
-                        <span className="inline-flex items-center justify-center min-w-[3rem] px-2 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-100">
-                          {item.qty_in_container || item.qty || 0}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10">
+                      <th className="px-3 py-2 w-1/3">VENDOR NAME</th>
+                      <th className="px-3 py-2">PRODUCT NAME</th>
+                      <th className="px-3 py-2 text-right w-32">
+                        QTY ASSIGNED
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {container.details.map((item, idx) => (
+                      <tr
+                        key={idx}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="px-3 py-2 max-w-[120px]">
+                          <span className="font-mono font-bold text-slate-500 truncate block">
+                            {item.vendor_name || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 max-w-[150px]">
+                          <span className="font-medium text-slate-800 line-clamp-1">
+                            {item.product_name || item.name || '-'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-medium">
+                          {item.qty_in_container || item.qty || 0}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <div className="py-12 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
