@@ -34,7 +34,7 @@ import {
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
-import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders } from '../services/purchaseOrder.service';
+import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
@@ -210,6 +210,7 @@ export default function POManagement({
 
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
+  const [isPostingComment, setIsPostingComment] = useState(false);
 
   // AI Email Generator state
   const [aiEmailGenerated, setAiEmailGenerated] = useState<string | null>(null);
@@ -644,27 +645,40 @@ Supply Chain CRM Coordinator`;
     }, 1800);
   };
 
-  // Add a discussion comment (Rule 7)
-  const handlePostComment = (e: React.FormEvent) => {
+  // Add a discussion comment — calls real API
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO || !newCommentText.trim()) return;
+    if (!selectedPO || !newCommentText.trim() || isPostingComment) return;
 
-    const comment: Comment = {
-      id: `COM-${Math.floor(100 + Math.random() * 900)}`,
+    const messageText = newCommentText.trim();
+
+    // Optimistic UI update immediately
+    const optimisticComment: Comment = {
+      id: `COM-OPT-${Date.now()}`,
       poId: selectedPO.id,
       user:
         userRole === 'Vendor' ? selectedPO.vendorName : 'Sourcing Lead (You)',
       role: userRole,
-      message: newCommentText.trim(),
+      message: messageText,
       timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
     };
-
-    onAddComment(comment);
-    onAddActivity(
-      `Added discussion comment on ${selectedPO.id}`,
-      'Vendor Comment',
-    );
+    onAddComment(optimisticComment);
     setNewCommentText('');
+
+    // Post to API in background
+    setIsPostingComment(true);
+    try {
+      await postPOComment(selectedPO.id, messageText);
+      onAddActivity(
+        `Added discussion comment on ${selectedPO.id}`,
+        'Vendor Comment',
+      );
+    } catch (err) {
+      console.error('Failed to save comment to server:', err);
+      toast.error('Comment posted locally but failed to save on server.');
+    } finally {
+      setIsPostingComment(false);
+    }
   };
 
   // Move a card on production board
@@ -1198,7 +1212,7 @@ Supply Chain CRM Coordinator`;
 
             {/* Tab Selection inside Modal */}
             <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
-              {(['details'] as const).map(
+              {(['details', 'comments'] as const).map(
                 (section) => (
                   <button
                     key={section}

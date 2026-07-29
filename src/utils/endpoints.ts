@@ -136,3 +136,9 @@ export const CONTAINERS_UPDATE = (id: string) => `/containers/${id}`;
 export const CONTAINERS_DELETE = (id: string) => `/containers/${id}`;
 export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) => `/containers/po-items/${sellercloud_po_id}`;
 export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
+
+// ------------------------------------------
+// PO Comment Endpoints
+// ------------------------------------------
+export const PO_COMMENTS = (poId: string) => `/purchase-orders/${poId}/comments`;
+

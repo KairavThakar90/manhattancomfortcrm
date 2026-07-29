@@ -7,6 +7,7 @@ import {
   PO_DELETE,
   PO_FILTERS_ALL,
   PO_EXPORT_CSV,
+  PO_COMMENTS,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -155,3 +156,10 @@ export async function updatePOLeadTime(poId: string, leadTimeDays: number): Prom
   const { data } = await apiClient.patch(`/purchase-orders/${poId}/lead-time?container_lead_time_days=${leadTimeDays}`);
   return data;
 }
+
+/** Post a comment on a Purchase Order */
+export async function postPOComment(poId: string, message: string): Promise<any> {
+  const { data } = await apiClient.post(PO_COMMENTS(poId), { message });
+  return data;
+}
+
