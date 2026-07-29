@@ -18,6 +18,7 @@ import {
   Calendar,
   Eye,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -849,9 +850,23 @@ export default function ContainerFlowPage() {
                         className="hover:bg-slate-50/75 transition-colors"
                       >
                         <td className="px-6 py-4 font-mono font-medium text-slate-700 text-xs">
-                          <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                            {c.sellercloud_container_id || c.id}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              {c.sellercloud_container_id || c.id}
+                            </span>
+                            {c.sellercloud_link && (
+                              <a
+                                title="Open in Sellercloud (Container)"
+                                href={c.sellercloud_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-800">
                           {c.name}
