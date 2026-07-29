@@ -23,8 +23,11 @@ export default function AppRoutes() {
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect root to purchase orders */}
+            <Route
+              path="/"
+              element={<Navigate to="/purchase-orders" replace />}
+            />
 
             {/* Map dynamic routes */}
             {appRoutes.map((route) => (

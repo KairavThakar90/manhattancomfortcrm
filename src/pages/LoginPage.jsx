@@ -30,7 +30,7 @@ export default function LoginPage() {
   };
 
   return isAuthenticated ? (
-    <Navigate to="/dashboard" replace />
+    <Navigate to="/purchase-orders" replace />
   ) : (
     <LoginPageComponent
       onLogin={handleLogin}

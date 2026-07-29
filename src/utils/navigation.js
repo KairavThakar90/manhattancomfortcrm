@@ -16,6 +16,7 @@ export const navItems = [
     path: '/dashboard',
     label: 'Executive Dashboard',
     icon: BarChart3,
+    comingSoon: true,
   },
   {
     id: 'purchase-orders',
@@ -34,36 +35,42 @@ export const navItems = [
     path: '/sourcing-vendors',
     label: 'Sourcing Vendors',
     icon: Users,
+    comingSoon: true,
   },
   {
     id: 'email-center',
     path: '/sourcing-email-hub',
     label: 'Sourcing Email Hub',
     icon: Mail,
+    comingSoon: true,
   },
   {
     id: 'chat',
     path: '/workspace-team-chat',
     label: 'Workspace Team Chat',
     icon: MessageSquare,
+    comingSoon: true,
   },
   {
     id: 'ai-assistant',
     path: '/sop-ai-assistant',
     label: 'S&OP AI Assistant',
     icon: Sparkles,
+    comingSoon: true,
   },
   {
     id: 'reports',
     path: '/reports-analytics',
     label: 'Reports & BI Analytics',
     icon: TrendingUp,
+    comingSoon: true,
   },
   {
     id: 'system-admin',
     path: '/security-admin',
     label: 'Security Admin Panel',
     icon: Shield,
+    comingSoon: true,
   },
 ];
 

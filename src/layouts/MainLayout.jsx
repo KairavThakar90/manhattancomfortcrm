@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Bell,
@@ -7,6 +7,8 @@ import {
   LogOut,
   ChevronsLeft,
   ChevronsRight,
+  X,
+  Rocket,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { logout } from '../services/auth.service';
@@ -29,6 +31,28 @@ export default function MainLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const openComingSoon = (tab) => {
+    setComingSoonModal(tab);
+    // Defer to next tick so the enter animation plays
+    requestAnimationFrame(() => setModalVisible(true));
+  };
+
+  const closeComingSoon = () => {
+    setModalVisible(false);
+    setTimeout(() => setComingSoonModal(null), 300);
+  };
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') closeComingSoon();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -104,6 +128,32 @@ export default function MainLayout() {
           <nav className="space-y-1">
             {navItems.map((tab) => {
               const IconComp = tab.icon;
+
+              if (tab.comingSoon) {
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    title={
+                      !sidebarOpen ? `${tab.label} — Coming Soon` : undefined
+                    }
+                    onClick={() => openComingSoon(tab)}
+                    className={`w-full flex items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition cursor-pointer ${
+                      sidebarOpen
+                        ? 'px-3.5 py-2.5'
+                        : 'px-2.5 py-2.5 justify-center'
+                    } hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300`}
+                  >
+                    <IconComp className="h-4 w-4 flex-shrink-0 text-indigo-400" />
+                    {sidebarOpen && (
+                      <span className="truncate flex-1 text-left">
+                        {tab.label}
+                      </span>
+                    )}
+                  </button>
+                );
+              }
+
               return (
                 <NavLink
                   key={tab.id}
@@ -325,6 +375,100 @@ export default function MainLayout() {
           <Outlet />
         </div>
       </main>
+
+      {/* ── COMING SOON MODAL ── */}
+      {comingSoonModal &&
+        (() => {
+          const ModalIcon = comingSoonModal.icon;
+          return (
+            <div
+              className={`fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300 ${
+                modalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+              onClick={closeComingSoon}
+            >
+              {/* Backdrop */}
+              <div
+                className={`absolute inset-0 bg-indigo-950/70 backdrop-blur-sm transition-opacity duration-300 ${
+                  modalVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+
+              {/* Card */}
+              <div
+                className={`relative z-10 w-[340px] transition-all duration-300 ${
+                  modalVisible
+                    ? 'opacity-100 scale-100 translate-y-0'
+                    : 'opacity-0 scale-90 translate-y-4'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="bg-indigo-950 border border-indigo-700/60 rounded-3xl shadow-2xl p-8 text-center overflow-hidden">
+                  {/* Animated glow rings */}
+                  <div className="relative flex items-center justify-center mb-6">
+                    <div
+                      className="absolute h-28 w-28 rounded-full border border-indigo-500/20 animate-ping"
+                      style={{ animationDuration: '2s' }}
+                    />
+                    <div
+                      className="absolute h-20 w-20 rounded-full border border-indigo-500/30 animate-ping"
+                      style={{
+                        animationDuration: '2.5s',
+                        animationDelay: '0.3s',
+                      }}
+                    />
+                    <div className="h-14 w-14 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center shadow-lg shadow-indigo-900">
+                      <ModalIcon className="h-7 w-7 text-indigo-300" />
+                    </div>
+                  </div>
+
+                  {/* Rocket badge */}
+                  <div className="flex items-center justify-center gap-1.5 mb-3">
+                    <Rocket className="h-3 w-3 text-indigo-400 animate-bounce" />
+                    <span className="text-[10px] font-extrabold tracking-[0.2em] uppercase text-indigo-400">
+                      Coming Soon
+                    </span>
+                    <Rocket
+                      className="h-3 w-3 text-indigo-400 animate-bounce"
+                      style={{ animationDelay: '0.15s' }}
+                    />
+                  </div>
+
+                  <h2 className="text-white font-extrabold text-lg leading-tight mb-2">
+                    {comingSoonModal.label}
+                  </h2>
+                  <p className="text-indigo-300/70 text-xs leading-relaxed mb-6">
+                    This feature is under active development and will be
+                    available in an upcoming release.
+                  </p>
+
+                  {/* Progress bar animation */}
+                  <div className="w-full bg-indigo-900/60 rounded-full h-1 mb-6 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+                      style={{ width: '65%', animation: 'none' }}
+                    />
+                  </div>
+
+                  <button
+                    onClick={closeComingSoon}
+                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold tracking-wide transition-colors"
+                  >
+                    Got it
+                  </button>
+                </div>
+
+                {/* Close icon */}
+                <button
+                  onClick={closeComingSoon}
+                  className="absolute top-3 right-3 p-1.5 rounded-lg text-indigo-400 hover:text-white hover:bg-indigo-800/60 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          );
+        })()}
     </div>
   );
 }
