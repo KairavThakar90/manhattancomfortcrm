@@ -320,6 +320,8 @@ export default function POManagement({
   const sortedPOs = [...purchaseOrders.filter((po) => {
     const matchesSearch =
       po.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (po.orderId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      po.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       po.container.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (po.invoiceDetails?.invoiceNumber || '')
         .toLowerCase()
