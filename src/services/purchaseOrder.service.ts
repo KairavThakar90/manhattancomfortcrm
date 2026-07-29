@@ -57,6 +57,7 @@ export interface PurchaseOrder {
   commentsCount: number;
   emailCount: number;
   containerLeadTimeDays?: number | null;
+  sellercloud_link?: string;
 }
 
 export interface CreatePOPayload {

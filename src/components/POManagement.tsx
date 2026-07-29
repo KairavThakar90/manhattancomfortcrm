@@ -31,6 +31,7 @@ import {
   ArrowUpDown,
   Copy,
   Info,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -1289,6 +1290,15 @@ Supply Chain CRM Coordinator`;
               </div>
 
               <div className="flex items-center gap-2">
+                {selectedPO.sellercloud_link && (
+                  <button
+                    onClick={() => window.open(selectedPO.sellercloud_link, '_blank')}
+                    className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open in Sellercloud
+                  </button>
+                )}
                 
                 <button
                   onClick={() => onSelectPO(null)}

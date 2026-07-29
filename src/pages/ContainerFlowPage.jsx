@@ -460,12 +460,14 @@ export default function ContainerFlowPage() {
         items: c.details || c.items || [],
         isApiOriginated: true,
         raw: c,
-        warehouse_name: c.warehouse?.name || c.warehouse_name || 'N/A',
+        warehouse_name:
+          c.warehouse?.name || c.warehouse_name || c.warehouse || 'N/A',
         total_items: c.total_items || 0,
         total_qty_in_container: c.total_qty_in_container || 0,
         total_qty_received: c.total_qty_received || 0,
         is_received: !!c.is_received,
         received_date: formattedRecvDate,
+        sellercloud_link: c.sellercloud_link || null,
       };
     });
   }, [reduxContainers]);

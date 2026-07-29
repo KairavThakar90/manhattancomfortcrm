@@ -243,6 +243,7 @@ export default function POManagementPage() {
               productionStage: po.productionStage || 'Assembly',
               commentsCount: po.commentsCount || 0,
               emailCount: po.emailCount || 0,
+              sellercloud_link: po.sellercloud_link || null,
             };
           });
 

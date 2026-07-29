@@ -1,5 +1,12 @@
 import React from 'react';
-import { Eye, X, Calendar, Package, CheckCircle2 } from 'lucide-react';
+import {
+  Eye,
+  X,
+  Calendar,
+  Package,
+  CheckCircle2,
+  ExternalLink,
+} from 'lucide-react';
 import Table from './common/Table';
 
 export default function ContainerDetailsModal({ container, onClose }) {
@@ -25,13 +32,26 @@ export default function ContainerDetailsModal({ container, onClose }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {container.sellercloud_link && (
+              <button
+                onClick={() =>
+                  window.open(container.sellercloud_link, '_blank')
+                }
+                className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2 cursor-pointer"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open in Sellercloud
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
