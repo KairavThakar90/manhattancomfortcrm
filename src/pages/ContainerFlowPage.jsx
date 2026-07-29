@@ -175,9 +175,17 @@ export default function ContainerFlowPage() {
     try {
       setContainerLoading(true);
       const data = await getContainers({ page, page_size: 25, search });
-      const results = Array.isArray(data) ? data : data.results || [];
-      if (results.length < 25) setContainerHasMore(false);
-      else setContainerHasMore(true);
+      const results = Array.isArray(data)
+        ? data
+        : data.results || data.data || data.items || [];
+
+      if (data && data.has_next !== undefined) {
+        setContainerHasMore(data.has_next);
+      } else if (results.length < 25) {
+        setContainerHasMore(false);
+      } else {
+        setContainerHasMore(true);
+      }
 
       setContainerList((prev) => (append ? [...prev, ...results] : results));
     } catch (err) {
@@ -191,8 +199,12 @@ export default function ContainerFlowPage() {
     async (page, pageSize) => {
       try {
         const data = await getContainers({ page, page_size: pageSize });
-        const results = Array.isArray(data) ? data : data.results || [];
-        if (data && data.count !== undefined) {
+        const results = Array.isArray(data)
+          ? data
+          : data.results || data.data || data.items || [];
+        if (data && data.total !== undefined) {
+          setTotalListCount(data.total);
+        } else if (data && data.count !== undefined) {
           setTotalListCount(data.count);
         } else if (page === 1) {
           setTotalListCount(results.length);
