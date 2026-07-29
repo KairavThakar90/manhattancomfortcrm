@@ -16,13 +16,10 @@ import {
   Edit,
   Trash2,
   Calendar,
-  Copy,
   Eye,
   X,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { Tooltip } from 'react-tooltip';
-import 'react-tooltip/dist/react-tooltip.css';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
@@ -419,6 +416,7 @@ export default function ContainerFlowPage() {
 
       return {
         id: c.id,
+        sellercloud_container_id: c.sellercloud_container_id || c.id,
         name:
           c.container_name ||
           c.name ||
@@ -804,30 +802,9 @@ export default function ContainerFlowPage() {
                         className="hover:bg-slate-50/75 transition-colors"
                       >
                         <td className="px-6 py-4 font-mono font-medium text-slate-700 text-xs">
-                          <div className="flex items-center gap-2 group">
-                            <span
-                              data-tooltip-id="container-id-tooltip"
-                              data-tooltip-content={c.id}
-                              className="cursor-pointer"
-                            >
-                              {c.id && c.id.toString().length > 8
-                                ? `${c.id.toString().substring(0, 8)}...`
-                                : c.id}
-                            </span>
-                            {c.id && (
-                              <button
-                                data-tooltip-id="container-id-tooltip"
-                                data-tooltip-content="Copy full ID"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(c.id);
-                                  toast.success('Container ID copied!');
-                                }}
-                                className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-indigo-50 rounded"
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                            {c.sellercloud_container_id || c.id}
+                          </span>
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-800">
                           {c.name}
@@ -892,18 +869,6 @@ export default function ContainerFlowPage() {
             )}
           </div>
         </div>
-        <Tooltip
-          id="container-id-tooltip"
-          place="top"
-          style={{
-            backgroundColor: '#6366f1',
-            color: '#ffffff',
-            fontWeight: '600',
-            borderRadius: '6px',
-            padding: '8px 12px',
-          }}
-          className="z-50 text-xs shadow-md"
-        />
 
         {/* View Container Overlay Modal — must be inside this return block */}
         <ContainerDetailsModal
