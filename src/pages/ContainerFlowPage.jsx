@@ -769,7 +769,15 @@ export default function ContainerFlowPage() {
     }
   };
 
-  const currentStep = !selectedPOId ? 1 : selectedItems.length === 0 ? 2 : 3;
+  const currentStep = !selectedPOId
+    ? 1
+    : selectedItems.length === 0
+      ? 2
+      : !containerName || !estimatedArrivalDate
+        ? 3
+        : !selectedWarehouseId
+          ? 4
+          : 4;
 
   if (showList) {
     return (
@@ -945,9 +953,15 @@ export default function ContainerFlowPage() {
         </div>
         <button
           onClick={handleSave}
-          disabled={selectedItems.length === 0 || !estimatedArrivalDate}
+          disabled={
+            selectedItems.length === 0 ||
+            !estimatedArrivalDate ||
+            !selectedWarehouseId
+          }
           className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 text-white ${
-            selectedItems.length === 0 || !estimatedArrivalDate
+            selectedItems.length === 0 ||
+            !estimatedArrivalDate ||
+            !selectedWarehouseId
               ? 'bg-slate-400 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700'
           }`}
@@ -965,7 +979,13 @@ export default function ContainerFlowPage() {
             className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-indigo-500 rounded-full z-0 transition-all duration-500 ease-in-out"
             style={{
               width:
-                currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
+                currentStep === 1
+                  ? '0%'
+                  : currentStep === 2
+                    ? '33%'
+                    : currentStep === 3
+                      ? '66%'
+                      : '100%',
             }}
           ></div>
 
@@ -1000,14 +1020,28 @@ export default function ContainerFlowPage() {
           {/* Step 3 */}
           <div className="relative z-10 flex flex-col items-center group">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep === 3 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 3 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 3 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
             >
-              3
+              {currentStep > 3 ? <CheckCircle2 className="h-4 w-4" /> : '3'}
             </div>
             <span
-              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep === 3 ? 'text-indigo-900' : 'text-slate-400'}`}
+              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 3 ? 'text-indigo-900' : 'text-slate-400'}`}
             >
               Container Details
+            </span>
+          </div>
+
+          {/* Step 4 */}
+          <div className="relative z-10 flex flex-col items-center group">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep === 4 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+            >
+              4
+            </div>
+            <span
+              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep === 4 ? 'text-indigo-900' : 'text-slate-400'}`}
+            >
+              Select Warehouse
             </span>
           </div>
         </div>
