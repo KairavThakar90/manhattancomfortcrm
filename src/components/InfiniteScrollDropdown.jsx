@@ -41,7 +41,7 @@ export default function InfiniteScrollDropdown({
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    onSearch(e.target.value);
+    if (onSearch) onSearch(e.target.value);
   };
 
   const isLoadingRef = useRef(isLoading);
@@ -61,7 +61,8 @@ export default function InfiniteScrollDropdown({
       if (
         entries[0].isIntersecting &&
         hasMoreRef.current &&
-        !isLoadingRef.current
+        !isLoadingRef.current &&
+        onLoadMoreRef.current
       ) {
         onLoadMoreRef.current();
       }

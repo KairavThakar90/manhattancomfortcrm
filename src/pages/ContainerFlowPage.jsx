@@ -55,6 +55,7 @@ export default function ContainerFlowPage() {
   const [originalContainerName, setOriginalContainerName] = useState('');
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
   const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
@@ -63,6 +64,37 @@ export default function ContainerFlowPage() {
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
 
+  // Fetch warehouses
+  const [warehousesList, setWarehousesList] = useState([]);
+  useEffect(() => {
+    import('../services/warehouse.service').then(({ getWarehouses }) => {
+      getWarehouses()
+        .then((data) => {
+          const results = Array.isArray(data)
+            ? data
+            : data.results || data.data || [];
+          setWarehousesList(results);
+        })
+        .catch((err) => console.error(err));
+    });
+  }, []);
+  const [warehouseSearch, setWarehouseSearch] = useState('');
+  const warehouseDropdownItems = useMemo(() => {
+    let filtered = warehousesList;
+    if (warehouseSearch) {
+      const q = warehouseSearch.toLowerCase();
+      filtered = filtered.filter(
+        (wh) =>
+          wh.name?.toLowerCase().includes(q) ||
+          wh.warehouse_name?.toLowerCase().includes(q) ||
+          wh.id?.toString().toLowerCase().includes(q),
+      );
+    }
+    return filtered.map((wh) => ({
+      value: wh.id,
+      label: wh.name || wh.warehouse_name || wh.id,
+    }));
+  }, [warehousesList, warehouseSearch]);
   // ====== PO Infinite Scroll Logic ======
   const [poList, setPoList] = useState([]);
   const [poPage, setPoPage] = useState(1);
@@ -428,6 +460,7 @@ export default function ContainerFlowPage() {
         items: c.details || c.items || [],
         isApiOriginated: true,
         raw: c,
+        warehouse_name: c.warehouse?.name || c.warehouse_name || 'N/A',
         total_items: c.total_items || 0,
         total_qty_in_container: c.total_qty_in_container || 0,
         total_qty_received: c.total_qty_received || 0,
@@ -545,6 +578,7 @@ export default function ContainerFlowPage() {
     // Construct the payload that would be sent to an API
     const apiPayload = {
       container_name: containerName.trim(),
+      warehouse_id: selectedWarehouseId || null,
       estimated_arrival_date: estimatedArrivalDate
         ? `${estimatedArrivalDate}T00:00:00Z`
         : null,
@@ -574,6 +608,7 @@ export default function ContainerFlowPage() {
 
     setContainerName('');
     setOriginalContainerName('');
+    setSelectedWarehouseId('');
     setEditingContainerId(null);
     setSelectedItems([]);
     setSelectedPOId('');
@@ -586,6 +621,7 @@ export default function ContainerFlowPage() {
     setSelectedPOId('');
     setContainerName('');
     setOriginalContainerName('');
+    setSelectedWarehouseId('');
     setEstimatedArrivalDate('');
     setIsManualContainerEntry(true); // Default manual on create
     setSelectedItems([]);
@@ -771,6 +807,7 @@ export default function ContainerFlowPage() {
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px] sticky top-0 z-10">
                     <th className="px-6 py-4 bg-slate-50">Container ID</th>
                     <th className="px-6 py-4 bg-slate-50">Container Name</th>
+                    <th className="px-6 py-4 bg-slate-50">Warehouse</th>
                     <th className="px-4 py-4 bg-slate-50">Total Items</th>
                     <th className="px-4 py-4 bg-slate-50">Total Qty</th>
                     <th className="px-4 py-4 bg-slate-50">Total Received</th>
@@ -808,6 +845,9 @@ export default function ContainerFlowPage() {
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-800">
                           {c.name}
+                        </td>
+                        <td className="px-6 py-4 font-medium text-slate-600">
+                          {c.warehouse_name || 'N/A'}
                         </td>
                         <td className="px-4 py-4 font-bold text-slate-700">
                           {c.total_items}
@@ -1244,6 +1284,22 @@ export default function ContainerFlowPage() {
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                   </div>
+                </div>
+
+                <div className="mt-3">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Select Warehouse
+                  </label>
+                  <InfiniteScrollDropdown
+                    value={selectedWarehouseId}
+                    onChange={(val) => setSelectedWarehouseId(val)}
+                    onSearch={(q) => setWarehouseSearch(q)}
+                    items={warehouseDropdownItems}
+                    placeholder="Select a warehouse..."
+                    searchPlaceholder="Search warehouses..."
+                    hasMore={false}
+                    isLoading={false}
+                  />
                 </div>
 
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mt-3">

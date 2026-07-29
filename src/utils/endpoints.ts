@@ -142,3 +142,8 @@ export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
 // ------------------------------------------
 export const PO_COMMENTS = (poId: string) => `/purchase-orders/${poId}/comments`;
 
+// ------------------------------------------
+// Warehouse Endpoints
+// ------------------------------------------
+export const WAREHOUSES_LIST = '/warehouses/';
+export const WAREHOUSES_BY_ID = (id: string) => `/warehouses/${id}`;
