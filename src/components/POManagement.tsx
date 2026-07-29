@@ -30,6 +30,7 @@ import {
   ArrowDown,
   ArrowUpDown,
   Copy,
+  Info,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -928,7 +929,18 @@ Supply Chain CRM Coordinator`;
                       </span>
                     </div>
                   </th>
-                  <th className="px-6 py-4 bg-slate-50">Invoice Delay Status</th>
+                  <th className="px-6 py-4 bg-slate-50">
+                    <div className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold text-slate-600">
+                      Invoice Delay Status
+                      <div
+                        data-tooltip-id="po-metrics-tooltip"
+                        data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
+                        className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
+                      >
+                        <Info className="h-3 w-3" />
+                      </div>
+                    </div>
+                  </th>
                   <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('eta')}>
                     <div className="flex items-center gap-1">
                       <div className="flex flex-col">
@@ -938,6 +950,14 @@ Supply Chain CRM Coordinator`;
                       <span className="text-slate-400 group-hover:text-indigo-600">
                         {activeSortConfig.key === 'eta' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
                       </span>
+                      <div
+                        data-tooltip-id="po-metrics-tooltip"
+                        data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
+                        className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Info className="h-3 w-3" />
+                      </div>
                     </div>
                   </th>
                   <th className="px-6 py-4 bg-slate-50">Container Count</th>
@@ -2043,6 +2063,12 @@ Supply Chain CRM Coordinator`;
           </div>
         </div>
       )}
+      {/* Modal Tooltips */}
+      <Tooltip 
+        id="po-metrics-tooltip" 
+        className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center" 
+        style={{ backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '8px', padding: '8px 12px' }}
+      />
     </div>
   );
 }
