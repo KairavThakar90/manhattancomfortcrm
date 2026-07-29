@@ -20,6 +20,7 @@ export default function InfiniteScrollDropdown({
   items, // array of { label, value, ...rest }
   placeholder = 'Select an option...',
   searchPlaceholder = 'Search...',
+  disabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,8 +76,9 @@ export default function InfiniteScrollDropdown({
     <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-slate-100 transition-colors"
+        className={`w-full flex items-center justify-between border text-sm px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${disabled ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-50 border-slate-200 text-slate-800 font-bold hover:bg-slate-100'}`}
       >
         <span
           className={`truncate ${!selectedItem && !value ? 'text-slate-400 font-normal' : ''}`}

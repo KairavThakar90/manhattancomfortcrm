@@ -4,7 +4,8 @@ import {
   CONTAINER_PO_ITEMS,
   CONTAINERS_CREATE,
   CONTAINERS_UPDATE,
-  CONTAINERS_DELETE
+  CONTAINERS_DELETE,
+  CONTAINER_DETAILS
 } from '../utils/endpoints';
 
 export async function getContainers(params?: {
@@ -33,5 +34,10 @@ export async function updateContainer(id: string | number, payload: any) {
 
 export async function deleteContainer(id: string | number) {
   const { data } = await apiClient.delete(CONTAINERS_DELETE(id.toString()));
+  return data;
+}
+
+export async function getContainerDetails(id: string | number) {
+  const { data } = await apiClient.get(CONTAINER_DETAILS(id.toString()));
   return data;
 }

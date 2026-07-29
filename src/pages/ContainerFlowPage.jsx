@@ -31,6 +31,7 @@ import {
   createContainer,
   updateContainer,
   deleteContainer,
+  getContainerDetails,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
@@ -609,41 +610,81 @@ export default function ContainerFlowPage() {
     }
   };
 
-  const handleEditContainer = (container) => {
-    setEditingContainerId(container.id || null);
-    setContainerName(container.name);
-    setOriginalContainerName(container.name);
-    if (
-      container.arrivalDate &&
-      container.arrivalDate !== 'Pending' &&
-      container.arrivalDate !== 'N/A'
-    ) {
-      setEstimatedArrivalDate(container.arrivalDate);
-    } else {
-      setEstimatedArrivalDate('');
-    }
-    setIsManualContainerEntry(false);
-
-    const poId = container.poIds[0] || '';
-    setSelectedPOId(poId);
-
-    if (container.items && container.items.length > 0) {
-      setSelectedItems(
-        container.items.map((item) => ({
-          id: item.po_item_id || item.id || item.uuid || item.poItemId,
-          sku: item.sku,
-          name: item.product_name || item.name || 'Unknown Item',
-          allocateQty:
-            item.qty_in_container || item.qty || item.allocateQty || 0,
-          maxQty: item.qty_ordered || item.maxQty || 9999,
-        })),
-      );
-    } else {
-      setSelectedItems([]);
+  const handleEditContainer = async (container) => {
+    if (!container.id) {
+      toast.error('Invalid container ID');
+      return;
     }
 
-    setIsEditMode(true);
-    setShowList(false);
+    try {
+      const detailsResp = await getContainerDetails(container.id);
+      const data = Array.isArray(detailsResp) ? detailsResp[0] : detailsResp;
+      const details = data?.details || data?.items || container.items || [];
+      const rawPoId =
+        data?.po_id ||
+        data?.purchase_orders?.[0]?.id ||
+        data?.purchase_orders?.[0]?.uuid ||
+        data?.purchase_orders?.[0]?.po_number ||
+        data?.purchase_orders?.[0]?.sellercloud_po_id ||
+        (container.poIds?.[0] !== 'N/A' ? container.poIds?.[0] : '');
+
+      let finalPoId = rawPoId;
+      if (rawPoId) {
+        const found =
+          poList.find(
+            (p) =>
+              p.id === rawPoId ||
+              p.sellercloud_po_id == rawPoId ||
+              p.po_number == rawPoId,
+          ) ||
+          purchaseOrders.find(
+            (p) =>
+              p.id === rawPoId ||
+              p.sellercloud_po_id == rawPoId ||
+              p.po_number == rawPoId,
+          );
+        if (found) {
+          finalPoId = found.id;
+        }
+      }
+
+      setEditingContainerId(container.id);
+      setContainerName(container.name);
+      setOriginalContainerName(container.name);
+      if (
+        container.arrivalDate &&
+        container.arrivalDate !== 'Pending' &&
+        container.arrivalDate !== 'N/A'
+      ) {
+        setEstimatedArrivalDate(container.arrivalDate);
+      } else {
+        setEstimatedArrivalDate('');
+      }
+      setIsManualContainerEntry(false);
+
+      setSelectedPOId(finalPoId);
+
+      if (details.length > 0) {
+        setSelectedItems(
+          details.map((item) => ({
+            id: item.po_item_id || item.id || item.uuid || item.poItemId,
+            sku: item.sku,
+            name: item.product_name || item.name || 'Unknown Item',
+            allocateQty:
+              item.qty_in_container || item.qty || item.allocateQty || 0,
+            maxQty: item.qty_ordered || item.maxQty || 9999,
+          })),
+        );
+      } else {
+        setSelectedItems([]);
+      }
+
+      setIsEditMode(true);
+      setShowList(false);
+    } catch (err) {
+      console.error('Failed to fetch container details', err);
+      toast.error('Could not load container details for editing');
+    }
   };
 
   const currentStep = !selectedPOId ? 1 : selectedItems.length === 0 ? 2 : 3;
@@ -941,6 +982,7 @@ export default function ContainerFlowPage() {
               hasMore={poHasMore}
               isLoading={poLoading}
               items={poDropdownItems}
+              disabled={isEditMode}
               placeholder="-- Choose a Purchase Order --"
               searchPlaceholder="Search POs..."
             />
