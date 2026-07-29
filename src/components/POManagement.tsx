@@ -205,15 +205,8 @@ export default function POManagement({
 
   // Export State
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportFilterStatus, setExportFilterStatus] = useState<string>('');
-  const [exportColumns, setExportColumns] = useState<string[]>([
-    'PO ID',
-    'PO Title',
-    'Vendor',
-    'Created On',
-    'Status Code',
-    'Total Amount',
-  ]);
+  const [exportFilterStatus, setExportFilterStatus] = useState<string>('all');
+  const [exportColumns, setExportColumns] = useState<string[]>([]);
 
   const PO_LEVEL_COLUMNS = [
     'PO ID',
@@ -360,25 +353,24 @@ export default function POManagement({
 
   // Execute CSV export using backend API (Rule 12)
   const handleExportCSVClick = () => {
+    setExportColumns([]);
+    setExportFilterStatus('all');
     setShowExportModal(true);
   };
 
   const executeExportCSV = async () => {
-    if (exportColumns.length === 0) {
-      toast.error('Please select at least one column to export.');
-      return;
+    let finalColumns = exportColumns;
+    if (finalColumns.length === 0) {
+      finalColumns = [...PO_LEVEL_COLUMNS, ...ITEM_LEVEL_COLUMNS, ...CONTAINER_LEVEL_COLUMNS];
     }
 
     try {
       const toastId = toast.loading('Generating CSV Export...');
 
       const payload: any = {
-        columns: exportColumns,
+        columns: finalColumns,
+        filter_status: exportFilterStatus,
       };
-
-      if (exportFilterStatus) {
-        payload.filter_status = exportFilterStatus;
-      }
 
       const blob = await exportPurchaseOrdersCSV(payload);
 
@@ -1902,7 +1894,7 @@ Supply Chain CRM Coordinator`;
                   onChange={(e) => setExportFilterStatus(e.target.value)}
                   className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-hidden focus:border-indigo-500 focus:bg-white text-slate-700 transition"
                 >
-                  <option value="">No Filter (All Data)</option>
+                  <option value="all">No Filter (All Data)</option>
                   <option value="invoice_delayed">Invoice Delayed (Missing &gt; 10 days)</option>
                   <option value="delivery_delayed">Delivery Delayed (ETA Passed)</option>
                   <option value="lefts_items">Incomplete Receiving (Lefts Items)</option>
