@@ -102,16 +102,6 @@ export default function ContainerFlowPage() {
   };
 
   const vendorsList = useSelector((state) => state.vendors?.list || []);
-  const STATIC_VENDOR_MAP = useMemo(
-    () => ({
-      '3f5551f4-186e-467d-9340-5b74d8e7b766': 'ABC Manufacturing',
-      '4ce542cd-5b23-4653-a884-53391edd9f0f': 'XYZ Logistics & Textiles',
-      'e38f467c-f483-46a4-8172-bce5bb862247': 'Global Tech Sourcing',
-      'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'Shenzhen Electronics Corp',
-    }),
-    [],
-  );
-
   const poDropdownItems = useMemo(() => {
     // Show Redux data first, merge with API poList
     const map = new Map();
@@ -133,7 +123,6 @@ export default function ContainerFlowPage() {
     return displayList.map((po) => {
       const vendorName =
         po.vendor?.name ||
-        STATIC_VENDOR_MAP[po.vendor_id] ||
         vendorsList.find((v) => v.id === po.vendor_id)?.name ||
         po.vendorName ||
         po.vendor_name ||
@@ -144,14 +133,7 @@ export default function ContainerFlowPage() {
         label: `${po.sellercloud_po_id ? `PO-${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : po.order_number || po.id} - ${vendorName}`,
       };
     });
-  }, [
-    poList,
-    purchaseOrders,
-    poSearch,
-    vendorsList,
-    STATIC_VENDOR_MAP,
-    selectedPOId,
-  ]);
+  }, [poList, purchaseOrders, poSearch, vendorsList, selectedPOId]);
 
   // ====== Container Infinite Scroll Logic ======
   const reduxContainers = useSelector((state) => state.containers?.list || []);
@@ -523,6 +505,10 @@ export default function ContainerFlowPage() {
       toast.error('Please select a Purchase Order first.');
       return;
     }
+    if (!estimatedArrivalDate) {
+      toast.error('Please select an Estimated Arrival Date.');
+      return;
+    }
     if (!containerName.trim()) {
       toast.error('Please enter a container name.');
       return;
@@ -825,9 +811,9 @@ export default function ContainerFlowPage() {
         </div>
         <button
           onClick={handleSave}
-          disabled={selectedItems.length === 0}
+          disabled={selectedItems.length === 0 || !estimatedArrivalDate}
           className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 text-white ${
-            selectedItems.length === 0
+            selectedItems.length === 0 || !estimatedArrivalDate
               ? 'bg-slate-400 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700'
           }`}
