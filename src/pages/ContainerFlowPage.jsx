@@ -16,8 +16,11 @@ import {
   Edit,
   Trash2,
   Calendar,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
@@ -679,9 +682,8 @@ export default function ContainerFlowPage() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px] sticky top-0 z-10">
-                    <th className="px-6 py-4 bg-slate-50">
-                      Container ID / Name
-                    </th>
+                    <th className="px-6 py-4 bg-slate-50">Container ID</th>
+                    <th className="px-6 py-4 bg-slate-50">Container Name</th>
                     <th className="px-4 py-4 bg-slate-50">Total Items</th>
                     <th className="px-4 py-4 bg-slate-50">Total Qty</th>
                     <th className="px-4 py-4 bg-slate-50">Total Received</th>
@@ -699,7 +701,7 @@ export default function ContainerFlowPage() {
                   {allContainers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan="8"
+                        colSpan="9"
                         className="px-6 py-12 text-center text-slate-400 italic text-sm"
                       >
                         No containers assigned yet. Click &quot;Add
@@ -712,7 +714,33 @@ export default function ContainerFlowPage() {
                         key={i}
                         className="hover:bg-slate-50/75 transition-colors"
                       >
-                        <td className="px-6 py-4 font-mono font-bold text-slate-800">
+                        <td className="px-6 py-4 font-mono font-medium text-slate-700 text-xs">
+                          <div className="flex items-center gap-2 group">
+                            <span
+                              data-tooltip-id="container-id-tooltip"
+                              data-tooltip-content={c.id}
+                              className="cursor-pointer"
+                            >
+                              {c.id && c.id.toString().length > 8
+                                ? `${c.id.toString().substring(0, 8)}...`
+                                : c.id}
+                            </span>
+                            {c.id && (
+                              <button
+                                data-tooltip-id="container-id-tooltip"
+                                data-tooltip-content="Copy full ID"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(c.id);
+                                  toast.success('Container ID copied!');
+                                }}
+                                className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-indigo-50 rounded"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-slate-800">
                           {c.name}
                         </td>
                         <td className="px-4 py-4 font-bold text-slate-700">
@@ -781,6 +809,18 @@ export default function ContainerFlowPage() {
             )}
           </div>
         </div>
+        <Tooltip
+          id="container-id-tooltip"
+          place="top"
+          style={{
+            backgroundColor: '#6366f1',
+            color: '#ffffff',
+            fontWeight: '600',
+            borderRadius: '6px',
+            padding: '8px 12px',
+          }}
+          className="z-50 text-xs shadow-md"
+        />
       </div>
     );
   }
