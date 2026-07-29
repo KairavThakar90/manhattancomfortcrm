@@ -52,8 +52,6 @@ export default function ContainerFlowPage() {
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
   const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
 
-  const [localContainers, setLocalContainers] = useState([]);
-  const [deletedContainers, setDeletedContainers] = useState(new Set());
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
 
@@ -402,7 +400,7 @@ export default function ContainerFlowPage() {
 
   const allContainers = useMemo(() => {
     // Map redux containers to the expected table format
-    const apiContainers = reduxContainers.map((c) => {
+    return reduxContainers.map((c) => {
       const poIds =
         c.purchase_orders?.map((p) => p.po_number || p.sellercloud_po_id) || [];
       if (poIds.length === 0 && c.po_id) poIds.push(c.po_id);
@@ -449,25 +447,7 @@ export default function ContainerFlowPage() {
         received_date: formattedRecvDate,
       };
     });
-
-    // Filter out deleted local containers
-    const filteredLocal = localContainers.filter(
-      (c) => !deletedContainers.has(c.name),
-    );
-
-    // Combine local changes with API list (local takes precedence if same name)
-    const combined = [...filteredLocal];
-    for (const api of apiContainers) {
-      if (
-        !combined.some((lc) => lc.name === api.name) &&
-        !deletedContainers.has(api.name)
-      ) {
-        combined.push(api);
-      }
-    }
-
-    return combined;
-  }, [localContainers, deletedContainers, reduxContainers]);
+  }, [reduxContainers]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -597,55 +577,8 @@ export default function ContainerFlowPage() {
       fetchTablePage(listPage, listPageSize);
     } catch (error) {
       console.error('Error saving container', error);
-      toast.error(
-        'Failed to save container data to server. Saving locally instead.',
-      );
-
-      // Fallback local save functionality
-      const newContainer = {
-        id: editingContainerId || `local-${Date.now()}`,
-        name: containerName.trim(),
-        poIds: [selectedPOId],
-        totalItems: itemsToSave.reduce(
-          (acc, curr) => acc + (curr.allocateQty || 0),
-          0,
-        ),
-        arrivalDate:
-          estimatedArrivalDate ||
-          selectedPO?.expected_delivery_date ||
-          selectedPO?.eta ||
-          'Pending',
-        items: itemsToSave,
-      };
-
-      if (isEditMode) {
-        setLocalContainers((prev) => {
-          const exists = prev.some((c) => c.name === originalContainerName);
-          if (exists) {
-            return prev.map((c) =>
-              c.name === originalContainerName ? newContainer : c,
-            );
-          } else {
-            return [newContainer, ...prev];
-          }
-        });
-      } else {
-        setLocalContainers((prev) => [newContainer, ...prev]);
-      }
+      toast.error('Failed to save container data to server.');
     }
-
-    setDeletedContainers((prev) => {
-      const next = new Set(prev);
-      next.delete(containerName.trim());
-      if (
-        isEditMode &&
-        originalContainerName &&
-        originalContainerName !== containerName.trim()
-      ) {
-        next.add(originalContainerName);
-      }
-      return next;
-    });
 
     setContainerName('');
     setOriginalContainerName('');
@@ -673,24 +606,16 @@ export default function ContainerFlowPage() {
         `Are you sure you want to delete container ${container.name}?`,
       )
     ) {
-      if (container.isApiOriginated && container.id) {
+      if (container.id) {
         try {
           await deleteContainer(container.id);
-          toast.success('Container deleted successfully from server');
+          toast.success('Container deleted successfully');
           fetchContainerAPI(1, '', false);
           fetchTablePage(listPage, listPageSize);
         } catch (error) {
           console.error('Error deleting container', error);
-          toast.error(
-            'Failed to delete container on server. Marking as deleted locally.',
-          );
-          setDeletedContainers((prev) => new Set(prev).add(container.name));
+          toast.error('Failed to delete container');
         }
-      } else {
-        setLocalContainers((prev) =>
-          prev.filter((c) => c.name !== container.name),
-        );
-        toast.success('Local container deleted successfully');
       }
     }
   };
@@ -713,9 +638,17 @@ export default function ContainerFlowPage() {
     const poId = container.poIds[0] || '';
     setSelectedPOId(poId);
 
-    const localMatch = localContainers.find((lc) => lc.name === container.name);
-    if (localMatch && localMatch.items) {
-      setSelectedItems(localMatch.items);
+    if (container.items && container.items.length > 0) {
+      setSelectedItems(
+        container.items.map((item) => ({
+          id: item.po_item_id || item.id || item.uuid || item.poItemId,
+          sku: item.sku,
+          name: item.product_name || item.name || 'Unknown Item',
+          allocateQty:
+            item.qty_in_container || item.qty || item.allocateQty || 0,
+          maxQty: item.qty_ordered || item.maxQty || 9999,
+        })),
+      );
     } else {
       setSelectedItems([]);
     }
