@@ -1609,9 +1609,12 @@ Supply Chain CRM Coordinator`;
                       </div>
                     ))}
                     {selectedPOComments.length === 0 && (
-                      <p className="text-xs text-slate-400 italic text-center py-6">
-                        No comments
-                      </p>
+                      <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
+                        <MessageSquare className="h-8 w-8 text-slate-400" />
+                        <p className="text-xs text-slate-500 font-medium font-mono">
+                          No comment
+                        </p>
+                      </div>
                     )}
                   </div>
 
