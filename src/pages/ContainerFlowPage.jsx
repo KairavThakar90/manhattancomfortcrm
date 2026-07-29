@@ -20,6 +20,7 @@ import {
 import { toast } from 'react-toastify';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
+import Pagination from '../components/common/Pagination';
 import {
   getPurchaseOrders,
   getPurchaseOrderById,
@@ -44,7 +45,8 @@ export default function ContainerFlowPage() {
   // State for toggling between views
   const [showList, setShowList] = useState(true);
   const [listPage, setListPage] = useState(1);
-  const [listPageSize] = useState(25);
+  const [listPageSize, setListPageSize] = useState(10);
+  const [totalListCount, setTotalListCount] = useState(0);
 
   // State for the flow
   const [selectedPOId, setSelectedPOId] = useState('');
@@ -169,25 +171,35 @@ export default function ContainerFlowPage() {
   const [containerLoading, setContainerLoading] = useState(false);
   const [containerHasMore, setContainerHasMore] = useState(true);
 
-  const fetchContainerAPI = useCallback(
-    async (page, search, append = true) => {
+  const fetchContainerAPI = useCallback(async (page, search, append = true) => {
+    try {
+      setContainerLoading(true);
+      const data = await getContainers({ page, page_size: 25, search });
+      const results = Array.isArray(data) ? data : data.results || [];
+      if (results.length < 25) setContainerHasMore(false);
+      else setContainerHasMore(true);
+
+      setContainerList((prev) => (append ? [...prev, ...results] : results));
+    } catch (err) {
+      console.error('Failed to fetch containers', err);
+    } finally {
+      setContainerLoading(false);
+    }
+  }, []);
+
+  const fetchTablePage = useCallback(
+    async (page, pageSize) => {
       try {
-        setContainerLoading(true);
-        const data = await getContainers({ page, page_size: 25, search });
+        const data = await getContainers({ page, page_size: pageSize });
         const results = Array.isArray(data) ? data : data.results || [];
-        if (results.length < 25) setContainerHasMore(false);
-        else setContainerHasMore(true);
-
-        setContainerList((prev) => (append ? [...prev, ...results] : results));
-
-        if (!search && page === 1 && !append) {
-          const prevRedux = []; // Overwrite redux on initial mount
-          dispatch(setContainersList([...prevRedux, ...results]));
+        if (data && data.count !== undefined) {
+          setTotalListCount(data.count);
+        } else if (page === 1) {
+          setTotalListCount(results.length);
         }
+        dispatch(setContainersList(results));
       } catch (err) {
-        console.error('Failed to fetch containers', err);
-      } finally {
-        setContainerLoading(false);
+        console.error('Failed to fetch table containers', err);
       }
     },
     [dispatch],
@@ -198,6 +210,14 @@ export default function ContainerFlowPage() {
       fetchContainerAPI(1, '', false);
     }, 0);
   }, [fetchContainerAPI]);
+
+  useEffect(() => {
+    if (showList) {
+      setTimeout(() => {
+        fetchTablePage(listPage, listPageSize);
+      }, 0);
+    }
+  }, [listPage, listPageSize, showList, fetchTablePage]);
 
   const loadMoreContainers = () => {
     if (!containerLoading && containerHasMore) {
@@ -567,6 +587,7 @@ export default function ContainerFlowPage() {
 
       // Refresh the API list
       fetchContainerAPI(1, '', false);
+      fetchTablePage(listPage, listPageSize);
     } catch (error) {
       console.error('Error saving container', error);
       toast.error(
@@ -650,6 +671,7 @@ export default function ContainerFlowPage() {
           await deleteContainer(container.id);
           toast.success('Container deleted successfully from server');
           fetchContainerAPI(1, '', false);
+          fetchTablePage(listPage, listPageSize);
         } catch (error) {
           console.error('Error deleting container', error);
           toast.error(
@@ -759,105 +781,77 @@ export default function ContainerFlowPage() {
                       </td>
                     </tr>
                   ) : (
-                    allContainers
-                      .slice(
-                        (listPage - 1) * listPageSize,
-                        listPage * listPageSize,
-                      )
-                      .map((c, i) => (
-                        <tr
-                          key={i}
-                          className="hover:bg-slate-50/75 transition-colors"
-                        >
-                          <td className="px-6 py-4 font-mono font-bold text-slate-800">
-                            {c.name}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-slate-700">
-                            {c.total_items}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-slate-700">
-                            {c.total_qty_in_container}
-                          </td>
-                          <td className="px-4 py-4 font-bold text-indigo-600">
-                            {c.total_qty_received}
-                          </td>
-                          <td className="px-4 py-4 text-slate-600 font-medium text-xs">
-                            {c.arrivalDate}
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            {c.is_received ? (
-                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-                                <CheckCircle2 className="w-3 h-3" /> Yes
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
-                                No
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-slate-600 font-medium text-xs">
-                            {c.received_date}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => handleEditContainer(c)}
-                                className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
-                                title="Edit Container"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteContainer(c)}
-                                className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
-                                title="Delete Container"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                    allContainers.map((c, i) => (
+                      <tr
+                        key={i}
+                        className="hover:bg-slate-50/75 transition-colors"
+                      >
+                        <td className="px-6 py-4 font-mono font-bold text-slate-800">
+                          {c.name}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-slate-700">
+                          {c.total_items}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-slate-700">
+                          {c.total_qty_in_container}
+                        </td>
+                        <td className="px-4 py-4 font-bold text-indigo-600">
+                          {c.total_qty_received}
+                        </td>
+                        <td className="px-4 py-4 text-slate-600 font-medium text-xs">
+                          {c.arrivalDate}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          {c.is_received ? (
+                            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" /> Yes
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
+                              No
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-slate-600 font-medium text-xs">
+                          {c.received_date}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEditContainer(c)}
+                              className="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded transition-colors"
+                              title="Edit Container"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContainer(c)}
+                              className="text-rose-600 hover:text-rose-800 p-1.5 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                              title="Delete Container"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination Controls */}
-            {allContainers.length > 0 && (
-              <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">
-                  Showing{' '}
-                  {Math.min(
-                    (listPage - 1) * listPageSize + 1,
-                    allContainers.length,
-                  )}{' '}
-                  to {Math.min(listPage * listPageSize, allContainers.length)}{' '}
-                  of {allContainers.length} containers
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setListPage((p) => Math.max(1, p - 1))}
-                    disabled={listPage === 1}
-                    className="px-3 py-1 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs font-bold text-slate-700 px-2">
-                    Page {listPage} of{' '}
-                    {Math.ceil(allContainers.length / listPageSize)}
-                  </span>
-                  <button
-                    onClick={() => setListPage((p) => p + 1)}
-                    disabled={
-                      listPage >= Math.ceil(allContainers.length / listPageSize)
-                    }
-                    className="px-3 py-1 text-xs font-semibold rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {(totalListCount > 0 || allContainers.length > 0) && (
+              <Pagination
+                currentPage={listPage}
+                totalCount={totalListCount || allContainers.length}
+                pageSize={listPageSize}
+                onPageChange={setListPage}
+                onPageSizeChange={(size) => {
+                  setListPageSize(size);
+                  setListPage(1);
+                }}
+              />
             )}
           </div>
         </div>

@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Bell,
-  RefreshCw,
-  Layers,
-  LogOut,
-} from 'lucide-react';
+import { Bell, RefreshCw, Layers, LogOut } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { logout } from '../services/auth.service';
 import { navItems } from '../utils/navigation';
