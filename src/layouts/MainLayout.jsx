@@ -356,7 +356,11 @@ export default function MainLayout() {
 
         {/* INTERNAL VIEWPORT PORTAL */}
         <div
-          className={`flex-1 p-6 min-h-0 ${location.pathname === '/purchase-orders' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}
+          className={`flex-1 p-6 min-h-0 ${
+            ['/purchase-orders', '/containers'].includes(location.pathname)
+              ? 'overflow-hidden flex flex-col'
+              : 'overflow-y-auto'
+          }`}
         >
           <Outlet />
         </div>

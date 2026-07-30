@@ -498,7 +498,7 @@ export default function POManagementPage() {
   // Loading state
   if (loading && !hasLoadedInitial) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex flex-col items-center justify-center flex-1 h-full w-full min-h-[400px] gap-4">
         <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
         <p className="text-sm text-slate-500 font-medium">
           Loading purchase orders...

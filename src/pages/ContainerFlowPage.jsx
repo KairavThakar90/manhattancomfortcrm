@@ -55,7 +55,8 @@ export default function ContainerFlowPage() {
   const [listPage, setListPage] = useState(1);
   const [listPageSize, setListPageSize] = useState(10);
   const [listSearchQuery, setListSearchQuery] = useState('');
-  const [listLoading, setListLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
 
   // State for the flow
@@ -271,6 +272,7 @@ export default function ContainerFlowPage() {
         console.error('Failed to fetch table containers', err);
       } finally {
         setListLoading(false);
+        setHasLoadedInitial(true);
       }
     },
     [dispatch],
@@ -942,6 +944,17 @@ export default function ContainerFlowPage() {
   );
 
   if (showList) {
+    if (listLoading && !hasLoadedInitial) {
+      return (
+        <div className="flex flex-col items-center justify-center flex-1 h-full w-full min-h-[400px] gap-4">
+          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+          <p className="text-sm text-slate-500 font-medium">
+            Loading containers...
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden relative">
         {/* Header */}
@@ -1028,9 +1041,6 @@ export default function ContainerFlowPage() {
 
         {isSyncing && (
           <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
-        )}
-        {listLoading && allContainers.length === 0 && (
-          <FullPageLoader message="Loading containers..." />
         )}
       </div>
     );

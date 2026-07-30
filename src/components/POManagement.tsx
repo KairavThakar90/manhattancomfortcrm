@@ -2026,11 +2026,6 @@ Supply Chain CRM Coordinator`;
           message="Fetching the latest Purchase Orders. This may take a moment..." 
         />
       )}
-      {loading && purchaseOrders.length === 0 && (
-        <FullPageLoader 
-          message="Loading purchase orders..." 
-        />
-      )}
 
       {/* Modal Tooltips */}
       <Tooltip 
