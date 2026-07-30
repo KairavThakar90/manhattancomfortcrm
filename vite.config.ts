@@ -19,7 +19,8 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
         '/api': {
-          target: 'https://manhattancomfortcrm-backend.vercel.app',
+          // target: 'https://manhattancomfortcrm-backend.vercel.app'
+          target: 'http://localhost:8000/',
           changeOrigin: true,
           secure: true,
         },

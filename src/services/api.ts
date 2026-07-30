@@ -51,6 +51,14 @@ apiClient.interceptors.response.use(
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
+    } else if (
+      error.response?.status >= 500 ||
+      (!error.response && error.message === 'Network Error')
+    ) {
+      if (!window.location.pathname.includes('/support')) {
+        // Redirect on server errors or network disconnects
+        window.location.href = '/support';
+      }
     }
 
     return Promise.reject(new Error(message));

@@ -16,20 +16,6 @@ import {
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const DB_VENDOR_ID_MAP = {
-  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'VEND-001',
-  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'VEND-002',
-  'e38f467c-f483-46a4-8172-bce5bb862247': 'VEND-003',
-  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'VEND-004',
-};
-
-const STATIC_VENDOR_MAP = {
-  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'ABC Manufacturing',
-  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'XYZ Logistics & Textiles',
-  'e38f467c-f483-46a4-8172-bce5bb862247': 'Global Tech Sourcing',
-  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'Shenzhen Electronics Corp',
-};
-
 export default function POManagementPage() {
   const dispatch = useDispatch();
   const {
@@ -112,12 +98,7 @@ export default function POManagementPage() {
         }
 
         if (vendorFilter !== 'all') {
-          // Find the database UUID that maps to this front ID (e.g. 'VEND-001')
-          const dbVendorId =
-            Object.keys(DB_VENDOR_ID_MAP).find(
-              (key) => DB_VENDOR_ID_MAP[key] === vendorFilter,
-            ) || vendorFilter;
-          params.vendor_id = dbVendorId;
+          params.vendor_id = vendorFilter;
         }
 
         if (userRole === 'Vendor') {
@@ -148,17 +129,10 @@ export default function POManagementPage() {
 
         const mapPOData = (rawPOs) =>
           rawPOs.map((po) => {
-            const frontVendorId =
-              DB_VENDOR_ID_MAP[po.vendor_id] || po.vendor_id || 'N/A';
-            const vendor = vendors.find(
-              (v) => v.id === frontVendorId || v.id === po.vendor_id,
-            );
+            const frontVendorId = po.vendor_id || 'N/A';
+            const vendor = vendors.find((v) => v.id === po.vendor_id);
             const vendorName =
-              po.vendor?.name ||
-              vendor?.name ||
-              STATIC_VENDOR_MAP[po.vendor_id] ||
-              po.vendor_name ||
-              'N/A';
+              po.vendor?.name || vendor?.name || po.vendor_name || 'N/A';
 
             const orderedQty = po.items
               ? po.items.reduce((sum, item) => sum + (item.qty_ordered || 0), 0)
@@ -395,17 +369,10 @@ export default function POManagementPage() {
       try {
         const poData = await getPurchaseOrderById(dbId);
         if (!cancelled && poData) {
-          const frontVendorId =
-            DB_VENDOR_ID_MAP[poData.vendor_id] || poData.vendor_id || 'N/A';
-          const vendor = vendors.find(
-            (v) => v.id === frontVendorId || v.id === poData.vendor_id,
-          );
+          const frontVendorId = poData.vendor_id || 'N/A';
+          const vendor = vendors.find((v) => v.id === poData.vendor_id);
           const vendorName =
-            poData.vendor?.name ||
-            vendor?.name ||
-            STATIC_VENDOR_MAP[poData.vendor_id] ||
-            poData.vendor_name ||
-            'N/A';
+            poData.vendor?.name || vendor?.name || poData.vendor_name || 'N/A';
 
           const orderedQty = poData.items
             ? poData.items.reduce(
@@ -577,10 +544,7 @@ export default function POManagementPage() {
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
 
-      const dbVendorId =
-        Object.keys(DB_VENDOR_ID_MAP).find(
-          (key) => DB_VENDOR_ID_MAP[key] === po.vendorId,
-        ) || po.vendorId;
+      const dbVendorId = po.vendorId;
 
       try {
         const response = await createPurchaseOrder({
