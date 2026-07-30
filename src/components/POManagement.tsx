@@ -290,6 +290,7 @@ export default function POManagement({
     'Lead Time (days)',
     'Total Amount',
     'Currency',
+    "Comments"
   ];
 
   const ITEM_LEVEL_COLUMNS = [
