@@ -1443,7 +1443,7 @@ Supply Chain CRM Coordinator`;
               <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
                 <div className="flex items-center gap-3">
                   <h3 className="text-sm font-bold text-slate-800">
-                    PO {selectedPO.id} - Comments
+                    {selectedPO.id} - Comments
                   </h3>
                 </div>
                 <button
@@ -1582,7 +1582,7 @@ Supply Chain CRM Coordinator`;
                             emptyMessage="No items specified for this purchase order."
                           />
                         </div>
-                        <div className="absolute top-0 left-0 w-0 h-0 z-0">
+                        <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
                           <Tooltip
                             id="po-item-tooltip"
                             place="top"
@@ -2122,7 +2122,7 @@ Supply Chain CRM Coordinator`;
       )}
 
       {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}
-      <div className="absolute top-0 left-0 w-0 h-0 z-0">
+      <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
         <Tooltip 
           id="po-metrics-tooltip" 
           positionStrategy="fixed"
