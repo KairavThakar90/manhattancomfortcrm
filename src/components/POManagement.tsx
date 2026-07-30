@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import {
   Search,
   Filter,
@@ -33,6 +34,7 @@ import {
   Copy,
   Info,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -115,6 +117,7 @@ export default function POManagement({
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders.list);
   const kanbanList = useSelector((state: any) => state.purchaseOrders.kanbanList || {});
+  const dispatch = useDispatch();
 
 
   const purchaseOrders = reduxPOs || [];
@@ -133,6 +136,7 @@ export default function POManagement({
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
 
   const handleSyncSellerCloud = async () => {
     try {
@@ -185,7 +189,8 @@ export default function POManagement({
           setIsLoadingComments(false);
         });
     }
-  }, [selectedPOId, purchaseOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPOId]);
 
   const searchQuery =
     propSearchQuery !== undefined ? propSearchQuery : localSearchQuery;
@@ -767,6 +772,14 @@ Supply Chain CRM Coordinator`;
            // we just replace the whole array with the fresh backend truth.
            return mappedComments;
         });
+
+        // Optimistically update the PO list commentsCount to avoid reloading the whole table
+        if (selectedPO) {
+          const updatedPOs = purchaseOrders.map((p: any) => 
+            p.id === selectedPO.id ? { ...p, commentsCount: mappedComments.length } : p
+          );
+          dispatch(setPurchaseOrdersList(updatedPOs));
+        }
       })
       .catch((err) => {
         console.error('Failed to save comment to server:', err);
@@ -956,12 +969,47 @@ Supply Chain CRM Coordinator`;
       render: (po: any) => po.containerNames && po.containerNames.length > 0 ? <span title={po.containerNames.join(', ')} className="text-[11px] font-bold text-slate-700">{po.containerNames.length}</span> : (!po.container || po.container === 'N/A') ? <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span> : <span className="truncate max-w-[150px] inline-block align-bottom">{po.container}</span>
     },
     {
+      header: 'Comments',
+      accessor: 'commentsCount',
+      headerClassName: 'px-4 py-4 bg-slate-50 text-center flex-shrink-0 w-20',
+      className: 'px-4 py-4 text-center',
+      render: (po: any) => {
+        const count = parseInt(po.commentsCount, 10) || 0;
+        const hasComments = count > 0;
+        return (
+          <button
+            onClick={(e: any) => {
+              e.stopPropagation();
+              setIsCommentOnlyView(true);
+              onSelectPO(po.id);
+              setTimeout(() => {
+                setActiveDrawerSection('comments');
+              }, 10);
+            }}
+            className={`relative p-2 rounded-xl border transition ${
+              hasComments
+                ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300'
+                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+            }`}
+            title="View Comments"
+          >
+            <MessageSquare className="h-5 w-5" />
+            {hasComments && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs border border-white">
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
+          </button>
+        );
+      }
+    },
+    {
       header: 'Actions',
       accessor: 'actions',
       headerClassName: 'px-6 py-4 bg-slate-50 text-center',
       className: 'px-6 py-4 text-center',
       render: (po: any) => (
-        <button onClick={(e: any) => { e.stopPropagation(); onSelectPO(po.id); }} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold">
+        <button onClick={(e: any) => { e.stopPropagation(); setIsCommentOnlyView(false); onSelectPO(po.id); }} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold">
           <Eye className="h-3.5 w-3.5" />
           <span>Order Insights</span>
         </button>
@@ -1345,20 +1393,21 @@ Supply Chain CRM Coordinator`;
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO && (
         <div
-          onClick={() => onSelectPO(null)}
+          onClick={() => { onSelectPO(null); setIsCommentOnlyView(false); }}
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-5xl w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp"
+            className={`bg-white rounded-2xl border border-slate-100 shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp`}
           >
             {/* Header */}
-            <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
-              <div className="flex items-center gap-3">
-                <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
-                  {selectedPO.id}
-                </span>
-                <div>
+            {!isCommentOnlyView && (
+              <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                    {selectedPO.id}
+                  </span>
+                  <div>
                   <h3 className="text-sm font-bold text-slate-800">
                     {selectedPO.vendorName}
                   </h3>
@@ -1381,17 +1430,35 @@ Supply Chain CRM Coordinator`;
                 )}
                 
                 <button
-                  onClick={() => onSelectPO(null)}
+                  onClick={() => { onSelectPO(null); setIsCommentOnlyView(false); }}
                   className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
+            )}
+            
+            {isCommentOnlyView && (
+              <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    PO {selectedPO.id} - Comments
+                  </h3>
+                </div>
+                <button
+                  onClick={() => { onSelectPO(null); setIsCommentOnlyView(false); }}
+                  className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            )}
 
             {/* Tab Selection inside Modal */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
-              {(['details', 'comments'] as const).map(
+            {!isCommentOnlyView && (
+              <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
+                {(['details', 'comments'] as const).map(
                 (section) => (
                   <button
                     key={section}
@@ -1407,10 +1474,11 @@ Supply Chain CRM Coordinator`;
                 ),
               )}
             </div>
+            )}
 
             <div className="p-6 flex-1 flex flex-col min-h-0">
               {/* TAB: DETAILS */}
-              {activeDrawerSection === 'details' && (
+              {activeDrawerSection === 'details' && !isCommentOnlyView && (
                 <div className="flex-1 flex flex-col min-h-0">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
                     {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
@@ -1551,36 +1619,47 @@ Supply Chain CRM Coordinator`;
               {activeDrawerSection === 'comments' && (
                 <div className="flex-1 flex flex-col min-h-0 gap-4">
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
-                    {selectedPOComments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900">
-                              {comment.user}
-                            </span>
-                            <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
-                              {comment.role}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {comment.timestamp}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-700 leading-relaxed">
-                          {comment.message}
-                        </p>
-                      </div>
-                    ))}
-                    {selectedPOComments.length === 0 && (
-                      <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
-                        <MessageSquare className="h-8 w-8 text-slate-400" />
+                    {isLoadingComments ? (
+                      <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                        <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
                         <p className="text-xs text-slate-500 font-medium font-mono">
-                          No comment
+                          Loading messages...
                         </p>
                       </div>
+                    ) : (
+                      <>
+                        {selectedPOComments.map((comment) => (
+                          <div
+                            key={comment.id}
+                            className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-900">
+                                  {comment.user}
+                                </span>
+                                <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
+                                  {comment.role}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {comment.timestamp}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-700 leading-relaxed">
+                              {comment.message}
+                            </p>
+                          </div>
+                        ))}
+                        {selectedPOComments.length === 0 && (
+                          <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
+                            <MessageSquare className="h-8 w-8 text-slate-400" />
+                            <p className="text-xs text-slate-500 font-medium font-mono">
+                              No comment
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 

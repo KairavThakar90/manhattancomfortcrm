@@ -241,7 +241,10 @@ export default function POManagementPage() {
                   }))
                 : po.items || [],
               productionStage: po.productionStage || 'Assembly',
-              commentsCount: po.commentsCount || 0,
+              commentsCount:
+                po.commentsCount ??
+                po.comments_count ??
+                (po.comments ? po.comments.length : 0),
               emailCount: po.emailCount || 0,
               sellercloud_link: po.sellercloud_link || null,
               delta_sellercloud_link: po.delta_sellercloud_link || null,
@@ -427,6 +430,13 @@ export default function POManagementPage() {
             ? poData.created_on.split('T')[0]
             : 'N/A';
 
+          const mergedCommentsCount =
+            poData.commentsCount ??
+            poData.comments_count ??
+            (poData.comments
+              ? poData.comments.length
+              : currentPO.commentsCount || 0);
+
           const updatedPO = {
             ...currentPO,
             vendorName,
@@ -435,6 +445,7 @@ export default function POManagementPage() {
             status,
             eta,
             expected_delivery_date: eta,
+            commentsCount: mergedCommentsCount,
             containerNames:
               poData.container_names && poData.container_names.length > 0
                 ? poData.container_names
