@@ -1116,6 +1116,9 @@ Supply Chain CRM Coordinator`;
 
   return (
     <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden relative">
+      {isSyncing && (
+        <TableLoader message="Syncing with SellerCloud..." />
+      )}
       {/* Tab Header Controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4 flex-shrink-0">
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
@@ -2093,14 +2096,7 @@ Supply Chain CRM Coordinator`;
           </div>
         </div>
       )}
-      {/* SYNC LOADER (restricted to component bounds, no separate full page loading) */}
-      {isSyncing && (
-        <div className="absolute inset-0 z-50">
-          <TableLoader 
-            message="Fetching the latest Purchase Orders. This may take a moment..." 
-          />
-        </div>
-      )}
+      {/* FullPageLoader removed in favor of localized TableLoaders for syncing */}
 
       {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}
       <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">

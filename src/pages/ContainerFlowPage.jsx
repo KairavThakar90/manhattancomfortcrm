@@ -1096,7 +1096,8 @@ export default function ContainerFlowPage() {
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
+        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4 relative">
+          {isSyncing && <TableLoader message="Syncing with SellerCloud..." />}
           <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -1279,10 +1280,6 @@ export default function ContainerFlowPage() {
               </div>
             </div>
           </div>
-        )}
-
-        {isSyncing && (
-          <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
         )}
       </div>
     );
@@ -1740,9 +1737,7 @@ export default function ContainerFlowPage() {
         onClose={() => setViewingContainerDetails(null)}
       />
 
-      {isSyncing && (
-        <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
-      )}
+      {/* FullPageLoader removed in favor of localized TableLoader */}
     </div>
   );
 }
