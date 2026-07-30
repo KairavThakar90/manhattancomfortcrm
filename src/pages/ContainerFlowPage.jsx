@@ -54,9 +54,14 @@ export default function ContainerFlowPage() {
   // State for toggling between views
   const [showList, setShowList] = useState(true);
   const [listPage, setListPage] = useState(1);
-  const [listPageSize, setListPageSize] = useState(10);
+  const [listPageSize, setListPageSize] = useState(25);
   const [listSearchQuery, setListSearchQuery] = useState('');
   const [listLoading, setListLoading] = useState(true);
+  const [isPaginating, setIsPaginating] = useState(false);
+  const [listSortConfig, setListSortConfig] = useState({
+    key: null,
+    direction: 'asc',
+  });
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
 
@@ -264,6 +269,14 @@ export default function ContainerFlowPage() {
       setHasLoadedInitial(true);
     }
   }, [dispatch]);
+
+  const handleContainerPageChange = (newPage) => {
+    setIsPaginating(true);
+    setTimeout(() => {
+      setListPage(newPage);
+      setIsPaginating(false);
+    }, 300);
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -1022,7 +1035,9 @@ export default function ContainerFlowPage() {
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-            {listLoading && <TableLoader message="Please wait a moment..." />}
+            {(listLoading || isPaginating) && (
+              <TableLoader message="Please wait a moment..." />
+            )}
             <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
               <DataTable
                 columns={containerColumns}
@@ -1044,10 +1059,10 @@ export default function ContainerFlowPage() {
                 currentPage={listPage}
                 totalCount={filteredContainers.length}
                 pageSize={listPageSize}
-                onPageChange={setListPage}
+                onPageChange={handleContainerPageChange}
                 onPageSizeChange={(size) => {
                   setListPageSize(size);
-                  setListPage(1);
+                  handleContainerPageChange(1);
                 }}
               />
             )}
