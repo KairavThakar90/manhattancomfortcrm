@@ -644,6 +644,7 @@ export default function POManagementPage() {
         onAddEmailLog={handleAddEmailLog}
         onAddActivity={handleAddActivity}
         onAddAudit={handleAddAudit}
+        onRefreshData={() => setRefreshTrigger((prev) => prev + 1)}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         pageSize={pageSize}

@@ -913,7 +913,7 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
-        header: 'Is Received?',
+        header: 'Shipping Status',
         accessor: 'is_received',
         headerClassName: 'px-4 py-4 bg-slate-50 text-center',
         className: 'px-4 py-4 text-center',
@@ -956,17 +956,6 @@ export default function ContainerFlowPage() {
   );
 
   if (showList) {
-    if (listLoading && !hasLoadedInitial) {
-      return (
-        <div className="flex flex-col items-center justify-center flex-1 h-full w-full min-h-[400px] gap-4">
-          <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">
-            Loading containers...
-          </p>
-        </div>
-      );
-    }
-
     return (
       <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden relative">
         {/* Header */}
@@ -994,6 +983,16 @@ export default function ContainerFlowPage() {
                 className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
               />
               {isSyncing ? 'Syncing...' : 'Sync Container SellerCloud'}
+            </button>
+            <button
+              onClick={() => fetchTablePage()}
+              disabled={listLoading}
+              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${listLoading ? 'animate-spin' : ''}`}
+              />
+              <span>{listLoading ? 'Refreshing...' : 'Refresh Data'}</span>
             </button>
             <button
               onClick={handleCreateContainer}
