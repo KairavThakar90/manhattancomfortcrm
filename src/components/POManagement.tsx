@@ -409,18 +409,9 @@ export default function POManagement({
     }
   }
 
-  // Items Pagination for selected PO (Rule 23)
-  const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
-  const itemsPageSize = 10;
-  
-  useEffect(() => {
-    setItemsCurrentPage(1);
-  }, [selectedPOId]);
-
-  const totalItemsCount = selectedPO?.items?.length || 0;
-  const paginatedItems = selectedPO?.items 
-    ? selectedPO.items.slice((itemsCurrentPage - 1) * itemsPageSize, itemsCurrentPage * itemsPageSize) 
-    : [];
+  // All Items for selected PO will be listed natively without separate pagination
+  const paginatedItems = selectedPO?.items || [];
+  const totalItemsCount = paginatedItems.length;
 
   // Comments for selected PO (Dynamically loaded from detail API)
   const selectedPOComments = fetchedComments;
@@ -1599,19 +1590,7 @@ Supply Chain CRM Coordinator`;
                             }}
                           />
                         </div>
-                        {/* Items Pagination Footer */}
-                        {totalItemsCount > itemsPageSize && (
-                          <div className="mt-4 shrink-0">
-                            <Pagination
-                              currentPage={itemsCurrentPage}
-                              totalCount={totalItemsCount}
-                              pageSize={itemsPageSize}
-                              onPageChange={setItemsCurrentPage}
-                              onPageSizeChange={() => {}}
-                              hidePageSizeSelector={true}
-                            />
-                          </div>
-                        )}
+                        {/* Native scrolling supported, separate items pagination removed */}
                       </div>
                     </div>
                   </div>
@@ -2114,11 +2093,13 @@ Supply Chain CRM Coordinator`;
           </div>
         </div>
       )}
-      {/* FULL PAGE LOADING FOR SYNC */}
+      {/* SYNC LOADER (restricted to component bounds, no separate full page loading) */}
       {isSyncing && (
-        <FullPageLoader 
-          message="Fetching the latest Purchase Orders. This may take a moment..." 
-        />
+        <div className="absolute inset-0 z-50">
+          <TableLoader 
+            message="Fetching the latest Purchase Orders. This may take a moment..." 
+          />
+        </div>
       )}
 
       {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}

@@ -506,17 +506,7 @@ export default function POManagementPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPOId]);
 
-  // Loading state
-  if (loading && !hasLoadedInitial) {
-    return (
-      <div className="flex flex-col items-center justify-center flex-1 h-full w-full min-h-[400px] gap-4">
-        <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
-        <p className="text-sm text-slate-500 font-medium">
-          Loading purchase orders...
-        </p>
-      </div>
-    );
-  }
+  // Initial loading is now handled natively via the TableLoader passed inside POManagement
 
   // Error state (only if no data to show)
   if (error && !hasLoadedInitial) {
