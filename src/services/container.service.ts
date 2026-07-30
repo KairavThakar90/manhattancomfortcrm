@@ -6,7 +6,8 @@ import {
   CONTAINERS_UPDATE,
   CONTAINERS_DELETE,
   CONTAINER_DETAILS,
-  CONTAINER_SYNC
+  CONTAINER_SYNC,
+  CONTAINERS_EXPORT_CSV
 } from '../utils/endpoints';
 
 export async function getContainers(params?: {
@@ -46,4 +47,22 @@ export async function getContainerDetails(id: string | number) {
 export async function syncContainers() {
   const { data } = await apiClient.post(CONTAINER_SYNC);
   return data;
+}
+
+export async function exportContainersCSV(payload: any) {
+  const response = await apiClient.post(CONTAINERS_EXPORT_CSV, payload, {
+    responseType: 'blob',
+  });
+  
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  
+  const dateStr = new Date().toISOString().split('T')[0];
+  link.setAttribute('download', `Container_Export_${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  
+  return response;
 }

@@ -138,6 +138,7 @@ export const CONTAINERS_DELETE = (id: string) => `/containers/${id}`;
 export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) => `/containers/po-items/${sellercloud_po_id}`;
 export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
 export const CONTAINER_SYNC = '/purchase-orders/sync-containers';
+export const CONTAINERS_EXPORT_CSV = '/containers/export/csv';
 
 // ------------------------------------------
 // PO Comment Endpoints

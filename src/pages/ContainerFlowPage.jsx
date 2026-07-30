@@ -22,6 +22,8 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  FileSpreadsheet,
+  Download,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -40,8 +42,37 @@ import {
   deleteContainer,
   getContainerDetails,
   syncContainers,
+  exportContainersCSV,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
+
+const CONTAINER_EXPORT_COLUMNS = [
+  'container_name',
+  'sellercloud_container_id',
+  'estimated_arrival_date',
+  'received_date',
+  'warehouse_name',
+  'sellercloud_po_id',
+  'po_order_number',
+  'sku',
+  'item_name',
+  'qty_ordered',
+  'qty_in_container',
+];
+
+const CONTAINER_EXPORT_COLUMNS_LABELS = {
+  container_name: 'Container Name',
+  sellercloud_container_id: 'System Container ID',
+  estimated_arrival_date: 'ETA Delivery Date',
+  received_date: 'Received Date',
+  warehouse_name: 'Warehouse',
+  sellercloud_po_id: 'System PO ID',
+  po_order_number: 'PO Order Number',
+  sku: 'SKU',
+  item_name: 'Item Description',
+  qty_ordered: 'Qty Ordered',
+  qty_in_container: 'Qty In Container',
+};
 
 export default function ContainerFlowPage() {
   const dispatch = useDispatch();
@@ -64,6 +95,11 @@ export default function ContainerFlowPage() {
   });
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
+
+  // CSV Export Modal State
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportColumns, setExportColumns] = useState([]);
+  const [exportFilterStatus, setExportFilterStatus] = useState('all');
 
   // State for the flow
   const [selectedPOId, setSelectedPOId] = useState('');
@@ -276,6 +312,37 @@ export default function ContainerFlowPage() {
       setListPage(newPage);
       setIsPaginating(false);
     }, 300);
+  };
+
+  const executeExportCSV = async () => {
+    try {
+      const toastId = toast.loading('Generating Export CSV...');
+
+      const payload = {
+        columns:
+          exportColumns.length > 0 ? exportColumns : CONTAINER_EXPORT_COLUMNS,
+      };
+
+      if (exportFilterStatus === 'received') {
+        payload.is_received = true;
+      } else if (exportFilterStatus === 'pending') {
+        payload.is_received = false;
+      }
+
+      await exportContainersCSV(payload);
+
+      toast.update(toastId, {
+        render: 'Export downloaded successfully!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+      });
+      setShowExportModal(false);
+    } catch (err) {
+      console.error('Failed to export CSV', err);
+      toast.dismiss();
+      toast.error('Failed to generate export file');
+    }
   };
 
   useEffect(() => {
@@ -1008,6 +1075,17 @@ export default function ContainerFlowPage() {
               <span>{listLoading ? 'Refreshing...' : 'Refresh Data'}</span>
             </button>
             <button
+              onClick={() => {
+                setExportColumns([]);
+                setExportFilterStatus('all');
+                setShowExportModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>Export CSV</span>
+            </button>
+            <button
               onClick={handleCreateContainer}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
             >
@@ -1074,6 +1152,134 @@ export default function ContainerFlowPage() {
           container={viewingContainerDetails}
           onClose={() => setViewingContainerDetails(null)}
         />
+
+        {/* Export CSV Modal */}
+        {showExportModal && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center animate-in fade-in p-4 overflow-y-auto w-full h-full">
+            <div className="bg-white max-w-xl w-full rounded-2xl shadow-2xl border border-slate-100 flex flex-col my-auto relative">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Export Container Data (CSV)
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Select the filters and columns to include in your export.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-5 flex flex-col gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                {/* Filter Section */}
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+                    Status Filter
+                  </h4>
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="container-export-filter"
+                        checked={exportFilterStatus === 'all'}
+                        onChange={() => setExportFilterStatus('all')}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
+                        All Containers (Pending & Received)
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="container-export-filter"
+                        checked={exportFilterStatus === 'pending'}
+                        onChange={() => setExportFilterStatus('pending')}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-amber-600 transition-colors">
+                        Pending/In-Transit Only
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="container-export-filter"
+                        checked={exportFilterStatus === 'received'}
+                        onChange={() => setExportFilterStatus('received')}
+                        className="text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
+                        Received Containers Only
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Columns Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Columns to Include
+                    </h4>
+                    <button
+                      onClick={() => setExportColumns(CONTAINER_EXPORT_COLUMNS)}
+                      className="text-[10px] uppercase font-bold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded transition"
+                    >
+                      Select All
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                    {CONTAINER_EXPORT_COLUMNS.map((col) => (
+                      <label
+                        key={col}
+                        className="flex items-start gap-2 cursor-pointer group"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={exportColumns.includes(col)}
+                          onChange={(e) => {
+                            if (e.target.checked)
+                              setExportColumns((C) => [...C, col]);
+                            else
+                              setExportColumns((C) =>
+                                C.filter((c) => c !== col),
+                              );
+                          }}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                        />
+                        <span className="text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors leading-tight">
+                          {CONTAINER_EXPORT_COLUMNS_LABELS[col] || col}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-slate-100 p-5 bg-slate-50/50 rounded-b-2xl shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeExportCSV}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                >
+                  <Download className="h-4 w-4" />
+                  Generate CSV
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isSyncing && (
           <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
