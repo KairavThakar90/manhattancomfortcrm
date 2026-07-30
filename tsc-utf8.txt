@@ -1,0 +1,30 @@
+﻿src/components/POManagement.tsx(1001,38): error TS1005: ',' expected.
+src/components/POManagement.tsx(1001,40): error TS1005: ',' expected.
+src/components/POManagement.tsx(1001,43): error TS1005: ',' expected.
+src/components/POManagement.tsx(1001,54): error TS1005: ',' expected.
+src/components/POManagement.tsx(1002,13): error TS1005: ',' expected.
+src/components/POManagement.tsx(1003,5): error TS1005: ',' expected.
+src/components/POManagement.tsx(1003,6): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1006,15): error TS1005: ';' expected.
+src/components/POManagement.tsx(1007,22): error TS1005: ';' expected.
+src/components/POManagement.tsx(1008,16): error TS1005: ';' expected.
+src/components/POManagement.tsx(1009,13): error TS1005: ';' expected.
+src/components/POManagement.tsx(1010,6): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1013,15): error TS1005: ';' expected.
+src/components/POManagement.tsx(1014,22): error TS1005: ';' expected.
+src/components/POManagement.tsx(1015,16): error TS1005: ';' expected.
+src/components/POManagement.tsx(1016,13): error TS1005: ';' expected.
+src/components/POManagement.tsx(1017,6): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1020,15): error TS1005: ';' expected.
+src/components/POManagement.tsx(1021,22): error TS1005: ';' expected.
+src/components/POManagement.tsx(1022,16): error TS1005: ';' expected.
+src/components/POManagement.tsx(1023,13): error TS1005: ';' expected.
+src/components/POManagement.tsx(1035,6): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1038,15): error TS1005: ';' expected.
+src/components/POManagement.tsx(1039,22): error TS1005: ';' expected.
+src/components/POManagement.tsx(1040,16): error TS1005: ';' expected.
+src/components/POManagement.tsx(1041,13): error TS1005: ';' expected.
+src/components/POManagement.tsx(1058,3): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1058,4): error TS1128: Declaration or statement expected.
+src/components/POManagement.tsx(1058,8): error TS1005: ';' expected.
+src/components/POManagement.tsx(2006,1): error TS1128: Declaration or statement expected.

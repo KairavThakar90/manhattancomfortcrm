@@ -7,8 +7,7 @@ import {
   CheckCircle2,
   ExternalLink,
 } from 'lucide-react';
-import Table from './common/Table';
-
+import DataTable from './common/DataTable';
 export default function ContainerDetailsModal({ container, onClose }) {
   if (!container) return null;
 
@@ -111,41 +110,47 @@ export default function ContainerDetailsModal({ container, onClose }) {
             </div>
 
             {container.details && container.details.length > 0 ? (
-              <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10">
-                      <th className="px-3 py-2 w-1/3">VENDOR NAME</th>
-                      <th className="px-3 py-2">PRODUCT NAME</th>
-                      <th className="px-3 py-2 text-right w-32">
-                        QTY ASSIGNED
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {container.details.map((item, idx) => (
-                      <tr
-                        key={idx}
-                        className="hover:bg-slate-50/50 transition-colors"
-                      >
-                        <td className="px-3 py-2 max-w-[120px]">
-                          <span className="font-mono font-bold text-slate-500 truncate block">
-                            {item.vendor_name || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 max-w-[150px]">
-                          <span className="font-medium text-slate-800 line-clamp-1">
-                            {item.product_name || item.name || '-'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono font-medium">
-                          {item.qty_in_container || item.qty || 0}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={[
+                  {
+                    header: 'VENDOR NAME',
+                    accessor: 'vendor_name',
+                    headerClassName: 'px-3 py-2 w-1/3 bg-white',
+                    className: 'px-3 py-2 max-w-[120px]',
+                    render: (item) => (
+                      <span className="font-mono font-bold text-slate-500 truncate block">
+                        {item.vendor_name || 'N/A'}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: 'PRODUCT NAME',
+                    accessor: 'product_name',
+                    headerClassName: 'px-3 py-2 bg-white',
+                    className: 'px-3 py-2 max-w-[150px]',
+                    render: (item) => (
+                      <span className="font-medium text-slate-800 line-clamp-1">
+                        {item.product_name || item.name || '-'}
+                      </span>
+                    ),
+                  },
+                  {
+                    header: 'QTY ASSIGNED',
+                    accessor: 'qty',
+                    headerClassName: 'px-3 py-2 text-right w-32 bg-white',
+                    className: 'px-3 py-2 text-right font-mono font-medium',
+                    render: (item) => item.qty_in_container || item.qty || 0,
+                  },
+                ]}
+                data={container.details}
+                keyField="product_name"
+                theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
+                tableClassName="w-full text-left text-xs border-collapse"
+                tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                trClassName="hover:bg-slate-50/50 transition-colors"
+                containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
+                tableWrapperClassName=""
+              />
             ) : (
               <div className="py-12 flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">

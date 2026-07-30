@@ -40,6 +40,7 @@ import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOCom
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
+import DataTable from './common/DataTable';
 
 interface POManagementProps {
   loading?: boolean;
@@ -781,6 +782,281 @@ Supply Chain CRM Coordinator`;
     );
   };
 
+  const poColumns = React.useMemo(() => [
+    {
+      header: (
+        <div className="flex items-center gap-1" onClick={() => handleSort('id')}>
+          PO Number
+          <span className="text-slate-400 group-hover:text-indigo-600">
+            {activeSortConfig.key === 'id' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+          </span>
+        </div>
+      ),
+      accessor: 'id',
+      headerClassName: 'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+      className: 'px-6 py-4',
+      render: (po: any) => (
+        <div className="flex flex-col gap-1 items-start">
+          <div className="flex items-center gap-1.5 max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
+            <span className="text-slate-900 font-bold font-mono text-[10px] truncate" title={po.id}>{po.id}</span>
+            {po.delta_sellercloud_link && (
+              <a title="Open in Sellercloud (Purchasing)" href={po.delta_sellercloud_link} target="_blank" rel="noopener noreferrer" onClick={(e: any) => e.stopPropagation()} className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0">
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+            {po.status === 'Delayed' && <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />}
+          </div>
+          {po.containerLeadTimeDays && <span className="text-slate-500 font-mono text-[9px]">Lead Days: {po.containerLeadTimeDays}d</span>}
+        </div>
+      )
+    },
+    {
+      header: 'Order Id',
+      accessor: 'orderId',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4',
+      render: (po: any) => (
+        <div className="flex items-center gap-1.5">
+          <span className={!po.orderId || po.orderId === 'N/A' ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500' : 'text-[11px] font-bold text-slate-700'}>
+            {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
+          </span>
+          {po.sellercloud_link && (
+            <a title="Open in Sellercloud (Order)" href={po.sellercloud_link} target="_blank" rel="noopener noreferrer" onClick={(e: any) => e.stopPropagation()} className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0">
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+        </div>
+      )
+    },
+    {
+      header: (
+        <div className="flex items-center gap-1" onClick={() => handleSort('creationDate')}>
+          <div className="flex flex-col">
+            <span>Order Date</span>
+            <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+          </div>
+          <span className="text-slate-400 group-hover:text-indigo-600">
+            {activeSortConfig.key === 'creationDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+          </span>
+        </div>
+      ),
+      accessor: 'creationDate',
+      headerClassName: 'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+      className: 'px-6 py-4',
+      render: (po: any) => po.creationDate && po.creationDate !== 'N/A' ? <span className="text-[11px] font-bold text-slate-700">{po.creationDate}</span> : <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
+    },
+    {
+      header: 'Vendor',
+      accessor: 'vendorName',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4 text-slate-700 font-medium'
+    },
+    {
+      header: 'PO Items',
+      accessor: 'items',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4',
+      render: (po: any) => (
+        <span title={po.items && po.items.length > 0 ? po.items.map((item: any) => item.name).join(', ') : 'N/A'} className={!po.items || po.items.length === 0 ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500' : 'text-[11px] font-bold text-slate-700'}>
+          {po.items && po.items.length > 0 ? po.items.length : 'N/A'}
+        </span>
+      )
+    },
+    {
+      header: 'Ordered / Received Qty',
+      accessor: 'orderedQty',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4 text-slate-600',
+      render: (po: any) => (<><span className="font-bold text-slate-800">{po.orderedQty}</span><span className="text-slate-400"> / {po.receivedQty}</span></>)
+    },
+    {
+      header: (
+        <div className="flex items-center gap-1" onClick={() => handleSort('invoiceDate')}>
+          <div className="flex flex-col">
+            <span>Invoice Date</span>
+            <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+          </div>
+          <span className="text-slate-400 group-hover:text-indigo-600">
+            {activeSortConfig.key === 'invoiceDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+          </span>
+        </div>
+      ),
+      accessor: 'invoiceDetails',
+      headerClassName: 'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+      className: 'px-6 py-4',
+      render: (po: any) => po.invoiceDetails?.date ? <span className="text-[11px] font-bold text-slate-700">{po.invoiceDetails.date}</span> : <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
+    },
+    {
+      header: (
+        <div className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold text-slate-600">
+          Invoice Delay Status
+          <div data-tooltip-id="po-metrics-tooltip" data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result." className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1">
+            <Info className="h-3 w-3" />
+          </div>
+        </div>
+      ),
+      accessor: 'invoiceDelayStatus',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4',
+      render: (po: any) => {
+        const invoiceDate = (po as any).invoice_date || po.invoiceDetails?.date;
+        const createdOn = (po as any).created_on || po.creationDate;
+        if (invoiceDate) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">On Time</span>;
+        if (!createdOn || createdOn === 'N/A') return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>;
+        const orderDate = new Date(createdOn);
+        const today = new Date();
+        const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 10) return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">Delay</span>;
+        return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-amber-50 border-amber-100 text-amber-700">Pending</span>;
+      }
+    },
+    {
+      header: (
+        <div className="flex items-center gap-1" onClick={() => handleSort('eta')}>
+          <div className="flex flex-col">
+            <span>Scheduled Delivery</span>
+            <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
+          </div>
+          <span className="text-slate-400 group-hover:text-indigo-600">
+            {activeSortConfig.key === 'eta' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
+          </span>
+          <div data-tooltip-id="po-metrics-tooltip" data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date." className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1" onClick={(e: any) => e.stopPropagation()}>
+            <Info className="h-3 w-3" />
+          </div>
+        </div>
+      ),
+      accessor: 'expected_delivery_date',
+      headerClassName: 'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+      className: 'px-6 py-4 text-slate-600 font-mono',
+      render: (po: any) => <span className={!po.expected_delivery_date || po.expected_delivery_date === 'N/A' ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500' : 'text-[11px] font-bold text-slate-700'}>{po.expected_delivery_date || 'N/A'}</span>
+    },
+    {
+      header: 'Container Count',
+      accessor: 'containerNames',
+      headerClassName: 'px-6 py-4 bg-slate-50',
+      className: 'px-6 py-4 text-slate-600 font-mono text-xs',
+      render: (po: any) => po.containerNames && po.containerNames.length > 0 ? <span title={po.containerNames.join(', ')} className="text-[11px] font-bold text-slate-700">{po.containerNames.length}</span> : (!po.container || po.container === 'N/A') ? <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span> : <span className="truncate max-w-[150px] inline-block align-bottom">{po.container}</span>
+    },
+    {
+      header: 'Actions',
+      accessor: 'actions',
+      headerClassName: 'px-6 py-4 bg-slate-50 text-center',
+      className: 'px-6 py-4 text-center',
+      render: (po: any) => (
+        <button onClick={(e: any) => { e.stopPropagation(); onSelectPO(po.id); }} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold">
+          <Eye className="h-3.5 w-3.5" />
+          <span>Order Insights</span>
+        </button>
+      )
+    }
+  ], [activeSortConfig, handleSort, selectedPOId, onSelectPO]);
+
+  const poItemColumns = React.useMemo(() => [
+    {
+      header: 'SKU',
+      accessor: 'sku',
+      headerClassName: 'px-3 py-2 bg-slate-50',
+      className: 'px-3 py-2 max-w-[120px]',
+      render: (item: any) => (
+        <div className="flex items-center gap-1 group">
+          <span className="font-mono font-bold text-slate-500 truncate cursor-pointer" data-tooltip-id="po-item-tooltip" data-tooltip-content={item.sku}>{item.sku}</span>
+          <button title="Copy SKU" onClick={(e: any) => { e.stopPropagation(); navigator.clipboard.writeText(item.sku); toast.success('SKU copied!'); }} className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0">
+            <Copy className="h-3 w-3" />
+          </button>
+        </div>
+      )
+    },
+    {
+      header: 'Product Name',
+      accessor: 'name',
+      headerClassName: 'px-3 py-2 bg-slate-50',
+      className: 'px-3 py-2 max-w-[150px]',
+      render: (item: any) => (
+        <div className="flex items-start gap-1 group">
+          <span className="font-medium text-slate-800 line-clamp-1 cursor-pointer" data-tooltip-id="po-item-tooltip" data-tooltip-content={item.name}>{item.name}</span>
+          <button title="Copy Product Name" onClick={(e: any) => { e.stopPropagation(); navigator.clipboard.writeText(item.name); toast.success('Product Name copied!'); }} className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5">
+            <Copy className="h-3 w-3" />
+          </button>
+        </div>
+      )
+    },
+    {
+      header: 'Ordered Qty',
+      accessor: 'qty',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-right',
+      className: 'px-3 py-2 text-right font-mono font-medium',
+      render: (item: any) => item.qty.toLocaleString()
+    },
+    {
+      header: 'Received Qty',
+      accessor: 'receivedQty',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-right',
+      className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
+      render: (item: any) => (item.receivedQty !== undefined ? item.receivedQty : 0).toLocaleString()
+    },
+    {
+      header: 'Remaining Qty',
+      accessor: 'remainingQty',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-right',
+      className: (item: any) => `px-3 py-2 text-right font-mono ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`,
+      render: (item: any) => Math.max(0, item.qty - (item.receivedQty || 0)).toLocaleString()
+    },
+    {
+      header: 'Unit Price',
+      accessor: 'unitPrice',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-right',
+      className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
+      render: (item: any) => `$${(item.unitPrice || 0).toFixed(2)}`
+    },
+    {
+      header: 'Total',
+      accessor: 'total',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-right',
+      className: 'px-3 py-2 text-right font-mono font-bold text-slate-800',
+      render: (item: any) => `$${(item.qty * (item.unitPrice || 0)).toFixed(2)}`
+    },
+    {
+      header: 'Container/Items Count',
+      accessor: 'containerInfo',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-left',
+      className: 'px-3 py-2 text-left font-mono font-medium text-slate-600',
+      render: (item: any) => {
+        if (!item.containers || item.containers.length === 0) return <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200">Unassigned</span>;
+        return (
+          <div className="flex flex-col gap-0.5">
+            {item.containers.map((c: any, idx: number) => (
+              <span key={idx} className="bg-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
+                {c.container_name || 'Unnamed'} <strong className="text-slate-600">({c.qty_in_container})</strong>
+              </span>
+            ))}
+          </div>
+        );
+      }
+    },
+    {
+      header: 'Container Details',
+      accessor: 'details',
+      headerClassName: 'px-3 py-2 bg-slate-50 text-left',
+      className: 'px-3 py-2 text-left font-mono text-[11px] text-slate-500',
+      render: (item: any) => {
+        if (!item.containers || item.containers.length === 0) return <span className="text-[10px] text-slate-400">N/A</span>;
+        return (
+          <div className="flex flex-col gap-0.5">
+            {item.containers.map((c: any, idx: number) => {
+              const rawDate = c.estimated_arrival_date || c.received_date;
+              const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
+              return (
+                <span key={idx} className="bg-slate-50 border border-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
+                  ETA: <strong className="text-indigo-600">{displayDate}</strong>
+                </span>
+              );
+            })}
+          </div>
+        );
+      }
+    }
+  ], []);
+
   return (
     <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Tab Header Controls */}
@@ -909,275 +1185,16 @@ Supply Chain CRM Coordinator`;
         <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {loading && <LoadingOverlay message="Please wait a moment..." />}
           <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10">
-                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('id')}>
-                    <div className="flex items-center gap-1">
-                      PO Number
-                      <span className="text-slate-400 group-hover:text-indigo-600">
-                        {activeSortConfig.key === 'id' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
-                      </span>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50">Order Id</th>
-                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('creationDate')}>
-                    <div className="flex items-center gap-1">
-                      <div className="flex flex-col">
-                        <span>Order Date</span>
-                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
-                      </div>
-                      <span className="text-slate-400 group-hover:text-indigo-600">
-                        {activeSortConfig.key === 'creationDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
-                      </span>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50">
-                    Vendor
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50">PO Items</th>
-                  <th className="px-6 py-4 bg-slate-50">Ordered / Received Qty</th>
-                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('invoiceDate')}>
-                    <div className="flex items-center gap-1">
-                      <div className="flex flex-col">
-                        <span>Invoice Date</span>
-                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
-                      </div>
-                      <span className="text-slate-400 group-hover:text-indigo-600">
-                        {activeSortConfig.key === 'invoiceDate' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
-                      </span>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50">
-                    <div className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold text-slate-600">
-                      Invoice Delay Status
-                      <div
-                        data-tooltip-id="po-metrics-tooltip"
-                        data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-                        className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
-                      >
-                        <Info className="h-3 w-3" />
-                      </div>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors" onClick={() => handleSort('eta')}>
-                    <div className="flex items-center gap-1">
-                      <div className="flex flex-col">
-                        <span>Scheduled Delivery</span>
-                        <span className="text-[9px] text-slate-400 normal-case">(YYYY-MM-DD)</span>
-                      </div>
-                      <span className="text-slate-400 group-hover:text-indigo-600">
-                        {activeSortConfig.key === 'eta' ? (activeSortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />}
-                      </span>
-                      <div
-                        data-tooltip-id="po-metrics-tooltip"
-                        data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
-                        className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Info className="h-3 w-3" />
-                      </div>
-                    </div>
-                  </th>
-                  <th className="px-6 py-4 bg-slate-50">Container Count</th>
-                  <th className="px-6 py-4 bg-slate-50 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {paginatedPOs.map((po) => (
-                  <tr
-                    key={po.id}
-                    className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        <div className="flex items-center gap-1.5 max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
-                          <span 
-                            className="text-slate-900 font-bold font-mono text-[10px] truncate"
-                            title={po.id}
-                          >
-                            {po.id}
-                          </span>
-                          {po.delta_sellercloud_link && (
-                            <a
-                              title="Open in Sellercloud (Purchasing)"
-                              href={po.delta_sellercloud_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-                          {po.status === 'Delayed' && (
-                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
-                          )}
-                        </div>
-                        {po.containerLeadTimeDays && (
-                          <span className="text-slate-500 font-mono text-[9px]">
-                            Lead Days: {po.containerLeadTimeDays}d
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={
-                            !po.orderId || po.orderId === 'N/A'
-                              ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
-                              : 'text-[11px] font-bold text-slate-700'
-                          }
-                        >
-                          {(!po.orderId || po.orderId === 'N/A') ? 'Stock' : po.orderId}
-                        </span>
-                        {po.sellercloud_link && (
-                          <a
-                            title="Open in Sellercloud (Order)"
-                            href={po.sellercloud_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {po.creationDate && po.creationDate !== 'N/A' ? (
-                        <span className="text-[11px] font-bold text-slate-700">{po.creationDate}</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-slate-700 font-medium">
-                      {po.vendorName}
-                    </td>
-                  
-                    <td className="px-6 py-4">
-                      <span 
-                        title={po.items && po.items.length > 0 ? po.items.map(item => item.name).join(', ') : 'N/A'}
-                        className={
-                          !po.items || po.items.length === 0
-                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
-                            : 'text-[11px] font-bold text-slate-700'
-                        }
-                      >
-                        {po.items && po.items.length > 0 ? po.items.length : 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <span className="font-bold text-slate-800">
-                        {po.orderedQty}
-                      </span>
-                      <span className="text-slate-400">
-                        {' '}
-                        / {po.receivedQty}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {po.invoiceDetails?.date ? (
-                        <span className="text-[11px] font-bold text-slate-700">{po.invoiceDetails.date}</span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {(() => {
-                        const invoiceDate = (po as any).invoice_date || po.invoiceDetails?.date;
-                        const createdOn = (po as any).created_on || po.creationDate;
-                        
-                        if (invoiceDate) {
-                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">On Time</span>;
-                        }
-
-                        if (!createdOn || createdOn === 'N/A') {
-                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">N/A</span>;
-                        }
-
-                        const orderDate = new Date(createdOn);
-                        const today = new Date();
-                        const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
-                        
-                        if (diffDays > 10) {
-                          return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">Delay</span>;
-                        }
-                        
-                        return <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-amber-50 border-amber-100 text-amber-700">Pending</span>;
-                      })()}
-                    </td>
-                    {/* <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border ${
-                          po.invoiceStatus === 'Approved'
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                            : po.invoiceStatus === 'Uploaded'
-                              ? 'bg-sky-50 border-sky-100 text-sky-700'
-                              : po.invoiceStatus === 'Rejected'
-                                ? 'bg-rose-50 border-rose-100 text-rose-700'
-                                : 'bg-slate-50 border-slate-200 text-slate-500'
-                        }`}
-                      >
-                        {po.invoiceStatus || 'N/A'}
-                      </span>
-                    </td> */}
-                    <td className="px-6 py-4 text-slate-600 font-mono">
-                      <span
-                        className={
-                          !po.expected_delivery_date || po.expected_delivery_date === 'N/A'
-                            ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
-                            : 'text-[11px] font-bold text-slate-700'
-                        }
-                      >
-                        {po.expected_delivery_date || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 font-mono text-xs">
-                      {po.containerNames && po.containerNames.length > 0 ? (
-                        <span 
-                          title={po.containerNames.join(', ')}
-                          className="text-[11px] font-bold text-slate-700"
-                        >
-                          {po.containerNames.length} 
-                        </span>
-                      ) : (!po.container || po.container === 'N/A') ? (
-                        <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-                          N/A
-                        </span>
-                      ) : (
-                        <span className="truncate max-w-[150px] inline-block align-bottom">{po.container}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSelectPO(po.id);
-                        }}
-                        className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>Order Insights</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredPOs.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={10}
-                      className="px-6 py-12 text-center text-slate-400 italic"
-                    >
-                      No Purchase Orders found matching search or filter
-                      parameters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            <DataTable
+              columns={poColumns}
+              data={paginatedPOs}
+              keyField="id"
+              theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+              tableClassName="w-full text-left text-xs border-collapse"
+              tbodyClassName="divide-y divide-slate-100"
+              trClassName={(po: any) => `transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : 'hover:bg-slate-50/75'}`}
+              emptyMessage="No Purchase Orders found matching search or filter parameters."
+            />
           </div>
 
           {/* Pagination Footer */}
@@ -1449,154 +1466,16 @@ Supply Chain CRM Coordinator`;
                           Item Specifications (Products)
                         </h5>
                         <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg border border-slate-100 bg-white">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10">
-                                <th className="px-3 py-2 bg-slate-50">SKU</th>
-                                <th className="px-3 py-2 bg-slate-50">
-                                  Product Name
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-right">
-                                  Ordered Qty
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-right">
-                                  Received Qty
-                                </th>
-                                 <th className="px-3 py-2 bg-slate-50 text-right">
-                                  Remaining Qty
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-right">
-                                  Unit Price
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-right">
-                                  Total
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-left">
-                                  Container/Items Count
-                                </th>
-                                <th className="px-3 py-2 bg-slate-50 text-left">
-                                  Container Details
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-700">
-                              {paginatedItems &&
-                              paginatedItems.length > 0 ? (
-                                paginatedItems.map((item) => (
-                                  <tr
-                                    key={item.sku}
-                                    className={`transition ${
-                                      Math.max(0, item.qty - (item.receivedQty || 0)) > 0
-                                        ? 'bg-amber-50/50 hover:bg-amber-100/50'
-                                        : 'hover:bg-slate-50/50'
-                                    }`}
-                                  >
-                                    <td className="px-3 py-2 max-w-[120px]">
-                                      <div className="flex items-center gap-1 group">
-                                        <span 
-                                          className="font-mono font-bold text-slate-500 truncate cursor-pointer"
-                                          data-tooltip-id="po-item-tooltip"
-                                          data-tooltip-content={item.sku}
-                                        >
-                                          {item.sku}
-                                        </span>
-                                        <button
-                                          title="Copy SKU"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigator.clipboard.writeText(item.sku);
-                                            toast.success('SKU copied!');
-                                          }}
-                                          className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0"
-                                        >
-                                          <Copy className="h-3 w-3" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2 max-w-[150px]">
-                                      <div className="flex items-start gap-1 group">
-                                        <span 
-                                          className="font-medium text-slate-800 line-clamp-1 cursor-pointer"
-                                          data-tooltip-id="po-item-tooltip"
-                                          data-tooltip-content={item.name}
-                                        >
-                                          {item.name}
-                                        </span>
-                                        <button
-                                          title="Copy Product Name"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigator.clipboard.writeText(item.name);
-                                            toast.success('Product Name copied!');
-                                          }}
-                                          className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5"
-                                        >
-                                          <Copy className="h-3 w-3" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                    <td className="px-3 py-2 text-right font-mono font-medium">
-                                      {item.qty.toLocaleString()}
-                                    </td>
-                                    <td className="px-3 py-2 text-right font-mono font-medium text-slate-500">
-                                      {(item.receivedQty !== undefined
-                                        ? item.receivedQty
-                                        : 0
-                                      ).toLocaleString()}
-                                    </td>
-                                     <td className={`px-3 py-2 text-right font-mono ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`}>
-                                      {Math.max(0, item.qty - (item.receivedQty || 0)).toLocaleString()}
-                                    </td>
-                                    <td className="px-3 py-2 text-right font-mono font-medium">
-                                      ${item.unitPrice.toFixed(2)}
-                                    </td>
-                                    <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
-                                      ${(item.qty * item.unitPrice).toFixed(2)}
-                                    </td>
-                                    <td className="px-3 py-2 text-left text-[10px] font-mono text-slate-500">
-                                      {item.containers && item.containers.length > 0 ? (
-                                        <div className="flex flex-col gap-0.5">
-                                          {item.containers.map((c, i) => (
-                                            <span key={i} className="bg-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
-                                              {c.container_name || 'Unnamed'} <strong className="text-slate-600">({c.qty_in_container})</strong>
-                                            </span>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        'Unassigned'
-                                      )}
-                                    </td>
-                                    <td className="px-3 py-2 text-left font-mono text-[11px] text-slate-500">
-                                      {item.containers && item.containers.length > 0 ? (
-                                        <div className="flex flex-col gap-0.5">
-                                          {item.containers.map((c, i) => {
-                                            const rawDate = c.estimated_arrival_date || c.received_date;
-                                            const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
-                                            return (
-                                              <span key={i} className="bg-slate-50 border border-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap">
-                                                ETA: <strong className="text-indigo-600">{displayDate}</strong>
-                                              </span>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        'N/A'
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td
-                                    colSpan={9}
-                                    className="px-3 py-6 text-center text-slate-400 italic"
-                                  >
-                                    No items specified for this purchase order.
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
+                          <DataTable
+                            columns={poItemColumns}
+                            data={paginatedItems}
+                            keyField="sku"
+                            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
+                            tableClassName="w-full text-left text-xs border-collapse"
+                            tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                            trClassName={(item: any) => `transition ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`}
+                            emptyMessage="No items specified for this purchase order."
+                          />
                         </div>
                         <Tooltip
                           id="po-item-tooltip"

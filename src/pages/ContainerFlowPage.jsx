@@ -19,11 +19,13 @@ import {
   Eye,
   X,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
+import DataTable from '../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
@@ -61,6 +63,7 @@ export default function ContainerFlowPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
   const [viewingContainerDetails, setViewingContainerDetails] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
@@ -607,6 +610,7 @@ export default function ContainerFlowPage() {
     };
 
     try {
+      setIsSaving(true);
       if (isEditMode && editingContainerId) {
         await updateContainer(editingContainerId, apiPayload);
         toast.success('Container updated successfully!');
@@ -621,6 +625,8 @@ export default function ContainerFlowPage() {
     } catch (error) {
       console.error('Error saving container', error);
       toast.error('Failed to save container data to server.');
+    } finally {
+      setIsSaving(false);
     }
 
     setContainerName('');
@@ -801,6 +807,110 @@ export default function ContainerFlowPage() {
           ? 4
           : 4;
 
+  const containerColumns = useMemo(
+    () => [
+      {
+        header: 'Container ID',
+        accessor: 'id',
+        className: 'px-6 py-4 font-mono font-medium text-slate-700 text-xs',
+        render: (c) => (
+          <div className="flex items-center gap-1.5">
+            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              {c.sellercloud_container_id || c.id}
+            </span>
+            {c.sellercloud_link && (
+              <a
+                title="Open in Sellercloud (Container)"
+                href={c.sellercloud_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+        ),
+      },
+      {
+        header: 'Container Name',
+        accessor: 'name',
+        className: 'px-6 py-4 font-semibold text-slate-800',
+      },
+      {
+        header: 'Warehouse',
+        accessor: 'warehouse_name',
+        className: 'px-6 py-4 font-medium text-slate-600',
+        render: (c) => c.warehouse_name || 'N/A',
+      },
+      {
+        header: 'Total Items',
+        accessor: 'total_items',
+        headerClassName: 'px-4 py-4 bg-slate-50',
+        className: 'px-4 py-4 font-bold text-slate-700',
+      },
+      {
+        header: 'Total Qty',
+        accessor: 'total_qty_in_container',
+        headerClassName: 'px-4 py-4 bg-slate-50',
+        className: 'px-4 py-4 font-bold text-slate-700',
+      },
+      {
+        header: 'Total Received',
+        accessor: 'total_qty_received',
+        headerClassName: 'px-4 py-4 bg-slate-50',
+        className: 'px-4 py-4 font-bold text-indigo-600',
+      },
+      {
+        header: 'ETA (Delivery)',
+        accessor: 'arrivalDate',
+        headerClassName: 'px-4 py-4 bg-slate-50',
+        className: 'px-4 py-4 text-slate-600 font-medium text-xs',
+      },
+      {
+        header: 'Is Received?',
+        accessor: 'is_received',
+        headerClassName: 'px-4 py-4 bg-slate-50 text-center',
+        className: 'px-4 py-4 text-center',
+        render: (c) =>
+          c.is_received ? (
+            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
+              <CheckCircle2 className="w-3 h-3" /> Yes
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
+              No
+            </span>
+          ),
+      },
+      {
+        header: 'Received Date',
+        accessor: 'received_date',
+        headerClassName: 'px-4 py-4 bg-slate-50',
+        className: 'px-4 py-4 text-slate-600 font-medium text-xs',
+      },
+      {
+        header: 'Actions',
+        accessor: 'actions',
+        headerClassName: 'px-6 py-4 bg-slate-50 text-right',
+        className: 'px-6 py-4 text-right',
+        render: (c) => (
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => handleViewContainer(c)}
+              className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+              title="View Details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
   if (showList) {
     return (
       <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden">
@@ -830,128 +940,26 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="p-4 flex-1 w-full min-h-0 flex flex-col">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-            <div className="overflow-y-auto flex-1 custom-scrollbar">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px] sticky top-0 z-10">
-                    <th className="px-6 py-4 bg-slate-50">Container ID</th>
-                    <th className="px-6 py-4 bg-slate-50">Container Name</th>
-                    <th className="px-6 py-4 bg-slate-50">Warehouse</th>
-                    <th className="px-4 py-4 bg-slate-50">Total Items</th>
-                    <th className="px-4 py-4 bg-slate-50">Total Qty</th>
-                    <th className="px-4 py-4 bg-slate-50">Total Received</th>
-                    <th className="px-4 py-4 bg-slate-50">ETA (Delivery)</th>
-                    <th className="px-4 py-4 bg-slate-50 text-center">
-                      Is Received?
-                    </th>
-                    <th className="px-4 py-4 bg-slate-50">Received Date</th>
-                    <th className="px-6 py-4 bg-slate-50 text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {allContainers.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="9"
-                        className="px-6 py-12 text-center text-slate-400 italic text-sm"
-                      >
-                        No containers assigned yet. Click &quot;Add
-                        Container&quot; to start.
-                      </td>
-                    </tr>
-                  ) : (
-                    allContainers.map((c, i) => (
-                      <tr
-                        key={i}
-                        className="hover:bg-slate-50/75 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-mono font-medium text-slate-700 text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                              {c.sellercloud_container_id || c.id}
-                            </span>
-                            {c.sellercloud_link && (
-                              <a
-                                title="Open in Sellercloud (Container)"
-                                href={c.sellercloud_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-slate-800">
-                          {c.name}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-slate-600">
-                          {c.warehouse_name || 'N/A'}
-                        </td>
-                        <td className="px-4 py-4 font-bold text-slate-700">
-                          {c.total_items}
-                        </td>
-                        <td className="px-4 py-4 font-bold text-slate-700">
-                          {c.total_qty_in_container}
-                        </td>
-                        <td className="px-4 py-4 font-bold text-indigo-600">
-                          {c.total_qty_received}
-                        </td>
-                        <td className="px-4 py-4 text-slate-600 font-medium text-xs">
-                          {c.arrivalDate}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          {c.is_received ? (
-                            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" /> Yes
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
-                              No
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-slate-600 font-medium text-xs">
-                          {c.received_date}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Temporarily hiding edit and delete, replacing with View */}
-                            <button
-                              onClick={() => handleViewContainer(c)}
-                              className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            {(totalListCount > 0 || allContainers.length > 0) && (
-              <Pagination
-                currentPage={listPage}
-                totalCount={totalListCount || allContainers.length}
-                pageSize={listPageSize}
-                onPageChange={setListPage}
-                onPageSizeChange={(size) => {
-                  setListPageSize(size);
-                  setListPage(1);
-                }}
-              />
-            )}
-          </div>
+          <DataTable
+            columns={containerColumns}
+            data={allContainers}
+            keyField="id"
+            emptyMessage='No containers assigned yet. Click "Add Container" to start.'
+            pagination={
+              (totalListCount > 0 || allContainers.length > 0) && (
+                <Pagination
+                  currentPage={listPage}
+                  totalCount={totalListCount || allContainers.length}
+                  pageSize={listPageSize}
+                  onPageChange={setListPage}
+                  onPageSizeChange={(size) => {
+                    setListPageSize(size);
+                    setListPage(1);
+                  }}
+                />
+              )
+            }
+          />
         </div>
 
         {/* View Container Overlay Modal — must be inside this return block */}
@@ -992,18 +1000,30 @@ export default function ContainerFlowPage() {
           disabled={
             selectedItems.length === 0 ||
             !estimatedArrivalDate ||
-            !selectedWarehouseId
+            !selectedWarehouseId ||
+            isSaving
           }
           className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 text-white ${
             selectedItems.length === 0 ||
             !estimatedArrivalDate ||
-            !selectedWarehouseId
+            !selectedWarehouseId ||
+            isSaving
               ? 'bg-slate-400 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700'
           }`}
         >
-          <Save className="h-3.5 w-3.5" />
-          {isEditMode ? 'Update Container' : 'Create Container'}
+          {isSaving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Save className="h-3.5 w-3.5" />
+          )}
+          {isSaving
+            ? isEditMode
+              ? 'Updating...'
+              : 'Creating...'
+            : isEditMode
+              ? 'Update Container'
+              : 'Create Container'}
         </button>
       </div>
 
