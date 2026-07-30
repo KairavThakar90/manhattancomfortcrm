@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ArrowRight,
   Trash,
+  RefreshCw,
   CalendarDays,
   Upload,
   DollarSign,
@@ -36,9 +37,10 @@ import {
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
-import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment, getPurchaseOrderById } from '../services/purchaseOrder.service';
+import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment, getPurchaseOrderById, syncPurchaseOrders } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
 import LoadingOverlay from './common/LoadingOverlay';
+import FullPageLoader from './common/FullPageLoader';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 
@@ -128,6 +130,20 @@ export default function POManagement({
   // Comments state fetched from detail API
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncSellerCloud = async () => {
+    try {
+      setIsSyncing(true);
+      await syncPurchaseOrders('25');
+      toast.success('Successfully synced POs from SellerCloud!');
+    } catch (error) {
+      console.error('Error syncing POs:', error);
+      toast.error('Failed to sync POs from SellerCloud.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const formatUtcTimestamp = (ts: any) => {
     if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -1099,13 +1115,23 @@ Supply Chain CRM Coordinator`;
           </button> */}
 
           {activeSubTab !== 'kanban' && (
-            <button
-              onClick={handleExportCSVClick}
-              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
-            >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
-              <span>Export CSV</span>
-            </button>
+            <>
+              <button
+                onClick={handleSyncSellerCloud}
+                disabled={isSyncing}
+                className="flex items-center gap-1 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-xs font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Syncing...' : 'Sync Order SellerCloud'}</span>
+              </button>
+              <button
+                onClick={handleExportCSVClick}
+                className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                <span>Export CSV</span>
+              </button>
+            </>
           )}
 
           {/* {userRole !== 'Vendor' && (
@@ -1995,6 +2021,14 @@ Supply Chain CRM Coordinator`;
           </div>
         </div>
       )}
+      {/* FULL PAGE LOADING FOR SYNC */}
+      {isSyncing && (
+        <FullPageLoader 
+          title="Syncing SellerCloud" 
+          message="Fetching the latest Purchase Orders. This may take a moment..." 
+        />
+      )}
+
       {/* Modal Tooltips */}
       <Tooltip 
         id="po-metrics-tooltip" 

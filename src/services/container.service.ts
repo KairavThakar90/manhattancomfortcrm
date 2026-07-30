@@ -5,7 +5,8 @@ import {
   CONTAINERS_CREATE,
   CONTAINERS_UPDATE,
   CONTAINERS_DELETE,
-  CONTAINER_DETAILS
+  CONTAINER_DETAILS,
+  CONTAINER_SYNC
 } from '../utils/endpoints';
 
 export async function getContainers(params?: {
@@ -39,5 +40,10 @@ export async function deleteContainer(id: string | number) {
 
 export async function getContainerDetails(id: string | number) {
   const { data } = await apiClient.get(CONTAINER_DETAILS(id.toString()));
+  return data;
+}
+
+export async function syncContainers() {
+  const { data } = await apiClient.post(CONTAINER_SYNC);
   return data;
 }

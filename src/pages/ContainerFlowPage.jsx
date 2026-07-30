@@ -20,6 +20,7 @@ import {
   X,
   ExternalLink,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -27,6 +28,7 @@ import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
 import DataTable from '../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
+import FullPageLoader from '../components/common/FullPageLoader';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -35,6 +37,7 @@ import {
   updateContainer,
   deleteContainer,
   getContainerDetails,
+  syncContainers,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
@@ -67,6 +70,22 @@ export default function ContainerFlowPage() {
 
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncContainers = async () => {
+    try {
+      setIsSyncing(true);
+      await syncContainers();
+      toast.success('Successfully synced containers from SellerCloud!');
+      // Optionally refresh the containers list here
+      // fetchContainers();
+    } catch (error) {
+      console.error('Error syncing containers:', error);
+      toast.error('Failed to sync containers from SellerCloud.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Fetch warehouses
   const [warehousesList, setWarehousesList] = useState([]);
@@ -929,13 +948,25 @@ export default function ContainerFlowPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleCreateContainer}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add Container
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSyncContainers}
+              disabled={isSyncing}
+              className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
+              />
+              {isSyncing ? 'Syncing...' : 'Sync Container SellerCloud'}
+            </button>
+            <button
+              onClick={handleCreateContainer}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Container
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -967,6 +998,13 @@ export default function ContainerFlowPage() {
           container={viewingContainerDetails}
           onClose={() => setViewingContainerDetails(null)}
         />
+
+        {isSyncing && (
+          <FullPageLoader
+            title="Syncing SellerCloud Containers"
+            message="Fetching the latest Container data. This may take a moment..."
+          />
+        )}
       </div>
     );
   }
@@ -1422,6 +1460,13 @@ export default function ContainerFlowPage() {
         container={viewingContainerDetails}
         onClose={() => setViewingContainerDetails(null)}
       />
+
+      {isSyncing && (
+        <FullPageLoader
+          title="Syncing SellerCloud Containers"
+          message="Fetching the latest Container data. This may take a moment..."
+        />
+      )}
     </div>
   );
 }

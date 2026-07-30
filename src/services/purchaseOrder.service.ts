@@ -8,6 +8,7 @@ import {
   PO_FILTERS_ALL,
   PO_EXPORT_CSV,
   PO_COMMENTS,
+  PO_SYNC,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -164,3 +165,8 @@ export async function postPOComment(poId: string, message: string): Promise<any>
   return data;
 }
 
+/** Sync POs from SellerCloud */
+export async function syncPurchaseOrders(viewId: string = '25'): Promise<any> {
+  const { data } = await apiClient.post(`${PO_SYNC}?view_id=${viewId}`);
+  return data;
+}

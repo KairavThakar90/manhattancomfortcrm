@@ -38,6 +38,7 @@ export const PO_UPDATE = (id: string) => `/purchase-orders/${id}`;
 export const PO_DELETE = (id: string) => `/purchase-orders/${id}`;
 export const PO_FILTERS_ALL = '/purchase-orders/filters/all';
 export const PO_EXPORT_CSV = '/purchase-orders/export/csv';
+export const PO_SYNC = '/purchase-orders/sync';
 
 // ------------------------------------------
 // Vendor Endpoints
@@ -136,6 +137,7 @@ export const CONTAINERS_UPDATE = (id: string) => `/containers/${id}`;
 export const CONTAINERS_DELETE = (id: string) => `/containers/${id}`;
 export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) => `/containers/po-items/${sellercloud_po_id}`;
 export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
+export const CONTAINER_SYNC = '/purchase-orders/sync-containers';
 
 // ------------------------------------------
 // PO Comment Endpoints
