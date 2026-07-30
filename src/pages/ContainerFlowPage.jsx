@@ -30,6 +30,7 @@ import Pagination from '../components/common/Pagination';
 import DataTable from '../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
 import FullPageLoader from '../components/common/FullPageLoader';
+import TableLoader from '../components/common/TableLoader';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -248,35 +249,21 @@ export default function ContainerFlowPage() {
     }
   }, []);
 
-  const fetchTablePage = useCallback(
-    async (page, pageSize, q = '') => {
-      try {
-        setListLoading(true);
-        const data = await getContainers({
-          page,
-          page_size: pageSize,
-          search: q,
-        });
-        const results = Array.isArray(data)
-          ? data
-          : data.results || data.data || data.items || [];
-        if (data && data.total !== undefined) {
-          setTotalListCount(data.total);
-        } else if (data && data.count !== undefined) {
-          setTotalListCount(data.count);
-        } else if (page === 1) {
-          setTotalListCount(results.length);
-        }
-        dispatch(setContainersList(results));
-      } catch (err) {
-        console.error('Failed to fetch table containers', err);
-      } finally {
-        setListLoading(false);
-        setHasLoadedInitial(true);
-      }
-    },
-    [dispatch],
-  );
+  const fetchTablePage = useCallback(async () => {
+    try {
+      setListLoading(true);
+      const data = await getContainers();
+      const results = Array.isArray(data)
+        ? data
+        : data.results || data.data || data.items || [];
+      dispatch(setContainersList(results));
+    } catch (err) {
+      console.error('Failed to fetch table containers', err);
+    } finally {
+      setListLoading(false);
+      setHasLoadedInitial(true);
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -286,12 +273,11 @@ export default function ContainerFlowPage() {
 
   useEffect(() => {
     if (showList) {
-      const handler = setTimeout(() => {
-        fetchTablePage(listPage, listPageSize, listSearchQuery);
-      }, 300);
-      return () => clearTimeout(handler);
+      setTimeout(() => {
+        fetchTablePage();
+      }, 0);
     }
-  }, [listPage, listPageSize, listSearchQuery, showList, fetchTablePage]);
+  }, [showList, fetchTablePage]);
 
   const loadMoreContainers = () => {
     if (!containerLoading && containerHasMore) {
@@ -519,6 +505,32 @@ export default function ContainerFlowPage() {
       };
     });
   }, [reduxContainers]);
+
+  // Client-side global search across all container fields
+  const filteredContainers = useMemo(() => {
+    if (!listSearchQuery.trim()) return allContainers;
+    const q = listSearchQuery.toLowerCase().trim();
+    return allContainers.filter((c) => {
+      const fields = [
+        String(c.sellercloud_container_id || c.id || ''),
+        c.name || '',
+        c.warehouse_name || '',
+        c.arrivalDate || '',
+        c.received_date || '',
+        c.is_received ? 'yes received' : 'no not received',
+        String(c.total_items || ''),
+        String(c.total_qty_in_container || ''),
+        String(c.total_qty_received || ''),
+        ...(c.poIds || []).map(String),
+      ];
+      return fields.some((f) => f.toLowerCase().includes(q));
+    });
+  }, [allContainers, listSearchQuery]);
+
+  const paginatedContainers = useMemo(() => {
+    const start = (listPage - 1) * listPageSize;
+    return filteredContainers.slice(start, start + listPageSize);
+  }, [filteredContainers, listPage, listPageSize]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -994,43 +1006,53 @@ export default function ContainerFlowPage() {
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-1 w-full min-h-0 flex flex-col">
-          <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs mb-4 flex-shrink-0">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400" />
+        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Smart Search: PO#, Vendor, SKU, Container, Invoice number..."
+                placeholder="Search by Container ID, Name, Warehouse, ETA, Status..."
                 value={listSearchQuery}
                 onChange={(e) => {
                   setListSearchQuery(e.target.value);
                   setListPage(1);
                 }}
-                className="w-full pl-10 pr-4 py-2 bg-indigo-50/30 border border-indigo-100 rounded-lg text-sm text-slate-700 placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
               />
             </div>
           </div>
-          <DataTable
-            isLoading={listLoading}
-            columns={containerColumns}
-            data={allContainers}
-            keyField="id"
-            emptyMessage='No containers assigned yet. Click "Add Container" to start.'
-            pagination={
-              (totalListCount > 0 || allContainers.length > 0) && (
-                <Pagination
-                  currentPage={listPage}
-                  totalCount={totalListCount || allContainers.length}
-                  pageSize={listPageSize}
-                  onPageChange={setListPage}
-                  onPageSizeChange={(size) => {
-                    setListPageSize(size);
-                    setListPage(1);
-                  }}
-                />
-              )
-            }
-          />
+          <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
+            {listLoading && <TableLoader message="Please wait a moment..." />}
+            <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
+              <DataTable
+                columns={containerColumns}
+                data={paginatedContainers}
+                keyField="id"
+                theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+                tableClassName="w-full text-left text-xs border-collapse"
+                tbodyClassName="divide-y divide-slate-100"
+                trClassName="hover:bg-slate-50/75 transition"
+                emptyMessage={
+                  listSearchQuery
+                    ? 'No containers found matching your search.'
+                    : 'No containers assigned yet. Click "Add Container" to start.'
+                }
+              />
+            </div>
+            {filteredContainers.length > 0 && (
+              <Pagination
+                currentPage={listPage}
+                totalCount={filteredContainers.length}
+                pageSize={listPageSize}
+                onPageChange={setListPage}
+                onPageSizeChange={(size) => {
+                  setListPageSize(size);
+                  setListPage(1);
+                }}
+              />
+            )}
+          </div>
         </div>
 
         {/* View Container Overlay Modal — must be inside this return block */}
