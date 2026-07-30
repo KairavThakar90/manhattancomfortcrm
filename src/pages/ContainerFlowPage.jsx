@@ -1096,8 +1096,7 @@ export default function ContainerFlowPage() {
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4 relative">
-          {isSyncing && <TableLoader message="Syncing with SellerCloud..." />}
+        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
           <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -1114,8 +1113,14 @@ export default function ContainerFlowPage() {
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-            {(listLoading || isPaginating) && (
-              <TableLoader message="Please wait a moment..." />
+            {(listLoading || isPaginating || isSyncing) && (
+              <TableLoader
+                message={
+                  isSyncing
+                    ? 'Syncing with SellerCloud...'
+                    : 'Please wait a moment...'
+                }
+              />
             )}
             <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
               <DataTable
