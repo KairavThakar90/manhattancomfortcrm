@@ -154,14 +154,24 @@ export async function deletePurchaseOrder(id: string): Promise<void> {
 }
 
 /** Update PO Lead Time */
-export async function updatePOLeadTime(poId: string, leadTimeDays: number): Promise<any> {
-  const { data } = await apiClient.patch(`/purchase-orders/${poId}/lead-time?container_lead_time_days=${leadTimeDays}`);
+export async function updatePOLeadTime(
+  poId: string,
+  leadTimeDays: number,
+): Promise<any> {
+  const { data } = await apiClient.patch(
+    `/purchase-orders/${poId}/lead-time?container_lead_time_days=${leadTimeDays}`,
+  );
   return data;
 }
 
 /** Post a comment on a Purchase Order */
-export async function postPOComment(poId: string, message: string): Promise<any> {
-  const { data } = await apiClient.post(PO_COMMENTS(poId), { comment: message });
+export async function postPOComment(
+  poId: string,
+  message: string,
+): Promise<any> {
+  const { data } = await apiClient.post(PO_COMMENTS(poId), {
+    comment: message,
+  });
   return data;
 }
 

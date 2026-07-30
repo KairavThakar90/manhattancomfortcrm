@@ -29,7 +29,8 @@
     "react-router-dom": "^7.18.1",
     "react-toastify": "^11.1.0",
     "react-tooltip": "^6.0.8",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

@@ -1,13 +1,13 @@
 import apiClient from './api';
-import { 
-  CONTAINERS_LIST, 
+import {
+  CONTAINERS_LIST,
   CONTAINER_PO_ITEMS,
   CONTAINERS_CREATE,
   CONTAINERS_UPDATE,
   CONTAINERS_DELETE,
   CONTAINER_DETAILS,
   CONTAINER_SYNC,
-  CONTAINERS_EXPORT_CSV
+  CONTAINERS_EXPORT_CSV,
 } from '../utils/endpoints';
 
 export async function getContainers(params?: {
@@ -20,7 +20,9 @@ export async function getContainers(params?: {
 }
 
 export async function getContainerPOItems(sellercloud_po_id: string | number) {
-  const { data } = await apiClient.get(CONTAINER_PO_ITEMS(sellercloud_po_id.toString()));
+  const { data } = await apiClient.get(
+    CONTAINER_PO_ITEMS(sellercloud_po_id.toString()),
+  );
   return data;
 }
 
@@ -30,7 +32,10 @@ export async function createContainer(payload: any) {
 }
 
 export async function updateContainer(id: string | number, payload: any) {
-  const { data } = await apiClient.put(CONTAINERS_UPDATE(id.toString()), payload);
+  const { data } = await apiClient.put(
+    CONTAINERS_UPDATE(id.toString()),
+    payload,
+  );
   return data;
 }
 
@@ -53,16 +58,16 @@ export async function exportContainersCSV(payload: any) {
   const response = await apiClient.post(CONTAINERS_EXPORT_CSV, payload, {
     responseType: 'blob',
   });
-  
+
   const url = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement('a');
   link.href = url;
-  
+
   const dateStr = new Date().toISOString().split('T')[0];
   link.setAttribute('download', `Container_Export_${dateStr}.csv`);
   document.body.appendChild(link);
   link.click();
   link.remove();
-  
+
   return response;
 }

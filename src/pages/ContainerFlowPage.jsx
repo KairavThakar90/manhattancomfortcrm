@@ -24,6 +24,7 @@ import {
   Search,
   FileSpreadsheet,
   Download,
+  Upload,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -31,6 +32,7 @@ import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
 import Pagination from '../components/common/Pagination';
 import DataTable from '../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
+import ImportItemsModal from '../components/ImportItemsModal';
 import FullPageLoader from '../components/common/FullPageLoader';
 import TableLoader from '../components/common/TableLoader';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
@@ -95,6 +97,8 @@ export default function ContainerFlowPage() {
   });
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
+
+  const [showGlobalImport, setShowGlobalImport] = useState(false);
 
   // CSV Export Modal State
   const [showExportModal, setShowExportModal] = useState(false);
@@ -1075,6 +1079,13 @@ export default function ContainerFlowPage() {
               <span>{listLoading ? 'Refreshing...' : 'Refresh Data'}</span>
             </button>
             <button
+              onClick={() => setShowGlobalImport(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              <span>Import CSV</span>
+            </button>
+            <button
               onClick={() => {
                 setExportColumns([]);
                 setExportFilterStatus('all');
@@ -1157,6 +1168,13 @@ export default function ContainerFlowPage() {
         <ContainerDetailsModal
           container={viewingContainerDetails}
           onClose={() => setViewingContainerDetails(null)}
+          onRefresh={() => {
+            fetchContainerAPI(1, '', false);
+            fetchTablePage();
+            if (viewingContainerDetails?.id) {
+              handleViewContainer({ id: viewingContainerDetails.id });
+            }
+          }}
         />
 
         {/* Export CSV Modal */}
@@ -1285,6 +1303,18 @@ export default function ContainerFlowPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {showGlobalImport && (
+          <ImportItemsModal
+            containerId={null}
+            containers={paginatedContainers}
+            onClose={() => setShowGlobalImport(false)}
+            onSuccess={() => {
+              fetchContainerAPI(1, '', false);
+              fetchTablePage();
+            }}
+          />
         )}
       </div>
     );
@@ -1740,6 +1770,13 @@ export default function ContainerFlowPage() {
       <ContainerDetailsModal
         container={viewingContainerDetails}
         onClose={() => setViewingContainerDetails(null)}
+        onRefresh={() => {
+          fetchContainerAPI(1, '', false);
+          fetchTablePage();
+          if (viewingContainerDetails?.id) {
+            handleViewContainer({ id: viewingContainerDetails.id });
+          }
+        }}
       />
 
       {/* FullPageLoader removed in favor of localized TableLoader */}
