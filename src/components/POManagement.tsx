@@ -1582,20 +1582,23 @@ Supply Chain CRM Coordinator`;
                             emptyMessage="No items specified for this purchase order."
                           />
                         </div>
-                        <Tooltip
-                          id="po-item-tooltip"
-                          place="top"
-                          style={{
-                            backgroundColor: '#4f46e5',
-                            color: '#ffffff',
-                            fontWeight: 500,
-                            fontSize: '11px',
-                            zIndex: 100,
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            maxWidth: '300px'
-                          }}
-                        />
+                        <div className="absolute top-0 left-0 w-0 h-0 z-0">
+                          <Tooltip
+                            id="po-item-tooltip"
+                            place="top"
+                            positionStrategy="fixed"
+                            style={{
+                              backgroundColor: '#4f46e5',
+                              color: '#ffffff',
+                              fontWeight: 500,
+                              fontSize: '11px',
+                              zIndex: 100,
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              maxWidth: '300px'
+                            }}
+                          />
+                        </div>
                         {/* Items Pagination Footer */}
                         {totalItemsCount > itemsPageSize && (
                           <div className="mt-4 shrink-0">
@@ -2118,12 +2121,16 @@ Supply Chain CRM Coordinator`;
         />
       )}
 
-      {/* Modal Tooltips */}
-      <Tooltip 
-        id="po-metrics-tooltip" 
-        className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center" 
-        style={{ backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '8px', padding: '8px 12px' }}
-      />
+      {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}
+      <div className="absolute top-0 left-0 w-0 h-0 z-0">
+        <Tooltip 
+          id="po-metrics-tooltip" 
+          positionStrategy="fixed"
+          place="top"
+          className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center" 
+          style={{ backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '8px', padding: '8px 12px' }}
+        />
+      </div>
     </div>
   );
 }
