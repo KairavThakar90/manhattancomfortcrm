@@ -52,7 +52,37 @@ export default function ImportItemsModal({
       const workbook = read(arrayBuffer);
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const parsedData = utils.sheet_to_json(worksheet);
+      const rawData = utils.sheet_to_json(worksheet);
+
+      const parsedData = rawData.map((row) => {
+        const mappedRow = {};
+        for (const key of Object.keys(row)) {
+          const lowerKey = key.toLowerCase().trim();
+          if (
+            lowerKey === 'productid' ||
+            lowerKey === 'sku' ||
+            lowerKey === 'item'
+          ) {
+            mappedRow['sku'] = row[key];
+          } else if (
+            lowerKey === 'qtyshippe' ||
+            lowerKey === 'qtyshipped' ||
+            lowerKey === 'qty' ||
+            lowerKey === 'quantity'
+          ) {
+            mappedRow['qty_in_container'] = row[key];
+          } else if (
+            lowerKey === 'poid' ||
+            lowerKey === 'po id' ||
+            lowerKey === 'sellercloud_po_id'
+          ) {
+            mappedRow['sellercloud_po_id'] = row[key];
+          } else {
+            mappedRow[key] = row[key];
+          }
+        }
+        return mappedRow;
+      });
 
       const validatedData = validateRows(parsedData);
       setRows(validatedData);
