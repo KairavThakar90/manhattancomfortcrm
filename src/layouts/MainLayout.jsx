@@ -248,20 +248,6 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Sellercloud Sync Status & Button */}
-            <div className="hidden sm:flex items-center gap-2 text-[10px] text-slate-400 font-mono">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Sellercloud Connected (10m interval active)</span>
-            </div>
-
-            <button
-              onClick={handleTriggerSync}
-              className="p-2 hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-lg shadow-2xs transition"
-              title="Trigger manual Sellercloud sync"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-
             {/* Notifications trigger with Red badge */}
             <div className="relative">
               <button

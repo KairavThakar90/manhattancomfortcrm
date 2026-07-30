@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  Search,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -53,6 +54,8 @@ export default function ContainerFlowPage() {
   const [showList, setShowList] = useState(true);
   const [listPage, setListPage] = useState(1);
   const [listPageSize, setListPageSize] = useState(10);
+  const [listSearchQuery, setListSearchQuery] = useState('');
+  const [listLoading, setListLoading] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
 
   // State for the flow
@@ -245,9 +248,14 @@ export default function ContainerFlowPage() {
   }, []);
 
   const fetchTablePage = useCallback(
-    async (page, pageSize) => {
+    async (page, pageSize, q = '') => {
       try {
-        const data = await getContainers({ page, page_size: pageSize });
+        setListLoading(true);
+        const data = await getContainers({
+          page,
+          page_size: pageSize,
+          search: q,
+        });
         const results = Array.isArray(data)
           ? data
           : data.results || data.data || data.items || [];
@@ -261,6 +269,8 @@ export default function ContainerFlowPage() {
         dispatch(setContainersList(results));
       } catch (err) {
         console.error('Failed to fetch table containers', err);
+      } finally {
+        setListLoading(false);
       }
     },
     [dispatch],
@@ -274,11 +284,12 @@ export default function ContainerFlowPage() {
 
   useEffect(() => {
     if (showList) {
-      setTimeout(() => {
-        fetchTablePage(listPage, listPageSize);
-      }, 0);
+      const handler = setTimeout(() => {
+        fetchTablePage(listPage, listPageSize, listSearchQuery);
+      }, 300);
+      return () => clearTimeout(handler);
     }
-  }, [listPage, listPageSize, showList, fetchTablePage]);
+  }, [listPage, listPageSize, listSearchQuery, showList, fetchTablePage]);
 
   const loadMoreContainers = () => {
     if (!containerLoading && containerHasMore) {
@@ -932,7 +943,7 @@ export default function ContainerFlowPage() {
 
   if (showList) {
     return (
-      <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden">
+      <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden relative">
         {/* Header */}
         <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
@@ -971,7 +982,23 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="p-4 flex-1 w-full min-h-0 flex flex-col">
+          <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-xs mb-4 flex-shrink-0">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400" />
+              <input
+                type="text"
+                placeholder="Smart Search: PO#, Vendor, SKU, Container, Invoice number..."
+                value={listSearchQuery}
+                onChange={(e) => {
+                  setListSearchQuery(e.target.value);
+                  setListPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 bg-indigo-50/30 border border-indigo-100 rounded-lg text-sm text-slate-700 placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+              />
+            </div>
+          </div>
           <DataTable
+            isLoading={listLoading}
             columns={containerColumns}
             data={allContainers}
             keyField="id"
@@ -1000,10 +1027,10 @@ export default function ContainerFlowPage() {
         />
 
         {isSyncing && (
-          <FullPageLoader
-            title="Syncing SellerCloud Containers"
-            message="Fetching the latest Container data. This may take a moment..."
-          />
+          <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
+        )}
+        {listLoading && allContainers.length === 0 && (
+          <FullPageLoader message="Loading containers..." />
         )}
       </div>
     );
@@ -1462,10 +1489,7 @@ export default function ContainerFlowPage() {
       />
 
       {isSyncing && (
-        <FullPageLoader
-          title="Syncing SellerCloud Containers"
-          message="Fetching the latest Container data. This may take a moment..."
-        />
+        <FullPageLoader message="Fetching the latest Container data. This may take a moment..." />
       )}
     </div>
   );

@@ -39,7 +39,7 @@ import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
 import { updatePOLeadTime, exportPurchaseOrdersCSV, getPurchaseOrders, postPOComment, getPurchaseOrderById, syncPurchaseOrders } from '../services/purchaseOrder.service';
 import Pagination from './common/Pagination';
-import LoadingOverlay from './common/LoadingOverlay';
+import TableLoader from './common/TableLoader';
 import FullPageLoader from './common/FullPageLoader';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
@@ -1074,7 +1074,7 @@ Supply Chain CRM Coordinator`;
   ], []);
 
   return (
-    <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden relative">
       {/* Tab Header Controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4 flex-shrink-0">
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
@@ -1209,7 +1209,7 @@ Supply Chain CRM Coordinator`;
       {/* SUB-VIEW 1: MASTER GRID VIEW */}
       {activeSubTab === 'grid' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-          {loading && <LoadingOverlay message="Please wait a moment..." />}
+          {loading && <TableLoader message="Please wait a moment..." />}
           <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
             <DataTable
               columns={poColumns}
@@ -1242,9 +1242,8 @@ Supply Chain CRM Coordinator`;
       {activeSubTab === 'kanban' && (
         <div className="flex-1 min-h-0 relative flex flex-col">
           {loading && (
-            <LoadingOverlay
+            <TableLoader
               message="Please wait a moment..."
-              className="bg-slate-50/60"
             />
           )}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
@@ -2024,8 +2023,12 @@ Supply Chain CRM Coordinator`;
       {/* FULL PAGE LOADING FOR SYNC */}
       {isSyncing && (
         <FullPageLoader 
-          title="Syncing SellerCloud" 
           message="Fetching the latest Purchase Orders. This may take a moment..." 
+        />
+      )}
+      {loading && purchaseOrders.length === 0 && (
+        <FullPageLoader 
+          message="Loading purchase orders..." 
         />
       )}
 
