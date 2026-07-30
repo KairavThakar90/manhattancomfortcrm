@@ -53,7 +53,8 @@ export default function ContainerFlowPage() {
   const [totalListCount, setTotalListCount] = useState(0);
 
   // State for the flow
-  const [selectedPOId, setSelectedPOId] = useState('');
+  const [selectedPOIds, setSelectedPOIds] = useState([]);
+  const [selectedPOId, setSelectedPOId] = useState(''); // keep for internal legacy just in case, but rely on selectedPOIds
   const [containerName, setContainerName] = useState('');
   const [originalContainerName, setOriginalContainerName] = useState('');
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
@@ -361,57 +362,101 @@ export default function ContainerFlowPage() {
   ]);
 
   // Derived data
-  const selectedPO = useMemo(() => {
-    return (
-      poList.find((po) => po.id === selectedPOId) ||
-      purchaseOrders.find((po) => po.id === selectedPOId) ||
-      null
-    );
-  }, [selectedPOId, poList, purchaseOrders]);
+  const selectedPOs = useMemo(() => {
+    return selectedPOIds
+      .map(
+        (id) =>
+          poList.find((po) => po.id === id) ||
+          purchaseOrders.find((po) => po.id === id),
+      )
+      .filter(Boolean);
+  }, [selectedPOIds, poList, purchaseOrders]);
+
+  // also keep a derived selectedPO representing maybe the first one or null
+  const selectedPO = selectedPOs[0] || null;
 
   const [fetchedPOItems, setFetchedPOItems] = useState([]);
   const [loadingPOItems, setLoadingPOItems] = useState(false);
 
   useEffect(() => {
     async function fetchItems() {
-      if (!selectedPO) {
+      if (!selectedPOs || selectedPOs.length === 0) {
         setFetchedPOItems([]);
         return;
       }
-      const rawPoId = selectedPO.sellercloud_po_id || selectedPO.id;
-      if (!rawPoId) return;
-      const poId = rawPoId.toString().replace(/^PO-/, '');
 
       try {
         setLoadingPOItems(true);
-        const data = await getContainerPOItems(poId);
-        let items = Array.isArray(data)
-          ? data
-          : data.results || data.data || data.items || [];
+        let allItems = [];
 
-        if (items.length === 0 && selectedPO.items) {
-          items = selectedPO.items;
+        for (const po of selectedPOs) {
+          const rawPoId = po.sellercloud_po_id || po.id;
+          if (!rawPoId) continue;
+          const poIdStr = rawPoId.toString().replace(/^PO-/, '');
+
+          let items = [];
+          try {
+            const data = await getContainerPOItems(poIdStr);
+            items = Array.isArray(data)
+              ? data
+              : data.results || data.data || data.items || [];
+          } catch (e) {
+            console.error('Failed to fetch detailed PO items for', poIdStr, e);
+          }
+
+          if (items.length === 0 && po.items) {
+            items = po.items;
+          }
+
+          items = items.map((it) => ({
+            ...it,
+            _parentPoId: po.id,
+            _parentPoTitle: po.vendorName
+              ? `${po.id} - ${po.vendorName}`
+              : po.id,
+          }));
+          allItems = allItems.concat(items);
         }
 
-        setFetchedPOItems(items);
+        setFetchedPOItems(allItems);
       } catch (err) {
         console.error('Failed to fetch detailed PO items', err);
-        setFetchedPOItems(selectedPO?.items || []);
+        setFetchedPOItems([]);
       } finally {
         setLoadingPOItems(false);
       }
     }
     fetchItems();
-  }, [selectedPO]);
+  }, [selectedPOs]);
 
   const availableItems = useMemo(() => {
-    const items =
-      fetchedPOItems.length > 0 ? fetchedPOItems : selectedPO?.items || [];
+    let items = [];
+    if (fetchedPOItems.length > 0) {
+      items = fetchedPOItems;
+    } else {
+      items = selectedPOs.flatMap((po) =>
+        po.items
+          ? po.items.map((it) => ({
+              ...it,
+              _parentPoId: po.id,
+              _parentPoTitle: po.vendorName
+                ? `${po.id} - ${po.vendorName}`
+                : po.id,
+            }))
+          : [],
+      );
+    }
     if (!items) return [];
+
+    // Filter out items that have already been allocated
     return items.filter(
-      (item) => !selectedItems.some((sItem) => sItem.sku === item.sku),
+      (item) =>
+        !selectedItems.some(
+          (sItem) =>
+            sItem.sku === item.sku && sItem._parentPoId === item._parentPoId,
+        ),
     );
-  }, [selectedPO, selectedItems, fetchedPOItems]);
+  }, [selectedPOs, selectedItems, fetchedPOItems]);
 
   const [itemSearchQuery, setItemSearchQuery] = useState('');
 
@@ -488,24 +533,30 @@ export default function ContainerFlowPage() {
     });
   }, [reduxContainers]);
 
-  const handlePOChange = (val) => {
-    setSelectedPOId(val);
-    setContainerName('');
-    setOriginalContainerName('');
-    setSelectedItems([]);
+  const handlePOChange = (vals) => {
+    const valArray = Array.isArray(vals) ? vals : vals ? [vals] : [];
+    setSelectedPOIds(valArray);
 
-    const po =
-      poList.find((p) => p.id === val) ||
-      purchaseOrders.find((p) => p.id === val);
+    // safe check: Clear out items that don't belong to selected POs anymore
+    setSelectedItems((prev) =>
+      prev.filter((item) => valArray.includes(item._parentPoId)),
+    );
+
+    // Grab first PO's ETA and use that (or minimum, but simple is fine)
+    const firstPo =
+      poList.find((p) => p.id === valArray[0]) ||
+      purchaseOrders.find((p) => p.id === valArray[0]);
     if (
-      po &&
-      (po.expected_delivery_date || po.eta) &&
-      (po.expected_delivery_date || po.eta) !== 'Pending' &&
-      (po.expected_delivery_date || po.eta) !== 'N/A'
+      firstPo &&
+      (firstPo.expected_delivery_date || firstPo.eta) &&
+      (firstPo.expected_delivery_date || firstPo.eta) !== 'Pending' &&
+      (firstPo.expected_delivery_date || firstPo.eta) !== 'N/A'
     ) {
-      const dateStr = (po.expected_delivery_date || po.eta).split('T')[0];
+      const dateStr = (firstPo.expected_delivery_date || firstPo.eta).split(
+        'T',
+      )[0];
       setEstimatedArrivalDate(dateStr);
-    } else {
+    } else if (valArray.length === 0) {
       setEstimatedArrivalDate('');
     }
   };
@@ -538,6 +589,8 @@ export default function ContainerFlowPage() {
           allocateQty: 0,
           maxQty:
             remainingQty > 0 ? remainingQty : item.qty_ordered || item.qty || 0,
+          _parentPoId: item._parentPoId,
+          _parentPoTitle: item._parentPoTitle,
         },
       ]);
     }
@@ -560,8 +613,8 @@ export default function ContainerFlowPage() {
   };
 
   const handleSave = async () => {
-    if (!selectedPOId) {
-      toast.error('Please select a Purchase Order first.');
+    if (selectedPOIds.length === 0) {
+      toast.error('Please select at least one Purchase Order first.');
       return;
     }
     if (!estimatedArrivalDate) {
@@ -767,7 +820,8 @@ export default function ContainerFlowPage() {
       }
       setIsManualContainerEntry(false);
 
-      setSelectedPOId(finalPoId);
+      setSelectedPOIds(finalPoId ? [finalPoId] : []);
+      setSelectedPOId(finalPoId || ''); // keep legacy usage
 
       if (details.length > 0) {
         setSelectedItems(
@@ -1118,7 +1172,7 @@ export default function ContainerFlowPage() {
 
           <div className="relative">
             <InfiniteScrollDropdown
-              value={selectedPOId}
+              value={selectedPOIds}
               onChange={handlePOChange}
               onSearch={handlePoSearch}
               onLoadMore={() => {}}
@@ -1126,13 +1180,14 @@ export default function ContainerFlowPage() {
               isLoading={poLoading}
               items={poDropdownItems}
               disabled={isEditMode}
-              placeholder="-- Choose a Purchase Order --"
+              placeholder="-- Choose Purchase Order(s) --"
               searchPlaceholder="Search POs..."
+              isMulti={true}
             />
           </div>
         </div>
 
-        {selectedPO && (
+        {selectedPOs.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
             {/* Step 2: Item Allocation */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-2 flex flex-col h-[525px]">
@@ -1145,140 +1200,188 @@ export default function ContainerFlowPage() {
                     Allocate Items
                   </h2>
                 </div>
-
-                {(availableItems.length > 0 || loadingPOItems) && (
-                  <div className="relative w-64">
-                    <InfiniteScrollDropdown
-                      value=""
-                      onChange={(val) => {
-                        if (val) {
-                          handleAddItem(val);
-                        }
-                      }}
-                      onSearch={(query) => setItemSearchQuery(query)}
-                      onLoadMore={() => {}}
-                      hasMore={false}
-                      isLoading={loadingPOItems}
-                      items={itemDropdownItems}
-                      placeholder={
-                        loadingPOItems
-                          ? 'Loading items...'
-                          : isEditMode
-                            ? '+ Add item from PO...'
-                            : '+ Add items'
-                      }
-                      searchPlaceholder="Search items..."
-                    />
-                  </div>
-                )}
               </div>
 
-              {selectedItems.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-lg">
-                  <Package className="h-10 w-10 text-slate-300 mb-3" />
-                  <h3 className="text-sm font-bold text-slate-700 mb-1">
-                    No items selected
-                  </h3>
-                  <p className="text-xs text-slate-500 max-w-sm">
-                    Select a PO from the dropdown above to start adding items to
-                    this container.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  <div className="space-y-3">
-                    {selectedItems.map((item) => (
-                      <div
-                        key={item.sku}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 transition-colors"
-                      >
-                        <div className="flex items-start gap-3 overflow-hidden">
-                          <div className="mt-0.5">
-                            <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                              <Package className="h-4 w-4" />
-                            </div>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className="text-sm font-bold text-slate-800 truncate"
-                              title={item.sku}
-                            >
-                              {item.sku}
-                            </p>
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
-                              {item.name}
-                            </p>
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                {selectedPOs.length === 0 && (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-lg">
+                    <Package className="h-10 w-10 text-slate-300 mb-3" />
+                    <h3 className="text-sm font-bold text-slate-700 mb-1">
+                      No PO Selected
+                    </h3>
+                    <p className="text-xs text-slate-500 max-w-sm">
+                      Select a PO above to start adding items.
+                    </p>
+                  </div>
+                )}
+                {selectedPOs.map((po) => {
+                  const poTitle = po.vendorName
+                    ? `${po.id} - ${po.vendorName}`
+                    : po.id;
+                  const poAvailableDropdownItems = itemDropdownItems.filter(
+                    (i) => {
+                      const matched = availableItems.find(
+                        (av) => av.sku === i.value,
+                      );
+                      return matched && matched._parentPoId === po.id;
+                    },
+                  );
+                  const currentPoSelectedItems = selectedItems.filter(
+                    (item) => item._parentPoId === po.id,
+                  );
+
+                  return (
+                    <details
+                      key={po.id}
+                      className="group bg-white border border-slate-200 rounded-lg shadow-sm mb-4 last:mb-0"
+                      open
+                    >
+                      <summary className="font-semibold text-sm text-slate-800 p-3 bg-slate-50 border-b border-slate-200 cursor-pointer select-none rounded-t-lg group-open:rounded-b-none rounded-b-lg flex items-center justify-between transition-colors hover:bg-slate-100">
+                        <span className="flex items-center gap-2">
+                          <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm">
+                            {currentPoSelectedItems.length} allocated
+                          </span>
+                          {poTitle}
+                        </span>
+                        <span className="text-slate-400 group-open:rotate-180 transition-transform duration-200 inline-block">
+                          ▼
+                        </span>
+                      </summary>
+                      <div className="p-3 bg-slate-50/50 flex flex-col gap-4">
+                        <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                          <span className="text-xs font-bold text-slate-600">
+                            Add Items from {po.id}:
+                          </span>
+                          <div className="relative w-[280px]">
+                            <InfiniteScrollDropdown
+                              value=""
+                              onChange={(val) => {
+                                if (val) handleAddItem(val);
+                                setItemSearchQuery('');
+                              }}
+                              onSearch={(query) => setItemSearchQuery(query)}
+                              onLoadMore={() => {}}
+                              hasMore={false}
+                              isLoading={loadingPOItems}
+                              items={poAvailableDropdownItems}
+                              placeholder={
+                                loadingPOItems
+                                  ? 'Loading items...'
+                                  : '+ Select Item to Allocate'
+                              }
+                              searchPlaceholder="Search available items..."
+                            />
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                          <div className="flex flex-col items-end">
-                            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
-                              Quantity
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max={item.maxQty}
-                                value={
-                                  item.allocateQty === ''
-                                    ? ''
-                                    : item.allocateQty
-                                }
-                                onChange={(e) =>
-                                  handleQtyChange(item.sku, e.target.value)
-                                }
-                                className={`w-20 px-2 py-1 text-right font-mono font-bold text-sm bg-slate-50 border rounded focus:outline-none focus:ring-1 ${
-                                  item.allocateQty > item.maxQty ||
-                                  item.allocateQty < 0
-                                    ? 'border-rose-300 focus:ring-rose-500 bg-rose-50 text-rose-700'
-                                    : 'border-slate-200 focus:ring-indigo-500 text-slate-800'
-                                }`}
-                                placeholder="0"
-                              />
-                              <span className="text-xs text-slate-400 font-medium whitespace-nowrap w-8">
-                                / {item.maxQty}
-                              </span>
-                            </div>
-                            {/* Inline Validation Messages */}
-                            {item.allocateQty > item.maxQty && (
-                              <span className="text-[10px] text-rose-500 font-bold mt-1">
-                                Exceeds max ({item.maxQty})
-                              </span>
-                            )}
-                            {item.allocateQty !== '' &&
-                              item.allocateQty < 0 && (
-                                <span className="text-[10px] text-rose-500 font-bold mt-1">
-                                  Must be &gt;= 0
-                                </span>
-                              )}
+                        {currentPoSelectedItems.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center p-6 text-center bg-white border border-dashed border-slate-200 rounded-lg">
+                            <Package className="h-8 w-8 text-slate-300 mb-2" />
+                            <p className="text-xs text-slate-500">
+                              No items allocated from {poTitle} yet.
+                            </p>
                           </div>
-                          <button
-                            onClick={() => handleRemoveItem(item.sku)}
-                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-2 mt-4 flex-shrink-0"
-                            title="Remove item"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {currentPoSelectedItems.map((item) => (
+                              <div
+                                key={item.sku}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 transition-colors shadow-sm"
+                              >
+                                <div className="flex items-start gap-3 overflow-hidden">
+                                  <div className="mt-0.5">
+                                    <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                                      <Package className="h-4 w-4" />
+                                    </div>
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className="text-sm font-bold text-slate-800 truncate"
+                                      title={item.sku}
+                                    >
+                                      {item.sku}
+                                    </p>
+                                    <p className="text-xs text-slate-500 truncate mt-0.5 leading-tight">
+                                      {item.name}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                  <div className="flex flex-col items-end">
+                                    <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+                                      Quantity
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={item.maxQty}
+                                        value={
+                                          item.allocateQty === ''
+                                            ? ''
+                                            : item.allocateQty
+                                        }
+                                        onChange={(e) =>
+                                          handleQtyChange(
+                                            item.sku,
+                                            e.target.value,
+                                          )
+                                        }
+                                        className={`w-20 px-2 py-1 text-right font-mono font-bold text-sm bg-slate-50 border rounded focus:outline-none focus:ring-1 ${
+                                          item.allocateQty > item.maxQty ||
+                                          item.allocateQty < 0
+                                            ? 'border-rose-300 focus:ring-rose-500 bg-rose-50 text-rose-700'
+                                            : 'border-slate-200 focus:ring-indigo-500 text-slate-800'
+                                        }`}
+                                        placeholder="0"
+                                      />
+                                      <span className="text-xs text-slate-400 font-medium whitespace-nowrap w-8">
+                                        / {item.maxQty}
+                                      </span>
+                                    </div>
+                                    {/* Inline Validation Messages */}
+                                    {item.allocateQty > item.maxQty && (
+                                      <span className="text-[10px] text-rose-500 font-bold mt-1">
+                                        Exceeds max ({item.maxQty})
+                                      </span>
+                                    )}
+                                    {item.allocateQty !== '' &&
+                                      item.allocateQty < 0 && (
+                                        <span className="text-[10px] text-rose-500 font-bold mt-1">
+                                          Must be &gt;= 0
+                                        </span>
+                                      )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveItem(item.sku)}
+                                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-2 mt-4 flex-shrink-0"
+                                    title="Remove item"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    </details>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Step 3: Container Details */}

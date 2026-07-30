@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useId,
 } from 'react';
-import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Check, Loader2, X } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -21,6 +21,7 @@ export default function InfiniteScrollDropdown({
   placeholder = 'Select an option...',
   searchPlaceholder = 'Search...',
   disabled = false,
+  isMulti = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,6 +74,15 @@ export default function InfiniteScrollDropdown({
 
   const selectedItem = items.find((item) => item.value === value);
 
+  // Helper for multi-select
+  const displayLabel = () => {
+    if (isMulti) {
+      if (!Array.isArray(value) || value.length === 0) return placeholder;
+      return `${value.length} selected`;
+    }
+    return selectedItem ? selectedItem.label : value || placeholder;
+  };
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
@@ -82,14 +92,46 @@ export default function InfiniteScrollDropdown({
         className={`w-full flex items-center justify-between border text-sm px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${disabled ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-50 border-slate-200 text-slate-800 font-bold hover:bg-slate-100'}`}
       >
         <span
-          className={`truncate ${!selectedItem && !value ? 'text-slate-400 font-normal' : ''}`}
+          className={`text-left truncate ${(!isMulti && !selectedItem && !value) || (isMulti && (!value || value.length === 0)) ? 'text-slate-400 font-normal' : ''}`}
         >
-          {selectedItem ? selectedItem.label : value || placeholder}
+          {displayLabel()}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-slate-500 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
+
+      {/* Selected Items rendered below the dropdown button for multi-select */}
+      {isMulti && Array.isArray(value) && value.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {value.map((v) => {
+            const matched = items.find((i) => i.value === v);
+            const label = matched ? matched.label : v;
+            return (
+              <span
+                key={v}
+                className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md text-xs flex items-center gap-1.5 shadow-sm border border-indigo-200"
+              >
+                <span className="truncate max-w-[200px] font-medium">
+                  {label}
+                </span>
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(value.filter((val) => val !== v));
+                    }}
+                    className="hover:bg-indigo-200 hover:text-indigo-900 text-indigo-500 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
@@ -113,7 +155,9 @@ export default function InfiniteScrollDropdown({
             )}
 
             {items.map((item, index) => {
-              const isSelected = item.value === value;
+              const isSelected = isMulti
+                ? Array.isArray(value) && value.includes(item.value)
+                : item.value === value;
               const isLast = index === items.length - 1;
               return (
                 <button
@@ -123,8 +167,21 @@ export default function InfiniteScrollDropdown({
                   data-tooltip-id={tooltipId}
                   data-tooltip-content={item.label}
                   onClick={() => {
-                    onChange(item.value, item);
-                    setIsOpen(false);
+                    if (isMulti) {
+                      const currentVals = Array.isArray(value) ? value : [];
+                      if (currentVals.includes(item.value)) {
+                        onChange(
+                          currentVals.filter((v) => v !== item.value),
+                          item,
+                        );
+                      } else {
+                        onChange([...currentVals, item.value], item);
+                      }
+                      // keep open for multi-select
+                    } else {
+                      onChange(item.value, item);
+                      setIsOpen(false);
+                    }
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-700 hover:bg-slate-50 font-medium'}`}
                 >
