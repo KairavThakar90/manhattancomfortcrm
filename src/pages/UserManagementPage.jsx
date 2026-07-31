@@ -56,7 +56,8 @@ export default function UserManagementPage() {
       {
         header: 'Name',
         accessor: 'name',
-        className: 'px-6 py-4 font-bold text-slate-800',
+        headerClassName: 'px-6 py-3 bg-slate-50 text-left w-[220px]',
+        className: 'px-6 py-3 font-semibold text-slate-800 text-sm',
         render: (u) =>
           u.full_name ||
           `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
@@ -65,14 +66,16 @@ export default function UserManagementPage() {
       {
         header: 'Email',
         accessor: 'email',
-        className: 'px-6 py-4 font-medium text-slate-600',
+        headerClassName: 'px-6 py-3 bg-slate-50 text-left',
+        className: 'px-6 py-3 text-slate-500 text-sm',
       },
       {
         header: 'Role',
         accessor: 'role',
-        className: 'px-6 py-4',
+        headerClassName: 'px-6 py-3 bg-slate-50 text-left w-[160px]',
+        className: 'px-6 py-3 w-[160px]',
         render: (u) => (
-          <span className="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-indigo-100">
+          <span className="inline-flex items-center bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-indigo-100">
             {u.role || 'User'}
           </span>
         ),
@@ -80,17 +83,20 @@ export default function UserManagementPage() {
       {
         header: 'Actions',
         accessor: 'actions',
-        className: 'px-6 py-4 text-right',
+        headerClassName: 'px-6 py-3 bg-slate-50 text-center w-[90px]',
+        className: 'px-6 py-3 w-[90px] text-center',
         render: (u) => (
-          <div className="flex items-center justify-end gap-2">
-            {currentUser?.id && String(currentUser.id) === String(u.id) && (
+          <div className="flex items-center justify-center gap-2">
+            {currentUser?.id && String(currentUser.id) === String(u.id) ? (
               <button
                 onClick={() => toast.info('Change password flow initiated...')}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition tooltip-trigger"
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition"
                 title="Change Password"
               >
                 <KeyRound className="w-4 h-4" />
               </button>
+            ) : (
+              <span className="text-slate-200 text-xs">—</span>
             )}
           </div>
         ),
