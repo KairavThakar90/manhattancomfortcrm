@@ -41,7 +41,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
         last_name: formData.lastName,
         email: formData.email,
         password: formData.password,
-        role: 'User', // default role if required by backend, or omit
+        role: 'admin',
       };
 
       // Ensure full_name or username if API expects it

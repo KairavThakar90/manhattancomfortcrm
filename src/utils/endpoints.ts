@@ -12,10 +12,12 @@ export const AUTH_LOGIN = '/auth/login';
 export const AUTH_LOGOUT = '/auth/logout';
 export const AUTH_REFRESH = '/auth/refresh';
 export const AUTH_ME = '/auth/me';
+export const APP_HEALTH = '/health';
 
 // ------------------------------------------
-// User Endpoints
+// Auth & User Endpoints
 // ------------------------------------------
+export const AUTH_REGISTER = '/auth/register';
 export const USERS_LIST = '/users';
 export const USERS_BY_ID = (id: string) => `/users/${id}`;
 export const USERS_CREATE = '/users';

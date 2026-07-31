@@ -2,7 +2,7 @@ import apiClient from './api';
 import {
   USERS_LIST,
   USERS_BY_ID,
-  USERS_CREATE,
+  AUTH_REGISTER,
   USERS_UPDATE,
   USERS_DELETE,
 } from '../utils/endpoints';
@@ -20,10 +20,12 @@ export interface User {
 }
 
 export interface CreateUserPayload {
-  username: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   password: string;
   role?: string;
+  username?: string;
 }
 
 export interface UpdateUserPayload {
@@ -45,9 +47,14 @@ export async function getUserById(id: string): Promise<User> {
   return data;
 }
 
-/** Create a new user */
+/** Create a new user (Register) */
 export async function createUser(payload: CreateUserPayload): Promise<User> {
-  const { data } = await apiClient.post<User>(USERS_CREATE, payload);
+  // Default role to 'admin'
+  const registerPayload = {
+    ...payload,
+    role: payload.role || 'admin',
+  };
+  const { data } = await apiClient.post<User>(AUTH_REGISTER, registerPayload);
   return data;
 }
 
