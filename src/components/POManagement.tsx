@@ -2104,7 +2104,7 @@ Supply Chain CRM Coordinator`;
                                           setReplyToUser(node.user);
                                           setReplyToText(node.message);
                                         }}
-                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
                                       >
                                         <Reply className="h-3 w-3" /> Reply
                                       </button>
