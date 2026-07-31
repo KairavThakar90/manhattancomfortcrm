@@ -155,9 +155,9 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col relative">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {loading && <TableLoader message="Loading users..." />}
-          <div className="overflow-x-auto scroll-smooth">
+          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
             <DataTable
               columns={userColumns}
               data={paginatedUsers}
