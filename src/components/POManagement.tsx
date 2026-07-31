@@ -2277,7 +2277,6 @@ Supply Chain CRM Coordinator`;
                                           <Reply className="h-3 w-3" /> Reply
                                         </button>
                                       )}
-
                                       {node.children.length > 0 && (
                                         <button
                                           type="button"

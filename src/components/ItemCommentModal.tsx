@@ -42,7 +42,7 @@ export default function ItemCommentModal({
   selectedPO,
   onAddActivity,
 }: ItemCommentModalProps) {
-  const { currentUser } = useCRM();
+  const { user: currentUser } = useCRM();
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
 
   const [isLoadingComments, setIsLoadingComments] = useState(false);
@@ -331,7 +331,6 @@ export default function ItemCommentModal({
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
               )}
-
               {!isMe && (
                 <button
                   type="button"
@@ -345,7 +344,6 @@ export default function ItemCommentModal({
                   <Reply className="h-3 w-3" /> Reply
                 </button>
               )}
-
               {node.children.length > 0 && (
                 <button
                   type="button"
