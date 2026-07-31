@@ -96,6 +96,7 @@ export interface Comment {
   role: string;
   message: string;
   timestamp: string;
+  parentId?: string | null;
 }
 
 export interface ChatMessage {

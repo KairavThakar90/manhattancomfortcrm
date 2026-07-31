@@ -37,10 +37,13 @@ import {
   ExternalLink,
   Loader2,
   Reply,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
+import { useCRM } from '../hooks/useCRM';
 import {
   updatePOLeadTime,
   exportPurchaseOrdersCSV,
@@ -130,6 +133,7 @@ export default function POManagement({
     (state: any) => state.purchaseOrders.kanbanList || {},
   );
   const dispatch = useDispatch();
+  const { user: currentUser } = useCRM();
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -152,6 +156,12 @@ export default function POManagement({
   // Reply State
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const [replyToUser, setReplyToUser] = useState<string | null>(null);
+  const [replyToText, setReplyToText] = useState<string | null>(null);
+
+  // Tree Collapse State
+  const [collapsedComments, setCollapsedComments] = useState<
+    Record<string, boolean>
+  >({});
 
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -204,12 +214,13 @@ export default function POManagement({
         .then((detailData: any) => {
           const rawComments = detailData?.comments || [];
           const mappedComments = rawComments.map((c: any) => ({
-            id: c.id || `COM-${Math.random()}`,
+            id: String(c.id || `COM-${Math.random()}`),
             poId: selectedPOId,
             user: c.user_name || c.user || c.author || 'User',
             role: c.role || 'Administrator',
             message: c.comment || c.message || c.text || '',
             timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
           }));
           setFetchedComments(mappedComments);
         })
@@ -826,6 +837,7 @@ Supply Chain CRM Coordinator`;
       role: userRole,
       message: messageText,
       timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      parentId: replyToCommentId,
     };
 
     onAddComment(optimisticComment);
@@ -837,6 +849,7 @@ Supply Chain CRM Coordinator`;
     const replyId = replyToCommentId;
     setReplyToCommentId(null);
     setReplyToUser(null);
+    setReplyToText(null);
 
     // Fire-and-forget background sync (No UI locks!)
     const targetId = selectedPO.id.replace(/^PO-/i, '');
@@ -855,12 +868,13 @@ Supply Chain CRM Coordinator`;
         if (!detailData) return;
         const rawComments = detailData.comments || [];
         const mappedComments = rawComments.map((c: any) => ({
-          id: c.id || `COM-${Math.random()}`,
+          id: String(c.id || `COM-${Math.random()}`),
           poId: selectedPO.id,
           user: c.user_name || c.user || c.author || 'User',
           role: c.role || 'Administrator',
           message: c.comment || c.message || c.text || '',
           timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+          parentId: c.parent_id ? String(c.parent_id) : null,
         }));
 
         // Only update if we didn't just switch away to another PO
@@ -2006,42 +2020,145 @@ Supply Chain CRM Coordinator`;
                       </div>
                     ) : (
                       <>
-                        {selectedPOComments.map((comment) => (
-                          <div
-                            key={comment.id}
-                            className="p-3 rounded-xl border border-slate-100 bg-slate-50/50"
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-slate-900">
-                                  {comment.user}
-                                </span>
-                                <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
-                                  {comment.role}
-                                </span>
+                        {(() => {
+                          const commentMap = new Map<string, any>();
+                          selectedPOComments.forEach((c) => {
+                            commentMap.set(c.id, { ...c, children: [] });
+                          });
+
+                          const rootNodes: any[] = [];
+                          selectedPOComments.forEach((c) => {
+                            const node = commentMap.get(c.id);
+                            if (
+                              node.parentId &&
+                              commentMap.has(node.parentId)
+                            ) {
+                              commentMap.get(node.parentId).children.push(node);
+                            } else {
+                              rootNodes.push(node);
+                            }
+                          });
+
+                          // Sort chronologically (assuming timestamp ordering natively or enforce here)
+                          const sortNodes = (nodes: any[]) => {
+                            return nodes.sort(
+                              (a, b) =>
+                                new Date(a.timestamp).getTime() -
+                                new Date(b.timestamp).getTime(),
+                            );
+                          };
+
+                          const renderCommentTree = (
+                            node: any,
+                            depth: number = 0,
+                          ) => {
+                            const isMe =
+                              node.user === 'Sourcing Lead (You)' ||
+                              (currentUser &&
+                                `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ===
+                                  node.user) ||
+                              (currentUser &&
+                                currentUser.username === node.user) ||
+                              (currentUser && currentUser.email === node.user);
+
+                            const isCollapsed =
+                              collapsedComments[node.id] || false;
+
+                            return (
+                              <div
+                                key={node.id}
+                                className="flex flex-col relative w-full mb-3"
+                              >
+                                <div className="flex gap-3 group relative transition-colors items-start max-w-full">
+                                  <div
+                                    className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
+                                  >
+                                    {(node.user[0] || 'U').toUpperCase()}
+                                  </div>
+                                  <div
+                                    className={`flex-1 min-w-0 flex flex-col p-3 rounded-2xl border ${isMe ? 'bg-indigo-50/30 border-indigo-100 shadow-sm' : 'bg-white border-slate-100/80 shadow-xs'}`}
+                                  >
+                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                      <span className="font-bold text-[13px] text-slate-800">
+                                        {node.user}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                        {node.timestamp}
+                                      </span>
+                                      {!isMe && node.role && (
+                                        <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded-sm">
+                                          {node.role}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
+                                      {node.message}
+                                    </p>
+
+                                    {/* Action Bar */}
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setReplyToCommentId(node.id);
+                                          setReplyToUser(node.user);
+                                          setReplyToText(node.message);
+                                        }}
+                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                                      >
+                                        <Reply className="h-3 w-3" /> Reply
+                                      </button>
+
+                                      {node.children.length > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setCollapsedComments((prev) => ({
+                                              ...prev,
+                                              [node.id]: !prev[node.id],
+                                            }))
+                                          }
+                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                                        >
+                                          {isCollapsed ? (
+                                            <>
+                                              <MessageSquare className="h-3 w-3" />{' '}
+                                              Expand {node.children.length}{' '}
+                                              replies
+                                            </>
+                                          ) : (
+                                            <>
+                                              <ChevronUp className="h-3 w-3" />{' '}
+                                              Collapse
+                                            </>
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Nested Children */}
+                                {!isCollapsed && node.children.length > 0 && (
+                                  <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative w-full">
+                                    {sortNodes(node.children).map(
+                                      (child: any) =>
+                                        renderCommentTree(child, depth + 1),
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-400 font-mono">
-                                  {comment.timestamp}
-                                </span>
-                                <button
-                                  type="button"
-                                  title="Reply"
-                                  onClick={() => {
-                                    setReplyToCommentId(comment.id);
-                                    setReplyToUser(comment.user);
-                                  }}
-                                  className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-200 rounded-md transition"
-                                >
-                                  <Reply className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
+                            );
+                          };
+
+                          return (
+                            <div className="flex flex-col">
+                              {sortNodes(rootNodes).map((root) =>
+                                renderCommentTree(root, 0),
+                              )}
                             </div>
-                            <p className="text-xs text-slate-700 leading-relaxed">
-                              {comment.message}
-                            </p>
-                          </div>
-                        ))}
+                          );
+                        })()}
                         {selectedPOComments.length === 0 && (
                           <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
                             <MessageSquare className="h-8 w-8 text-slate-400" />
@@ -2059,24 +2176,26 @@ Supply Chain CRM Coordinator`;
                     className="flex flex-col gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
                   >
                     {replyToUser && (
-                      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg animate-fadeIn">
-                        <div className="flex items-center gap-2 text-xs text-indigo-700">
-                          <Reply className="h-3.5 w-3.5" />
-                          <span>
-                            Replying to{' '}
-                            <span className="font-bold">{replyToUser}</span>
+                      <div className="flex flex-col bg-slate-100 rounded-lg p-2.5 border-l-4 border-l-indigo-500 mb-1 animate-fadeIn relative group overflow-hidden">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-extrabold text-indigo-700">
+                            {replyToUser}
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyToCommentId(null);
+                              setReplyToUser(null);
+                              setReplyToText(null);
+                            }}
+                            className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded p-1 transition"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReplyToCommentId(null);
-                            setReplyToUser(null);
-                          }}
-                          className="hover:bg-indigo-100 p-0.5 rounded text-indigo-500 hover:text-indigo-700 transition"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+                        <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
+                          {replyToText}
+                        </p>
                       </div>
                     )}
                     <div className="flex gap-2">
