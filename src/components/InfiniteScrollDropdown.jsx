@@ -21,6 +21,7 @@ export default function InfiniteScrollDropdown({
   placeholder = 'Select an option...',
   searchPlaceholder = 'Search...',
   disabled = false,
+  menuPlacement = 'bottom',
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,7 +93,11 @@ export default function InfiniteScrollDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col">
+        <div
+          className={`absolute z-50 w-full bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col ${
+            menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}
+        >
           <div className="p-2 border-b border-slate-100 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
