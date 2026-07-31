@@ -99,6 +99,15 @@ export default function ImportItemsModal({
         },
       );
 
+      
+
+      if (response.success === false) {
+        toast.error(
+          response.message || response.error || 'Failed to process file',
+        );
+        return;
+      }
+
       const apiData = response.data?.data || [];
 
       // Map API response to our local rows
@@ -114,11 +123,17 @@ export default function ImportItemsModal({
       });
 
       setRows(parsedData);
+
+      if (response.data?.message) {
+        toast.success(response.data.message);
+      }
     } catch (error) {
       console.error('Error parsing file:', error);
-      toast.error(
-        'Failed to parse the file or hit API. Ensure it is a valid format.',
-      );
+      const errMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Failed to parse the file or hit API. Ensure it is a valid format.';
+      toast.error(errMsg);
     } finally {
       setLoading(false);
       if (fileInputRef.current) {
@@ -188,12 +203,20 @@ export default function ImportItemsModal({
     try {
       setImporting(true);
       // Clean up internal properties before sending
-      const payload = rows.map(({ _id, _errors, ...rest }) => rest);
+      const payload = rows.map(
+        ({ _id, _errors, sku, file_po_id, ...rest }) => rest,
+      );
 
       if (containerId) {
-        await apiClient.post(CONTAINER_ITEMS_IMPORT(containerId), {
-          items: payload,
-        });
+        const response = await apiClient.post(
+          CONTAINER_ITEMS_IMPORT(containerId),
+          {
+            items: payload,
+          },
+        );
+        toast.success(
+          response.data?.message || 'Successfully imported items to container!',
+        );
       } else {
         const apiPayload = {
           container_name: containerName.trim(),
@@ -204,10 +227,13 @@ export default function ImportItemsModal({
           received_date: null,
           items: payload,
         };
-        await createContainer(apiPayload);
+        const response = await createContainer(apiPayload);
+        toast.success(
+          response?.data?.message ||
+            response?.message ||
+            'Successfully created container!',
+        );
       }
-
-      toast.success('Successfully imported items to container!');
 
       if (onSuccess) {
         onSuccess();
@@ -215,15 +241,15 @@ export default function ImportItemsModal({
       onClose();
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('Failed to import items to the API.');
+      const errMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Failed to import items to the API.';
+      toast.error(errMsg);
     } finally {
       setImporting(false);
     }
   };
-
-  const hasValidationErrors = rows.some(
-    (r) => r._errors && r._errors.length > 0,
-  );
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
@@ -280,11 +306,6 @@ export default function ImportItemsModal({
                 <div>
                   <h4 className="font-bold text-slate-800 flex items-center gap-2">
                     Preview Imported Data
-                    {hasValidationErrors && (
-                      <span className="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
-                        <AlertTriangle className="w-3 h-3" /> Fix errors
-                      </span>
-                    )}
                   </h4>
                   <p className="text-xs text-slate-500">
                     {rows.length} rows loaded from {file?.name}
@@ -526,7 +547,6 @@ export default function ImportItemsModal({
             disabled={
               importing ||
               rows.length === 0 ||
-              hasValidationErrors ||
               (!containerId &&
                 (!containerName ||
                   !estimatedArrivalDate ||
