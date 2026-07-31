@@ -238,6 +238,7 @@ export default function POManagement({
             id: String(c.id || `COM-${Math.random()}`),
             poId: selectedPOId,
             user: c.user_name || c.user || c.author || 'User',
+            userId: c.user_id || c.author_id || null,
             role: c.role || 'Administrator',
             message: c.comment || c.message || c.text || '',
             timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
@@ -375,6 +376,35 @@ export default function POManagement({
       setActiveDrawerSection('details');
     }
   }, [selectedPOId]);
+
+  useEffect(() => {
+    const handleItemCommentAdded = (e: any) => {
+      const itemId = e.detail?.itemId;
+      if (!itemId) return;
+      setDetailedPOItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                commentsCount:
+                  (parseInt(
+                    item.commentsCount ||
+                      item.comments_count ||
+                      item.commentCount ||
+                      (Array.isArray(item.comments) ? item.comments.length : 0),
+                    10,
+                  ) || 0) + 1,
+              }
+            : item,
+        ),
+      );
+    };
+
+    window.addEventListener('item-comment-added', handleItemCommentAdded);
+    return () => {
+      window.removeEventListener('item-comment-added', handleItemCommentAdded);
+    };
+  }, []);
 
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
@@ -942,6 +972,7 @@ Supply Chain CRM Coordinator`;
           id: String(c.id || `COM-${Math.random()}`),
           poId: selectedPO.id,
           user: c.user_name || c.user || c.author || 'User',
+          userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
           message: c.comment || c.message || c.text || '',
           timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
@@ -1358,8 +1389,8 @@ Supply Chain CRM Coordinator`;
             >
               <MessageSquare className="h-5 w-5" />
               {hasComments && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs border border-white">
-                  {count > 9 ? '9+' : count}
+                <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[18px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs border border-white">
+                  {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
                 </span>
               )}
             </button>
@@ -1553,31 +1584,52 @@ Supply Chain CRM Coordinator`;
         accessor: 'id', // or just a placeholder
         headerClassName: 'px-3 py-2 bg-slate-50 text-center w-24',
         className: 'px-3 py-2 text-center',
-        render: (item: any) => (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (item.id !== undefined || item.sku) {
-                // Determine ID natively or fallback only if strictly missing
-                const resolvedId =
-                  item.id !== undefined && item.id !== null
-                    ? item.id
-                    : item.sku;
-                const detailItem = { ...item, id: resolvedId };
-                const event = new CustomEvent('open-item-comments', {
-                  detail: detailItem,
-                });
-                window.dispatchEvent(event);
-              } else {
-                toast.error('This item lacks an identifier.');
-              }
-            }}
-            className="p-1.5 rounded-lg bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition border border-slate-200 relative inline-flex"
-            title="Item Comments"
-          >
-            <MessageSquare className="w-4 h-4" />
-          </button>
-        ),
+        render: (item: any) => {
+          const count =
+            parseInt(
+              item.commentsCount ||
+                item.comments_count ||
+                item.commentCount ||
+                item.comment_count ||
+                item.total_comments ||
+                (Array.isArray(item.comments) ? item.comments.length : 0),
+              10,
+            ) || 0;
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (item.id !== undefined || item.sku) {
+                  // Determine ID natively or fallback only if strictly missing
+                  const resolvedId =
+                    item.id !== undefined && item.id !== null
+                      ? item.id
+                      : item.sku;
+                  const detailItem = { ...item, id: resolvedId };
+                  const event = new CustomEvent('open-item-comments', {
+                    detail: detailItem,
+                  });
+                  window.dispatchEvent(event);
+                } else {
+                  toast.error('This item lacks an identifier.');
+                }
+              }}
+              className={`p-1.5 rounded-lg transition border relative inline-flex ${
+                count > 0
+                  ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'
+              }`}
+              title="Item Comments"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[18px] px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs border border-white">
+                  {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
+                </span>
+              )}
+            </button>
+          );
+        },
       },
     ],
     [],
@@ -2157,14 +2209,29 @@ Supply Chain CRM Coordinator`;
                             node: any,
                             depth: number = 0,
                           ) => {
+                            const isMeStr = (node.user || '').toLowerCase();
                             const isMe =
-                              node.user === 'Sourcing Lead (You)' ||
+                              isMeStr === 'sourcing lead (you)' ||
                               (currentUser &&
-                                `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ===
-                                  node.user) ||
-                              (currentUser &&
-                                currentUser.username === node.user) ||
-                              (currentUser && currentUser.email === node.user);
+                                (isMeStr ===
+                                  `${currentUser.first_name || ''} ${currentUser.last_name || ''}`
+                                    .trim()
+                                    .toLowerCase() ||
+                                  isMeStr ===
+                                    String(
+                                      currentUser.username || '',
+                                    ).toLowerCase() ||
+                                  isMeStr ===
+                                    String(
+                                      currentUser.email || '',
+                                    ).toLowerCase() ||
+                                  isMeStr ===
+                                    String(
+                                      currentUser.first_name || '',
+                                    ).toLowerCase() ||
+                                  (currentUser.id &&
+                                    String(node.userId) ===
+                                      String(currentUser.id))));
 
                             const isCollapsed =
                               collapsedComments[node.id] || false;

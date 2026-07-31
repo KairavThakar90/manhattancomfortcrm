@@ -77,6 +77,7 @@ export default function ItemCommentModal({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
           itemId: targetItem.id,
           user: c.user_name || c.user || c.author || 'User',
+          userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
           message: c.comment || c.message || c.text || '',
           timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
@@ -152,6 +153,12 @@ export default function ItemCommentModal({
           `Added an item comment for ${targetItem.sku}`,
           'Vendor Comment',
         );
+        // Notify the main PO grid to update its comment count for this item!
+        window.dispatchEvent(
+          new CustomEvent('item-comment-added', {
+            detail: { itemId: targetItem.id },
+          }),
+        );
         return getItemComments(targetItem.id!);
       })
       .then((data) => {
@@ -160,6 +167,7 @@ export default function ItemCommentModal({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
           itemId: targetItem.id,
           user: c.user_name || c.user || c.author || 'User',
+          userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
           message: c.comment || c.message || c.text || '',
           timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
@@ -204,6 +212,7 @@ export default function ItemCommentModal({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
           itemId: targetItem.id,
           user: c.user_name || c.user || c.author || 'User',
+          userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
           message: c.comment || c.message || c.text || '',
           timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
@@ -240,13 +249,18 @@ export default function ItemCommentModal({
   };
 
   const renderCommentTree = (node: any, depth = 0): React.ReactNode => {
+    const isMeStr = (node.user || '').toLowerCase();
     const isMe =
-      node.user === 'Sourcing Lead (You)' ||
+      isMeStr === 'sourcing lead (you)' ||
       (currentUser &&
-        `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ===
-          node.user) ||
-      (currentUser && currentUser.username === node.user) ||
-      (currentUser && currentUser.email === node.user);
+        (isMeStr ===
+          `${currentUser.first_name || ''} ${currentUser.last_name || ''}`
+            .trim()
+            .toLowerCase() ||
+          isMeStr === String(currentUser.username || '').toLowerCase() ||
+          isMeStr === String(currentUser.email || '').toLowerCase() ||
+          isMeStr === String(currentUser.first_name || '').toLowerCase() ||
+          (currentUser.id && String(node.userId) === String(currentUser.id))));
     const isCollapsed = collapsedComments[node.id] || false;
 
     return (
