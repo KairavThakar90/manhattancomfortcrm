@@ -152,5 +152,4 @@ export const PO_COMMENTS = (poId: string) =>
 // ------------------------------------------
 export const WAREHOUSES_LIST = '/warehouses/';
 export const WAREHOUSES_BY_ID = (id: string) => `/warehouses/${id}`;
-
-export const CONTAINER_ITEMS_IMPORT = (id: string) => /containers/ / items;
+export const CONTAINER_ITEMS_IMPORT = (id: string) => `/containers/${id}/items`;
