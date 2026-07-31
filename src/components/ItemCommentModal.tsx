@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { User } from '../services/user.service';
+import { toast } from 'react-toastify';
+
 const formatUtcTimestamp = (ts: any) => {
   if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
   const d = new Date(ts);
@@ -135,20 +137,7 @@ export default function ItemCommentModal({
       .map((w) => taggedUserMap[w])
       .filter(Boolean);
 
-    const optimisticComment = {
-      id: `OPT-${Math.random()}`,
-      itemId: targetItem.id,
-      user: currentUser
-        ? `${currentUser.first_name} ${currentUser.last_name}`.trim()
-        : 'Sourcing Lead (You)',
-      role: 'Administrator',
-      message: messageText,
-      timestamp: 'Just now',
-      parentId: replyToCommentId ? String(replyToCommentId) : null,
-      children: [],
-    };
-
-    setFetchedComments((prev) => [...prev, optimisticComment]);
+    // Removed optimistic update to match exactly the POManagement flow and preserve strict tree integrity
     setNewCommentText('');
     setShowMentionDropdown(false);
     const replyId = replyToCommentId;
@@ -157,7 +146,14 @@ export default function ItemCommentModal({
     setReplyToText(null);
 
     postItemComment(targetItem.id, messageText, taggedUserIds, replyId)
-      .then(() => getItemComments(targetItem.id!))
+      .then(() => {
+        toast.success('Comment posted successfully');
+        onAddActivity(
+          `Added an item comment for ${targetItem.sku}`,
+          'Vendor Comment',
+        );
+        return getItemComments(targetItem.id!);
+      })
       .then((data) => {
         const rawComments = data?.comments || data || [];
         const mappedComments = rawComments.map((c: any) => ({
@@ -171,7 +167,10 @@ export default function ItemCommentModal({
         }));
         setFetchedComments(mappedComments);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        toast.error('Failed to post comment.');
+      });
   };
 
   const handleUpdateSubmit = (commentId: string) => {
@@ -191,7 +190,14 @@ export default function ItemCommentModal({
     setEditingCommentText('');
 
     updateItemComment(commentId, editingCommentText.trim(), taggedUserIds)
-      .then(() => getItemComments(targetItem.id!))
+      .then(() => {
+        toast.success('Comment updated successfully');
+        onAddActivity(
+          `Updated an item comment for ${targetItem.sku}`,
+          'Vendor Comment',
+        );
+        return getItemComments(targetItem.id!);
+      })
       .then((data) => {
         const rawComments = data?.comments || data || [];
         const mappedComments = rawComments.map((c: any) => ({
@@ -205,7 +211,10 @@ export default function ItemCommentModal({
         }));
         setFetchedComments(mappedComments);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        toast.error('Failed to update comment.');
+      });
   };
 
   const buildTree = (comments: any[]) => {
