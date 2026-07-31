@@ -109,6 +109,8 @@ export default function ImportItemsModal({
       );
 
       if (response.success === false) {
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         const errText =
           response.message || response.error || 'Failed to process file';
         setApiErrorMsg(errText);
@@ -137,6 +139,7 @@ export default function ImportItemsModal({
       }
     } catch (error) {
       console.error('Error parsing file:', error);
+      setFile(null);
       const errMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -352,6 +355,26 @@ export default function ImportItemsModal({
                   <p className="text-xs text-slate-500">
                     {rows.length} rows loaded from {file?.name}
                   </p>
+                </div>
+                <div className="relative group flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFile(null);
+                      setRows([]);
+                      setApiErrorMsg(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 text-xs font-semibold transition"
+                  >
+                    Upload Different File
+                  </button>
+                  <div className="absolute top-full right-0 mt-2 hidden group-hover:block w-max bg-indigo-600 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200">
+                    If you selected the wrong file, upload a new file.
+                    <div className="absolute bottom-full right-16 border-4 border-transparent border-b-indigo-600"></div>
+                  </div>
                 </div>
               </div>
 
