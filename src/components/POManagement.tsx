@@ -2940,12 +2940,22 @@ Supply Chain CRM Coordinator`;
                             type="checkbox"
                             checked={exportColumns.includes(col)}
                             onChange={(e) => {
-                              if (e.target.checked)
-                                setExportColumns((C) => [...C, col]);
-                              else
+                              if (e.target.checked) {
+                                setExportColumns((C) => {
+                                  const next = [...C, col];
+                                  if (col === 'Comments') {
+                                    if (!next.includes('PO ID'))
+                                      next.push('PO ID');
+                                    if (!next.includes('PO Title'))
+                                      next.push('PO Title');
+                                  }
+                                  return next;
+                                });
+                              } else {
                                 setExportColumns((C) =>
                                   C.filter((c) => c !== col),
                                 );
+                              }
                             }}
                             className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
                           />
@@ -2969,12 +2979,20 @@ Supply Chain CRM Coordinator`;
                             type="checkbox"
                             checked={exportColumns.includes(col)}
                             onChange={(e) => {
-                              if (e.target.checked)
-                                setExportColumns((C) => [...C, col]);
-                              else
+                              if (e.target.checked) {
+                                setExportColumns((C) => {
+                                  const next = [...C, col];
+                                  if (!next.includes('PO ID'))
+                                    next.push('PO ID');
+                                  if (!next.includes('PO Title'))
+                                    next.push('PO Title');
+                                  return next;
+                                });
+                              } else {
                                 setExportColumns((C) =>
                                   C.filter((c) => c !== col),
                                 );
+                              }
                             }}
                             className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
                           />
