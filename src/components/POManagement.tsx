@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
+import { fetchUsers } from '../store/userSlice';
 import {
   Search,
   Filter,
@@ -47,6 +48,7 @@ import {
   getPurchaseOrderById,
   syncPurchaseOrders,
 } from '../services/purchaseOrder.service';
+import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
 import TableLoader from './common/TableLoader';
 import FullPageLoader from './common/FullPageLoader';
@@ -145,6 +147,21 @@ export default function POManagement({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
+
+  // Mention Tagging State
+  const reduxUsers = useSelector((state: any) => state.users?.list || []);
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionIndex, setMentionIndex] = useState(-1);
+  const [mentionFilter, setMentionFilter] = useState('');
+  const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>(
+    {},
+  );
+
+  useEffect(() => {
+    if (!reduxUsers || reduxUsers.length === 0) {
+      dispatch(fetchUsers() as any);
+    }
+  }, [dispatch, reduxUsers.length]);
 
   const handleSyncSellerCloud = async () => {
     try {
@@ -740,6 +757,46 @@ Supply Chain CRM Coordinator`;
       );
     }, 1800);
   };
+  // User Mention logic
+  const handleCommentTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setNewCommentText(val);
+
+    const cursorPosition = e.target.selectionStart || val.length;
+    const textBeforeCursor = val.slice(0, cursorPosition);
+    const words = textBeforeCursor.split(/\s+/);
+    const lastWord = words[words.length - 1];
+
+    if (lastWord.startsWith('@')) {
+      setShowMentionDropdown(true);
+      setMentionFilter(lastWord.slice(1).toLowerCase());
+      const wordStartIndex = textBeforeCursor.lastIndexOf(lastWord);
+      setMentionIndex(wordStartIndex);
+    } else {
+      setShowMentionDropdown(false);
+    }
+  };
+
+  const handleSelectMention = (user: User | any) => {
+    const username =
+      user.full_name ||
+      user.username ||
+      `${user.first_name || ''}_${user.last_name || ''}`.trim() ||
+      user.email;
+    const tag = `@${username.replace(/\s+/g, '_')}`;
+
+    const textBefore = newCommentText.slice(0, mentionIndex);
+    const textAfter = newCommentText.slice(mentionIndex).replace(/^\S+/, '');
+
+    setNewCommentText(`${textBefore}${tag} ${textAfter}`);
+
+    setTaggedUserMap((prev) => ({
+      ...prev,
+      [tag]: user.id,
+    }));
+
+    setShowMentionDropdown(false);
+  };
 
   // Add a discussion comment — WhatsApp style 'fire and forget'
   const handlePostComment = (e: React.FormEvent) => {
@@ -747,6 +804,13 @@ Supply Chain CRM Coordinator`;
     if (!selectedPO || !newCommentText.trim()) return;
 
     const messageText = newCommentText.trim();
+
+    // Extract tagged users
+    const words = messageText.split(/\s+/);
+    const taggedUserIds = words
+      .filter((w) => w.startsWith('@'))
+      .map((w) => taggedUserMap[w])
+      .filter(Boolean);
 
     // Optimistic UI update immediately
     const optimisticComment: Comment = {
@@ -762,11 +826,12 @@ Supply Chain CRM Coordinator`;
     onAddComment(optimisticComment);
     setFetchedComments((prev) => [...prev, optimisticComment]);
     setNewCommentText('');
+    setShowMentionDropdown(false);
 
     // Fire-and-forget background sync (No UI locks!)
     const targetId = selectedPO.id.replace(/^PO-/i, '');
 
-    postPOComment(targetId, messageText)
+    postPOComment(targetId, messageText, taggedUserIds)
       .then(() => {
         onAddActivity(
           `Added discussion comment on ${selectedPO.id}`,
@@ -1968,15 +2033,71 @@ Supply Chain CRM Coordinator`;
 
                   <form
                     onSubmit={handlePostComment}
-                    className="flex gap-2 border-t border-slate-100 pt-3 shrink-0"
+                    className="flex gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
                   >
-                    <input
-                      type="text"
-                      placeholder="Type a message..."
-                      value={newCommentText}
-                      onChange={(e) => setNewCommentText(e.target.value)}
-                      className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-                    />
+                    <div className="flex-1 relative">
+                      {showMentionDropdown &&
+                        reduxUsers &&
+                        reduxUsers.length > 0 && (
+                          <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
+                            <div className="max-h-48 overflow-y-auto py-1">
+                              {reduxUsers
+                                .filter((u) => {
+                                  const searchTargets = [
+                                    (u.full_name || '').toLowerCase(),
+                                    (u.username || '').toLowerCase(),
+                                    (u.first_name || '').toLowerCase(),
+                                    (u.last_name || '').toLowerCase(),
+                                    (u.email || '').toLowerCase(),
+                                  ];
+                                  return (
+                                    !mentionFilter ||
+                                    searchTargets.some((t) =>
+                                      t.includes(mentionFilter),
+                                    )
+                                  );
+                                })
+                                .map((u) => {
+                                  const displayName =
+                                    u.full_name ||
+                                    u.username ||
+                                    `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                    u.email;
+                                  const initial = (
+                                    displayName[0] || 'U'
+                                  ).toUpperCase();
+                                  return (
+                                    <button
+                                      key={u.id}
+                                      type="button"
+                                      onClick={() => handleSelectMention(u)}
+                                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                                        {initial}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-slate-700 truncate">
+                                          {displayName}
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 truncate">
+                                          {u.email}
+                                        </div>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      <input
+                        type="text"
+                        placeholder="Type a message... (Use @ to tag)"
+                        value={newCommentText}
+                        onChange={handleCommentTextChange}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                      />
+                    </div>
                     <button
                       type="submit"
                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"

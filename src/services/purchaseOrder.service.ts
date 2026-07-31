@@ -168,9 +168,12 @@ export async function updatePOLeadTime(
 export async function postPOComment(
   poId: string,
   message: string,
+  tagged_user_ids?: string[],
 ): Promise<any> {
   const { data } = await apiClient.post(PO_COMMENTS(poId), {
     comment: message,
+    parent_id: null,
+    tagged_user_ids: tagged_user_ids || [],
   });
   return data;
 }
