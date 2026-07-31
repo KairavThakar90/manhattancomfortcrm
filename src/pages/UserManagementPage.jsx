@@ -1,40 +1,36 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Users, Search, RefreshCw, Plus } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Users, Search, RefreshCw, Plus, KeyRound } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getUsers } from '../services/user.service';
+import { fetchUsers } from '../store/userSlice';
+import { useCRM } from '../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
 import Pagination from '../components/common/Pagination';
 import TableLoader from '../components/common/TableLoader';
 import DataTable from '../components/common/DataTable';
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { user: currentUser } = useCRM();
+
+  const { list: users, loading } = useSelector((state) => state.users);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const fetchUsers = useCallback(async (isRefresh = false) => {
-    try {
-      setLoading(true);
-      const data = await getUsers();
-      setUsers(Array.isArray(data) ? data : data?.users || []);
-      if (isRefresh) toast.success('Users refreshed successfully');
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to load users');
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Load users on mount
   useEffect(() => {
-    setTimeout(() => {
-      fetchUsers();
-    }, 0);
-  }, [fetchUsers]);
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
+  const handleRefresh = () => {
+    dispatch(fetchUsers())
+      .unwrap()
+      .then(() => toast.success('Users refreshed successfully'))
+      .catch(() => toast.error('Failed to update user list'));
+  };
 
   // Client-side filtering & pagination
   const filteredUsers = useMemo(() => {
@@ -96,8 +92,26 @@ export default function UserManagementPage() {
             </span>
           ),
       },
+      {
+        header: 'Actions',
+        accessor: 'actions',
+        className: 'px-6 py-4 text-right',
+        render: (u) => (
+          <div className="flex items-center justify-end gap-2">
+            {currentUser?.id && String(currentUser.id) === String(u.id) && (
+              <button
+                onClick={() => toast.info('Change password flow initiated...')}
+                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition tooltip-trigger"
+                title="Change Password"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ),
+      },
     ],
-    [],
+    [currentUser],
   );
 
   return (
