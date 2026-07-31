@@ -13,7 +13,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../services/api';
-import { CONTAINER_ITEMS_IMPORT, CONTAINERS_LIST } from '../utils/endpoints';
+import {
+  CONTAINER_ITEMS_IMPORT,
+  CONTAINERS_LIST,
+  CONTAINER_IMPORT_PREVIEW,
+} from '../utils/endpoints';
 import InfiniteScrollDropdown from './InfiniteScrollDropdown';
 import { createContainer } from '../services/container.service';
 
@@ -28,6 +32,7 @@ export default function ImportItemsModal({
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [apiErrorMsg, setApiErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
 
   const [containerName, setContainerName] = useState('');
@@ -86,25 +91,28 @@ export default function ImportItemsModal({
 
     setFile(selectedFile);
     setLoading(true);
+    setApiErrorMsg(null);
 
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
       const response = await apiClient.post(
-        '/containers/import/preview',
+        CONTAINER_IMPORT_PREVIEW,
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-Skip-Global-Error': 'true',
+          },
         },
       );
 
-      
-
       if (response.success === false) {
-        toast.error(
-          response.message || response.error || 'Failed to process file',
-        );
+        const errText =
+          response.message || response.error || 'Failed to process file';
+        setApiErrorMsg(errText);
+        toast.error(errText);
         return;
       }
 
@@ -132,7 +140,9 @@ export default function ImportItemsModal({
       const errMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
+        error.message ||
         'Failed to parse the file or hit API. Ensure it is a valid format.';
+      setApiErrorMsg(errMsg);
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -202,6 +212,7 @@ export default function ImportItemsModal({
 
     try {
       setImporting(true);
+      setApiErrorMsg(null);
       // Clean up internal properties before sending
       const payload = rows.map(
         ({ _id, _errors, sku, file_po_id, ...rest }) => rest,
@@ -213,7 +224,19 @@ export default function ImportItemsModal({
           {
             items: payload,
           },
+          {
+            headers: { 'X-Skip-Global-Error': 'true' },
+          },
         );
+
+        if (response.data?.success === false) {
+          throw new Error(
+            response.data.message ||
+              response.data.error ||
+              'Failed to import items to container',
+          );
+        }
+
         toast.success(
           response.data?.message || 'Successfully imported items to container!',
         );
@@ -227,11 +250,20 @@ export default function ImportItemsModal({
           received_date: null,
           items: payload,
         };
-        const response = await createContainer(apiPayload);
+        const responseData = await createContainer(apiPayload, {
+          headers: { 'X-Skip-Global-Error': 'true' },
+        });
+
+        if (responseData?.success === false) {
+          throw new Error(
+            responseData.message ||
+              responseData.error ||
+              'Failed to create container',
+          );
+        }
+
         toast.success(
-          response?.data?.message ||
-            response?.message ||
-            'Successfully created container!',
+          responseData?.message || 'Successfully created container!',
         );
       }
 
@@ -244,7 +276,9 @@ export default function ImportItemsModal({
       const errMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
+        error.message ||
         'Failed to import items to the API.';
+      setApiErrorMsg(errMsg);
       toast.error(errMsg);
     } finally {
       setImporting(false);
@@ -253,7 +287,15 @@ export default function ImportItemsModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 relative">
+        {importing && (
+          <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-4" />
+            <p className="text-sm font-semibold text-slate-700 animate-pulse">
+              Processing your request...
+            </p>
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
@@ -311,15 +353,6 @@ export default function ImportItemsModal({
                     {rows.length} rows loaded from {file?.name}
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setFile(null);
-                    setRows([]);
-                  }}
-                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 transition underline"
-                >
-                  Clear & Start Over
-                </button>
               </div>
 
               {loading ? (
@@ -452,31 +485,24 @@ export default function ImportItemsModal({
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Estimated Arrival Date
                   </label>
-                  <div className="relative focus-within:ring-2 focus-within:ring-indigo-500 rounded-md">
-                    <input
-                      type="text"
-                      placeholder="yyyy-mm-dd"
-                      value={estimatedArrivalDate}
-                      readOnly
-                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md outline-none font-medium ${
-                        !estimatedArrivalDate
-                          ? 'text-slate-400 font-normal'
-                          : 'text-slate-800'
-                      }`}
-                    />
-                    <Calendar
-                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] pointer-events-none ${
-                        !estimatedArrivalDate
-                          ? 'text-slate-500'
-                          : 'text-slate-800'
-                      }`}
-                    />
+                  <div className="relative">
                     <input
                       type="date"
                       min={new Date().toISOString().split('T')[0]}
                       value={estimatedArrivalDate}
                       onChange={(e) => setEstimatedArrivalDate(e.target.value)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      onClick={(e) => {
+                        try {
+                          e.target.showPicker();
+                        } catch (err) {
+                          // Ignore if unsupported (older browsers)
+                        }
+                      }}
+                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium cursor-pointer ${
+                        !estimatedArrivalDate
+                          ? 'text-slate-400 font-normal'
+                          : 'text-slate-800'
+                      }`}
                     />
                   </div>
                 </div>
@@ -533,34 +559,46 @@ export default function ImportItemsModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={importing}
-            className="px-5 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold bg-white hover:bg-slate-100 transition disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleImport}
-            disabled={
-              importing ||
-              rows.length === 0 ||
-              (!containerId &&
-                (!containerName ||
-                  !estimatedArrivalDate ||
-                  !selectedWarehouseId))
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0">
+          {apiErrorMsg && (
+            <div className="text-rose-600 text-xs flex items-center gap-1 font-semibold flex-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="line-clamp-2">{apiErrorMsg}</span>
+            </div>
+          )}
+          <div
+            className={
+              apiErrorMsg ? 'flex gap-3' : 'flex justify-end gap-3 w-full'
             }
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
-            {importing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {importing ? 'Saving...' : 'Confirm Import'}
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={importing}
+              className="px-5 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold bg-white hover:bg-slate-100 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleImport}
+              disabled={
+                importing ||
+                rows.length === 0 ||
+                (!containerId &&
+                  (!containerName ||
+                    !estimatedArrivalDate ||
+                    !selectedWarehouseId))
+              }
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {importing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {importing ? 'Saving...' : 'Confirm Import'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -43,6 +43,10 @@ apiClient.interceptors.response.use(
       error.message ||
       'An unexpected error occurred.';
 
+    const skipGlobalError =
+      error.config?.headers?.['X-Skip-Global-Error'] === 'true' ||
+      error.config?.headers?.['x-skip-global-error'] === 'true';
+
     // Handle 401 Unauthorized globally
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -55,13 +59,13 @@ apiClient.interceptors.response.use(
       error.response?.status >= 500 ||
       (!error.response && error.message === 'Network Error')
     ) {
-      if (!window.location.pathname.includes('/support')) {
+      if (!skipGlobalError && !window.location.pathname.includes('/support')) {
         // Redirect on server errors or network disconnects
         window.location.href = '/support';
       }
     }
 
-    return Promise.reject(new Error(message));
+    return Promise.reject(error);
   },
 );
 

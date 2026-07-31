@@ -26,8 +26,8 @@ export async function getContainerPOItems(sellercloud_po_id: string | number) {
   return data;
 }
 
-export async function createContainer(payload: any) {
-  const { data } = await apiClient.post(CONTAINERS_CREATE, payload);
+export async function createContainer(payload: any, options: any = {}) {
+  const { data } = await apiClient.post(CONTAINERS_CREATE, payload, options);
   return data;
 }
 

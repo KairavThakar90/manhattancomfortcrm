@@ -1082,7 +1082,7 @@ export default function ContainerFlowPage() {
               onClick={() => setShowGlobalImport(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
             >
-              <Upload className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" />
               <span>Import CSV</span>
             </button>
             <button
@@ -1093,7 +1093,7 @@ export default function ContainerFlowPage() {
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <Upload className="h-3.5 w-3.5" />
               <span>Export CSV</span>
             </button>
             <button
@@ -1297,7 +1297,7 @@ export default function ContainerFlowPage() {
                   onClick={executeExportCSV}
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs"
                 >
-                  <Download className="h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                   Generate CSV
                 </button>
               </div>
