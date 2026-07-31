@@ -30,4 +30,8 @@ export const appRoutes = [
   { path: '/sop-ai-assistant', element: React.createElement(AIAssistantPage) },
   { path: '/reports-analytics', element: React.createElement(ReportsPage) },
   { path: '/security-admin', element: React.createElement(AdminPanelPage) },
+  {
+    path: '/user-management',
+    element: React.createElement(UserManagementPage),
+  },
 ];

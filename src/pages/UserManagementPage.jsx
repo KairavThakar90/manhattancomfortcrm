@@ -3,8 +3,8 @@ import { Users, Search, RefreshCw, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getUsers } from '../services/user.service';
 import AddUserModal from '../components/AddUserModal';
-import Pagination from '../components/ui/Pagination';
-import TableLoader from '../components/ui/TableLoader';
+import Pagination from '../components/common/Pagination';
+import TableLoader from '../components/common/TableLoader';
 import DataTable from '../components/common/DataTable';
 
 export default function UserManagementPage() {
