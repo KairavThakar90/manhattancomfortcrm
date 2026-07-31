@@ -78,21 +78,6 @@ export default function UserManagementPage() {
         ),
       },
       {
-        header: 'Status',
-        accessor: 'is_active',
-        className: 'px-6 py-4 text-center',
-        render: (u) =>
-          u.is_active === false ? (
-            <span className="bg-rose-50 text-rose-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-rose-200">
-              Inactive
-            </span>
-          ) : (
-            <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-              Active
-            </span>
-          ),
-      },
-      {
         header: 'Actions',
         accessor: 'actions',
         className: 'px-6 py-4 text-right',
@@ -170,9 +155,9 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 relative">
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col relative">
           {loading && <TableLoader message="Loading users..." />}
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
+          <div className="overflow-x-auto scroll-smooth">
             <DataTable
               columns={userColumns}
               data={paginatedUsers}
