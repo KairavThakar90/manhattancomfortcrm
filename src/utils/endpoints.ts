@@ -153,6 +153,14 @@ export const PO_COMMENT_UPDATE = (commentId: string) =>
   `/purchase-orders/comments/${commentId}`;
 
 // ------------------------------------------
+// PO Item Comment Endpoints
+// ------------------------------------------
+export const PO_ITEM_COMMENTS = (itemId: string) =>
+  `/purchase-orders/items/${itemId}/comments`;
+export const PO_ITEM_COMMENT_UPDATE = (commentId: string) =>
+  `/purchase-orders/items/comments/${commentId}`;
+
+// ------------------------------------------
 // Warehouse Endpoints
 // ------------------------------------------
 export const WAREHOUSES_LIST = '/warehouses/';

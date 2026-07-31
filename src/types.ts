@@ -19,6 +19,7 @@ export interface POItemContainer {
 }
 
 export interface POItem {
+  id?: string;
   sku: string;
   name: string;
   qty: number;
@@ -26,6 +27,7 @@ export interface POItem {
   unitPrice: number;
   expected_delivery_date?: string;
   containers?: POItemContainer[];
+  commentsCount?: number;
 }
 
 export interface InvoiceDetails {

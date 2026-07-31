@@ -58,6 +58,7 @@ import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
 import TableLoader from './common/TableLoader';
 import FullPageLoader from './common/FullPageLoader';
+import ItemCommentModal from './ItemCommentModal';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 
@@ -151,6 +152,7 @@ export default function POManagement({
 
   // Comments state fetched from detail API
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
+  const [detailedPOItems, setDetailedPOItems] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
@@ -172,11 +174,24 @@ export default function POManagement({
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
-  const [mentionIndex, setMentionIndex] = useState(-1);
+  const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionFilter, setMentionFilter] = useState('');
   const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>(
     {},
   );
+
+  // Item Comments Modal
+  const [selectedItemForComments, setSelectedItemForComments] =
+    useState<any>(null);
+
+  useEffect(() => {
+    const handleOpenItemComments = (e: any) => {
+      setSelectedItemForComments(e.detail);
+    };
+    window.addEventListener('open-item-comments', handleOpenItemComments);
+    return () =>
+      window.removeEventListener('open-item-comments', handleOpenItemComments);
+  }, []);
 
   useEffect(() => {
     if (!reduxUsers || reduxUsers.length === 0) {
@@ -229,10 +244,12 @@ export default function POManagement({
             parentId: c.parent_id ? String(c.parent_id) : null,
           }));
           setFetchedComments(mappedComments);
+          setDetailedPOItems(detailData?.items || []);
         })
         .catch((err) => {
           console.error('Failed to fetch PO details for comments', err);
           setFetchedComments([]);
+          setDetailedPOItems([]);
         })
         .finally(() => {
           setIsLoadingComments(false);
@@ -467,7 +484,9 @@ export default function POManagement({
   }
 
   // All Items for selected PO will be listed natively without separate pagination
-  const paginatedItems = selectedPO?.items || [];
+  // Use detailed API items if available since they contain `id` DB fields that are missing in the summary index
+  const paginatedItems =
+    detailedPOItems.length > 0 ? detailedPOItems : selectedPO?.items || [];
   const totalItemsCount = paginatedItems.length;
 
   // Comments for selected PO (Dynamically loaded from detail API)
@@ -1433,7 +1452,7 @@ Supply Chain CRM Coordinator`;
         accessor: 'qty',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-medium',
-        render: (item: any) => item.qty.toLocaleString(),
+        render: (item: any) => (item.qty || 0).toLocaleString(),
       },
       {
         header: 'Received Qty',
@@ -1451,9 +1470,12 @@ Supply Chain CRM Coordinator`;
         accessor: 'remainingQty',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: (item: any) =>
-          `px-3 py-2 text-right font-mono ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`,
+          `px-3 py-2 text-right font-mono ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`,
         render: (item: any) =>
-          Math.max(0, item.qty - (item.receivedQty || 0)).toLocaleString(),
+          Math.max(
+            0,
+            (item.qty || 0) - (item.receivedQty || 0),
+          ).toLocaleString(),
       },
       {
         header: 'Unit Price',
@@ -1468,7 +1490,7 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-bold text-slate-800',
         render: (item: any) =>
-          `$${(item.qty * (item.unitPrice || 0)).toFixed(2)}`,
+          `$${((item.qty || 0) * (item.unitPrice || 0)).toFixed(2)}`,
       },
       {
         header: 'Container/Items Count',
@@ -1525,6 +1547,37 @@ Supply Chain CRM Coordinator`;
             </div>
           );
         },
+      },
+      {
+        header: 'Comments',
+        accessor: 'id', // or just a placeholder
+        headerClassName: 'px-3 py-2 bg-slate-50 text-center w-24',
+        className: 'px-3 py-2 text-center',
+        render: (item: any) => (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (item.id !== undefined || item.sku) {
+                // Determine ID natively or fallback only if strictly missing
+                const resolvedId =
+                  item.id !== undefined && item.id !== null
+                    ? item.id
+                    : item.sku;
+                const detailItem = { ...item, id: resolvedId };
+                const event = new CustomEvent('open-item-comments', {
+                  detail: detailItem,
+                });
+                window.dispatchEvent(event);
+              } else {
+                toast.error('This item lacks an identifier.');
+              }
+            }}
+            className="p-1.5 rounded-lg bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition border border-slate-200 relative inline-flex"
+            title="Item Comments"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+        ),
       },
     ],
     [],
@@ -2030,7 +2083,7 @@ Supply Chain CRM Coordinator`;
                             tableClassName="w-full text-left text-xs border-collapse"
                             tbodyClassName="divide-y divide-slate-100 text-slate-700"
                             trClassName={(item: any) =>
-                              `transition ${Math.max(0, item.qty - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
+                              `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
                             }
                             emptyMessage="No items specified for this purchase order."
                           />
@@ -2925,6 +2978,14 @@ Supply Chain CRM Coordinator`;
           }}
         />
       </div>
+
+      <ItemCommentModal
+        isOpen={!!selectedItemForComments}
+        onClose={() => setSelectedItemForComments(null)}
+        targetItem={selectedItemForComments}
+        selectedPO={selectedPO}
+        onAddActivity={onAddActivity}
+      />
     </div>
   );
 }

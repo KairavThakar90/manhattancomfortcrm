@@ -9,6 +9,8 @@ import {
   PO_EXPORT_CSV,
   PO_COMMENTS,
   PO_COMMENT_UPDATE,
+  PO_ITEM_COMMENTS,
+  PO_ITEM_COMMENT_UPDATE,
   PO_SYNC,
 } from '../utils/endpoints';
 
@@ -196,5 +198,43 @@ export async function updatePOComment(
 /** Sync POs from SellerCloud */
 export async function syncPurchaseOrders(viewId: string = '25'): Promise<any> {
   const { data } = await apiClient.post(`${PO_SYNC}?view_id=${viewId}`);
+  return data;
+}
+
+// ------------------------------------------
+// Item Comments
+// ------------------------------------------
+
+/** Get comments for a specific PO Item */
+export async function getItemComments(itemId: string): Promise<any> {
+  const { data } = await apiClient.get(PO_ITEM_COMMENTS(itemId));
+  return data;
+}
+
+/** Post a comment on a PO Item */
+export async function postItemComment(
+  itemId: string,
+  message: string,
+  tagged_user_ids?: string[],
+  parent_id?: string | null,
+): Promise<any> {
+  const { data } = await apiClient.post(PO_ITEM_COMMENTS(itemId), {
+    comment: message,
+    parent_id: parent_id || null,
+    tagged_user_ids: tagged_user_ids || [],
+  });
+  return data;
+}
+
+/** Update an existing PO Item comment */
+export async function updateItemComment(
+  commentId: string,
+  message: string,
+  tagged_user_ids?: string[],
+): Promise<any> {
+  const { data } = await apiClient.put(PO_ITEM_COMMENT_UPDATE(commentId), {
+    comment: message,
+    tagged_user_ids: tagged_user_ids || [],
+  });
   return data;
 }
