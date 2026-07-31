@@ -36,6 +36,7 @@ import {
   Info,
   ExternalLink,
   Loader2,
+  Reply,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -147,6 +148,10 @@ export default function POManagement({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
+
+  // Reply State
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
+  const [replyToUser, setReplyToUser] = useState<string | null>(null);
 
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -828,10 +833,15 @@ Supply Chain CRM Coordinator`;
     setNewCommentText('');
     setShowMentionDropdown(false);
 
+    // Store locally before resetting
+    const replyId = replyToCommentId;
+    setReplyToCommentId(null);
+    setReplyToUser(null);
+
     // Fire-and-forget background sync (No UI locks!)
     const targetId = selectedPO.id.replace(/^PO-/i, '');
 
-    postPOComment(targetId, messageText, taggedUserIds)
+    postPOComment(targetId, messageText, taggedUserIds, replyId)
       .then(() => {
         onAddActivity(
           `Added discussion comment on ${selectedPO.id}`,
@@ -2010,9 +2020,22 @@ Supply Chain CRM Coordinator`;
                                   {comment.role}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-400 font-mono">
-                                {comment.timestamp}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {comment.timestamp}
+                                </span>
+                                <button
+                                  type="button"
+                                  title="Reply"
+                                  onClick={() => {
+                                    setReplyToCommentId(comment.id);
+                                    setReplyToUser(comment.user);
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-200 rounded-md transition"
+                                >
+                                  <Reply className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
                             <p className="text-xs text-slate-700 leading-relaxed">
                               {comment.message}
@@ -2033,78 +2056,101 @@ Supply Chain CRM Coordinator`;
 
                   <form
                     onSubmit={handlePostComment}
-                    className="flex gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
+                    className="flex flex-col gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
                   >
-                    <div className="flex-1 relative">
-                      {showMentionDropdown &&
-                        reduxUsers &&
-                        reduxUsers.length > 0 && (
-                          <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
-                            <div className="max-h-48 overflow-y-auto py-1">
-                              {reduxUsers
-                                .filter((u) => {
-                                  const searchTargets = [
-                                    (u.full_name || '').toLowerCase(),
-                                    (u.username || '').toLowerCase(),
-                                    (u.first_name || '').toLowerCase(),
-                                    (u.last_name || '').toLowerCase(),
-                                    (u.email || '').toLowerCase(),
-                                  ];
-                                  return (
-                                    !mentionFilter ||
-                                    searchTargets.some((t) =>
-                                      t.includes(mentionFilter),
-                                    )
-                                  );
-                                })
-                                .map((u) => {
-                                  const displayName =
-                                    u.full_name ||
-                                    u.username ||
-                                    `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                    u.email;
-                                  const initial = (
-                                    displayName[0] || 'U'
-                                  ).toUpperCase();
-                                  return (
-                                    <button
-                                      key={u.id}
-                                      type="button"
-                                      onClick={() => handleSelectMention(u)}
-                                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
-                                    >
-                                      <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                                        {initial}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-slate-700 truncate">
-                                          {displayName}
+                    {replyToUser && (
+                      <div className="flex items-center justify-between bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg animate-fadeIn">
+                        <div className="flex items-center gap-2 text-xs text-indigo-700">
+                          <Reply className="h-3.5 w-3.5" />
+                          <span>
+                            Replying to{' '}
+                            <span className="font-bold">{replyToUser}</span>
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReplyToCommentId(null);
+                            setReplyToUser(null);
+                          }}
+                          className="hover:bg-indigo-100 p-0.5 rounded text-indigo-500 hover:text-indigo-700 transition"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        {showMentionDropdown &&
+                          reduxUsers &&
+                          reduxUsers.length > 0 && (
+                            <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
+                              <div className="max-h-48 overflow-y-auto py-1">
+                                {reduxUsers
+                                  .filter((u) => {
+                                    const searchTargets = [
+                                      (u.full_name || '').toLowerCase(),
+                                      (u.username || '').toLowerCase(),
+                                      (u.first_name || '').toLowerCase(),
+                                      (u.last_name || '').toLowerCase(),
+                                      (u.email || '').toLowerCase(),
+                                    ];
+                                    return (
+                                      !mentionFilter ||
+                                      searchTargets.some((t) =>
+                                        t.includes(mentionFilter),
+                                      )
+                                    );
+                                  })
+                                  .map((u) => {
+                                    const displayName =
+                                      u.full_name ||
+                                      u.username ||
+                                      `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                      u.email;
+                                    const initial = (
+                                      displayName[0] || 'U'
+                                    ).toUpperCase();
+                                    return (
+                                      <button
+                                        key={u.id}
+                                        type="button"
+                                        onClick={() => handleSelectMention(u)}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
+                                      >
+                                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                                          {initial}
                                         </div>
-                                        <div className="text-[10px] text-slate-400 truncate">
-                                          {u.email}
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-semibold text-slate-700 truncate">
+                                            {displayName}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 truncate">
+                                            {u.email}
+                                          </div>
                                         </div>
-                                      </div>
-                                    </button>
-                                  );
-                                })}
+                                      </button>
+                                    );
+                                  })}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      <input
-                        type="text"
-                        placeholder="Type a message... (Use @ to tag)"
-                        value={newCommentText}
-                        onChange={handleCommentTextChange}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-                      />
+                          )}
+                        <input
+                          type="text"
+                          placeholder="Type a message... (Use @ to tag)"
+                          value={newCommentText}
+                          onChange={handleCommentTextChange}
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                      >
+                        <Send className="h-3 w-3" />
+                        <span>Comment</span>
+                      </button>
                     </div>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
-                    >
-                      <Send className="h-3 w-3" />
-                      <span>Comment</span>
-                    </button>
                   </form>
                 </div>
               )}
