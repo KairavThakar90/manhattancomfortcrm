@@ -1452,31 +1452,39 @@ Supply Chain CRM Coordinator`;
       },
       {
         header: 'Product Name',
-        accessor: 'name',
+        accessor: 'name', // Or perhaps accessor isn't strict, but render handles it
         headerClassName: 'px-3 py-2 bg-slate-50',
         className: 'px-3 py-2 max-w-[150px]',
-        render: (item: any) => (
-          <div className="flex items-start gap-1 group">
-            <span
-              className="font-medium text-slate-800 line-clamp-1 cursor-pointer"
-              data-tooltip-id="po-item-tooltip"
-              data-tooltip-content={item.name}
-            >
-              {item.name}
-            </span>
-            <button
-              title="Copy Product Name"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(item.name);
-                toast.success('Product Name copied!');
-              }}
-              className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5"
-            >
-              <Copy className="h-3 w-3" />
-            </button>
-          </div>
-        ),
+        render: (item: any) => {
+          const productName =
+            item.name ||
+            item.product_name ||
+            item.productName ||
+            item.ProductName ||
+            'Unknown Product';
+          return (
+            <div className="flex items-start gap-1 group">
+              <span
+                className="font-medium text-slate-800 line-clamp-1 cursor-pointer"
+                data-tooltip-id="po-item-tooltip"
+                data-tooltip-content={productName}
+              >
+                {productName}
+              </span>
+              <button
+                title="Copy Product Name"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(productName);
+                  toast.success('Product Name copied!');
+                }}
+                className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+            </div>
+          );
+        },
       },
       {
         header: 'Ordered Qty',

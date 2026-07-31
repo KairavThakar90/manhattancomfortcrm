@@ -408,7 +408,13 @@ export default function ItemCommentModal({
             <h2 className="text-lg font-bold text-slate-800">
               {targetItem.sku} Comments
             </h2>
-            <p className="text-sm text-slate-500">{targetItem.name}</p>
+            <p className="text-sm text-slate-500">
+              {targetItem.name ||
+                targetItem.product_name ||
+                targetItem.productName ||
+                targetItem.ProductName ||
+                'Unknown Product'}
+            </p>
           </div>
           <button
             onClick={onClose}

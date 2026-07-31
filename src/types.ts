@@ -22,6 +22,9 @@ export interface POItem {
   id?: string;
   sku: string;
   name: string;
+  product_name?: string;
+  productName?: string;
+  ProductName?: string;
   qty: number;
   receivedQty?: number;
   unitPrice: number;
