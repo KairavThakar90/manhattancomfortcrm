@@ -2097,17 +2097,19 @@ Supply Chain CRM Coordinator`;
 
                                     {/* Action Bar */}
                                     <div className="flex items-center gap-4 mt-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setReplyToCommentId(node.id);
-                                          setReplyToUser(node.user);
-                                          setReplyToText(node.message);
-                                        }}
-                                        className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
-                                      >
-                                        <Reply className="h-3 w-3" /> Reply
-                                      </button>
+                                      {!isMe && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setReplyToCommentId(node.id);
+                                            setReplyToUser(node.user);
+                                            setReplyToText(node.message);
+                                          }}
+                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                        >
+                                          <Reply className="h-3 w-3" /> Reply
+                                        </button>
+                                      )}
 
                                       {node.children.length > 0 && (
                                         <button
