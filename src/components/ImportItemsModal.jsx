@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { read, utils } from 'xlsx';
 import {
-  Upload,
+  Download,
   FileSpreadsheet,
   AlertTriangle,
   Save,
@@ -303,7 +303,7 @@ export default function ImportItemsModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-              <Upload className="w-5 h-5" />
+              <Download className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-800 leading-tight">
