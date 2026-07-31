@@ -220,8 +220,8 @@ export default function ContainerFlowPage() {
           'Unknown Vendor';
 
         const poNumber = po.sellercloud_po_id
-          ? `PO-${po.sellercloud_po_id.toString().replace(/^PO-/, '')}`
-          : po.order_number || po.id;
+          ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}`
+          : String(po.order_number || po.id).replace(/^PO-/, '');
 
         return (
           poNumber?.toString().toLowerCase().includes(q) ||
@@ -252,7 +252,7 @@ export default function ContainerFlowPage() {
 
       return {
         value: po.id,
-        label: `${po.sellercloud_po_id ? `PO-${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : po.order_number || po.id} - ${vendorName}`,
+        label: `${po.sellercloud_po_id ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : String(po.order_number || po.id).replace(/^PO-/i, '')} - ${vendorName}`,
       };
     });
   }, [poList, purchaseOrders, poSearch, vendorsList, selectedPOId]);

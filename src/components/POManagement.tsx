@@ -1061,9 +1061,9 @@ Supply Chain CRM Coordinator`;
             <div className="flex items-center gap-1.5 max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
               <span
                 className="text-slate-900 font-bold font-mono text-[10px] truncate"
-                title={po.id}
+                title={String(po.id).replace(/^PO-/i, '')}
               >
-                {po.id}
+                {String(po.id).replace(/^PO-/i, '')}
               </span>
               {po.delta_sellercloud_link && (
                 <a
