@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Shield,
   Package,
+  UserCog,
 } from 'lucide-react';
 
 export const navItems = [
@@ -71,6 +72,12 @@ export const navItems = [
     label: 'Security Admin Panel',
     icon: Shield,
     comingSoon: true,
+  },
+  {
+    id: 'user-management',
+    path: '/user-management',
+    label: 'User Management',
+    icon: UserCog,
   },
 ];
 
