@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
 import { useCRM } from '../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import Pagination from '../components/common/Pagination';
 import TableLoader from '../components/common/TableLoader';
 import DataTable from '../components/common/DataTable';
@@ -19,6 +20,7 @@ export default function UserManagementPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // Load users on mount
   useEffect(() => {
@@ -89,7 +91,7 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-center gap-2">
             {currentUser?.id && String(currentUser.id) === String(u.id) ? (
               <button
-                onClick={() => toast.info('Change password flow initiated...')}
+                onClick={() => setShowChangePasswordModal(true)}
                 className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition"
                 title="Change Password"
               >
@@ -197,7 +199,13 @@ export default function UserManagementPage() {
       {showAddModal && (
         <AddUserModal
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => fetchUsers(false)}
+          onSuccess={() => dispatch(fetchUsers())}
+        />
+      )}
+
+      {showChangePasswordModal && (
+        <ChangePasswordModal
+          onClose={() => setShowChangePasswordModal(false)}
         />
       )}
     </div>
