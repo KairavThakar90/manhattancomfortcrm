@@ -149,6 +149,8 @@ export const CONTAINERS_EXPORT_CSV = '/containers/export/csv';
 // ------------------------------------------
 export const PO_COMMENTS = (poId: string) =>
   `/purchase-orders/${poId}/comments`;
+export const PO_COMMENT_UPDATE = (commentId: string) =>
+  `/purchase-orders/comments/${commentId}`;
 
 // ------------------------------------------
 // Warehouse Endpoints

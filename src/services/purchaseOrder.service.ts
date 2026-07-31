@@ -8,6 +8,7 @@ import {
   PO_FILTERS_ALL,
   PO_EXPORT_CSV,
   PO_COMMENTS,
+  PO_COMMENT_UPDATE,
   PO_SYNC,
 } from '../utils/endpoints';
 
@@ -174,6 +175,19 @@ export async function postPOComment(
   const { data } = await apiClient.post(PO_COMMENTS(poId), {
     comment: message,
     parent_id: parent_id || null,
+    tagged_user_ids: tagged_user_ids || [],
+  });
+  return data;
+}
+
+/** Update an existing comment */
+export async function updatePOComment(
+  commentId: string,
+  message: string,
+  tagged_user_ids?: string[],
+): Promise<any> {
+  const { data } = await apiClient.put(PO_COMMENT_UPDATE(commentId), {
+    comment: message,
     tagged_user_ids: tagged_user_ids || [],
   });
   return data;

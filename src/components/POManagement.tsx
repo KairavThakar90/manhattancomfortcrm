@@ -39,6 +39,7 @@ import {
   Reply,
   ChevronUp,
   ChevronDown,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -51,6 +52,7 @@ import {
   postPOComment,
   getPurchaseOrderById,
   syncPurchaseOrders,
+  updatePOComment,
 } from '../services/purchaseOrder.service';
 import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
@@ -162,6 +164,10 @@ export default function POManagement({
   const [collapsedComments, setCollapsedComments] = useState<
     Record<string, boolean>
   >({});
+
+  // Editing Comment State
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState<string>('');
 
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -812,6 +818,52 @@ Supply Chain CRM Coordinator`;
     }));
 
     setShowMentionDropdown(false);
+  };
+
+  const handleUpdateSubmit = (commentId: string) => {
+    if (!editingCommentText.trim() || !selectedPO) return;
+
+    // Extract tagged users
+    const words = editingCommentText.trim().split(/\s+/);
+    const taggedUserIds = words
+      .filter((w) => w.startsWith('@'))
+      .map((w) => taggedUserMap[w])
+      .filter(Boolean);
+
+    // Optimistic UI update
+    setFetchedComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
+      ),
+    );
+    setEditingCommentId(null);
+    setEditingCommentText('');
+
+    updatePOComment(commentId, editingCommentText.trim(), taggedUserIds).catch(
+      () => {
+        // Re-fetch invisibly to sync real DB record if it fails or completes
+        const targetId = selectedPO.id.replace(/^PO-/i, '');
+        getPurchaseOrderById(targetId).then((detailData: any) => {
+          if (!detailData) return;
+          const rawComments = detailData.comments || [];
+          const mappedComments = rawComments.map((c: any) => ({
+            id: String(c.id || `COM-${Math.random()}`),
+            poId: selectedPO.id,
+            user: c.user_name || c.user || c.author || 'User',
+            role: c.role || 'Administrator',
+            message: c.comment || c.message || c.text || '',
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
+          }));
+          // Only update if we didn't just switch away to another PO
+          setFetchedComments((current) => {
+            if (current.length > 0 && current[0].poId !== selectedPO.id)
+              return current;
+            return mappedComments;
+          });
+        });
+      },
+    );
   };
 
   // Add a discussion comment — WhatsApp style 'fire and forget'
@@ -2067,9 +2119,9 @@ Supply Chain CRM Coordinator`;
                             return (
                               <div
                                 key={node.id}
-                                className="flex flex-col relative w-full mb-3"
+                                className="flex flex-col relative mb-3"
                               >
-                                <div className="flex gap-3 group relative transition-colors items-start max-w-full">
+                                <div className="flex gap-3 group relative transition-colors items-start">
                                   <div
                                     className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
                                   >
@@ -2091,12 +2143,74 @@ Supply Chain CRM Coordinator`;
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
-                                      {node.message}
-                                    </p>
+                                    {editingCommentId === node.id ? (
+                                      <div className="flex flex-col gap-2 w-full mt-1">
+                                        <textarea
+                                          value={editingCommentText}
+                                          onChange={(e) =>
+                                            setEditingCommentText(
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="w-full text-[13px] text-slate-800 p-2 rounded border border-indigo-200 bg-white focus:outline-hidden focus:border-indigo-400"
+                                          rows={2}
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setEditingCommentId(null);
+                                              setEditingCommentText('');
+                                            }}
+                                            className="text-[11px] text-slate-500 hover:text-slate-700 px-2 py-1"
+                                          >
+                                            Cancel
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleUpdateSubmit(node.id)
+                                            }
+                                            className="text-[11px] bg-indigo-600 text-white font-semibold rounded px-3 py-1 hover:bg-indigo-700"
+                                          >
+                                            Save
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
+                                        {node.message
+                                          .split(/(@[\w.-]+)/g)
+                                          .map((part: string, i: number) =>
+                                            part.startsWith('@') ? (
+                                              <span
+                                                key={i}
+                                                className="font-bold text-indigo-600"
+                                              >
+                                                {part}
+                                              </span>
+                                            ) : (
+                                              part
+                                            ),
+                                          )}
+                                      </p>
+                                    )}
 
                                     {/* Action Bar */}
                                     <div className="flex items-center gap-4 mt-2">
+                                      {isMe && editingCommentId !== node.id && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setEditingCommentId(node.id);
+                                            setEditingCommentText(node.message);
+                                          }}
+                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                        >
+                                          <Pencil className="h-3 w-3" /> Edit
+                                        </button>
+                                      )}
+
                                       {!isMe && (
                                         <button
                                           type="button"
@@ -2142,7 +2256,7 @@ Supply Chain CRM Coordinator`;
 
                                 {/* Nested Children */}
                                 {!isCollapsed && node.children.length > 0 && (
-                                  <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative w-full">
+                                  <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative">
                                     {sortNodes(node.children).map(
                                       (child: any) =>
                                         renderCommentTree(child, depth + 1),
@@ -2196,66 +2310,121 @@ Supply Chain CRM Coordinator`;
                           </button>
                         </div>
                         <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
-                          {replyToText}
+                          {replyToText
+                            ?.split(/(@[\w.-]+)/g)
+                            .map((part: string, i: number) =>
+                              part.startsWith('@') ? (
+                                <span
+                                  key={i}
+                                  className="font-bold text-indigo-500 not-italic"
+                                >
+                                  {part}
+                                </span>
+                              ) : (
+                                part
+                              ),
+                            )}
                         </p>
                       </div>
                     )}
                     <div className="flex gap-2">
                       <div className="flex-1 relative">
-                        {showMentionDropdown &&
-                          reduxUsers &&
-                          reduxUsers.length > 0 && (
-                            <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
-                              <div className="max-h-48 overflow-y-auto py-1">
-                                {reduxUsers
-                                  .filter((u) => {
-                                    const searchTargets = [
-                                      (u.full_name || '').toLowerCase(),
-                                      (u.username || '').toLowerCase(),
-                                      (u.first_name || '').toLowerCase(),
-                                      (u.last_name || '').toLowerCase(),
-                                      (u.email || '').toLowerCase(),
-                                    ];
-                                    return (
-                                      !mentionFilter ||
-                                      searchTargets.some((t) =>
-                                        t.includes(mentionFilter),
-                                      )
-                                    );
-                                  })
-                                  .map((u) => {
-                                    const displayName =
-                                      u.full_name ||
-                                      u.username ||
-                                      `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                      u.email;
-                                    const initial = (
-                                      displayName[0] || 'U'
-                                    ).toUpperCase();
-                                    return (
-                                      <button
-                                        key={u.id}
-                                        type="button"
-                                        onClick={() => handleSelectMention(u)}
-                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
-                                      >
-                                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                                          {initial}
+                        {showMentionDropdown && (
+                          <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
+                            <div className="max-h-48 overflow-y-auto py-1">
+                              {(() => {
+                                let taggableUsers = [...(reduxUsers || [])];
+                                if (selectedPO?.vendorName) {
+                                  taggableUsers.unshift({
+                                    id: selectedPO.vendorId || 'vendor',
+                                    full_name: selectedPO.vendorName,
+                                    username: selectedPO.vendorName.replace(
+                                      /\s+/g,
+                                      '',
+                                    ),
+                                    email: 'Vendor (Owner)',
+                                  });
+                                }
+                                // Remove current user safely by matching actual IDs
+                                if (currentUser) {
+                                  taggableUsers = taggableUsers.filter((u) => {
+                                    if (
+                                      currentUser.id &&
+                                      u.id === currentUser.id
+                                    )
+                                      return false;
+                                    if (
+                                      currentUser.email &&
+                                      u.email === currentUser.email
+                                    )
+                                      return false;
+                                    if (
+                                      currentUser.username &&
+                                      u.username === currentUser.username
+                                    )
+                                      return false;
+                                    return true;
+                                  });
+                                }
+
+                                const filtered = taggableUsers.filter((u) => {
+                                  const searchTargets = [
+                                    (u.full_name || '').toLowerCase(),
+                                    (u.username || '').toLowerCase(),
+                                    (u.first_name || '').toLowerCase(),
+                                    (u.last_name || '').toLowerCase(),
+                                    (u.email || '').toLowerCase(),
+                                  ];
+                                  return (
+                                    !mentionFilter ||
+                                    searchTargets.some((t) =>
+                                      t.includes(mentionFilter),
+                                    )
+                                  );
+                                });
+
+                                if (filtered.length === 0) {
+                                  return (
+                                    <div className="px-3 py-2 text-xs text-slate-400">
+                                      No users found
+                                    </div>
+                                  );
+                                }
+
+                                return filtered.map((u) => {
+                                  const displayName =
+                                    u.full_name ||
+                                    u.username ||
+                                    `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                    u.email;
+                                  const initial = (
+                                    displayName[0] || 'U'
+                                  ).toUpperCase();
+                                  return (
+                                    <button
+                                      key={u.id}
+                                      type="button"
+                                      onClick={() => handleSelectMention(u)}
+                                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                                        {initial}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-slate-700 truncate">
+                                          {displayName}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-semibold text-slate-700 truncate">
-                                            {displayName}
-                                          </div>
-                                          <div className="text-[10px] text-slate-400 truncate">
-                                            {u.email}
-                                          </div>
+                                        <div className="text-[10px] text-slate-400 truncate">
+                                          {u.email}
                                         </div>
-                                      </button>
-                                    );
-                                  })}
-                              </div>
+                                      </div>
+                                    </button>
+                                  );
+                                });
+                              })()}
                             </div>
-                          )}
+                          </div>
+                        )}
                         <input
                           type="text"
                           placeholder="Type a message... (Use @ to tag)"
