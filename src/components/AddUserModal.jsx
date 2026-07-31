@@ -98,9 +98,11 @@ export default function AddUserModal({ onClose, onSuccess }) {
             <input
               type="text"
               value={formData.firstName}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, firstName: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((p) => ({ ...p, firstName: e.target.value }));
+                if (errors.firstName)
+                  setErrors((p) => ({ ...p, firstName: undefined }));
+              }}
               placeholder="e.g. Jane"
               className={`w-full px-3 py-2 text-sm bg-slate-50 border ${errors.firstName ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg focus:outline-none focus:ring-2 transition-colors`}
             />
@@ -118,9 +120,11 @@ export default function AddUserModal({ onClose, onSuccess }) {
             <input
               type="text"
               value={formData.lastName}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, lastName: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((p) => ({ ...p, lastName: e.target.value }));
+                if (errors.lastName)
+                  setErrors((p) => ({ ...p, lastName: undefined }));
+              }}
               placeholder="e.g. Doe"
               className={`w-full px-3 py-2 text-sm bg-slate-50 border ${errors.lastName ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg focus:outline-none focus:ring-2 transition-colors`}
             />
@@ -138,9 +142,11 @@ export default function AddUserModal({ onClose, onSuccess }) {
             <input
               type="email"
               value={formData.email}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, email: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((p) => ({ ...p, email: e.target.value }));
+                if (errors.email)
+                  setErrors((p) => ({ ...p, email: undefined }));
+              }}
               placeholder="e.g. jane@company.com"
               className={`w-full px-3 py-2 text-sm bg-slate-50 border ${errors.email ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg focus:outline-none focus:ring-2 transition-colors`}
             />
@@ -158,9 +164,11 @@ export default function AddUserModal({ onClose, onSuccess }) {
             <input
               type="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData((p) => ({ ...p, password: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((p) => ({ ...p, password: e.target.value }));
+                if (errors.password)
+                  setErrors((p) => ({ ...p, password: undefined }));
+              }}
               placeholder="Create a strong password"
               className={`w-full px-3 py-2 text-sm bg-slate-50 border ${errors.password ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg focus:outline-none focus:ring-2 transition-colors`}
             />
