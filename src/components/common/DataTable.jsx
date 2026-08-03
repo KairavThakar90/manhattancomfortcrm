@@ -33,7 +33,7 @@ export default function DataTable({
   emptyMessage = 'No records found.',
   isLoading = false,
   containerClassName = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col',
-  tableWrapperClassName = 'overflow-y-auto flex-1 custom-scrollbar',
+  tableWrapperClassName = 'overflow-auto flex-1 custom-scrollbar',
   tableClassName = 'w-full text-left text-sm border-collapse',
   theadClassName = 'bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px] sticky top-0 z-10',
   defaultThClassName = 'px-6 py-4 bg-slate-50',

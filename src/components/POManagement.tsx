@@ -1805,31 +1805,31 @@ Supply Chain CRM Coordinator`;
               }
             />
           )}
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
-            <DataTable
-              columns={poColumns}
-              data={paginatedPOs}
-              keyField="id"
-              theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
-              tableClassName="w-full text-left text-xs border-collapse"
-              tbodyClassName="divide-y divide-slate-100"
-              trClassName={(po: any) =>
-                `transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : 'hover:bg-slate-50/75'}`
-              }
-              emptyMessage="No Purchase Orders found matching search or filter parameters."
-            />
-          </div>
-
-          {/* Pagination Footer */}
-          {filteredPOs.length > 0 && (
-            <Pagination
-              currentPage={normalizedCurrentPage}
-              totalCount={validTotalCount}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          )}
+          <DataTable
+            columns={poColumns}
+            data={paginatedPOs}
+            keyField="id"
+            containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
+            tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+            tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+            tbodyClassName="divide-y divide-slate-100"
+            trClassName={(po: any) =>
+              `transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : 'hover:bg-slate-50/75'}`
+            }
+            emptyMessage="No Purchase Orders found matching search or filter parameters."
+            pagination={
+              filteredPOs.length > 0 ? (
+                <Pagination
+                  currentPage={normalizedCurrentPage}
+                  totalCount={validTotalCount}
+                  pageSize={pageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                />
+              ) : null
+            }
+          />
         </div>
       )}
 
@@ -2134,20 +2134,20 @@ Supply Chain CRM Coordinator`;
                         <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
                           Item Specifications (Products)
                         </h5>
-                        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg border border-slate-100 bg-white">
-                          <DataTable
-                            columns={poItemColumns}
-                            data={paginatedItems}
-                            keyField="sku"
-                            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
-                            tableClassName="w-full text-left text-xs border-collapse"
-                            tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                            trClassName={(item: any) =>
-                              `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
-                            }
-                            emptyMessage="No items specified for this purchase order."
-                          />
-                        </div>
+                        <DataTable
+                          columns={poItemColumns}
+                          data={paginatedItems}
+                          keyField="sku"
+                          containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
+                          tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                          theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
+                          tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+                          tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                          trClassName={(item: any) =>
+                            `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
+                          }
+                          emptyMessage="No items specified for this purchase order."
+                        />
                         <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
                           <Tooltip
                             id="po-item-tooltip"

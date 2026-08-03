@@ -1133,34 +1133,36 @@ export default function ContainerFlowPage() {
                 }
               />
             )}
-            <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
-              <DataTable
-                columns={containerColumns}
-                data={paginatedContainers}
-                keyField="id"
-                theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
-                tableClassName="w-full text-left text-xs border-collapse"
-                tbodyClassName="divide-y divide-slate-100"
-                trClassName="hover:bg-slate-50/75 transition"
-                emptyMessage={
-                  listSearchQuery
-                    ? 'No containers found matching your search.'
-                    : 'No containers assigned yet. Click "Add Container" to start.'
-                }
-              />
-            </div>
-            {filteredContainers.length > 0 && (
-              <Pagination
-                currentPage={listPage}
-                totalCount={filteredContainers.length}
-                pageSize={listPageSize}
-                onPageChange={handleContainerPageChange}
-                onPageSizeChange={(size) => {
-                  setListPageSize(size);
-                  handleContainerPageChange(1);
-                }}
-              />
-            )}
+            <DataTable
+              columns={containerColumns}
+              data={paginatedContainers}
+              keyField="id"
+              containerClassName="flex-1 flex flex-col min-h-0 w-full"
+              tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+              theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+              tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+              tbodyClassName="divide-y divide-slate-100"
+              trClassName="hover:bg-slate-50/75 transition"
+              emptyMessage={
+                listSearchQuery
+                  ? 'No containers found matching your search.'
+                  : 'No containers assigned yet. Click "Add Container" to start.'
+              }
+              pagination={
+                filteredContainers.length > 0 ? (
+                  <Pagination
+                    currentPage={listPage}
+                    totalCount={filteredContainers.length}
+                    pageSize={listPageSize}
+                    onPageChange={handleContainerPageChange}
+                    onPageSizeChange={(size) => {
+                      setListPageSize(size);
+                      handleContainerPageChange(1);
+                    }}
+                  />
+                ) : null
+              }
+            />
           </div>
         </div>
 

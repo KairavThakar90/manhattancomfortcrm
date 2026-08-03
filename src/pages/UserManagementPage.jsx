@@ -165,34 +165,34 @@ export default function UserManagementPage() {
 
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {loading && <TableLoader message="Loading users..." />}
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 scroll-smooth">
-            <DataTable
-              columns={userColumns}
-              data={paginatedUsers}
-              keyField="id"
-              theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
-              tableClassName="w-full text-left text-xs border-collapse"
-              tbodyClassName="divide-y divide-slate-100"
-              trClassName="hover:bg-slate-50 hover:bg-opacity-50 transition"
-              emptyMessage={
-                searchQuery
-                  ? 'No users matched your search.'
-                  : 'No users found.'
-              }
-            />
-          </div>
-          {filteredUsers.length > 0 && (
-            <Pagination
-              currentPage={page}
-              totalCount={filteredUsers.length}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          )}
+          <DataTable
+            columns={userColumns}
+            data={paginatedUsers}
+            keyField="id"
+            containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
+            tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+            tableClassName="w-full text-left text-xs border-collapse"
+            tbodyClassName="divide-y divide-slate-100"
+            trClassName="hover:bg-slate-50 hover:bg-opacity-50 transition"
+            emptyMessage={
+              searchQuery ? 'No users matched your search.' : 'No users found.'
+            }
+            pagination={
+              filteredUsers.length > 0 ? (
+                <Pagination
+                  currentPage={page}
+                  totalCount={filteredUsers.length}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              ) : null
+            }
+          />
         </div>
       </div>
 
