@@ -10,7 +10,6 @@ import { useCRM } from '../hooks/useCRM';
 import {
   getPurchaseOrders,
   createPurchaseOrder,
-  patchPurchaseOrder,
   getPurchaseOrderById,
   getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
@@ -339,139 +338,7 @@ export default function POManagementPage() {
     (state) => state.purchaseOrders.kanbanList || {},
   );
 
-  // Fetch single purchase order details dynamically on selection
-  useEffect(() => {
-    if (!selectedPOId) return;
 
-    // Find the current PO in context to find its database UUID
-    let currentPO = purchaseOrders.find(
-      (p) => p.id === selectedPOId || p.uuid === selectedPOId,
-    );
-
-    if (!currentPO && kanbanList) {
-      for (const key of Object.keys(kanbanList)) {
-        const found = kanbanList[key].find(
-          (p) => p.id === selectedPOId || p.uuid === selectedPOId,
-        );
-        if (found) {
-          currentPO = found;
-          break;
-        }
-      }
-    }
-
-    if (!currentPO) return;
-
-    const dbId = currentPO.uuid || selectedPOId;
-    let cancelled = false;
-
-    async function fetchDetailedPO() {
-      try {
-        const poData = await getPurchaseOrderById(dbId);
-        if (!cancelled && poData) {
-          const frontVendorId = poData.vendor_id || 'N/A';
-          const vendor = vendors.find((v) => v.id === poData.vendor_id);
-          const vendorName =
-            poData.vendor?.name || vendor?.name || poData.vendor_name || 'N/A';
-
-          const orderedQty = poData.items
-            ? poData.items.reduce(
-                (sum, item) => sum + (item.qty_ordered || 0),
-                0,
-              )
-            : 0;
-          const receivedQty = poData.items
-            ? poData.items.reduce(
-                (sum, item) => sum + (item.qty_received || 0),
-                0,
-              )
-            : 0;
-
-          let status = poData.status_label || 'N/A';
-
-          let eta = poData.expected_delivery_date
-            ? poData.expected_delivery_date.split('T')[0]
-            : 'N/A';
-
-          const creationDate = poData.created_on
-            ? poData.created_on.split('T')[0]
-            : 'N/A';
-
-          const mergedCommentsCount =
-            poData.commentsCount ??
-            poData.comments_count ??
-            (poData.comments
-              ? poData.comments.length
-              : currentPO.commentsCount || 0);
-
-          const updatedPO = {
-            ...currentPO,
-            vendorName,
-            orderedQty,
-            receivedQty,
-            status,
-            eta,
-            expected_delivery_date: eta,
-            commentsCount: mergedCommentsCount,
-            containerNames:
-              poData.container_names && poData.container_names.length > 0
-                ? poData.container_names
-                : currentPO.containerNames || [],
-            items: poData.items
-              ? poData.items.map((item) => {
-                  const currentItem = currentPO.items?.find(
-                    (i) => i.sku === item.sku,
-                  );
-                  return {
-                    sku: item.sku || 'N/A',
-                    name: item.product_name || item.name || 'N/A',
-                    qty:
-                      item.qty_ordered !== undefined
-                        ? item.qty_ordered
-                        : item.qty || 0,
-                    receivedQty:
-                      item.qty_received !== undefined
-                        ? item.qty_received
-                        : item.receivedQty || 0,
-                    unitPrice:
-                      item.unit_price !== undefined
-                        ? item.unit_price
-                        : item.unitPrice || 0,
-                    expected_delivery_date: item.expected_delivery_date
-                      ? item.expected_delivery_date.split('T')[0]
-                      : currentItem?.expected_delivery_date || null,
-                    containers:
-                      item.containers && item.containers.length > 0
-                        ? item.containers
-                        : currentItem?.containers || [],
-                  };
-                })
-              : currentPO.items || [],
-          };
-
-          const updatedList = purchaseOrders.map((p) =>
-            p.id === currentPO.id ? updatedPO : p,
-          );
-
-          if (!purchaseOrders.some((p) => p.id === currentPO.id)) {
-            updatedList.push(updatedPO);
-          }
-
-          handleUpdatePOs(updatedList);
-          dispatch(setPurchaseOrdersList(updatedList));
-        }
-      } catch (err) {
-        console.error('Failed to load detailed PO items from API:', err);
-      }
-    }
-
-    fetchDetailedPO();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPOId]);
 
   // Initial loading is now handled natively via the TableLoader passed inside POManagement
 
@@ -500,38 +367,10 @@ export default function POManagementPage() {
       (p) => p.id === po.id || p.uuid === po.uuid,
     );
     if (exists) {
-      // Find database UUID
-      const originalPO = purchaseOrders.find(
-        (p) => p.id === po.id || p.uuid === po.uuid,
-      );
-      const dbId = originalPO?.uuid || po.uuid || po.id;
-
       // Optimistic update of local state
       const updated = purchaseOrders.map((p) => (p.id === po.id ? po : p));
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
-
-      try {
-        await patchPurchaseOrder(dbId, {
-          status: po.status,
-          eta: po.eta,
-          container: po.container,
-          productionStage: po.productionStage,
-          container_lead_time_days:
-            po.containerLeadTimeDays || po.container_lead_time_days || null,
-          items: po.items?.map((it) => ({
-            sku: it.sku,
-            product_name: it.name,
-            qty_ordered: it.qty,
-            unit_price: it.unitPrice,
-          })),
-        });
-
-        // Background call to purchase order API
-        setRefreshTrigger((prev) => prev + 1);
-      } catch (err) {
-        console.error('Failed to sync PO update to backend API:', err);
-      }
     } else {
       // Optimistic create UI state
       const mockId = po.id || `PO-${Math.floor(10000 + Math.random() * 90000)}`;

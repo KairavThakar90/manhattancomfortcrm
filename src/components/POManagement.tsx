@@ -220,19 +220,40 @@ export default function POManagement({
       : d.toISOString().slice(0, 16).replace('T', ' ');
   };
 
+  const isPoMatch = (po: any, targetId: string | number | null | undefined) => {
+    if (!targetId || !po) return false;
+    const cleanTarget = String(targetId).replace(/^PO-/i, '').trim();
+    const cleanId = String(po.id || '').replace(/^PO-/i, '').trim();
+    const cleanUuid = String(po.uuid || '').trim();
+    const cleanScId = String(po.sellercloud_po_id || '').trim();
+
+    return (
+      po.id === targetId ||
+      po.uuid === targetId ||
+      po.sellercloud_po_id === targetId ||
+      (cleanId && cleanId === cleanTarget) ||
+      (cleanUuid && cleanUuid === cleanTarget) ||
+      (cleanScId && cleanScId === cleanTarget)
+    );
+  };
+
   useEffect(() => {
     if (selectedPOId) {
-      const po = purchaseOrders.find((p: any) => p.id === selectedPOId);
+      const po = purchaseOrders.find((p: any) => isPoMatch(p, selectedPOId));
       if (po && po.containerLeadTimeDays) {
         setLeadTimeDays(po.containerLeadTimeDays.toString());
       } else {
         setLeadTimeDays('');
       }
 
-      const targetId = po?.uuid || selectedPOId;
+      const targetId =
+        po?.sellercloud_po_id ||
+        String(selectedPOId).replace(/^PO-/i, '') ||
+        po?.uuid;
       setIsLoadingComments(true);
       getPurchaseOrderById(targetId)
         .then((detailData: any) => {
+          if (!detailData) return;
           const rawComments = detailData?.comments || [];
           const mappedComments = rawComments.map((c: any) => ({
             id: String(c.id || `COM-${Math.random()}`),
@@ -246,6 +267,74 @@ export default function POManagement({
           }));
           setFetchedComments(mappedComments);
           setDetailedPOItems(detailData?.items || []);
+
+          if (po) {
+            const calculatedOrderedQty = detailData.items
+              ? detailData.items.reduce(
+                  (sum: number, i: any) =>
+                    sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                  0,
+                )
+              : po.orderedQty;
+            const calculatedReceivedQty = detailData.items
+              ? detailData.items.reduce(
+                  (sum: number, i: any) =>
+                    sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                  0,
+                )
+              : po.receivedQty;
+
+            const updatedPO = {
+              ...po,
+              orderedQty: calculatedOrderedQty || po.orderedQty || 0,
+              receivedQty: calculatedReceivedQty || po.receivedQty || 0,
+              commentsCount: mappedComments.length,
+              items: detailData.items
+                ? detailData.items.map((item: any) => ({
+                    ...item,
+                    sku: item.sku || 'N/A',
+                    name: item.product_name || item.name || 'N/A',
+                    qty_ordered:
+                      item.qty_ordered !== undefined
+                        ? item.qty_ordered
+                        : item.qty || 0,
+                    qty_received:
+                      item.qty_received !== undefined
+                        ? item.qty_received
+                        : item.receivedQty || 0,
+                    qty_remaining:
+                      item.qty_remaining !== undefined && item.qty_remaining !== null
+                        ? item.qty_remaining
+                        : Math.max(
+                            0,
+                            (item.qty_ordered ?? item.qty ?? 0) -
+                              (item.qty_received ?? item.receivedQty ?? 0),
+                          ),
+                    qty:
+                      item.qty_ordered !== undefined
+                        ? item.qty_ordered
+                        : item.qty || 0,
+                    receivedQty:
+                      item.qty_received !== undefined
+                        ? item.qty_received
+                        : item.receivedQty || 0,
+                    unitPrice:
+                      item.unit_price !== undefined
+                        ? item.unit_price
+                        : item.unitPrice || 0,
+                    expected_delivery_date: item.expected_delivery_date
+                      ? item.expected_delivery_date.split('T')[0]
+                      : null,
+                    containers: item.containers || [],
+                  }))
+                : po.items,
+              containerNames:
+                detailData.container_names && detailData.container_names.length > 0
+                  ? detailData.container_names
+                  : po.containerNames,
+            };
+            onUpdatePO(updatedPO);
+          }
         })
         .catch((err) => {
           console.error('Failed to fetch PO details for comments', err);
@@ -502,10 +591,10 @@ export default function POManagement({
       ? filteredPOs
       : filteredPOs.slice(startIndex, endIndex);
 
-  let selectedPO = purchaseOrders.find((po) => po.id === selectedPOId);
+  let selectedPO = purchaseOrders.find((po: any) => isPoMatch(po, selectedPOId));
   if (!selectedPO && kanbanList) {
     for (const key of Object.keys(kanbanList)) {
-      const found = kanbanList[key].find((po: any) => po.id === selectedPOId);
+      const found = kanbanList[key].find((po: any) => isPoMatch(po, selectedPOId));
       if (found) {
         selectedPO = found;
         break;
@@ -1491,45 +1580,68 @@ Supply Chain CRM Coordinator`;
         accessor: 'qty',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-medium',
-        render: (item: any) => (item.qty || 0).toLocaleString(),
+        render: (item: any) => {
+          const qty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
+          return Number(qty).toLocaleString();
+        },
       },
       {
         header: 'Received Qty',
         accessor: 'receivedQty',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
-        render: (item: any) =>
-          (item.receivedQty !== undefined
-            ? item.receivedQty
-            : 0
-          ).toLocaleString(),
+        render: (item: any) => {
+          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          return Number(rQty).toLocaleString();
+        },
       },
       {
         header: 'Remaining Qty',
         accessor: 'remainingQty',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
-        className: (item: any) =>
-          `px-3 py-2 text-right font-mono ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`,
-        render: (item: any) =>
-          Math.max(
-            0,
-            (item.qty || 0) - (item.receivedQty || 0),
-          ).toLocaleString(),
+        className: (item: any) => {
+          const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
+          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          const remQty =
+            item.qty_remaining !== undefined && item.qty_remaining !== null
+              ? item.qty_remaining
+              : item.remainingQty !== undefined && item.remainingQty !== null
+              ? item.remainingQty
+              : Math.max(0, oQty - rQty);
+          return `px-3 py-2 text-right font-mono ${remQty > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`;
+        },
+        render: (item: any) => {
+          const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
+          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          const remQty =
+            item.qty_remaining !== undefined && item.qty_remaining !== null
+              ? item.qty_remaining
+              : item.remainingQty !== undefined && item.remainingQty !== null
+              ? item.remainingQty
+              : Math.max(0, oQty - rQty);
+          return Number(remQty).toLocaleString();
+        },
       },
       {
         header: 'Unit Price',
         accessor: 'unitPrice',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
-        render: (item: any) => `$${(item.unitPrice || 0).toFixed(2)}`,
+        render: (item: any) => {
+          const uPrice = item.unit_price ?? item.unitPrice ?? item.price ?? 0;
+          return `$${Number(uPrice).toFixed(2)}`;
+        },
       },
       {
         header: 'Total',
         accessor: 'total',
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-bold text-slate-800',
-        render: (item: any) =>
-          `$${((item.qty || 0) * (item.unitPrice || 0)).toFixed(2)}`,
+        render: (item: any) => {
+          const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
+          const uPrice = item.unit_price ?? item.unitPrice ?? item.price ?? 0;
+          return `$${(Number(oQty) * Number(uPrice)).toFixed(2)}`;
+        },
       },
       {
         header: 'Container/Items Count',
@@ -1815,7 +1927,7 @@ Supply Chain CRM Coordinator`;
             tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-slate-100"
             trClassName={(po: any) =>
-              `transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : 'hover:bg-slate-50/75'}`
+              `transition ${isPoMatch(po, selectedPOId) ? 'bg-indigo-50/20 font-medium' : 'hover:bg-slate-50/75'}`
             }
             emptyMessage="No Purchase Orders found matching search or filter parameters."
             pagination={
@@ -2047,7 +2159,13 @@ Supply Chain CRM Coordinator`;
                             Ordered Quantity
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.orderedQty} units
+                            {selectedPO.orderedQty ||
+                              paginatedItems.reduce(
+                                (sum: number, i: any) =>
+                                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                                0,
+                              )}{' '}
+                            units
                           </strong>
                         </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
@@ -2055,7 +2173,13 @@ Supply Chain CRM Coordinator`;
                             Received Quantity
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.receivedQty} units
+                            {selectedPO.receivedQty ||
+                              paginatedItems.reduce(
+                                (sum: number, i: any) =>
+                                  sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                                0,
+                              )}{' '}
+                            units
                           </strong>
                         </div>
                         <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
@@ -2065,7 +2189,18 @@ Supply Chain CRM Coordinator`;
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {Math.max(
                               0,
-                              selectedPO.orderedQty - selectedPO.receivedQty,
+                              (selectedPO.orderedQty ||
+                                paginatedItems.reduce(
+                                  (sum: number, i: any) =>
+                                    sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                                  0,
+                                )) -
+                                (selectedPO.receivedQty ||
+                                  paginatedItems.reduce(
+                                    (sum: number, i: any) =>
+                                      sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                                    0,
+                                  )),
                             )}{' '}
                             units
                           </strong>
