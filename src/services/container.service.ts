@@ -50,7 +50,10 @@ export async function getContainerDetails(id: string | number) {
 }
 
 export async function syncContainers() {
-  const { data } = await apiClient.post(CONTAINER_SYNC);
+  // Pass timeout: 0 to disable the global timeout limit entirely for this sync operation
+  const { data } = await apiClient.post(CONTAINER_SYNC, undefined, {
+    timeout: 0,
+  });
   return data;
 }
 

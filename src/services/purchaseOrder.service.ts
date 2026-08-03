@@ -195,9 +195,14 @@ export async function updatePOComment(
   return data;
 }
 
-/** Sync POs from SellerCloud */
 export async function syncPurchaseOrders(viewId: string = '25'): Promise<any> {
-  const { data } = await apiClient.post(`${PO_SYNC}?view_id=${viewId}`);
+  const { data } = await apiClient.post(
+    `${PO_SYNC}?view_id=${viewId}`,
+    undefined,
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 
