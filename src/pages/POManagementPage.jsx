@@ -166,6 +166,10 @@ export default function POManagementPage() {
               status,
               orderedQty,
               receivedQty,
+              total_item_count: po.total_item_count,
+              total_qty_ordered: po.total_qty_ordered,
+              total_qty_received: po.total_qty_received,
+              total_qty_remaining: po.total_qty_remaining,
               container: po.container || 'N/A',
               containerNames: po.container_names || [],
               invoiceStatus: po.invoice_status || po.invoiceStatus || null,
@@ -215,6 +219,7 @@ export default function POManagementPage() {
                 : po.items || [],
               productionStage: po.productionStage || 'Assembly',
               commentsCount:
+                po.total_comments_count ??
                 po.commentsCount ??
                 po.comments_count ??
                 (po.comments ? po.comments.length : 0),
@@ -337,8 +342,6 @@ export default function POManagementPage() {
   const kanbanList = useSelector(
     (state) => state.purchaseOrders.kanbanList || {},
   );
-
-
 
   // Initial loading is now handled natively via the TableLoader passed inside POManagement
 

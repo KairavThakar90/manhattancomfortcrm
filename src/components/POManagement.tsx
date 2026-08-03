@@ -223,7 +223,9 @@ export default function POManagement({
   const isPoMatch = (po: any, targetId: string | number | null | undefined) => {
     if (!targetId || !po) return false;
     const cleanTarget = String(targetId).replace(/^PO-/i, '').trim();
-    const cleanId = String(po.id || '').replace(/^PO-/i, '').trim();
+    const cleanId = String(po.id || '')
+      .replace(/^PO-/i, '')
+      .trim();
     const cleanUuid = String(po.uuid || '').trim();
     const cleanScId = String(po.sellercloud_po_id || '').trim();
 
@@ -279,7 +281,8 @@ export default function POManagement({
             const calculatedReceivedQty = detailData.items
               ? detailData.items.reduce(
                   (sum: number, i: any) =>
-                    sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                    sum +
+                    (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
                   0,
                 )
               : po.receivedQty;
@@ -303,7 +306,8 @@ export default function POManagement({
                         ? item.qty_received
                         : item.receivedQty || 0,
                     qty_remaining:
-                      item.qty_remaining !== undefined && item.qty_remaining !== null
+                      item.qty_remaining !== undefined &&
+                      item.qty_remaining !== null
                         ? item.qty_remaining
                         : Math.max(
                             0,
@@ -329,7 +333,8 @@ export default function POManagement({
                   }))
                 : po.items,
               containerNames:
-                detailData.container_names && detailData.container_names.length > 0
+                detailData.container_names &&
+                detailData.container_names.length > 0
                   ? detailData.container_names
                   : po.containerNames,
             };
@@ -591,10 +596,14 @@ export default function POManagement({
       ? filteredPOs
       : filteredPOs.slice(startIndex, endIndex);
 
-  let selectedPO = purchaseOrders.find((po: any) => isPoMatch(po, selectedPOId));
+  let selectedPO = purchaseOrders.find((po: any) =>
+    isPoMatch(po, selectedPOId),
+  );
   if (!selectedPO && kanbanList) {
     for (const key of Object.keys(kanbanList)) {
-      const found = kanbanList[key].find((po: any) => isPoMatch(po, selectedPOId));
+      const found = kanbanList[key].find((po: any) =>
+        isPoMatch(po, selectedPOId),
+      );
       if (found) {
         selectedPO = found;
         break;
@@ -1166,6 +1175,19 @@ Supply Chain CRM Coordinator`;
                   <ExternalLink className="h-3 w-3" />
                 </a>
               )}
+              <button
+                type="button"
+                title="View PO Insights"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  setIsCommentOnlyView(false);
+                  onSelectPO(po.id);
+                  setActiveDrawerSection('details');
+                }}
+                className="text-slate-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0 ml-0.5"
+              >
+                <Eye className="h-3 w-3" />
+              </button>
               {po.status === 'Delayed' && (
                 <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
               )}
@@ -1260,34 +1282,43 @@ Supply Chain CRM Coordinator`;
         accessor: 'items',
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4',
-        render: (po: any) => (
-          <span
-            title={
-              po.items && po.items.length > 0
-                ? po.items.map((item: any) => item.name).join(', ')
-                : 'N/A'
-            }
-            className={
-              !po.items || po.items.length === 0
-                ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
-                : 'text-[11px] font-bold text-slate-700'
-            }
-          >
-            {po.items && po.items.length > 0 ? po.items.length : 'N/A'}
-          </span>
-        ),
+        render: (po: any) => {
+          const itemCount =
+            po.total_item_count ??
+            (po.items && po.items.length > 0 ? po.items.length : 'N/A');
+          return (
+            <span
+              title={
+                po.items && po.items.length > 0
+                  ? po.items.map((item: any) => item.name).join(', ')
+                  : 'N/A'
+              }
+              className={
+                itemCount === 'N/A' || itemCount === 0
+                  ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                  : 'text-[11px] font-bold text-slate-700'
+              }
+            >
+              {itemCount}
+            </span>
+          );
+        },
       },
       {
         header: 'Ordered / Received Qty',
         accessor: 'orderedQty',
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-600',
-        render: (po: any) => (
-          <>
-            <span className="font-bold text-slate-800">{po.orderedQty}</span>
-            <span className="text-slate-400"> / {po.receivedQty}</span>
-          </>
-        ),
+        render: (po: any) => {
+          const ordered = po.total_qty_ordered ?? po.orderedQty ?? 0;
+          const received = po.total_qty_received ?? po.receivedQty ?? 0;
+          return (
+            <>
+              <span className="font-bold text-slate-800">{ordered}</span>
+              <span className="text-slate-400"> / {received}</span>
+            </>
+          );
+        },
       },
       {
         header: (
@@ -1457,7 +1488,8 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-4 py-4 bg-slate-50 text-center flex-shrink-0 w-20',
         className: 'px-4 py-4 text-center',
         render: (po: any) => {
-          const count = parseInt(po.commentsCount, 10) || 0;
+          const count =
+            parseInt(po.total_comments_count ?? po.commentsCount, 10) || 0;
           const hasComments = count > 0;
           return (
             <button
@@ -1591,7 +1623,8 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
         render: (item: any) => {
-          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          const rQty =
+            item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
           return Number(rQty).toLocaleString();
         },
       },
@@ -1601,24 +1634,26 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-3 py-2 bg-slate-50 text-right',
         className: (item: any) => {
           const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
-          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          const rQty =
+            item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
           const remQty =
             item.qty_remaining !== undefined && item.qty_remaining !== null
               ? item.qty_remaining
               : item.remainingQty !== undefined && item.remainingQty !== null
-              ? item.remainingQty
-              : Math.max(0, oQty - rQty);
+                ? item.remainingQty
+                : Math.max(0, oQty - rQty);
           return `px-3 py-2 text-right font-mono ${remQty > 0 ? 'text-amber-700 font-bold' : 'font-medium text-slate-500'}`;
         },
         render: (item: any) => {
           const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
-          const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+          const rQty =
+            item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
           const remQty =
             item.qty_remaining !== undefined && item.qty_remaining !== null
               ? item.qty_remaining
               : item.remainingQty !== undefined && item.remainingQty !== null
-              ? item.remainingQty
-              : Math.max(0, oQty - rQty);
+                ? item.remainingQty
+                : Math.max(0, oQty - rQty);
           return Number(remQty).toLocaleString();
         },
       },
@@ -2162,7 +2197,8 @@ Supply Chain CRM Coordinator`;
                             {selectedPO.orderedQty ||
                               paginatedItems.reduce(
                                 (sum: number, i: any) =>
-                                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                                  sum +
+                                  (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
                                 0,
                               )}{' '}
                             units
@@ -2176,7 +2212,11 @@ Supply Chain CRM Coordinator`;
                             {selectedPO.receivedQty ||
                               paginatedItems.reduce(
                                 (sum: number, i: any) =>
-                                  sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                                  sum +
+                                  (i.qty_received ??
+                                    i.receivedQty ??
+                                    i.received_qty ??
+                                    0),
                                 0,
                               )}{' '}
                             units
@@ -2192,13 +2232,21 @@ Supply Chain CRM Coordinator`;
                               (selectedPO.orderedQty ||
                                 paginatedItems.reduce(
                                   (sum: number, i: any) =>
-                                    sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                                    sum +
+                                    (i.qty_ordered ??
+                                      i.qty ??
+                                      i.orderedQty ??
+                                      0),
                                   0,
                                 )) -
                                 (selectedPO.receivedQty ||
                                   paginatedItems.reduce(
                                     (sum: number, i: any) =>
-                                      sum + (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                                      sum +
+                                      (i.qty_received ??
+                                        i.receivedQty ??
+                                        i.received_qty ??
+                                        0),
                                     0,
                                   )),
                             )}{' '}
