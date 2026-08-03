@@ -297,10 +297,24 @@ export default function ContainerFlowPage() {
   const fetchTablePage = useCallback(async () => {
     try {
       setListLoading(true);
-      const data = await getContainers();
+      const data = await getContainers({
+        page: listPage,
+        page_size: listPageSize,
+        search: listSearchQuery,
+      });
       const results = Array.isArray(data)
         ? data
         : data.results || data.data || data.items || [];
+
+      const count =
+        data.count !== undefined
+          ? data.count
+          : data.total ||
+            data.total_count ||
+            data.totalElements ||
+            results.length;
+      setTotalListCount(count);
+
       dispatch(setContainersList(results));
     } catch (err) {
       console.error('Failed to fetch table containers', err);
@@ -308,7 +322,7 @@ export default function ContainerFlowPage() {
       setListLoading(false);
       setHasLoadedInitial(true);
     }
-  }, [dispatch]);
+  }, [dispatch, listPage, listPageSize, listSearchQuery]);
 
   const handleContainerPageChange = (newPage) => {
     setIsPaginating(true);
@@ -590,31 +604,15 @@ export default function ContainerFlowPage() {
     });
   }, [reduxContainers]);
 
-  // Client-side global search across all container fields
+  // Client-side global search across all container fields (disabled when using server-side search)
   const filteredContainers = useMemo(() => {
-    if (!listSearchQuery.trim()) return allContainers;
-    const q = listSearchQuery.toLowerCase().trim();
-    return allContainers.filter((c) => {
-      const fields = [
-        String(c.sellercloud_container_id || c.id || ''),
-        c.name || '',
-        c.warehouse_name || '',
-        c.arrivalDate || '',
-        c.received_date || '',
-        c.is_received ? 'yes received' : 'no not received',
-        String(c.total_items || ''),
-        String(c.total_qty_in_container || ''),
-        String(c.total_qty_received || ''),
-        ...(c.poIds || []).map(String),
-      ];
-      return fields.some((f) => f.toLowerCase().includes(q));
-    });
-  }, [allContainers, listSearchQuery]);
+    return allContainers;
+  }, [allContainers]);
 
   const paginatedContainers = useMemo(() => {
-    const start = (listPage - 1) * listPageSize;
-    return filteredContainers.slice(start, start + listPageSize);
-  }, [filteredContainers, listPage, listPageSize]);
+    // Rely on server-side pagination; the fetched list is exactly the current page.
+    return allContainers;
+  }, [allContainers]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -1149,10 +1147,10 @@ export default function ContainerFlowPage() {
                   : 'No containers assigned yet. Click "Add Container" to start.'
               }
               pagination={
-                filteredContainers.length > 0 ? (
+                totalListCount > 0 ? (
                   <Pagination
                     currentPage={listPage}
-                    totalCount={filteredContainers.length}
+                    totalCount={totalListCount}
                     pageSize={listPageSize}
                     onPageChange={handleContainerPageChange}
                     onPageSizeChange={(size) => {
