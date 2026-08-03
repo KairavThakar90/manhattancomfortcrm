@@ -467,6 +467,8 @@ export default function POManagement({
 
   const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
+  const [isItemsPaginationLoading, setIsItemsPaginationLoading] =
+    useState(false);
 
   useEffect(() => {
     if (selectedPOId) {
@@ -1542,7 +1544,7 @@ Supply Chain CRM Coordinator`;
             className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
           >
             <Eye className="h-3.5 w-3.5" />
-            <span>Order Insights</span>
+            <span></span>
           </button>
         ),
       },
@@ -2330,6 +2332,9 @@ Supply Chain CRM Coordinator`;
                           columns={poItemColumns}
                           data={paginatedItems}
                           keyField="sku"
+                          isLoading={
+                            isLoadingComments || isItemsPaginationLoading
+                          }
                           containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
                           tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
                           theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
@@ -2363,10 +2368,22 @@ Supply Chain CRM Coordinator`;
                               currentPage={itemsCurrentPage}
                               totalCount={totalItemsCount}
                               pageSize={itemsPageSize}
-                              onPageChange={setItemsCurrentPage}
+                              onPageChange={(page) => {
+                                setIsItemsPaginationLoading(true);
+                                setItemsCurrentPage(page);
+                                setTimeout(
+                                  () => setIsItemsPaginationLoading(false),
+                                  300,
+                                );
+                              }}
                               onPageSizeChange={(newSize) => {
+                                setIsItemsPaginationLoading(true);
                                 setItemsPageSize(newSize);
                                 setItemsCurrentPage(1);
+                                setTimeout(
+                                  () => setIsItemsPaginationLoading(false),
+                                  300,
+                                );
                               }}
                             />
                           </div>
