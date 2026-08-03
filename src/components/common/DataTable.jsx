@@ -45,10 +45,6 @@ export default function DataTable({
   return (
     <div className={containerClassName}>
       <div className={`relative ${tableWrapperClassName}`}>
-        {isLoading && data.length > 0 && <TableLoader />}
-        {isLoading && data.length === 0 && (
-          <TableLoader message="Loading records..." />
-        )}
         <table className={tableClassName}>
           <thead>
             <tr className={theadClassName}>
@@ -66,11 +62,17 @@ export default function DataTable({
             </tr>
           </thead>
           <tbody className={tbodyClassName}>
-            {data.length === 0 && isLoading ? (
+            {isLoading && (
               <tr>
-                <td colSpan={columns.length || 1} className="px-6 py-12"></td>
+                <td
+                  colSpan={columns.length || 1}
+                  className="p-0 relative border-b-0 h-1 overflow-hidden"
+                >
+                  <TableLoader />
+                </td>
               </tr>
-            ) : data.length === 0 && !isLoading ? (
+            )}
+            {data.length === 0 && !isLoading ? (
               <tr>
                 <td
                   colSpan={columns.length || 1}
