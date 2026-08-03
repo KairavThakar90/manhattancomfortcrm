@@ -465,9 +465,13 @@ export default function POManagement({
     'details' | 'comments' | 'ocr' | 'emails'
   >('details');
 
+  const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
+  const [itemsPageSize, setItemsPageSize] = useState(10);
+
   useEffect(() => {
     if (selectedPOId) {
       setActiveDrawerSection('details');
+      setItemsCurrentPage(1);
     }
   }, [selectedPOId]);
 
@@ -611,11 +615,16 @@ export default function POManagement({
     }
   }
 
-  // All Items for selected PO will be listed natively without separate pagination
+  // All Items for selected PO will be listed with local pagination
   // Use detailed API items if available since they contain `id` DB fields that are missing in the summary index
-  const paginatedItems =
+  const allItemsForPO =
     detailedPOItems.length > 0 ? detailedPOItems : selectedPO?.items || [];
-  const totalItemsCount = paginatedItems.length;
+  const totalItemsCount = allItemsForPO.length;
+
+  const paginatedItems = allItemsForPO.slice(
+    (itemsCurrentPage - 1) * itemsPageSize,
+    itemsCurrentPage * itemsPageSize,
+  );
 
   // Comments for selected PO (Dynamically loaded from detail API)
   const selectedPOComments = fetchedComments;
@@ -1310,8 +1319,8 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-600',
         render: (po: any) => {
-          const ordered = po.total_qty_ordered ?? po.orderedQty ?? 0;
-          const received = po.total_qty_received ?? po.receivedQty ?? 0;
+          const ordered = po.total_qty_ordered || po.orderedQty || 0;
+          const received = po.total_qty_received || po.receivedQty || 0;
           return (
             <>
               <span className="font-bold text-slate-800">{ordered}</span>
@@ -2195,7 +2204,7 @@ Supply Chain CRM Coordinator`;
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {selectedPO.orderedQty ||
-                              paginatedItems.reduce(
+                              allItemsForPO.reduce(
                                 (sum: number, i: any) =>
                                   sum +
                                   (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
@@ -2210,7 +2219,7 @@ Supply Chain CRM Coordinator`;
                           </span>
                           <strong className="text-sm font-bold text-slate-800 font-mono">
                             {selectedPO.receivedQty ||
-                              paginatedItems.reduce(
+                              allItemsForPO.reduce(
                                 (sum: number, i: any) =>
                                   sum +
                                   (i.qty_received ??
@@ -2230,7 +2239,7 @@ Supply Chain CRM Coordinator`;
                             {Math.max(
                               0,
                               (selectedPO.orderedQty ||
-                                paginatedItems.reduce(
+                                allItemsForPO.reduce(
                                   (sum: number, i: any) =>
                                     sum +
                                     (i.qty_ordered ??
@@ -2240,7 +2249,7 @@ Supply Chain CRM Coordinator`;
                                   0,
                                 )) -
                                 (selectedPO.receivedQty ||
-                                  paginatedItems.reduce(
+                                  allItemsForPO.reduce(
                                     (sum: number, i: any) =>
                                       sum +
                                       (i.qty_received ??
@@ -2348,7 +2357,20 @@ Supply Chain CRM Coordinator`;
                             }}
                           />
                         </div>
-                        {/* Native scrolling supported, separate items pagination removed */}
+                        {totalItemsCount > 0 && (
+                          <div className="mt-2 border border-slate-100 rounded-lg p-1 bg-white">
+                            <Pagination
+                              currentPage={itemsCurrentPage}
+                              totalCount={totalItemsCount}
+                              pageSize={itemsPageSize}
+                              onPageChange={setItemsCurrentPage}
+                              onPageSizeChange={(newSize) => {
+                                setItemsPageSize(newSize);
+                                setItemsCurrentPage(1);
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
