@@ -2536,13 +2536,7 @@ Supply Chain CRM Coordinator`;
                           const itemId = item.id || item.sku;
                           return (
                             <option key={`sku-${itemId}`} value={itemId}>
-                              SKU: {item.sku} -{' '}
-                              {item.name || item.product_name || 'Item'} (Qty:{' '}
-                              {item.qty ||
-                                item.orderedQty ||
-                                item.quantity ||
-                                0}
-                              )
+                              SKU: {item.sku}
                             </option>
                           );
                         })}
