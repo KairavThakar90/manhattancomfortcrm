@@ -203,9 +203,9 @@ export default function ImportItemsModal({
     // Construct payload
     const payload = {
       items: rows.map((r) => ({
-        po_id: r.file_po_id || '',
-        sku: r.sku || '',
-        qty: parseInt(r.qty_in_container || r.qty || 0, 10),
+        po_id: String(r.file_po_id || ''),
+        sku: String(r.sku || ''),
+        qty: parseInt(r.qty_in_container || r.qty || 0, 10) || 0,
       })),
     };
 
