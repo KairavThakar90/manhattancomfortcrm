@@ -99,6 +99,8 @@ interface POManagementProps {
   onStatusFilterChange?: (val: string) => void;
   vendorFilter?: string;
   onVendorFilterChange?: (val: string) => void;
+  dateFrom?: string;
+  onDateFromChange?: (val: string) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
   sortConfig?: { key: string | null; direction: 'asc' | 'desc' | null };
@@ -129,6 +131,8 @@ export default function POManagement({
   onStatusFilterChange: propOnStatusFilterChange,
   vendorFilter: propVendorFilter,
   onVendorFilterChange: propOnVendorFilterChange,
+  dateFrom: propDateFrom,
+  onDateFromChange: propOnDateFromChange,
   pageSize: propPageSize,
   onPageSizeChange: propOnPageSizeChange,
   sortConfig: propSortConfig,
@@ -379,6 +383,12 @@ export default function POManagement({
     ? propOnVendorFilterChange
     : setLocalVendorFilter;
 
+  const [localDateFrom, setLocalDateFrom] = useState('');
+  const dateFrom = propDateFrom !== undefined ? propDateFrom : localDateFrom;
+  const setDateFrom = propOnDateFromChange
+    ? propOnDateFromChange
+    : setLocalDateFrom;
+
   // Pagination
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
   const currentPage =
@@ -597,12 +607,21 @@ export default function POManagement({
       const matchesStatus =
         statusFilter === 'all' || po.status === statusFilter;
 
+      // Client-side order date filter (ETA field)
+      const poEta = po.eta || po.expected_delivery_date || '';
+      const matchesDate = !dateFrom || (poEta && poEta === dateFrom);
+
       // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
       if (userRole === 'Vendor') {
-        return matchesSearch && matchesStatus && po.vendorId === 'VEND-001';
+        return (
+          matchesSearch &&
+          matchesStatus &&
+          matchesDate &&
+          po.vendorId === 'VEND-001'
+        );
       }
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesDate;
     }),
   ].sort((a, b) => {
     if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
@@ -626,7 +645,9 @@ export default function POManagement({
   const filteredPOs = sortedPOs;
 
   // Pagination calculation
-  const isLocalFilteringActive = Boolean(searchQuery || statusFilter !== 'all');
+  const isLocalFilteringActive = Boolean(
+    searchQuery || statusFilter !== 'all' || dateFrom,
+  );
   const validTotalCount =
     propTotalCount !== undefined && !isLocalFilteringActive
       ? propTotalCount
@@ -2005,64 +2026,82 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
-        {activeSubTab === 'kanban' && (
-          <div className="flex-1">
-            <h3 className="font-display font-bold text-slate-900 text-sm">
-              Purchase Order Overview
-            </h3>
-          </div>
-        )}
-        {activeSubTab !== 'kanban' && (
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Smart Search: PO#, Vendor, SKU, Container, Invoice number..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-            />
-          </div>
-        )}
-
-        <div className="flex items-center gap-2.5">
-          {/* <div className="flex items-center gap-1">
-            <Filter className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-xs font-medium text-slate-500">Status:</span>
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700"
-          >
-            <option value="all">All Statuses</option>
-            <option value="Production">Production</option>
-            <option value="In Transit">In Transit</option>
-            <option value="Port of Entry">Port of Entry</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Delayed">Delayed</option>
-          </select> */}
-
-          {userRole !== 'Vendor' && (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <Filter className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-500">
-                  Vendor:
-                </span>
-              </div>
-              <div className="w-40">
-                <VendorInfiniteDropdown
-                  value={vendorFilter}
-                  onChange={setVendorFilter}
-                  showAllOption={true}
-                  placeholder="All Vendors"
-                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
-                />
-              </div>
+      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col gap-3 flex-shrink-0">
+        {/* Row 1: Search + Vendor filter */}
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          {activeSubTab === 'kanban' && (
+            <div className="flex-1">
+              <h3 className="font-display font-bold text-slate-900 text-sm">
+                Purchase Order Overview
+              </h3>
             </div>
           )}
+          {activeSubTab !== 'kanban' && (
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Smart Search: PO#, Vendor, SKU, Container, Invoice number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2.5">
+            {userRole !== 'Vendor' && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Filter className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500">
+                    Vendor:
+                  </span>
+                </div>
+                <div className="w-40">
+                  <VendorInfiniteDropdown
+                    value={vendorFilter}
+                    onChange={setVendorFilter}
+                    showAllOption={true}
+                    placeholder="All Vendors"
+                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                  />
+                </div>
+              </div>
+            )}
+            {activeSubTab !== 'kanban' && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                    Order Date:
+                  </span>
+                </div>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value);
+                    handlePageChange(1);
+                  }}
+                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                  title="Order Date Filter"
+                />
+                {dateFrom && (
+                  <button
+                    onClick={() => {
+                      setDateFrom('');
+                      handlePageChange(1);
+                    }}
+                    className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
+                    title="Clear date filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

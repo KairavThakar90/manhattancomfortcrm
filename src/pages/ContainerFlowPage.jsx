@@ -97,6 +97,7 @@ export default function ContainerFlowPage() {
   });
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
+  const [dateFrom, setDateFrom] = useState('');
 
   const [showGlobalImport, setShowGlobalImport] = useState(false);
 
@@ -297,11 +298,13 @@ export default function ContainerFlowPage() {
   const fetchTablePage = useCallback(async () => {
     try {
       setListLoading(true);
-      const data = await getContainers({
+      const params = {
         page: listPage,
         page_size: listPageSize,
         search: listSearchQuery,
-      });
+      };
+      if (dateFrom) params.date_from = dateFrom;
+      const data = await getContainers(params);
       const results = Array.isArray(data)
         ? data
         : data.results || data.data || data.items || [];
@@ -322,7 +325,7 @@ export default function ContainerFlowPage() {
       setListLoading(false);
       setHasLoadedInitial(true);
     }
-  }, [dispatch, listPage, listPageSize, listSearchQuery]);
+  }, [dispatch, listPage, listPageSize, listSearchQuery, dateFrom]);
 
   const handleContainerPageChange = (newPage) => {
     setIsPaginating(true);
@@ -604,15 +607,20 @@ export default function ContainerFlowPage() {
     });
   }, [reduxContainers]);
 
-  // Client-side global search across all container fields (disabled when using server-side search)
+  // Client-side order date filter on ETA
   const filteredContainers = useMemo(() => {
-    return allContainers;
-  }, [allContainers]);
+    if (!dateFrom) return allContainers;
+    return allContainers.filter((c) => {
+      const eta = c.arrivalDate || '';
+      if (eta === 'Pending' || eta === 'N/A') return !dateFrom;
+      return eta === dateFrom;
+    });
+  }, [allContainers, dateFrom]);
 
   const paginatedContainers = useMemo(() => {
     // Rely on server-side pagination; the fetched list is exactly the current page.
-    return allContainers;
-  }, [allContainers]);
+    return filteredContainers;
+  }, [filteredContainers]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -1106,7 +1114,8 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
+          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col gap-3 flex-shrink-0 justify-between">
+            {/* Row 1: Search bar */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
@@ -1119,6 +1128,37 @@ export default function ContainerFlowPage() {
                 }}
                 className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
               />
+            </div>
+            {/* Order Date Filter - inline */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  Order Date Filter:
+                </span>
+              </div>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  setListPage(1);
+                }}
+                className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                title="Order Date Filter"
+              />
+              {dateFrom && (
+                <button
+                  onClick={() => {
+                    setDateFrom('');
+                    setListPage(1);
+                  }}
+                  className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
+                  title="Clear date filter"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">

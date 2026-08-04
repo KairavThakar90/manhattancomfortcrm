@@ -63,6 +63,11 @@ export default function POManagementPage() {
     setVendorFilter(val);
     setCurrentPage(1);
   };
+  const [dateFrom, setDateFrom] = useState('');
+  const handleDateFromChange = (val) => {
+    setDateFrom(val);
+    setCurrentPage(1);
+  };
 
   // Fetch purchase orders from API when page, search, or filters change
   useEffect(() => {
@@ -80,6 +85,7 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
+        if (dateFrom) params.date_from = dateFrom;
 
         if (sortConfig.key && sortConfig.direction) {
           // Map front-end keys to backend column names if necessary
@@ -334,6 +340,7 @@ export default function POManagementPage() {
     searchQuery,
     statusFilter,
     vendorFilter,
+    dateFrom,
     userRole,
     refreshTrigger,
     sortConfig,
@@ -463,6 +470,8 @@ export default function POManagementPage() {
         onStatusFilterChange={handleStatusFilterChange}
         vendorFilter={vendorFilter}
         onVendorFilterChange={handleVendorFilterChange}
+        dateFrom={dateFrom}
+        onDateFromChange={handleDateFromChange}
         sortConfig={sortConfig}
         onSortChange={(key, direction) => setSortConfig({ key, direction })}
       />
