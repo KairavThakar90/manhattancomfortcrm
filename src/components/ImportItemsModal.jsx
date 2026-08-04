@@ -302,6 +302,28 @@ export default function ImportItemsModal({
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['PO ID', 'SKU', 'QTY'];
+    const rows = [
+      ['12345', 'TEST-BLA', '50'],
+      ['12345', 'TEST-COM-Aphrodite 02', '25'],
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Container_Items_Template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleImport = async () => {
     if (!containerId) {
       if (!containerName.trim()) {
@@ -435,9 +457,19 @@ export default function ImportItemsModal({
               <h3 className="text-lg font-bold text-slate-800 leading-tight">
                 Import Container Items
               </h3>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Upload CSV or Excel file to add items automatically
-              </p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <p className="text-xs text-slate-500 font-medium">
+                  Upload CSV or Excel file to add items automatically
+                </p>
+                <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                <button
+                  onClick={handleDownloadTemplate}
+                  title="Download template"
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition hover:underline"
+                >
+                  Download file Format
+                </button>
+              </div>
             </div>
           </div>
           <button
