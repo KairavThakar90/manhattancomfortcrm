@@ -608,9 +608,10 @@ export default function POManagement({
       const matchesStatus =
         statusFilter === 'all' || po.status === statusFilter;
 
-      // Client-side order date filter (ETA field)
-      const poEta = po.eta || po.expected_delivery_date || '';
-      const matchesDate = !dateFrom || (poEta && poEta === dateFrom);
+      // Client-side order date filter
+      const poOrderDate = po.creationDate || '';
+      const matchesDate =
+        !dateFrom || (poOrderDate && poOrderDate.startsWith(dateFrom));
 
       // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
       if (userRole === 'Vendor') {

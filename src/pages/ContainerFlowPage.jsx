@@ -615,7 +615,7 @@ export default function ContainerFlowPage() {
     return allContainers.filter((c) => {
       const rd = c.received_date || '';
       if (rd === 'N/A' || !rd) return false;
-      return rd === dateFrom;
+      return rd.startsWith(dateFrom);
     });
   }, [allContainers, dateFrom]);
 
