@@ -34,6 +34,19 @@ export default function MainLayout() {
   const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Filter nav items by role — Vendors only see Purchase Orders
+  const visibleNavItems = navItems.filter((tab) => {
+    if (!tab.roles) return true; // no restriction = visible to all
+    return tab.roles.includes(userRole);
+  });
+
+  // Auto-redirect vendor users to purchase orders
+  useEffect(() => {
+    if (userRole === 'Vendor' && location.pathname === '/') {
+      navigate('/purchase-orders', { replace: true });
+    }
+  }, [userRole, location.pathname, navigate]);
+
   const openComingSoon = (tab) => {
     setComingSoonModal(tab);
     // Defer to next tick so the enter animation plays
@@ -126,7 +139,7 @@ export default function MainLayout() {
 
           {/* Nav Links */}
           <nav className="space-y-1">
-            {navItems.map((tab) => {
+            {visibleNavItems.map((tab) => {
               const IconComp = tab.icon;
 
               if (tab.comingSoon) {
