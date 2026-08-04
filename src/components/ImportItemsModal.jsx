@@ -804,7 +804,12 @@ export default function ImportItemsModal({
                   </label>
                   <div className="relative">
                     <input
-                      type="date"
+                      type={estimatedArrivalDate ? 'date' : 'text'}
+                      placeholder="yyyy-mm-dd"
+                      onFocus={(e) => (e.target.type = 'date')}
+                      onBlur={(e) => {
+                        if (!e.target.value) e.target.type = 'text';
+                      }}
                       min={new Date().toISOString().split('T')[0]}
                       value={estimatedArrivalDate}
                       onChange={(e) => setEstimatedArrivalDate(e.target.value)}

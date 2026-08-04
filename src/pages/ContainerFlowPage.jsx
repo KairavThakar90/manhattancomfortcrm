@@ -1144,7 +1144,12 @@ export default function ContainerFlowPage() {
                   </span>
                 </div>
                 <input
-                  type="date"
+                  type={dateFrom ? 'date' : 'text'}
+                  placeholder="yyyy-mm-dd"
+                  onFocus={(e) => (e.target.type = 'date')}
+                  onBlur={(e) => {
+                    if (!e.target.value) e.target.type = 'text';
+                  }}
                   value={dateFrom}
                   onChange={(e) => {
                     setDateFrom(e.target.value);
