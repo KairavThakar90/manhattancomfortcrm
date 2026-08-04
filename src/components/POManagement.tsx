@@ -53,6 +53,9 @@ import {
   getPurchaseOrderById,
   syncPurchaseOrders,
   updatePOComment,
+  getItemComments,
+  postItemComment,
+  updateItemComment,
 } from '../services/purchaseOrder.service';
 import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
@@ -156,6 +159,10 @@ export default function POManagement({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
+  const [commentScope, setCommentScope] = useState<'po' | 'sku'>('po');
+  const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
+  const [fetchedSkuComments, setFetchedSkuComments] = useState<any[]>([]);
+  const [isLoadingSkuComments, setIsLoadingSkuComments] = useState(false);
 
   // Reply State
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
@@ -474,8 +481,40 @@ export default function POManagement({
     if (selectedPOId) {
       setActiveDrawerSection('details');
       setItemsCurrentPage(1);
+      setCommentScope('po');
+      setSelectedSkuId(null);
     }
   }, [selectedPOId]);
+
+  useEffect(() => {
+    if (
+      activeDrawerSection === 'comments' &&
+      commentScope === 'sku' &&
+      selectedSkuId
+    ) {
+      setIsLoadingSkuComments(true);
+      getItemComments(selectedSkuId)
+        .then((data: any) => {
+          const rawComments = data?.comments || data || [];
+          const mappedComments = rawComments.map((c: any) => ({
+            id: String(c.id || `ITEMCOM-${Math.random()}`),
+            itemId: selectedSkuId,
+            user: c.user_name || c.user || c.author || 'User',
+            userId: c.user_id || c.author_id || null,
+            role: c.role || 'Administrator',
+            message: c.comment || c.message || c.text || '',
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
+          }));
+          setFetchedSkuComments(mappedComments);
+        })
+        .catch((err: any) => {
+          console.error(err);
+          setFetchedSkuComments([]);
+        })
+        .finally(() => setIsLoadingSkuComments(false));
+    }
+  }, [selectedSkuId, commentScope, activeDrawerSection]);
 
   useEffect(() => {
     const handleItemCommentAdded = (e: any) => {
@@ -997,6 +1036,46 @@ Supply Chain CRM Coordinator`;
     setEditingCommentId(null);
     setEditingCommentText('');
 
+    if (commentScope === 'sku' && selectedSkuId) {
+      setFetchedSkuComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
+        ),
+      );
+      setEditingCommentId(null);
+      setEditingCommentText('');
+
+      updateItemComment(commentId, editingCommentText.trim(), taggedUserIds)
+        .then(() => {
+          onAddActivity(
+            `Updated comment on SKU (${selectedSkuId})`,
+            'Vendor Comment',
+          );
+          return getItemComments(selectedSkuId);
+        })
+        .then((data: any) => {
+          const rawComments = data?.comments || data || [];
+          const mappedComments = rawComments.map((c: any) => ({
+            id: String(c.id || `ITEMCOM-${Math.random()}`),
+            itemId: selectedSkuId,
+            user: c.user_name || c.user || c.author || 'User',
+            userId: c.user_id || c.author_id || null,
+            role: c.role || 'Administrator',
+            message: c.comment || c.message || c.text || '',
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
+          }));
+          setFetchedSkuComments(mappedComments);
+        })
+        .catch((err) => {
+          console.error('Failed to update SKU comment', err);
+          toast.error('Network sync error: Comment may not have saved.', {
+            autoClose: 2000,
+          });
+        });
+      return;
+    }
+
     updatePOComment(commentId, editingCommentText.trim(), taggedUserIds).catch(
       () => {
         // Re-fetch invisibly to sync real DB record if it fails or completes
@@ -1050,16 +1129,51 @@ Supply Chain CRM Coordinator`;
       parentId: replyToCommentId,
     };
 
-    onAddComment(optimisticComment);
-    setFetchedComments((prev) => [...prev, optimisticComment]);
-    setNewCommentText('');
-    setShowMentionDropdown(false);
-
-    // Store locally before resetting
     const replyId = replyToCommentId;
     setReplyToCommentId(null);
     setReplyToUser(null);
     setReplyToText(null);
+
+    if (commentScope === 'sku' && selectedSkuId) {
+      setFetchedSkuComments((prev) => [...prev, optimisticComment]);
+      setNewCommentText('');
+      setShowMentionDropdown(false);
+
+      postItemComment(selectedSkuId, messageText, taggedUserIds, replyId)
+        .then(() => {
+          onAddActivity(
+            `Added discussion comment on SKU (${selectedSkuId})`,
+            'Vendor Comment',
+          );
+          return getItemComments(selectedSkuId);
+        })
+        .then((data: any) => {
+          const rawComments = data?.comments || data || [];
+          const mappedComments = rawComments.map((c: any) => ({
+            id: String(c.id || `ITEMCOM-${Math.random()}`),
+            itemId: selectedSkuId,
+            user: c.user_name || c.user || c.author || 'User',
+            userId: c.user_id || c.author_id || null,
+            role: c.role || 'Administrator',
+            message: c.comment || c.message || c.text || '',
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
+          }));
+          setFetchedSkuComments(mappedComments);
+        })
+        .catch((err) => {
+          console.error('Failed to save comment to server:', err);
+          toast.error('Network sync error: Comment may not have saved.', {
+            autoClose: 2000,
+          });
+        });
+      return;
+    }
+
+    onAddComment(optimisticComment);
+    setFetchedComments((prev) => [...prev, optimisticComment]);
+    setNewCommentText('');
+    setShowMentionDropdown(false);
 
     // Fire-and-forget background sync (No UI locks!)
     const targetId = selectedPO.id.replace(/^PO-/i, '');
@@ -2397,8 +2511,50 @@ Supply Chain CRM Coordinator`;
               {/* TAB: COMMENTS DISCUSSION ENGINE */}
               {activeDrawerSection === 'comments' && (
                 <div className="flex-1 flex flex-col min-h-0 gap-4">
+                  <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                      Discussion Scope
+                    </label>
+                    <select
+                      value={commentScope === 'po' ? 'po' : selectedSkuId || ''}
+                      onChange={(e) => {
+                        if (e.target.value === 'po') {
+                          setCommentScope('po');
+                          setSelectedSkuId(null);
+                        } else {
+                          setCommentScope('sku');
+                          setSelectedSkuId(e.target.value);
+                        }
+                      }}
+                      className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 focus:outline-hidden focus:border-indigo-500 text-slate-700"
+                    >
+                      <option value="po" className="font-bold">
+                        General PO Comments
+                      </option>
+                      <optgroup label="SKU-wise Comments">
+                        {selectedPO?.items?.map((item: any) => {
+                          const itemId = item.id || item.sku;
+                          return (
+                            <option key={`sku-${itemId}`} value={itemId}>
+                              SKU: {item.sku} -{' '}
+                              {item.name || item.product_name || 'Item'} (Qty:{' '}
+                              {item.qty ||
+                                item.orderedQty ||
+                                item.quantity ||
+                                0}
+                              )
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    </select>
+                  </div>
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
-                    {isLoadingComments ? (
+                    {(
+                      commentScope === 'po'
+                        ? isLoadingComments
+                        : isLoadingSkuComments
+                    ) ? (
                       <div className="flex flex-col items-center justify-center py-12 space-y-3">
                         <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
                         <p className="text-xs text-slate-500 font-medium font-mono">
@@ -2409,12 +2565,18 @@ Supply Chain CRM Coordinator`;
                       <>
                         {(() => {
                           const commentMap = new Map<string, any>();
-                          selectedPOComments.forEach((c) => {
+                          (commentScope === 'po'
+                            ? selectedPOComments
+                            : fetchedSkuComments
+                          ).forEach((c) => {
                             commentMap.set(c.id, { ...c, children: [] });
                           });
 
                           const rootNodes: any[] = [];
-                          selectedPOComments.forEach((c) => {
+                          (commentScope === 'po'
+                            ? selectedPOComments
+                            : fetchedSkuComments
+                          ).forEach((c) => {
                             const node = commentMap.get(c.id);
                             if (
                               node.parentId &&
@@ -2624,7 +2786,10 @@ Supply Chain CRM Coordinator`;
                             </div>
                           );
                         })()}
-                        {selectedPOComments.length === 0 && (
+                        {(commentScope === 'po'
+                          ? selectedPOComments
+                          : fetchedSkuComments
+                        ).length === 0 && (
                           <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
                             <MessageSquare className="h-8 w-8 text-slate-400" />
                             <p className="text-xs text-slate-500 font-medium font-mono">

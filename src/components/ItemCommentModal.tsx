@@ -49,6 +49,14 @@ export default function ItemCommentModal({
   const [fetchedComments, setFetchedComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
 
+  const [activeItem, setActiveItem] = useState<any>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveItem(targetItem);
+    }
+  }, [isOpen, targetItem]);
+
   // Mentions
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
@@ -68,14 +76,14 @@ export default function ItemCommentModal({
   const [editingCommentText, setEditingCommentText] = useState<string>('');
 
   useEffect(() => {
-    if (!isOpen || !targetItem?.id) return;
+    if (!isOpen || !activeItem?.id) return;
     setIsLoadingComments(true);
-    getItemComments(targetItem.id)
+    getItemComments(activeItem.id)
       .then((data) => {
         const rawComments = data?.comments || data || [];
         const mappedComments = rawComments.map((c: any) => ({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: targetItem.id,
+          itemId: activeItem.id,
           user: c.user_name || c.user || c.author || 'User',
           userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
@@ -90,7 +98,7 @@ export default function ItemCommentModal({
         setFetchedComments([]);
       })
       .finally(() => setIsLoadingComments(false));
-  }, [isOpen, targetItem]);
+  }, [isOpen, activeItem]);
 
   const handleCommentTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -129,7 +137,7 @@ export default function ItemCommentModal({
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!targetItem?.id || !newCommentText.trim()) return;
+    if (!activeItem?.id || !newCommentText.trim()) return;
 
     const messageText = newCommentText.trim();
     const words = messageText.split(/\s+/);
@@ -146,26 +154,26 @@ export default function ItemCommentModal({
     setReplyToUser(null);
     setReplyToText(null);
 
-    postItemComment(targetItem.id, messageText, taggedUserIds, replyId)
+    postItemComment(activeItem.id, messageText, taggedUserIds, replyId)
       .then(() => {
         toast.success('Comment posted successfully');
         onAddActivity(
-          `Added an item comment for ${targetItem.sku}`,
+          `Added an item comment for ${activeItem.sku}`,
           'Vendor Comment',
         );
         // Notify the main PO grid to update its comment count for this item!
         window.dispatchEvent(
           new CustomEvent('item-comment-added', {
-            detail: { itemId: targetItem.id },
+            detail: { itemId: activeItem.id },
           }),
         );
-        return getItemComments(targetItem.id!);
+        return getItemComments(activeItem.id!);
       })
       .then((data) => {
         const rawComments = data?.comments || data || [];
         const mappedComments = rawComments.map((c: any) => ({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: targetItem.id,
+          itemId: activeItem.id,
           user: c.user_name || c.user || c.author || 'User',
           userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
@@ -182,7 +190,7 @@ export default function ItemCommentModal({
   };
 
   const handleUpdateSubmit = (commentId: string) => {
-    if (!editingCommentText.trim() || !targetItem?.id) return;
+    if (!editingCommentText.trim() || !activeItem?.id) return;
     const words = editingCommentText.trim().split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
@@ -201,16 +209,16 @@ export default function ItemCommentModal({
       .then(() => {
         toast.success('Comment updated successfully');
         onAddActivity(
-          `Updated an item comment for ${targetItem.sku}`,
+          `Updated an item comment for ${activeItem.sku}`,
           'Vendor Comment',
         );
-        return getItemComments(targetItem.id!);
+        return getItemComments(activeItem.id!);
       })
       .then((data) => {
         const rawComments = data?.comments || data || [];
         const mappedComments = rawComments.map((c: any) => ({
           id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: targetItem.id,
+          itemId: activeItem.id,
           user: c.user_name || c.user || c.author || 'User',
           userId: c.user_id || c.author_id || null,
           role: c.role || 'Administrator',
@@ -403,22 +411,37 @@ export default function ItemCommentModal({
     <div className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 overflow-hidden">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col h-full animate-fadeInUpBig">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50 rounded-t-2xl">
-          <div>
-            <h2 className="text-lg font-bold text-slate-800">
-              {targetItem.sku} Comments
+        <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between shrink-0 bg-slate-50/50 rounded-t-2xl">
+          <div className="flex-1 w-full relative">
+            <h2 className="text-lg font-bold text-slate-800 mb-2">
+              SKU Comments
             </h2>
-            <p className="text-sm text-slate-500">
-              {targetItem.name ||
-                targetItem.product_name ||
-                targetItem.productName ||
-                targetItem.ProductName ||
-                'Unknown Product'}
-            </p>
+            <div className="relative max-w-sm">
+              <select
+                value={activeItem?.id || activeItem?.sku || ''}
+                onChange={(e) => {
+                  const sel = selectedPO?.items?.find(
+                    (i: any) => (i.id || i.sku) === e.target.value,
+                  );
+                  if (sel) setActiveItem({ ...sel, id: sel.id || sel.sku });
+                }}
+                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-hidden focus:border-indigo-500 font-medium text-slate-700 pointer-events-auto cursor-pointer shadow-xs truncate"
+              >
+                {selectedPO?.items?.map((item: any) => {
+                  const itemId = item.id || item.sku;
+                  return (
+                    <option key={itemId} value={itemId}>
+                      {item.sku} - {item.name || item.product_name} (Qty:{' '}
+                      {item.qty || item.orderedQty || item.quantity})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition"
+            className="p-2 ml-4 flex-shrink-0 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -434,7 +457,9 @@ export default function ItemCommentModal({
           ) : rootNodes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
               <MessageSquare className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-sm font-medium">No comments yet</p>
+              <p className="text-sm font-medium">
+                No comments available for this SKU.
+              </p>
               <p className="text-xs mt-1">
                 Be the first to start the discussion for this item.
               </p>
