@@ -6,23 +6,32 @@ import {
   Package,
   CheckCircle2,
   ExternalLink,
-  Upload,
 } from 'lucide-react';
 import DataTable from './common/DataTable';
-import ImportItemsModal from './ImportItemsModal';
+import Pagination from './common/Pagination';
 
 export default function ContainerDetailsModal({
   container,
+  isLoading = false,
   onClose,
   onRefresh,
 }) {
-  const [showImport, setShowImport] = useState(false);
+  const [itemsPage, setItemsPage] = useState(1);
+  const [itemsPageSize, setItemsPageSize] = useState(10);
+
   if (!container) return null;
+
+  const allItems = container.details || [];
+  const totalItems = allItems.length;
+  const paginatedItems = allItems.slice(
+    (itemsPage - 1) * itemsPageSize,
+    itemsPage * itemsPageSize,
+  );
 
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
           {/* Modal Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-3">
@@ -111,62 +120,69 @@ export default function ContainerDetailsModal({
             </div>
 
             {/* Items Table */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)] flex-1 flex flex-col min-h-0 mt-2">
-              <div className="flex items-center justify-between shrink-0 mb-4">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)] flex-1 flex flex-col min-h-0 mt-2 overflow-hidden">
+              <div className="flex items-center justify-between shrink-0 px-5 pt-5 pb-4">
                 <h4 className="text-sm font-bold text-slate-900 shrink-0">
                   Allocated Items
                 </h4>
-                <button
-                  onClick={() => setShowImport(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  Import Items
-                </button>
               </div>
 
-              {container.details && container.details.length > 0 ? (
-                <DataTable
-                  columns={[
-                    {
-                      header: 'VENDOR NAME',
-                      accessor: 'vendor_name',
-                      headerClassName: 'px-3 py-2 w-1/3 bg-white',
-                      className: 'px-3 py-2 max-w-[120px]',
-                      render: (item) => (
-                        <span className="font-mono font-bold text-slate-500 truncate block">
-                          {item.vendor_name || 'N/A'}
-                        </span>
-                      ),
-                    },
-                    {
-                      header: 'PRODUCT NAME',
-                      accessor: 'product_name',
-                      headerClassName: 'px-3 py-2 bg-white',
-                      className: 'px-3 py-2 max-w-[150px]',
-                      render: (item) => (
-                        <span className="font-medium text-slate-800 line-clamp-1">
-                          {item.product_name || item.name || '-'}
-                        </span>
-                      ),
-                    },
-                    {
-                      header: 'QTY ASSIGNED',
-                      accessor: 'qty',
-                      headerClassName: 'px-3 py-2 text-right w-32 bg-white',
-                      className: 'px-3 py-2 text-right font-mono font-medium',
-                      render: (item) => item.qty_in_container || item.qty || 0,
-                    },
-                  ]}
-                  data={container.details}
-                  keyField="product_name"
-                  theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
-                  tableClassName="w-full text-left text-xs border-collapse"
-                  tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                  trClassName="hover:bg-slate-50/50 transition-colors"
-                  containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
-                  tableWrapperClassName=""
-                />
+              {allItems.length > 0 || isLoading ? (
+                <>
+                  <DataTable
+                    isLoading={isLoading}
+                    columns={[
+                      {
+                        header: 'VENDOR NAME',
+                        accessor: 'vendor_name',
+                        headerClassName: 'px-3 py-2 w-1/3 bg-white',
+                        className: 'px-3 py-2 max-w-[120px]',
+                        render: (item) => (
+                          <span className="font-mono font-bold text-slate-500 truncate block">
+                            {item.vendor_name || 'N/A'}
+                          </span>
+                        ),
+                      },
+                      {
+                        header: 'PRODUCT NAME',
+                        accessor: 'product_name',
+                        headerClassName: 'px-3 py-2 bg-white',
+                        className: 'px-3 py-2 max-w-[150px]',
+                        render: (item) => (
+                          <span className="font-medium text-slate-800 line-clamp-1">
+                            {item.product_name || item.name || '-'}
+                          </span>
+                        ),
+                      },
+                      {
+                        header: 'QTY ASSIGNED',
+                        accessor: 'qty',
+                        headerClassName: 'px-3 py-2 text-right w-32 bg-white',
+                        className: 'px-3 py-2 text-right font-mono font-medium',
+                        render: (item) =>
+                          item.qty_in_container || item.qty || 0,
+                      },
+                    ]}
+                    data={paginatedItems}
+                    keyField="product_name"
+                    theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
+                    tableClassName="w-full text-left text-xs border-collapse"
+                    tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                    trClassName="hover:bg-slate-50/50 transition-colors"
+                    containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
+                    tableWrapperClassName=""
+                  />
+                  <Pagination
+                    currentPage={itemsPage}
+                    totalCount={totalItems}
+                    pageSize={itemsPageSize}
+                    onPageChange={(pg) => setItemsPage(pg)}
+                    onPageSizeChange={(size) => {
+                      setItemsPageSize(size);
+                      setItemsPage(1);
+                    }}
+                  />
+                </>
               ) : (
                 <div className="py-12 flex flex-col items-center justify-center text-center">
                   <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
@@ -195,16 +211,6 @@ export default function ContainerDetailsModal({
           </div>
         </div>
       </div>
-
-      {showImport && (
-        <ImportItemsModal
-          containerId={container.id}
-          onClose={() => setShowImport(false)}
-          onSuccess={() => {
-            if (onRefresh) onRefresh(container.id);
-          }}
-        />
-      )}
     </>
   );
 }

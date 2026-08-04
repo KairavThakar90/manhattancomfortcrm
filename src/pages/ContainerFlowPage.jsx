@@ -117,6 +117,7 @@ export default function ContainerFlowPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
   const [viewingContainerDetails, setViewingContainerDetails] = useState(null);
+  const [isViewContainerLoading, setIsViewContainerLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Items tracking
@@ -824,6 +825,7 @@ export default function ContainerFlowPage() {
     };
 
     setViewingContainerDetails(initialMappedContainer);
+    setIsViewContainerLoading(true);
 
     try {
       // Background fetch to hydrate the view with rich details
@@ -846,6 +848,8 @@ export default function ContainerFlowPage() {
         e,
       );
       toast.warning('Displaying basic container details (server unavailable)');
+    } finally {
+      setIsViewContainerLoading(false);
     }
   };
 
@@ -1811,6 +1815,7 @@ export default function ContainerFlowPage() {
       {/* View Container Overlay Modal */}
       <ContainerDetailsModal
         container={viewingContainerDetails}
+        isLoading={isViewContainerLoading}
         onClose={() => setViewingContainerDetails(null)}
         onRefresh={() => {
           fetchContainerAPI(1, '', false);
