@@ -35,6 +35,7 @@ import ContainerDetailsModal from '../components/ContainerDetailsModal';
 import ImportItemsModal from '../components/ImportItemsModal';
 import FullPageLoader from '../components/common/FullPageLoader';
 import TableLoader from '../components/common/TableLoader';
+import SellerCloudSyncLoading from '../components/common/SellerCloudSyncLoading';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -1168,14 +1169,8 @@ export default function ContainerFlowPage() {
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-            {(listLoading || isPaginating || isSyncing) && (
-              <TableLoader
-                message={
-                  isSyncing
-                    ? 'Syncing with SellerCloud...'
-                    : 'Please wait a moment...'
-                }
-              />
+            {(listLoading || isPaginating) && !isSyncing && (
+              <TableLoader message={'Please wait a moment...'} />
             )}
             <DataTable
               columns={containerColumns}
@@ -1827,6 +1822,7 @@ export default function ContainerFlowPage() {
       />
 
       {/* FullPageLoader removed in favor of localized TableLoader */}
+      <SellerCloudSyncLoading isOpen={isSyncing} />
     </div>
   );
 }
