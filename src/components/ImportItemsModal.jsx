@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Calendar,
   AlertCircle,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import apiClient from '../services/api';
@@ -43,6 +44,7 @@ export default function ImportItemsModal({
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const [warehousesList, setWarehousesList] = useState([]);
   const [showWizard, setShowWizard] = useState(false);
+  const [showContainerDetails, setShowContainerDetails] = useState(false);
 
   useEffect(() => {
     import('../services/warehouse.service').then(({ getWarehouses }) => {
@@ -77,14 +79,15 @@ export default function ImportItemsModal({
   const REQUIRED_FIELDS = ['sku', 'qty_in_container'];
 
   const validateRows = (parsedRows) => {
-    return parsedRows.map((row, index) => {
+    return parsedRows.map((row) => {
       const errors = [];
       REQUIRED_FIELDS.forEach((field) => {
         if (!row[field] && row[field] !== 0) {
           errors.push(`Missing ${field}`);
         }
       });
-      return { ...row, _id: index, _errors: errors };
+      // Preserve existing ID but invalidate _success because data changed locally
+      return { ...row, _errors: errors, _success: null };
     });
   };
 
@@ -515,6 +518,19 @@ export default function ImportItemsModal({
                 <div>
                   <h4 className="font-bold text-slate-800 flex items-center gap-2">
                     {file ? 'Preview Imported Data' : 'Container Items'}
+                    {rows.length > 0 &&
+                      rows.some((r) => r._success) &&
+                      !rows.some((r) => r._errors?.length > 0) && (
+                        <span className="ml-2 inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                          <CheckCircle2 className="w-3 h-3" /> All Validated
+                        </span>
+                      )}
+                    {rows.length > 0 &&
+                      rows.some((r) => r._errors?.length > 0) && (
+                        <span className="ml-2 inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                          <XCircle className="w-3 h-3" /> Needs Fixes
+                        </span>
+                      )}
                   </h4>
                   <p className="text-xs text-slate-500">
                     {file
@@ -522,23 +538,23 @@ export default function ImportItemsModal({
                       : `${rows.length} manually added items`}
                   </p>
                 </div>
-                <div className="relative group flex items-center justify-center">
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowWizard(true)}
-                      className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md hover:bg-indigo-100 text-xs font-bold transition shadow-sm"
-                    >
-                      + Add Row
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleVerifyItems}
-                      disabled={loading || rows.length === 0}
-                      className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-100 text-xs font-bold transition shadow-sm disabled:opacity-50"
-                    >
-                      Verify Items
-                    </button>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowWizard(true)}
+                    className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md hover:bg-indigo-100 text-xs font-bold transition shadow-sm"
+                  >
+                    + Add Row
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleVerifyItems}
+                    disabled={loading || rows.length === 0}
+                    className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-100 text-xs font-bold transition shadow-sm disabled:opacity-50"
+                  >
+                    Verify Items
+                  </button>
+                  <div className="relative group">
                     <button
                       type="button"
                       onClick={() => {
@@ -553,13 +569,13 @@ export default function ImportItemsModal({
                     >
                       {file ? 'Upload Different File' : 'Clear & Upload File'}
                     </button>
+                    {file && (
+                      <div className="absolute top-full right-0 mt-2 hidden group-hover:block w-max bg-indigo-600 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200">
+                        If you selected the wrong file, upload a new file.
+                        <div className="absolute bottom-full right-16 border-4 border-transparent border-b-indigo-600"></div>
+                      </div>
+                    )}
                   </div>
-                  {file && (
-                    <div className="absolute top-full right-0 mt-2 hidden group-hover:block w-max bg-indigo-600 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200">
-                      If you selected the wrong file, upload a new file.
-                      <div className="absolute bottom-full right-16 border-4 border-transparent border-b-indigo-600"></div>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -584,7 +600,7 @@ export default function ImportItemsModal({
                         <tr
                           key={row._id}
                           className={
-                            row._errors.length > 0 ? 'bg-rose-50/30' : ''
+                            row._errors?.length > 0 ? 'bg-rose-50/30' : ''
                           }
                         >
                           <td className="px-4 py-2 relative">
@@ -665,12 +681,15 @@ export default function ImportItemsModal({
                             />
                           </td>
                           <td className="px-4 py-2 text-right">
-                            <button
-                              onClick={() => removeRow(row._id)}
-                              className="text-slate-400 hover:text-rose-600 transition"
-                            >
-                              <X className="w-4 h-4 inline" />
-                            </button>
+                            <div className="flex items-center justify-end gap-3">
+                              <button
+                                onClick={() => removeRow(row._id)}
+                                className="text-slate-400 hover:text-rose-600 transition"
+                                title="Remove Item"
+                              >
+                                <X className="w-4 h-4 inline" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -681,8 +700,8 @@ export default function ImportItemsModal({
             </div>
           )}
 
-          {!containerId && (
-            <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          {!containerId && showContainerDetails && (
+            <div className="mt-6 bg-white rounded-xl shadow-sm border border-slate-200 p-4 animate-in slide-in-from-bottom-4 fade-in duration-500">
               <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-base font-bold text-slate-800">
                   Container Details
@@ -802,25 +821,52 @@ export default function ImportItemsModal({
             >
               Cancel
             </button>
-            <button
-              onClick={handleImport}
-              disabled={
-                importing ||
-                rows.length === 0 ||
-                (!containerId &&
-                  (!containerName ||
-                    !estimatedArrivalDate ||
-                    !selectedWarehouseId))
-              }
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              {importing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {importing ? 'Saving...' : 'Confirm Import'}
-            </button>
+            {!containerId && !showContainerDetails ? (
+              <div className="relative group inline-block">
+                <button
+                  onClick={() => setShowContainerDetails(true)}
+                  disabled={
+                    rows.length === 0 ||
+                    !rows.some((r) => r._success) ||
+                    rows.some((r) => r._errors?.length > 0)
+                  }
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm relative z-10"
+                >
+                  Allocate to Container
+                </button>
+                {(rows.length === 0 ||
+                  !rows.some((r) => r._success) ||
+                  rows.some((r) => r._errors?.length > 0)) && (
+                  <>
+                    <div className="absolute inset-0 z-20 cursor-not-allowed"></div>
+                    <div className="absolute bottom-full right-0 mb-3 hidden group-hover:block w-max max-w-xs bg-rose-600 text-white text-[11px] font-bold px-4 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200 pointer-events-none">
+                      First verify items then allocate container details
+                      <div className="absolute top-full right-16 border-[6px] border-transparent border-t-rose-600"></div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleImport}
+                disabled={
+                  importing ||
+                  rows.length === 0 ||
+                  (!containerId &&
+                    (!containerName ||
+                      !estimatedArrivalDate ||
+                      !selectedWarehouseId))
+                }
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {importing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                {importing ? 'Saving...' : 'Confirm Import'}
+              </button>
+            )}
           </div>
         </div>
       </div>
