@@ -206,7 +206,7 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-slate-50 w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 relative slide-in-from-bottom-4 duration-300">
+      <div className="bg-slate-50 w-full max-w-4xl h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 relative slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shrink-0">
           <div>

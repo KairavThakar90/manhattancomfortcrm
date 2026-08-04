@@ -447,6 +447,7 @@ export default function ImportItemsModal({
                           <td className="px-4 py-2">
                             <input
                               type="text"
+                              disabled
                               value={row.sellercloud_item_id || ''}
                               onChange={(e) =>
                                 handleRowChange(
@@ -455,7 +456,7 @@ export default function ImportItemsModal({
                                   e.target.value,
                                 )
                               }
-                              className="w-full px-2 py-1 border border-slate-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 hover:border-slate-300"
+                              className="w-full px-2 py-1 border border-slate-200 rounded text-xs bg-slate-50 text-slate-500 cursor-not-allowed hover:bg-slate-50"
                               placeholder="Item ID"
                             />
                           </td>
