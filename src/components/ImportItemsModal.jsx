@@ -20,6 +20,7 @@ import {
 } from '../utils/endpoints';
 import InfiniteScrollDropdown from './InfiniteScrollDropdown';
 import { createContainer } from '../services/container.service';
+import AddContainerItemsWizard from './AddContainerItemsWizard';
 
 export default function ImportItemsModal({
   containerId,
@@ -40,6 +41,7 @@ export default function ImportItemsModal({
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const [warehousesList, setWarehousesList] = useState([]);
+  const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
     import('../services/warehouse.service').then(({ getWarehouses }) => {
@@ -290,6 +292,16 @@ export default function ImportItemsModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+      {showWizard && (
+        <AddContainerItemsWizard
+          onClose={() => setShowWizard(false)}
+          onConfirm={(newItems) => {
+            setRows((prev) => [...prev, ...newItems]);
+            setShowWizard(false);
+          }}
+        />
+      )}
+
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 relative">
         {importing && (
           <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
@@ -341,7 +353,13 @@ export default function ImportItemsModal({
               <p className="text-slate-500 text-sm mb-6 font-medium">
                 Accepts .xlsx, .xls, .csv
               </p>
-              <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition shadow-sm">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition shadow-sm"
+              >
                 Select File
               </button>
             </div>
@@ -350,31 +368,44 @@ export default function ImportItemsModal({
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                    Preview Imported Data
+                    {file ? 'Preview Imported Data' : 'Container Items'}
                   </h4>
                   <p className="text-xs text-slate-500">
-                    {rows.length} rows loaded from {file?.name}
+                    {file
+                      ? `${rows.length} rows loaded from ${file.name}`
+                      : `${rows.length} manually added items`}
                   </p>
                 </div>
                 <div className="relative group flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFile(null);
-                      setRows([]);
-                      setApiErrorMsg(null);
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = '';
-                      }
-                    }}
-                    className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 text-xs font-semibold transition"
-                  >
-                    Upload Different File
-                  </button>
-                  <div className="absolute top-full right-0 mt-2 hidden group-hover:block w-max bg-indigo-600 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200">
-                    If you selected the wrong file, upload a new file.
-                    <div className="absolute bottom-full right-16 border-4 border-transparent border-b-indigo-600"></div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowWizard(true)}
+                      className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-md hover:bg-indigo-100 text-xs font-bold transition shadow-sm"
+                    >
+                      + Add Row
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFile(null);
+                        setRows([]);
+                        setApiErrorMsg(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md hover:bg-slate-50 text-xs font-semibold transition cursor-pointer"
+                    >
+                      {file ? 'Upload Different File' : 'Clear & Upload File'}
+                    </button>
                   </div>
+                  {file && (
+                    <div className="absolute top-full right-0 mt-2 hidden group-hover:block w-max bg-indigo-600 text-white text-[11px] font-bold px-3 py-2 rounded-lg shadow-xl z-50 animate-in fade-in zoom-in duration-200">
+                      If you selected the wrong file, upload a new file.
+                      <div className="absolute bottom-full right-16 border-4 border-transparent border-b-indigo-600"></div>
+                    </div>
+                  )}
                 </div>
               </div>
 
