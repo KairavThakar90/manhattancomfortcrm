@@ -78,7 +78,15 @@ export default function ImportItemsModal({
 
   const REQUIRED_FIELDS = ['sku', 'qty_in_container'];
 
-  const validateRows = (parsedRows) => {
+  const validateRows = (parsedRows, preserveServerStatus = false) => {
+    // Count SKU + PO combinations to find duplicates
+    const skuCounts = {};
+    parsedRows.forEach((r) => {
+      if (!r.sku || r.sku === '-') return;
+      const key = `${String(r.sku).trim()}-${String(r.file_po_id || '').trim()}`;
+      skuCounts[key] = (skuCounts[key] || 0) + 1;
+    });
+
     return parsedRows.map((row) => {
       const errors = [];
       REQUIRED_FIELDS.forEach((field) => {
@@ -86,8 +94,30 @@ export default function ImportItemsModal({
           errors.push(`Missing ${field}`);
         }
       });
-      // Preserve existing ID but invalidate _success because data changed locally
-      return { ...row, _errors: errors, _success: null };
+      if (
+        row.qty_available_for_container !== undefined &&
+        row.qty_available_for_container !== null &&
+        Number(row.qty_in_container) > Number(row.qty_available_for_container)
+      ) {
+        errors.push(
+          `Requested Qty exceeds available PO items (${row.qty_available_for_container})`,
+        );
+      }
+
+      const key = `${String(row.sku || '').trim()}-${String(row.file_po_id || '').trim()}`;
+      if (row.sku && row.sku !== '-' && skuCounts[key] > 1) {
+        errors.push('Duplicate SKU. Please remove this.');
+      }
+
+      const finalErrors = preserveServerStatus
+        ? [...(row._errors || []), ...errors]
+        : errors;
+      let finalSuccess = preserveServerStatus ? row._success : null;
+
+      // If there's any error logically, it absolutely cannot be successful
+      if (finalErrors.length > 0) finalSuccess = null;
+
+      return { ...row, _errors: finalErrors, _success: finalSuccess };
     });
   };
 
@@ -142,11 +172,11 @@ export default function ImportItemsModal({
           sellercloud_item_id: item.found_item?.sellercloud_item_id || '',
           file_po_id: item.file_po_id || '',
           qty_in_container: item.file_qty || 0,
-          _errors: [], // We can rely on API validations if needed, skipping local _errors for now
+          _errors: [],
         };
       });
 
-      setRows(parsedData);
+      setRows(validateRows(parsedData));
 
       if (response.data?.message) {
         toast.success(response.data.message);
@@ -224,7 +254,7 @@ export default function ImportItemsModal({
 
       const applyValidation = (items) => {
         setRows((prevRows) => {
-          return prevRows.map((r, index) => {
+          const formatted = prevRows.map((r, index) => {
             const serverItem = items[index];
             if (!serverItem) return r;
 
@@ -245,10 +275,18 @@ export default function ImportItemsModal({
                 serverItem.found_item?.id ||
                 r.sellercloud_item_id ||
                 '',
+              qty_available_for_container:
+                serverItem.found_item?.qty_available_for_container ??
+                serverItem.qty_available_for_container ??
+                serverItem.po_item?.qty_available_for_container ??
+                serverItem.available_qty ??
+                r.qty_available_for_container ??
+                null,
               _errors: errs,
               _success: successMsg,
             };
           });
+          return validateRows(formatted, true);
         });
       };
 
@@ -268,7 +306,7 @@ export default function ImportItemsModal({
       const errItems = err.response?.data?.data || err.response?.data;
       if (Array.isArray(errItems) && errItems.length > 0) {
         setRows((prevRows) => {
-          return prevRows.map((r, index) => {
+          const formatted = prevRows.map((r, index) => {
             const serverItem = errItems[index];
             if (!serverItem) return r;
             const errs = [];
@@ -287,10 +325,18 @@ export default function ImportItemsModal({
                 serverItem.found_item?.id ||
                 r.sellercloud_item_id ||
                 '',
+              qty_available_for_container:
+                serverItem.found_item?.qty_available_for_container ??
+                serverItem.qty_available_for_container ??
+                serverItem.po_item?.qty_available_for_container ??
+                serverItem.available_qty ??
+                r.qty_available_for_container ??
+                null,
               _errors: errs,
               _success: successMsg,
             };
           });
+          return validateRows(formatted, true);
         });
         toast.warning('Verification complete, but some items have errors.');
       } else {
@@ -679,6 +725,22 @@ export default function ImportItemsModal({
                               className={`w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-1 ${(row.qty_in_container === undefined || row.qty_in_container === null || row.qty_in_container === '') && (row.qty === undefined || row.qty === null || row.qty === '') ? 'border-rose-300 focus:ring-rose-500 bg-rose-50' : 'border-slate-200 focus:ring-indigo-500 hover:border-slate-300'}`}
                               placeholder="Required"
                             />
+                            {row.qty_available_for_container !== undefined &&
+                              row.qty_available_for_container !== null && (
+                                <div className="mt-1 text-[10px] text-slate-500 font-medium text-right w-full">
+                                  Avail:{' '}
+                                  <span
+                                    className={
+                                      Number(row.qty_in_container) >
+                                      Number(row.qty_available_for_container)
+                                        ? 'text-rose-600 font-bold'
+                                        : 'text-slate-700 font-bold'
+                                    }
+                                  >
+                                    {row.qty_available_for_container}
+                                  </span>
+                                </div>
+                              )}
                           </td>
                           <td className="px-4 py-2 text-right">
                             <div className="flex items-center justify-end gap-3">
