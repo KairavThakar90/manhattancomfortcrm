@@ -106,7 +106,7 @@ export default function ImportItemsModal({
 
       const key = `${String(row.sku || '').trim()}-${String(row.file_po_id || '').trim()}`;
       if (row.sku && row.sku !== '-' && skuCounts[key] > 1) {
-        errors.push('Duplicate SKU');
+        errors.push('Duplicate SKU. Remove any one row');
       }
 
       const finalErrors = preserveServerStatus
