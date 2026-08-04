@@ -64,6 +64,7 @@ import FullPageLoader from './common/FullPageLoader';
 import ItemCommentModal from './ItemCommentModal';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
+import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 
 interface POManagementProps {
   loading?: boolean;
@@ -2108,15 +2109,7 @@ Supply Chain CRM Coordinator`;
       {/* SUB-VIEW 1: MASTER GRID VIEW */}
       {activeSubTab === 'grid' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-          {(loading || isSyncing) && (
-            <TableLoader
-              message={
-                isSyncing
-                  ? 'Syncing with SellerCloud...'
-                  : 'Please wait a moment...'
-              }
-            />
-          )}
+          {loading && <TableLoader message="Please wait a moment..." />}
           <DataTable
             columns={poColumns}
             data={paginatedPOs}
@@ -2148,15 +2141,7 @@ Supply Chain CRM Coordinator`;
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
         <div className="flex-1 min-h-0 relative flex flex-col">
-          {(loading || isSyncing) && (
-            <TableLoader
-              message={
-                isSyncing
-                  ? 'Syncing with SellerCloud...'
-                  : 'Please wait a moment...'
-              }
-            />
-          )}
+          {loading && <TableLoader message="Please wait a moment..." />}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
             {[
               { name: '1. New', key: 'new_without_invoice' },
@@ -2237,7 +2222,10 @@ Supply Chain CRM Coordinator`;
           </div>
         </div>
       )}
-
+      <SellerCloudSyncLoading
+        isOpen={isSyncing}
+        onForceClose={() => setIsSyncing(false)}
+      />
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO && (
         <div

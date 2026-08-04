@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Tooltip } from 'react-tooltip';
 
 const MESSAGES = [
   'Connecting to SellerCloud...',
@@ -12,7 +14,10 @@ const MESSAGES = [
   'Finalizing sync...',
 ];
 
-export default function SellerCloudSyncLoading({ isOpen, onForceClose }) {
+export default function SellerCloudSyncLoading({
+  isOpen,
+  onForceClose = null,
+}) {
   const [msgIndex, setMsgIndex] = useState(0);
 
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
@@ -48,8 +53,8 @@ export default function SellerCloudSyncLoading({ isOpen, onForceClose }) {
     return `${m}:${s}`;
   };
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-hidden pointer-events-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-hidden pointer-events-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -58,12 +63,29 @@ export default function SellerCloudSyncLoading({ isOpen, onForceClose }) {
         className="w-full max-w-sm bg-white/95 backdrop-blur-2xl rounded-[32px] shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] flex flex-col items-center p-8 border border-white relative overflow-hidden"
       >
         {onForceClose && (
-          <button
-            onClick={onForceClose}
-            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <>
+            <button
+              onClick={onForceClose}
+              data-tooltip-id="force-close-tooltip"
+              data-tooltip-content="⚠️ Warning: Do not close if data is still processing"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <Tooltip
+              id="force-close-tooltip"
+              place="bottom"
+              className="z-[999999] shadow-xl text-center tracking-wide"
+              style={{
+                backgroundColor: '#6366f1',
+                color: '#ffffff',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                fontWeight: '700',
+                fontSize: '11px',
+              }}
+            />
+          </>
         )}
 
         {/* Ambient Glow Effects */}
@@ -120,6 +142,7 @@ export default function SellerCloudSyncLoading({ isOpen, onForceClose }) {
           />
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

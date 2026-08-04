@@ -1118,7 +1118,7 @@ export default function ContainerFlowPage() {
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
+        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4 relative">
           <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex-shrink-0">
             <div className="flex items-center gap-3">
               {/* Search bar */}
@@ -1204,6 +1204,11 @@ export default function ContainerFlowPage() {
             />
           </div>
         </div>
+
+        <SellerCloudSyncLoading
+          isOpen={isSyncing}
+          onForceClose={() => setIsSyncing(false)}
+        />
 
         {/* View Container Overlay Modal — must be inside this return block */}
         <ContainerDetailsModal
@@ -1371,8 +1376,6 @@ export default function ContainerFlowPage() {
             }
           }}
         />
-
-        <SellerCloudSyncLoading isOpen={isSyncing} />
       </div>
     );
   }
@@ -1838,7 +1841,6 @@ export default function ContainerFlowPage() {
       />
 
       {/* FullPageLoader removed in favor of localized TableLoader */}
-      <SellerCloudSyncLoading isOpen={isSyncing} />
     </div>
   );
 }
