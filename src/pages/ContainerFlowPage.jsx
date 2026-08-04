@@ -1357,6 +1357,22 @@ export default function ContainerFlowPage() {
             }}
           />
         )}
+
+        {/* Modals for List View */}
+        <ContainerDetailsModal
+          container={viewingContainerDetails}
+          isLoading={isViewContainerLoading}
+          onClose={() => setViewingContainerDetails(null)}
+          onRefresh={() => {
+            fetchContainerAPI(1, '', false);
+            fetchTablePage();
+            if (viewingContainerDetails?.id) {
+              handleViewContainer({ id: viewingContainerDetails.id });
+            }
+          }}
+        />
+
+        <SellerCloudSyncLoading isOpen={isSyncing} />
       </div>
     );
   }
