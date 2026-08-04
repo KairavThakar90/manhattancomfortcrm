@@ -85,7 +85,11 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
-        if (dateFrom) params.date_from = dateFrom;
+        // Backend filters date_ordered with an inclusive range (date_from / date_to)
+        if (dateFrom) {
+          params.date_from = dateFrom;
+          params.date_to = dateFrom;
+        }
 
         if (sortConfig.key && sortConfig.direction) {
           // Map front-end keys to backend column names if necessary
@@ -94,7 +98,7 @@ export default function POManagementPage() {
             vendorName: 'vendor_name',
             invoiceDate: 'invoice_date',
             eta: 'expected_delivery_date',
-            creationDate: 'created_on',
+            creationDate: 'date_ordered',
           };
           params.ordering =
             sortConfig.direction === 'desc'
@@ -159,8 +163,10 @@ export default function POManagementPage() {
             } else if (po.expected_delivery_date) {
               eta = po.expected_delivery_date.split('T')[0];
             }
-            const creationDate = po.created_on
-              ? po.created_on.split('T')[0]
+            // Order Date column maps to date_ordered (same field the date filter uses)
+            const rawOrderDate = po.date_ordered || po.created_on;
+            const creationDate = rawOrderDate
+              ? String(rawOrderDate).split('T')[0]
               : 'N/A';
 
             return {

@@ -65,6 +65,7 @@ import ItemCommentModal from './ItemCommentModal';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
+import DateFilterInput from './common/DateFilterInput';
 
 interface POManagementProps {
   loading?: boolean;
@@ -608,22 +609,26 @@ export default function POManagement({
       const matchesStatus =
         statusFilter === 'all' || po.status === statusFilter;
 
-      // Client-side order date filter
-      const poOrderDate = po.creationDate || '';
+      // When parent drives the list via API, search/status/date are already applied server-side
+      const isServerFiltered = propTotalCount !== undefined;
       const matchesDate =
-        !dateFrom || (poOrderDate && poOrderDate.startsWith(dateFrom));
+        isServerFiltered ||
+        !dateFrom ||
+        Boolean(po.creationDate && po.creationDate.startsWith(dateFrom));
+      const matchesSearchOrServer = isServerFiltered || matchesSearch;
+      const matchesStatusOrServer = isServerFiltered || matchesStatus;
 
       // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
       if (userRole === 'Vendor') {
         return (
-          matchesSearch &&
-          matchesStatus &&
+          matchesSearchOrServer &&
+          matchesStatusOrServer &&
           matchesDate &&
           po.vendorId === 'VEND-001'
         );
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearchOrServer && matchesStatusOrServer && matchesDate;
     }),
   ].sort((a, b) => {
     if (!activeSortConfig.key || !activeSortConfig.direction) return 0;
@@ -646,10 +651,10 @@ export default function POManagement({
 
   const filteredPOs = sortedPOs;
 
-  // Pagination calculation
-  const isLocalFilteringActive = Boolean(
-    searchQuery || statusFilter !== 'all' || dateFrom,
-  );
+  // Pagination calculation — trust server totals when the parent fetches filtered pages
+  const isLocalFilteringActive =
+    propTotalCount === undefined &&
+    Boolean(searchQuery || statusFilter !== 'all' || dateFrom);
   const validTotalCount =
     propTotalCount !== undefined && !isLocalFilteringActive
       ? propTotalCount
@@ -2079,33 +2084,14 @@ Supply Chain CRM Coordinator`;
                     Order Date:
                   </span>
                 </div>
-                <input
-                  type={dateFrom ? 'date' : 'text'}
-                  placeholder="yyyy-mm-dd"
-                  onFocus={(e) => (e.target.type = 'date')}
-                  onBlur={(e) => {
-                    if (!e.target.value) e.target.type = 'text';
-                  }}
-                  value={dateFrom}
-                  onChange={(e) => {
-                    setDateFrom(e.target.value);
+                <DateFilterInput
+                  value={dateFrom || ''}
+                  onChange={(val) => {
+                    setDateFrom(val);
                     handlePageChange(1);
                   }}
-                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
                   title="Order Date Filter"
                 />
-                {dateFrom && (
-                  <button
-                    onClick={() => {
-                      setDateFrom('');
-                      handlePageChange(1);
-                    }}
-                    className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
-                    title="Clear date filter"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
               </div>
             )}
           </div>

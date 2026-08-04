@@ -36,6 +36,7 @@ import ImportItemsModal from '../components/ImportItemsModal';
 import FullPageLoader from '../components/common/FullPageLoader';
 import TableLoader from '../components/common/TableLoader';
 import SellerCloudSyncLoading from '../components/common/SellerCloudSyncLoading';
+import DateFilterInput from '../components/common/DateFilterInput';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -299,7 +300,11 @@ export default function ContainerFlowPage() {
         page_size: listPageSize,
         search: listSearchQuery,
       };
-      if (dateFrom) params.date_from = dateFrom;
+      // Backend filters received_date with an inclusive range (date_from / date_to)
+      if (dateFrom) {
+        params.date_from = dateFrom;
+        params.date_to = dateFrom;
+      }
       const data = await getContainers(params);
       const results = Array.isArray(data)
         ? data
@@ -609,20 +614,8 @@ export default function ContainerFlowPage() {
     });
   }, [reduxContainers]);
 
-  // Client-side order date filter on received date
-  const filteredContainers = useMemo(() => {
-    if (!dateFrom) return allContainers;
-    return allContainers.filter((c) => {
-      const rd = c.received_date || '';
-      if (rd === 'N/A' || !rd) return false;
-      return rd.startsWith(dateFrom);
-    });
-  }, [allContainers, dateFrom]);
-
-  const paginatedContainers = useMemo(() => {
-    // Rely on server-side pagination; the fetched list is exactly the current page.
-    return filteredContainers;
-  }, [filteredContainers]);
+  // Server already applies received_date filtering via date_from/date_to
+  const paginatedContainers = allContainers;
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -1143,33 +1136,14 @@ export default function ContainerFlowPage() {
                     Received Date:
                   </span>
                 </div>
-                <input
-                  type={dateFrom ? 'date' : 'text'}
-                  placeholder="yyyy-mm-dd"
-                  onFocus={(e) => (e.target.type = 'date')}
-                  onBlur={(e) => {
-                    if (!e.target.value) e.target.type = 'text';
-                  }}
-                  value={dateFrom}
-                  onChange={(e) => {
-                    setDateFrom(e.target.value);
+                <DateFilterInput
+                  value={dateFrom || ''}
+                  onChange={(val) => {
+                    setDateFrom(val);
                     setListPage(1);
                   }}
-                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
                   title="Received Date Filter"
                 />
-                {dateFrom && (
-                  <button
-                    onClick={() => {
-                      setDateFrom('');
-                      setListPage(1);
-                    }}
-                    className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
-                    title="Clear date filter"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
               </div>
             </div>
           </div>
