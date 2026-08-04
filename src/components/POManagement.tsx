@@ -163,6 +163,7 @@ export default function POManagement({
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
   const [fetchedSkuComments, setFetchedSkuComments] = useState<any[]>([]);
   const [isLoadingSkuComments, setIsLoadingSkuComments] = useState(false);
+  const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
 
   // Reply State
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
@@ -2511,43 +2512,82 @@ Supply Chain CRM Coordinator`;
               {/* TAB: COMMENTS DISCUSSION ENGINE */}
               {activeDrawerSection === 'comments' && (
                 <div className="flex-1 flex flex-col min-h-0 gap-4">
-                  <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                      Discussion Scope
-                    </label>
-                    <select
-                      value={commentScope === 'po' ? 'po' : selectedSkuId || ''}
-                      onChange={(e) => {
-                        if (e.target.value === 'po') {
-                          setCommentScope('po');
-                          setSelectedSkuId(null);
-                        } else {
-                          setCommentScope('sku');
-                          setSelectedSkuId(e.target.value);
-                        }
-                      }}
-                      className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 focus:outline-hidden focus:border-indigo-500 text-slate-700"
-                    >
-                      <option value="po" className="font-bold">
-                        General PO Comments
-                      </option>
-                      <optgroup label="SKU-wise Comments">
-                        {selectedPO?.items?.map((item: any) => {
-                          const itemId = item.id || item.sku;
-                          return (
-                            <option key={`sku-${itemId}`} value={itemId}>
-                              SKU: {item.sku}
-                            </option>
-                          );
-                        })}
-                      </optgroup>
-                    </select>
-                  </div>
+                  {isCommentOnlyView && (
+                    <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                        Discussion Scope
+                      </label>
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setIsScopeDropdownOpen(!isScopeDropdownOpen)
+                          }
+                          className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 flex items-center justify-between focus:outline-hidden focus:border-indigo-500 text-slate-700"
+                        >
+                          <span className="truncate">
+                            {commentScope === 'po'
+                              ? 'General PO Comments'
+                              : selectedPO?.items?.find(
+                                    (i: any) =>
+                                      (i.id || i.sku) === selectedSkuId,
+                                  )
+                                ? `SKU: ${selectedPO?.items?.find((i: any) => (i.id || i.sku) === selectedSkuId)?.sku}`
+                                : 'General PO Comments'}
+                          </span>
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isScopeDropdownOpen ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+
+                        {isScopeDropdownOpen && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden text-xs max-h-60 overflow-y-auto">
+                            <button
+                              className={`w-full text-left px-3 py-2 font-bold hover:bg-slate-50 transition-colors ${commentScope === 'po' ? 'bg-indigo-50/50 text-indigo-700' : 'text-slate-700'}`}
+                              onClick={() => {
+                                setCommentScope('po');
+                                setSelectedSkuId(null);
+                                setIsScopeDropdownOpen(false);
+                              }}
+                            >
+                              General PO Comments
+                            </button>
+
+                            {selectedPO?.items?.length > 0 && (
+                              <div className="px-3 py-1.5 bg-slate-50 border-y border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                SKU-wise Comments
+                              </div>
+                            )}
+
+                            {selectedPO?.items?.map((item: any) => {
+                              const itemId = item.id || item.sku;
+                              const isSelected =
+                                commentScope === 'sku' &&
+                                selectedSkuId === itemId;
+                              return (
+                                <button
+                                  key={`sku-${itemId}`}
+                                  className={`w-full text-left px-3 py-2 transition-colors ${isSelected ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                                  onClick={() => {
+                                    setCommentScope('sku');
+                                    setSelectedSkuId(itemId);
+                                    setIsScopeDropdownOpen(false);
+                                  }}
+                                >
+                                  SKU: {item.sku}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
                     {(
-                      commentScope === 'po'
-                        ? isLoadingComments
-                        : isLoadingSkuComments
+                      isCommentOnlyView && commentScope === 'sku'
+                        ? isLoadingSkuComments
+                        : isLoadingComments
                     ) ? (
                       <div className="flex flex-col items-center justify-center py-12 space-y-3">
                         <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
@@ -2559,17 +2599,17 @@ Supply Chain CRM Coordinator`;
                       <>
                         {(() => {
                           const commentMap = new Map<string, any>();
-                          (commentScope === 'po'
-                            ? selectedPOComments
-                            : fetchedSkuComments
+                          (isCommentOnlyView && commentScope === 'sku'
+                            ? fetchedSkuComments
+                            : selectedPOComments
                           ).forEach((c) => {
                             commentMap.set(c.id, { ...c, children: [] });
                           });
 
                           const rootNodes: any[] = [];
-                          (commentScope === 'po'
-                            ? selectedPOComments
-                            : fetchedSkuComments
+                          (isCommentOnlyView && commentScope === 'sku'
+                            ? fetchedSkuComments
+                            : selectedPOComments
                           ).forEach((c) => {
                             const node = commentMap.get(c.id);
                             if (
