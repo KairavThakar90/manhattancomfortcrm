@@ -18,57 +18,70 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
   const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
 
-  // Fetch POs
-  useEffect(() => {
-    const fetchPOs = async () => {
-      try {
-        setPoLoading(true);
-        const data = await getPurchaseOrders({ page: 1, limit: 100 });
-        if (data && data.results) {
-          setPoList(data.results);
-        } else if (Array.isArray(data)) {
-          setPoList(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch POs', err);
-      } finally {
-        setPoLoading(false);
+  const poSearchTimeout = React.useRef(null);
+
+  const fetchPOs = React.useCallback(async (query = '') => {
+    try {
+      setPoLoading(true);
+      const params = {};
+      if (query.trim()) {
+        params.search = query.trim();
       }
-    };
-    fetchPOs();
+      const data = await getPurchaseOrders(params);
+      if (data && data.results) {
+        setPoList(data.results);
+      } else if (Array.isArray(data)) {
+        setPoList(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch POs', err);
+    } finally {
+      setPoLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPOs();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchPOs]);
+
+  const handlePoSearch = (q) => {
+    setPoSearch(q);
+    if (poSearchTimeout.current) clearTimeout(poSearchTimeout.current);
+    poSearchTimeout.current = setTimeout(() => {
+      fetchPOs(q);
+    }, 400);
+  };
+
   const poDropdownItems = useMemo(() => {
-    let displayList = poList;
-    if (poSearch) {
-      const q = poSearch.toLowerCase();
-      displayList = displayList.filter((po) => {
-        const poNumber = String(
-          po.sellercloud_po_id || po.po_number || po.id,
-        ).replace(/^PO-/, '');
-        const vendorName = String(
-          po.vendor?.name ||
-            vendorsList.find((v) => v.id === po.vendor_id)?.name ||
-            po.vendor_name ||
-            po.vendorName ||
-            '',
-        ).toLowerCase();
-        return poNumber.includes(q) || vendorName.includes(q);
-      });
-    }
-    return displayList.map((po) => {
+    const rawList = [...poList];
+
+    const finalItems = [];
+    const seenLabels = new Set();
+
+    rawList.forEach((po) => {
       const vendorName =
         po.vendor?.name ||
         vendorsList.find((v) => v.id === po.vendor_id)?.name ||
         po.vendor_name ||
         po.vendorName ||
         'Unknown Vendor';
-      return {
-        value: po.id,
-        label: `${po.sellercloud_po_id || po.po_number || po.id} - ${vendorName}`,
-      };
+
+      const label = `${po.sellercloud_po_id || po.po_number || po.id} - ${vendorName}`;
+
+      if (!seenLabels.has(label)) {
+        seenLabels.add(label);
+        finalItems.push({
+          value: po.id,
+          label,
+        });
+      }
     });
-  }, [poList, poSearch, vendorsList]);
+
+    return finalItems;
+  }, [poList, vendorsList]);
 
   const selectedPO = useMemo(() => {
     return poList.find((p) => String(p.id) === String(selectedPOId));
@@ -280,7 +293,7 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
                     setSelectedPOId(val);
                     setSelectedItems([]);
                   }}
-                  onSearch={(q) => setPoSearch(q)}
+                  onSearch={handlePoSearch}
                   hasMore={false}
                   isLoading={poLoading}
                   items={poDropdownItems}

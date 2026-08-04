@@ -175,11 +175,14 @@ export default function ContainerFlowPage() {
   const [poList, setPoList] = useState([]);
   const [poSearch, setPoSearch] = useState('');
   const [poLoading, setPoLoading] = useState(false);
+  const poSearchTimeout = useRef(null);
 
-  const fetchPOs = useCallback(async () => {
+  const fetchPOs = useCallback(async (searchQuery = '') => {
     try {
       setPoLoading(true);
-      const data = await getPurchaseOrders({ page_size: 200, dropdown: true });
+      const data = await getPurchaseOrders({
+        ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+      });
       const results = Array.isArray(data) ? data : data.results || [];
       setPoList(results);
     } catch (err) {
@@ -197,55 +200,39 @@ export default function ContainerFlowPage() {
 
   const handlePoSearch = (query) => {
     setPoSearch(query);
+    if (poSearchTimeout.current) clearTimeout(poSearchTimeout.current);
+    poSearchTimeout.current = setTimeout(() => {
+      fetchPOs(query);
+    }, 400);
   };
 
   const vendorsList = useSelector((state) => state.vendors?.list || []);
   const poDropdownItems = useMemo(() => {
     // Show Redux data first, merge with API poList
-    const map = new Map();
-    if (Array.isArray(purchaseOrders)) {
-      purchaseOrders.forEach((po) => map.set(po.id, po));
+    const rawList = [];
+    // Only merge the full Redux cache if the user is not actively searching
+    if (!poSearch && Array.isArray(purchaseOrders)) {
+      rawList.push(...purchaseOrders);
     }
     if (Array.isArray(poList)) {
-      poList.forEach((po) => map.set(po.id, po));
-    }
-
-    let displayList = Array.from(map.values());
-
-    if (poSearch) {
-      const q = poSearch.toLowerCase();
-      displayList = displayList.filter((po) => {
-        const vendorName =
-          po.vendor?.name ||
-          vendorsList.find((v) => v.id === po.vendor_id)?.name ||
-          po.vendorName ||
-          po.vendor_name ||
-          'Unknown Vendor';
-
-        const poNumber = po.sellercloud_po_id
-          ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}`
-          : String(po.order_number || po.id).replace(/^PO-/, '');
-
-        return (
-          poNumber?.toString().toLowerCase().includes(q) ||
-          vendorName?.toLowerCase().includes(q) ||
-          po.id?.toString().toLowerCase().includes(q)
-        );
-      });
+      rawList.push(...poList);
     }
 
     // Ensure selected PO is always in the list
     if (
       selectedPOId &&
-      !displayList.some((p) => String(p.id) === String(selectedPOId))
+      !rawList.some((p) => String(p.id) === String(selectedPOId))
     ) {
-      const reduxPO = purchaseOrders.find(
+      const reduxPO = purchaseOrders?.find(
         (p) => String(p.id) === String(selectedPOId),
       );
-      if (reduxPO) displayList.unshift(reduxPO);
+      if (reduxPO) rawList.unshift(reduxPO);
     }
 
-    return displayList.map((po) => {
+    const finalItems = [];
+    const seenLabels = new Set();
+
+    rawList.forEach((po) => {
       const vendorName =
         po.vendor?.name ||
         vendorsList.find((v) => v.id === po.vendor_id)?.name ||
@@ -253,12 +240,19 @@ export default function ContainerFlowPage() {
         po.vendor_name ||
         'Unknown Vendor';
 
-      return {
-        value: po.id,
-        label: `${po.sellercloud_po_id ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : String(po.order_number || po.id).replace(/^PO-/i, '')} - ${vendorName}`,
-      };
+      const label = `${po.sellercloud_po_id ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : String(po.order_number || po.id).replace(/^PO-/i, '')} - ${vendorName}`;
+
+      if (!seenLabels.has(label)) {
+        seenLabels.add(label);
+        finalItems.push({
+          value: po.id,
+          label,
+        });
+      }
     });
-  }, [poList, purchaseOrders, poSearch, vendorsList, selectedPOId]);
+
+    return finalItems;
+  }, [poList, purchaseOrders, vendorsList, selectedPOId, poSearch]);
 
   // ====== Container Infinite Scroll Logic ======
   const reduxContainers = useSelector((state) => state.containers?.list || []);
@@ -401,12 +395,18 @@ export default function ContainerFlowPage() {
     const map = new Map();
     if (Array.isArray(reduxContainers)) {
       reduxContainers.forEach((c) =>
-        map.set(c.id || c.container_name || c.name || c.container_number, c),
+        map.set(
+          String(c.id || c.container_name || c.name || c.container_number),
+          c,
+        ),
       );
     }
     if (Array.isArray(containerList)) {
       containerList.forEach((c) =>
-        map.set(c.id || c.container_name || c.name || c.container_number, c),
+        map.set(
+          String(c.id || c.container_name || c.name || c.container_number),
+          c,
+        ),
       );
     }
 

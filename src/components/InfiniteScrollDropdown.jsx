@@ -105,9 +105,12 @@ export default function InfiniteScrollDropdown({
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+              className="w-full pl-9 pr-9 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
               autoFocus
             />
+            {isLoading && (
+              <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 animate-spin" />
+            )}
           </div>
 
           <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
