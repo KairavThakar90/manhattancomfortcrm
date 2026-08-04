@@ -607,13 +607,13 @@ export default function ContainerFlowPage() {
     });
   }, [reduxContainers]);
 
-  // Client-side order date filter on ETA
+  // Client-side order date filter on received date
   const filteredContainers = useMemo(() => {
     if (!dateFrom) return allContainers;
     return allContainers.filter((c) => {
-      const eta = c.arrivalDate || '';
-      if (eta === 'Pending' || eta === 'N/A') return !dateFrom;
-      return eta === dateFrom;
+      const rd = c.received_date || '';
+      if (rd === 'N/A' || !rd) return false;
+      return rd === dateFrom;
     });
   }, [allContainers, dateFrom]);
 
@@ -1114,51 +1114,53 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col gap-3 flex-shrink-0 justify-between">
-            {/* Row 1: Search bar */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by Container ID, Name, Warehouse, ETA, Status..."
-                value={listSearchQuery}
-                onChange={(e) => {
-                  setListSearchQuery(e.target.value);
-                  setListPage(1);
-                }}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-              />
-            </div>
-            {/* Order Date Filter - inline */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
-                  Order Date Filter:
-                </span>
-              </div>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => {
-                  setDateFrom(e.target.value);
-                  setListPage(1);
-                }}
-                className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
-                title="Order Date Filter"
-              />
-              {dateFrom && (
-                <button
-                  onClick={() => {
-                    setDateFrom('');
+          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex-shrink-0">
+            <div className="flex items-center gap-3">
+              {/* Search bar */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search by Container ID, Name, Warehouse, ETA, Status..."
+                  value={listSearchQuery}
+                  onChange={(e) => {
+                    setListSearchQuery(e.target.value);
                     setListPage(1);
                   }}
-                  className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
-                  title="Clear date filter"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                />
+              </div>
+              {/* Order Date Filter - inline */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                    Received Date:
+                  </span>
+                </div>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value);
+                    setListPage(1);
+                  }}
+                  className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                  title="Received Date Filter"
+                />
+                {dateFrom && (
+                  <button
+                    onClick={() => {
+                      setDateFrom('');
+                      setListPage(1);
+                    }}
+                    className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
+                    title="Clear date filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
