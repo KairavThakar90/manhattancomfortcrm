@@ -109,9 +109,20 @@ export default function ImportItemsModal({
         errors.push('Duplicate SKU. Remove any one row');
       }
 
-      const finalErrors = preserveServerStatus
-        ? [...(row._errors || []), ...errors]
-        : errors;
+      const knownLocalErrors = [
+        'Missing sku',
+        'Missing qty_in_container',
+        'Duplicate SKU. Remove any one row',
+      ];
+      const preservedErrors = preserveServerStatus
+        ? (row._errors || []).filter(
+            (e) =>
+              !knownLocalErrors.includes(e) &&
+              !e.startsWith('Requested Qty exceeds'),
+          )
+        : [];
+
+      const finalErrors = Array.from(new Set([...preservedErrors, ...errors]));
       let finalSuccess = preserveServerStatus ? row._success : null;
 
       // If there's any error logically, it absolutely cannot be successful
@@ -227,7 +238,10 @@ export default function ImportItemsModal({
   };
 
   const removeRow = (id) => {
-    setRows((prev) => prev.filter((r) => r._id !== id));
+    setRows((prev) => {
+      const filtered = prev.filter((r) => r._id !== id);
+      return validateRows(filtered, true);
+    });
   };
 
   const handleVerifyItems = async () => {
