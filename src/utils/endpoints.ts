@@ -167,3 +167,4 @@ export const WAREHOUSES_LIST = '/warehouses/';
 export const WAREHOUSES_BY_ID = (id: string) => `/warehouses/${id}`;
 export const CONTAINER_ITEMS_IMPORT = (id: string) => `/containers/${id}/items`;
 export const CONTAINER_IMPORT_PREVIEW = '/containers/import/preview';
+export const CONTAINER_VALIDATE_ITEMS_BULK = '/containers/validate-items-bulk';

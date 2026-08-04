@@ -17,6 +17,7 @@ import {
   CONTAINER_ITEMS_IMPORT,
   CONTAINERS_LIST,
   CONTAINER_IMPORT_PREVIEW,
+  CONTAINER_VALIDATE_ITEMS_BULK,
 } from '../utils/endpoints';
 import InfiniteScrollDropdown from './InfiniteScrollDropdown';
 import { createContainer } from '../services/container.service';
@@ -90,6 +91,14 @@ export default function ImportItemsModal({
   const handleFileUpload = async (e) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
+
+    if (!selectedFile.name.match(/\.(csv|xlsx|xls)$/i)) {
+      toast.error(
+        'Invalid file format. Only .csv, .xlsx, and .xls files are supported.',
+      );
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
     setFile(selectedFile);
     setLoading(true);
@@ -186,6 +195,111 @@ export default function ImportItemsModal({
 
   const removeRow = (id) => {
     setRows((prev) => prev.filter((r) => r._id !== id));
+  };
+
+  const handleVerifyItems = async () => {
+    if (rows.length === 0) return;
+
+    // Construct payload
+    const payload = {
+      items: rows.map((r) => ({
+        po_id: r.file_po_id || '',
+        sku: r.sku || '',
+        qty: parseInt(r.qty_in_container || r.qty || 0, 10),
+      })),
+    };
+
+    try {
+      setLoading(true);
+      const response = await apiClient.post(
+        CONTAINER_VALIDATE_ITEMS_BULK,
+        payload,
+        { headers: { 'X-Skip-Global-Error': 'true' } },
+      );
+
+      const validatedItems = response.data?.data || response.data || [];
+
+      const applyValidation = (items) => {
+        setRows((prevRows) => {
+          return prevRows.map((r, index) => {
+            const serverItem = items[index];
+            if (!serverItem) return r;
+
+            const errs = [];
+            let successMsg = null;
+            if (serverItem.status === 'error') {
+              errs.push(
+                serverItem.validation_message || 'Item validation failed',
+              );
+            } else if (serverItem.status === 'success' || serverItem.is_valid) {
+              successMsg = serverItem.validation_message || 'Valid';
+            }
+
+            return {
+              ...r,
+              sellercloud_item_id:
+                serverItem.found_item?.sellercloud_item_id ||
+                serverItem.found_item?.id ||
+                r.sellercloud_item_id ||
+                '',
+              _errors: errs,
+              _success: successMsg,
+            };
+          });
+        });
+      };
+
+      if (Array.isArray(validatedItems) && validatedItems.length > 0) {
+        applyValidation(validatedItems);
+        const hasErrors = validatedItems.some((i) => i.status === 'error');
+        if (hasErrors) {
+          toast.warning('Verification complete, but some items have errors.');
+        } else {
+          toast.success('All items verified successfully!');
+        }
+      }
+    } catch (err) {
+      console.error('Validation error:', err);
+
+      // If the API throws 4xx and passes the array, map it!
+      const errItems = err.response?.data?.data || err.response?.data;
+      if (Array.isArray(errItems) && errItems.length > 0) {
+        setRows((prevRows) => {
+          return prevRows.map((r, index) => {
+            const serverItem = errItems[index];
+            if (!serverItem) return r;
+            const errs = [];
+            let successMsg = null;
+            if (serverItem.status === 'error') {
+              errs.push(
+                serverItem.validation_message || 'Item validation failed',
+              );
+            } else if (serverItem.status === 'success' || serverItem.is_valid) {
+              successMsg = serverItem.validation_message || 'Valid';
+            }
+            return {
+              ...r,
+              sellercloud_item_id:
+                serverItem.found_item?.sellercloud_item_id ||
+                serverItem.found_item?.id ||
+                r.sellercloud_item_id ||
+                '',
+              _errors: errs,
+              _success: successMsg,
+            };
+          });
+        });
+        toast.warning('Verification complete, but some items have errors.');
+      } else {
+        toast.error(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            'Validation failed',
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImport = async () => {
@@ -387,6 +501,14 @@ export default function ImportItemsModal({
                     </button>
                     <button
                       type="button"
+                      onClick={handleVerifyItems}
+                      disabled={loading || rows.length === 0}
+                      className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md hover:bg-emerald-100 text-xs font-bold transition shadow-sm disabled:opacity-50"
+                    >
+                      Verify Items
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => {
                         setFile(null);
                         setRows([]);
@@ -433,16 +555,32 @@ export default function ImportItemsModal({
                             row._errors.length > 0 ? 'bg-rose-50/30' : ''
                           }
                         >
-                          <td className="px-4 py-2">
+                          <td className="px-4 py-2 relative">
                             <input
                               type="text"
                               value={row.sku || ''}
                               onChange={(e) =>
                                 handleRowChange(row._id, 'sku', e.target.value)
                               }
-                              className={`w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-1 ${!row.sku || row.sku === '-' ? 'border-rose-300 focus:ring-rose-500 bg-rose-50' : 'border-slate-200 focus:ring-indigo-500 hover:border-slate-300'}`}
+                              className={`w-full px-2 py-1 border rounded text-xs focus:outline-none focus:ring-1 ${!row.sku || row.sku === '-' || row._errors?.length > 0 ? 'border-rose-300 focus:ring-rose-500 bg-rose-50 text-rose-800' : row._success ? 'border-emerald-300 focus:ring-emerald-500 bg-emerald-50/30 text-emerald-900' : 'border-slate-200 focus:ring-indigo-500 hover:border-slate-300'}`}
                               placeholder="SKU Required"
                             />
+                            {row._errors && row._errors.length > 0 && (
+                              <div
+                                className="mt-1 text-[10px] text-rose-600 font-bold leading-tight"
+                                title={row._errors.join(', ')}
+                              >
+                                {row._errors[0]}
+                              </div>
+                            )}
+                            {row._success && (
+                              <div
+                                className="mt-1 text-[10px] text-emerald-600 font-bold leading-tight"
+                                title={row._success}
+                              >
+                                {row._success}
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-2">
                             <input
