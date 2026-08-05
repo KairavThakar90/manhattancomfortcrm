@@ -17,6 +17,10 @@ const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },
   { path: '/purchase-orders', element: React.createElement(POManagementPage) },
+  {
+    path: '/purchase-orders/:poId',
+    element: React.createElement(POManagementPage),
+  },
   { path: '/container-flow', element: React.createElement(ContainerFlowPage) },
   {
     path: '/sourcing-vendors',

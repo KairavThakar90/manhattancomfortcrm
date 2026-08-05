@@ -22,6 +22,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Filter,
   FileSpreadsheet,
   Download,
   Upload,
@@ -37,6 +38,7 @@ import FullPageLoader from '../components/common/FullPageLoader';
 import TableLoader from '../components/common/TableLoader';
 import SellerCloudSyncLoading from '../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../components/common/DateFilterInput';
+import WarehouseInfiniteDropdown from '../components/common/WarehouseInfiniteDropdown';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -100,6 +102,16 @@ export default function ContainerFlowPage() {
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
   const [dateFrom, setDateFrom] = useState('');
+  const [warehouseFilter, setWarehouseFilter] = useState('all');
+
+  const containerTableRef = useRef(null);
+
+  // Scroll containers table to top after pagination changes
+  useEffect(() => {
+    if (containerTableRef.current) {
+      containerTableRef.current.scrollTop = 0;
+    }
+  }, [listPage, listPageSize]);
 
   const [showGlobalImport, setShowGlobalImport] = useState(false);
 
@@ -300,10 +312,11 @@ export default function ContainerFlowPage() {
         page_size: listPageSize,
         search: listSearchQuery,
       };
-      // Backend filters received_date with an inclusive range (date_from / date_to)
       if (dateFrom) {
         params.date_from = dateFrom;
-        params.date_to = dateFrom;
+      }
+      if (warehouseFilter && warehouseFilter !== 'all') {
+        params.sellercloud_warehouse_id = warehouseFilter;
       }
       const data = await getContainers(params);
       const results = Array.isArray(data)
@@ -326,7 +339,14 @@ export default function ContainerFlowPage() {
       setListLoading(false);
       setHasLoadedInitial(true);
     }
-  }, [dispatch, listPage, listPageSize, listSearchQuery, dateFrom]);
+  }, [
+    dispatch,
+    listPage,
+    listPageSize,
+    listSearchQuery,
+    dateFrom,
+    warehouseFilter,
+  ]);
 
   const handleContainerPageChange = (newPage) => {
     setIsPaginating(true);
@@ -374,11 +394,15 @@ export default function ContainerFlowPage() {
   }, [fetchContainerAPI]);
 
   useEffect(() => {
+    let timeoutId;
     if (showList) {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         fetchTablePage();
-      }, 0);
+      }, 400);
     }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [showList, fetchTablePage]);
 
   const loadMoreContainers = () => {
@@ -389,10 +413,16 @@ export default function ContainerFlowPage() {
     }
   };
 
+  const containerSearchTimeout = useRef(null);
+
   const handleContainerSearch = (query) => {
     setContainerSearch(query);
     setContainerPage(1);
-    fetchContainerAPI(1, query, false);
+    if (containerSearchTimeout.current)
+      clearTimeout(containerSearchTimeout.current);
+    containerSearchTimeout.current = setTimeout(() => {
+      fetchContainerAPI(1, query, false);
+    }, 400);
   };
 
   const containerDropdownItems = useMemo(() => {
@@ -962,6 +992,16 @@ export default function ContainerFlowPage() {
                 <ExternalLink className="h-3 w-3" />
               </a>
             )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewContainer(c);
+              }}
+              title="View container details"
+              className="text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center shrink-0"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
           </div>
         ),
       },
@@ -1128,6 +1168,26 @@ export default function ContainerFlowPage() {
                   className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
                 />
               </div>
+              {/* Warehouse Filter */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                    Warehouse:
+                  </span>
+                </div>
+                <div className="w-48">
+                  <WarehouseInfiniteDropdown
+                    value={warehouseFilter}
+                    onChange={(val) => {
+                      setWarehouseFilter(val);
+                      setListPage(1);
+                    }}
+                    showAllOption={true}
+                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                  />
+                </div>
+              </div>
               {/* Order Date Filter - inline */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
@@ -1157,6 +1217,7 @@ export default function ContainerFlowPage() {
               keyField="id"
               containerClassName="flex-1 flex flex-col min-h-0 w-full"
               tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+              tableWrapperRef={containerTableRef}
               theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
               tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
               tbodyClassName="divide-y divide-slate-100"

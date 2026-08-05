@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Layers, Lock, User, ChevronRight, Sparkles } from 'lucide-react';
+import {
+  Layers,
+  Lock,
+  User,
+  ChevronRight,
+  Sparkles,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (username: string, password: string, rememberMe: boolean) => void;
@@ -21,6 +29,7 @@ export default function LoginPage({
   const [rememberMe, setRememberMe] = useState(initialRememberMe || false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   React.useEffect(() => {
     initialUsername ? setUsername(initialUsername) : null;
@@ -124,16 +133,28 @@ export default function LoginPage({
                   <Lock className="h-4.5 w-4.5" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (passwordError) setPasswordError('');
                   }}
-                  className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl pl-10 pr-4 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm font-medium"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 text-white rounded-xl pl-10 pr-12 py-3 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-sm font-medium"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-400 transition-colors focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
               {passwordError && (
                 <p className="mt-1.5 text-xs text-rose-500 font-medium">

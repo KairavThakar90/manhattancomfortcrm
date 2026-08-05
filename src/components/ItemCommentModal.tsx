@@ -416,27 +416,13 @@ export default function ItemCommentModal({
             <h2 className="text-lg font-bold text-slate-800 mb-2">
               SKU Comments
             </h2>
-            <div className="relative max-w-sm">
-              <select
-                value={activeItem?.id || activeItem?.sku || ''}
-                onChange={(e) => {
-                  const sel = selectedPO?.items?.find(
-                    (i: any) => (i.id || i.sku) === e.target.value,
-                  );
-                  if (sel) setActiveItem({ ...sel, id: sel.id || sel.sku });
-                }}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-hidden focus:border-indigo-500 font-medium text-slate-700 pointer-events-auto cursor-pointer shadow-xs truncate"
-              >
-                {selectedPO?.items?.map((item: any) => {
-                  const itemId = item.id || item.sku;
-                  return (
-                    <option key={itemId} value={itemId}>
-                      {item.sku} - {item.name || item.product_name} (Qty:{' '}
-                      {item.qty || item.orderedQty || item.quantity})
-                    </option>
-                  );
-                })}
-              </select>
+            <div className="text-sm font-medium text-slate-600 truncate max-w-md">
+              {activeItem?.sku} - {activeItem?.name || activeItem?.product_name}{' '}
+              (Qty:{' '}
+              {activeItem?.qty ||
+                activeItem?.orderedQty ||
+                activeItem?.quantity}
+              )
             </div>
           </div>
           <button

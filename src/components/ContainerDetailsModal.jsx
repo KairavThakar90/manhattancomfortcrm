@@ -44,11 +44,11 @@ export default function ContainerDetailsModal({
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm text-slate-500 font-medium">
-                    {container.name || 'Unnamed'}
-                    {container.warehouse_name &&
+                    {container.sellercloud_container_id || 'Unnamed'}
+                    {/* {container.warehouse_name &&
                     container.warehouse_name !== 'N/A'
                       ? ` (${container.warehouse_name})`
-                      : ''}
+                      : ''} */}
                   </span>
                 </div>
               </div>
@@ -92,11 +92,11 @@ export default function ContainerDetailsModal({
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm shadow-slate-100/50 hover:border-emerald-200 hover:shadow-emerald-50 transition-all duration-200">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Package className="w-3.5 h-3.5 text-emerald-500" />
-                  Total Qty
+                  Total Item
                 </p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-xl font-bold text-slate-800">
-                    {container.totalItems}
+                    {totalItems}
                   </span>
                   <span className="text-sm font-medium text-slate-500">
                     units
