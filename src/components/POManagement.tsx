@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
@@ -70,6 +70,25 @@ import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
 import ContainerDetailsModal from './ContainerDetailsModal';
 import { getContainerDetails } from '../services/container.service';
+
+interface DataTableProps {
+  columns: any[];
+  data: any[];
+  keyField?: string;
+  emptyMessage?: React.ReactNode;
+  isLoading?: boolean;
+  containerClassName?: string;
+  tableWrapperClassName?: string;
+  tableWrapperRef?: React.Ref<HTMLDivElement>;
+  tableClassName?: string;
+  theadClassName?: string;
+  defaultThClassName?: string;
+  tbodyClassName?: string;
+  trClassName?: string | ((row: any, rowIndex: number) => string);
+  defaultTdClassName?: string;
+  pagination?: React.ReactNode;
+}
+const TypedDataTable = DataTable as React.FC<DataTableProps>;
 
 const VendorStatusDropdown = ({
   poId,
@@ -643,6 +662,22 @@ export default function POManagement({
   const [itemsPageSize, setItemsPageSize] = useState(10);
   const [isItemsPaginationLoading, setIsItemsPaginationLoading] =
     useState(false);
+  const itemsTableRef = useRef<HTMLDivElement>(null);
+  const poTableRef = useRef<HTMLDivElement>(null);
+
+  // Scroll items table back to top after pagination changes (runs post-render)
+  useEffect(() => {
+    if (itemsTableRef.current) {
+      itemsTableRef.current.scrollTop = 0;
+    }
+  }, [itemsCurrentPage, itemsPageSize]);
+
+  // Scroll main PO table back to top after pagination changes (runs post-render)
+  useEffect(() => {
+    if (poTableRef.current) {
+      poTableRef.current.scrollTop = 0;
+    }
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     if (selectedPOId) {
@@ -2152,29 +2187,31 @@ Supply Chain CRM Coordinator`;
             <div className="flex flex-col gap-0.5">
               {item.containers.map((c: any, idx: number) => {
                 const isObj = typeof c === 'object' && c !== null;
-                const cId = isObj
+                const cDbId = isObj ? c.id : null;
+                const cScId = isObj ? c.sellercloud_container_id : null;
+                const cName = isObj
+                  ? c.container_name || c.name || 'Unnamed'
+                  : String(c);
+                const cClickId = isObj
                   ? c.id ||
                     c.sellercloud_container_id ||
                     c.name ||
                     c.container_name
                   : c;
+                const qty = isObj ? (c.qty_in_container ?? 0) : 0;
+                const displayId = cScId || cDbId;
                 return (
                   <button
                     key={idx}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (cId) handleOpenContainerDetails(String(cId));
+                      if (cClickId)
+                        handleOpenContainerDetails(String(cClickId));
                     }}
-                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
+                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors font-mono text-[11px]"
                   >
-                    {isObj
-                      ? c.sellercloud_container_id ||
-                        c.container_name ||
-                        'Unnamed'
-                      : c}{' '}
-                    <strong className="text-indigo-800">
-                      ({isObj ? c.qty_in_container || 0 : 0})
-                    </strong>
+                    {displayId ? `[${displayId}]` : ''}
+                    {cName}({qty})
                   </button>
                 );
               })}
@@ -2436,12 +2473,13 @@ Supply Chain CRM Coordinator`;
       {activeSubTab === 'grid' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {loading && <TableLoader message="Please wait a moment..." />}
-          <DataTable
+          <TypedDataTable
             columns={poColumns}
             data={paginatedPOs}
             keyField="id"
             containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+            tableWrapperRef={poTableRef}
             theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
             tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-slate-100"
@@ -2808,7 +2846,7 @@ Supply Chain CRM Coordinator`;
                         <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
                           Item Specifications (Products)
                         </h5>
-                        <DataTable
+                        <TypedDataTable
                           columns={poItemColumns}
                           data={paginatedItems}
                           keyField="sku"
@@ -2817,6 +2855,7 @@ Supply Chain CRM Coordinator`;
                           }
                           containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
                           tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                          tableWrapperRef={itemsTableRef}
                           theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
                           tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
                           tbodyClassName="divide-y divide-slate-100 text-slate-700"

@@ -41,10 +41,14 @@ export default function DataTable({
   trClassName = 'hover:bg-slate-50/75 transition-colors',
   defaultTdClassName = 'px-6 py-4',
   pagination = null,
+  tableWrapperRef = null,
 }) {
   return (
     <div className={containerClassName}>
-      <div className={`relative ${tableWrapperClassName}`}>
+      <div
+        ref={tableWrapperRef}
+        className={`relative ${tableWrapperClassName}`}
+      >
         <table className={tableClassName}>
           <thead>
             <tr className={theadClassName}>

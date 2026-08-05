@@ -101,6 +101,15 @@ export default function ContainerFlowPage() {
   const [totalListCount, setTotalListCount] = useState(0);
   const [dateFrom, setDateFrom] = useState('');
 
+  const containerTableRef = useRef(null);
+
+  // Scroll containers table to top after pagination changes
+  useEffect(() => {
+    if (containerTableRef.current) {
+      containerTableRef.current.scrollTop = 0;
+    }
+  }, [listPage, listPageSize]);
+
   const [showGlobalImport, setShowGlobalImport] = useState(false);
 
   // CSV Export Modal State
@@ -1165,6 +1174,7 @@ export default function ContainerFlowPage() {
               keyField="id"
               containerClassName="flex-1 flex flex-col min-h-0 w-full"
               tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+              tableWrapperRef={containerTableRef}
               theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
               tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
               tbodyClassName="divide-y divide-slate-100"
