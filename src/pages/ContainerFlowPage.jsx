@@ -300,10 +300,8 @@ export default function ContainerFlowPage() {
         page_size: listPageSize,
         search: listSearchQuery,
       };
-      // Backend filters received_date with an inclusive range (date_from / date_to)
       if (dateFrom) {
         params.date_from = dateFrom;
-        params.date_to = dateFrom;
       }
       const data = await getContainers(params);
       const results = Array.isArray(data)

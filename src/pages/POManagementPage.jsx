@@ -85,10 +85,8 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
-        // Backend filters date_ordered with an inclusive range (date_from / date_to)
         if (dateFrom) {
           params.date_from = dateFrom;
-          params.date_to = dateFrom;
         }
 
         if (sortConfig.key && sortConfig.direction) {
