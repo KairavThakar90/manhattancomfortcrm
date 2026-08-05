@@ -68,6 +68,8 @@ import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
+import ContainerDetailsModal from './ContainerDetailsModal';
+import { getContainerDetails } from '../services/container.service';
 
 const VendorStatusDropdown = ({
   poId,
@@ -313,6 +315,37 @@ export default function POManagement({
   // Item Comments Modal
   const [selectedItemForComments, setSelectedItemForComments] =
     useState<any>(null);
+
+  // Container Details Modal
+  const [viewingContainerDetails, setViewingContainerDetails] =
+    useState<any>(null);
+  const [isContainerModalLoading, setIsContainerModalLoading] = useState(false);
+
+  const handleOpenContainerDetails = async (containerId: string) => {
+    setIsContainerModalLoading(true);
+    try {
+      // Create a mock object so the modal opens immediately with loading state (optional)
+      setViewingContainerDetails({ name: containerId, id: containerId });
+      const rawResp = await getContainerDetails(containerId);
+      const detailsResp = Array.isArray(rawResp) ? rawResp[0] : rawResp;
+
+      const rawDetails = detailsResp?.details || detailsResp?.items || [];
+      const safeDetails = Array.isArray(rawDetails) ? rawDetails : [];
+
+      setViewingContainerDetails({
+        id: containerId,
+        name: containerId,
+        ...detailsResp,
+        details: safeDetails,
+      });
+    } catch (err) {
+      console.error('Failed to load container details:', err);
+      toast.error(`Could not load details for container ${containerId}`);
+      setViewingContainerDetails(null);
+    } finally {
+      setIsContainerModalLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleOpenItemComments = (e: any) => {
@@ -1787,27 +1820,67 @@ Supply Chain CRM Coordinator`;
         ),
       },
       {
-        header: 'Container Count',
-        accessor: 'containerNames',
-        headerClassName: 'px-6 py-4 bg-slate-50',
+        header: 'Containers',
+        accessor: 'containerIds',
+        headerClassName: 'px-6 py-4 bg-slate-50 min-w-[150px]',
         className: 'px-6 py-4 text-slate-600 font-mono text-xs',
-        render: (po: any) =>
-          po.containerNames && po.containerNames.length > 0 ? (
-            <span
-              title={po.containerNames.join(', ')}
-              className="text-[11px] font-bold text-slate-700"
-            >
-              {po.containerNames.length}
-            </span>
-          ) : !po.container || po.container === 'N/A' ? (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-              N/A
-            </span>
-          ) : (
-            <span className="truncate max-w-[150px] inline-block align-bottom">
-              {po.container}
-            </span>
-          ),
+        render: (po: any) => {
+          let cArray = po.containers || [];
+          if (!cArray || cArray.length === 0) {
+            let fallbackIds = po.containerIds || po.containerNames || [];
+            if (!fallbackIds || fallbackIds.length === 0) {
+              if (po.container && po.container !== 'N/A') {
+                fallbackIds = String(po.container)
+                  .split(',')
+                  .map((c) => c.trim())
+                  .filter(Boolean);
+              }
+            }
+            cArray = fallbackIds.map((id: string) => ({
+              id,
+              name: id,
+              container_name: id,
+              sellercloud_container_id: id,
+            }));
+          }
+
+          if (!cArray || cArray.length === 0) {
+            return (
+              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+                N/A
+              </span>
+            );
+          }
+          return (
+            <div className="flex flex-wrap gap-1">
+              {cArray.map((cObj: any, idx: number) => {
+                const cId = cObj.id || cObj.name;
+                // Favor container_name / sellercloud_container_id if available, fallback to pure ID
+                const displayName =
+                  cObj.container_name ||
+                  cObj.name ||
+                  cObj.sellercloud_container_id ||
+                  cId;
+                return (
+                  <React.Fragment key={String(cId) + idx}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenContainerDetails(String(cId));
+                      }}
+                      className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                    >
+                      {String(displayName)}
+                    </button>
+                    {idx < cArray.length - 1 && (
+                      <span className="text-slate-400">,</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          );
+        },
       },
       {
         header: 'Comments',
@@ -3710,6 +3783,17 @@ Supply Chain CRM Coordinator`;
         targetItem={selectedItemForComments}
         selectedPO={selectedPO}
         onAddActivity={onAddActivity}
+      />
+
+      <ContainerDetailsModal
+        container={viewingContainerDetails}
+        isLoading={isContainerModalLoading}
+        onClose={() => setViewingContainerDetails(null)}
+        onRefresh={() => {
+          if (viewingContainerDetails?.id) {
+            handleOpenContainerDetails(viewingContainerDetails.id);
+          }
+        }}
       />
     </div>
   );

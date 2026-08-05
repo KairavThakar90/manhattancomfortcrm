@@ -197,6 +197,24 @@ export default function POManagementPage() {
               ? String(rawOrderDate).split('T')[0]
               : 'N/A';
 
+            // Dynamically find containers array in case the API field name is non-standard
+            let foundContainers = po.containers || [];
+            if (foundContainers.length === 0) {
+              for (const key in po) {
+                if (
+                  Array.isArray(po[key]) &&
+                  po[key].length > 0 &&
+                  typeof po[key][0] === 'object' &&
+                  po[key][0] !== null &&
+                  ('sellercloud_container_id' in po[key][0] ||
+                    'container_name' in po[key][0])
+                ) {
+                  foundContainers = po[key];
+                  break;
+                }
+              }
+            }
+
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
               uuid: po.id,
@@ -211,7 +229,9 @@ export default function POManagementPage() {
               total_qty_received: po.total_qty_received,
               total_qty_remaining: po.total_qty_remaining,
               container: po.container || 'N/A',
+              containers: foundContainers,
               containerNames: po.container_names || [],
+              containerIds: po.container_ids || po.container_names || [],
               invoiceStatus: po.invoice_status || po.invoiceStatus || null,
               invoiceFile:
                 po.invoiceFile ||

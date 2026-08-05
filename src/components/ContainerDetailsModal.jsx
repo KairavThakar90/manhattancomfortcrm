@@ -96,7 +96,7 @@ export default function ContainerDetailsModal({
                 </p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-xl font-bold text-slate-800">
-                    {container.totalItems}
+                    {totalItems}
                   </span>
                   <span className="text-sm font-medium text-slate-500">
                     units
