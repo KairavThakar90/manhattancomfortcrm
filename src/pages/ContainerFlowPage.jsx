@@ -979,6 +979,16 @@ export default function ContainerFlowPage() {
                 <ExternalLink className="h-3 w-3" />
               </a>
             )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewContainer(c);
+              }}
+              title="View container details"
+              className="text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center shrink-0"
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
           </div>
         ),
       },
