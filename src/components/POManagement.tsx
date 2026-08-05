@@ -107,6 +107,8 @@ interface POManagementProps {
   onPageSizeChange?: (size: number) => void;
   sortConfig?: { key: string | null; direction: 'asc' | 'desc' | null };
   onSortChange?: (key: string | null, direction: 'asc' | 'desc' | null) => void;
+  activeSubTab?: 'grid' | 'kanban' | 'calendar';
+  onActiveSubTabChange?: (tab: 'grid' | 'kanban' | 'calendar') => void;
 }
 
 export default function POManagement({
@@ -139,6 +141,8 @@ export default function POManagement({
   onPageSizeChange: propOnPageSizeChange,
   sortConfig: propSortConfig,
   onSortChange: propOnSortChange,
+  activeSubTab: propActiveSubTab,
+  onActiveSubTabChange: propOnActiveSubTabChange,
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders.list);
   const kanbanList = useSelector(
@@ -149,9 +153,13 @@ export default function POManagement({
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
-  const [activeSubTab, setActiveSubTab] = useState<
+  const [localActiveSubTab, setLocalActiveSubTab] = useState<
     'grid' | 'kanban' | 'calendar'
   >('grid');
+
+  const activeSubTab =
+    propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab;
+  const setActiveSubTab = propOnActiveSubTabChange || setLocalActiveSubTab;
 
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
