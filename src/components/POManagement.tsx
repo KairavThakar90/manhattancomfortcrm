@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import { fetchUsers } from '../store/userSlice';
@@ -67,6 +68,112 @@ import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
+
+const VendorStatusDropdown = ({
+  poId,
+  currentStatus,
+  onUpdate,
+}: {
+  poId: string;
+  currentStatus: string;
+  onUpdate: (poId: string, status: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const statuses = [
+    'NOT_STARTED',
+    'IN_PRODUCTION',
+    'DELAYED',
+    'COMPLETED',
+    'NOT_PLANNED',
+    'PLANNED',
+    'PARTIALLY_SHIPPED',
+    'SHIPPED',
+  ];
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="w-full flex items-center justify-between text-xs font-medium border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer outline-hidden"
+      >
+        <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
+        <ChevronDown
+          className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="bg-white border border-slate-200 rounded-md shadow-lg z-[9999] overflow-hidden text-xs max-h-60 overflow-y-auto"
+          >
+            {statuses.map((s) => (
+              <button
+                key={s}
+                className={`w-full text-left px-3 py-2 transition-colors ${
+                  currentStatus === s
+                    ? 'bg-indigo-50/50 text-indigo-700 font-bold'
+                    : 'text-slate-700 font-medium hover:bg-slate-50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onUpdate(poId, s);
+                  setIsOpen(false);
+                }}
+              >
+                {s.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
 
 interface POManagementProps {
   loading?: boolean;
@@ -1452,42 +1559,7 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
-      ...(userRole === 'Vendor'
-        ? [
-            {
-              header: 'Status',
-              accessor: 'vendor_status',
-              headerClassName: 'px-6 py-4 bg-slate-50 relative',
-              className: 'px-6 py-4',
-              render: (po: any) => (
-                <div onClick={(e: any) => e.stopPropagation()}>
-                  <select
-                    className="text-xs font-medium border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors w-full cursor-pointer outline-none"
-                    value={po.vendor_status || 'NOT_STARTED'}
-                    onChange={(e) =>
-                      handleVendorStatusUpdate(po.id, e.target.value)
-                    }
-                  >
-                    {[
-                      'NOT_STARTED',
-                      'IN_PRODUCTION',
-                      'DELAYED',
-                      'COMPLETED',
-                      'NOT_PLANNED',
-                      'PLANNED',
-                      'PARTIALLY_SHIPPED',
-                      'SHIPPED',
-                    ].map((statusMode) => (
-                      <option key={statusMode} value={statusMode}>
-                        {statusMode.replace(/_/g, ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ),
-            },
-          ]
-        : []),
+
       {
         header: 'PO Items',
         accessor: 'items',
@@ -1621,6 +1693,23 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
+      ...(userRole === 'Vendor'
+        ? [
+            {
+              header: 'Status',
+              accessor: 'vendor_status',
+              headerClassName: 'px-6 py-4 bg-slate-50 relative',
+              className: 'px-6 py-4 min-w-[200px]',
+              render: (po: any) => (
+                <VendorStatusDropdown
+                  poId={po.id}
+                  currentStatus={po.vendor_status || 'NOT_STARTED'}
+                  onUpdate={handleVendorStatusUpdate}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         header: (
           <div

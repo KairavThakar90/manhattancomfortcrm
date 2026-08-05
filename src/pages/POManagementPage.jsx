@@ -260,15 +260,13 @@ export default function POManagementPage() {
               const safeMap = (arr) => {
                 if (!Array.isArray(arr)) return [];
                 const mappedArr = mapPOData(arr);
-                if (vendorFilter === 'all' && userRole !== 'Vendor')
-                  return mappedArr;
+                if (userRole === 'Vendor') return mappedArr;
+                if (vendorFilter === 'all') return mappedArr;
 
-                const targetVendor =
-                  userRole === 'Vendor' ? params.vendor_id : vendorFilter;
                 return mappedArr.filter(
                   (po) =>
-                    po.vendorId === targetVendor ||
-                    po.vendor_id === targetVendor,
+                    po.vendorId === vendorFilter ||
+                    po.vendor_id === vendorFilter,
                 );
               };
 
