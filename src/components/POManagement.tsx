@@ -320,12 +320,17 @@ export default function POManagement({
   const [viewingContainerDetails, setViewingContainerDetails] =
     useState<any>(null);
   const [isContainerModalLoading, setIsContainerModalLoading] = useState(false);
+  // Track which PO rows have their container list fully expanded
+  const [expandedContainerRows, setExpandedContainerRows] = useState<
+    Set<string>
+  >(new Set());
 
   const handleOpenContainerDetails = async (containerId: string) => {
     setIsContainerModalLoading(true);
     try {
       // Create a mock object so the modal opens immediately with loading state (optional)
       setViewingContainerDetails({ name: containerId, id: containerId });
+
       const rawResp = await getContainerDetails(containerId);
       const detailsResp = Array.isArray(rawResp) ? rawResp[0] : rawResp;
 
@@ -1822,8 +1827,10 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Containers',
         accessor: 'containerIds',
-        headerClassName: 'px-6 py-4 bg-slate-50 min-w-[150px]',
-        className: 'px-6 py-4 text-slate-600 font-mono text-xs',
+        headerClassName:
+          'px-6 py-4 bg-slate-50 w-[200px] min-w-[200px] max-w-[200px]',
+        className:
+          'px-6 py-4 text-slate-600 font-mono text-xs w-[200px] max-w-[200px]',
         render: (po: any) => {
           let cArray = po.containers || [];
           if (!cArray || cArray.length === 0) {
@@ -1851,16 +1858,27 @@ Supply Chain CRM Coordinator`;
               </span>
             );
           }
+          const poKey = String(po.id || po.uuid || po.containerIds);
+          const isExpanded = expandedContainerRows.has(poKey);
+          const maxShow = 4;
+          const visible = isExpanded ? cArray : cArray.slice(0, maxShow);
+          const overflow = cArray.length - maxShow;
           return (
-            <div className="flex flex-wrap gap-1">
-              {cArray.map((cObj: any, idx: number) => {
-                const cId = cObj.id || cObj.name;
-                // Favor container_name / sellercloud_container_id if available, fallback to pure ID
-                const displayName =
-                  cObj.container_name ||
-                  cObj.name ||
-                  cObj.sellercloud_container_id ||
-                  cId;
+            <div className="flex flex-wrap gap-1 max-w-[188px]">
+              {visible.map((cObj: any, idx: number) => {
+                const isObj = typeof cObj === 'object' && cObj !== null;
+                const cId = isObj
+                  ? cObj.id ||
+                    cObj.sellercloud_container_id ||
+                    cObj.name ||
+                    cObj.container_name
+                  : cObj;
+                const displayName = isObj
+                  ? cObj.sellercloud_container_id ||
+                    cObj.container_name ||
+                    cObj.name ||
+                    cId
+                  : cId;
                 return (
                   <React.Fragment key={String(cId) + idx}>
                     <button
@@ -1868,16 +1886,49 @@ Supply Chain CRM Coordinator`;
                         e.stopPropagation();
                         handleOpenContainerDetails(String(cId));
                       }}
-                      className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                      className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer truncate max-w-[80px]"
+                      title={String(displayName)}
                     >
                       {String(displayName)}
                     </button>
-                    {idx < cArray.length - 1 && (
+                    {idx < visible.length - 1 && (
                       <span className="text-slate-400">,</span>
                     )}
                   </React.Fragment>
                 );
               })}
+              {!isExpanded && overflow > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedContainerRows((prev) => {
+                      const next = new Set(prev);
+                      next.add(poKey);
+                      return next;
+                    });
+                  }}
+                  className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  title="Show all containers"
+                >
+                  +{overflow} more
+                </button>
+              )}
+              {isExpanded && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedContainerRows((prev) => {
+                      const next = new Set(prev);
+                      next.delete(poKey);
+                      return next;
+                    });
+                  }}
+                  className="text-[10px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  title="Show less"
+                >
+                  Show less
+                </button>
+              )}
             </div>
           );
         },
@@ -2099,17 +2150,34 @@ Supply Chain CRM Coordinator`;
             );
           return (
             <div className="flex flex-col gap-0.5">
-              {item.containers.map((c: any, idx: number) => (
-                <span
-                  key={idx}
-                  className="bg-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
-                >
-                  {c.container_name || 'Unnamed'}{' '}
-                  <strong className="text-slate-600">
-                    ({c.qty_in_container})
-                  </strong>
-                </span>
-              ))}
+              {item.containers.map((c: any, idx: number) => {
+                const isObj = typeof c === 'object' && c !== null;
+                const cId = isObj
+                  ? c.id ||
+                    c.sellercloud_container_id ||
+                    c.name ||
+                    c.container_name
+                  : c;
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (cId) handleOpenContainerDetails(String(cId));
+                    }}
+                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
+                  >
+                    {isObj
+                      ? c.sellercloud_container_id ||
+                        c.container_name ||
+                        'Unnamed'
+                      : c}{' '}
+                    <strong className="text-indigo-800">
+                      ({isObj ? c.qty_in_container || 0 : 0})
+                    </strong>
+                  </button>
+                );
+              })}
             </div>
           );
         },
@@ -2125,16 +2193,29 @@ Supply Chain CRM Coordinator`;
           return (
             <div className="flex flex-col gap-0.5">
               {item.containers.map((c: any, idx: number) => {
-                const rawDate = c.estimated_arrival_date || c.received_date;
+                const isObj = typeof c === 'object' && c !== null;
+                const rawDate = isObj
+                  ? c.estimated_arrival_date || c.received_date
+                  : null;
                 const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
+                const cId = isObj
+                  ? c.id ||
+                    c.sellercloud_container_id ||
+                    c.name ||
+                    c.container_name
+                  : c;
                 return (
-                  <span
+                  <button
                     key={idx}
-                    className="bg-slate-50 border border-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (cId) handleOpenContainerDetails(String(cId));
+                    }}
+                    className="bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
                   >
                     ETA:{' '}
                     <strong className="text-indigo-600">{displayDate}</strong>
-                  </span>
+                  </button>
                 );
               })}
             </div>
