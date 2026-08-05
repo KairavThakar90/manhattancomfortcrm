@@ -608,12 +608,39 @@ export default function POManagement({
 
   useEffect(() => {
     if (selectedPOId) {
-      setActiveDrawerSection('details');
+      // Don't auto-reset to 'details' if we are responding to a deep link
+      if (activeDrawerSection !== 'comments') {
+        setActiveDrawerSection('details');
+      }
       setItemsCurrentPage(1);
       setCommentScope('po');
       setSelectedSkuId(null);
     }
   }, [selectedPOId]);
+
+  useEffect(() => {
+    const handleDeepLink = (e: any) => {
+      const { commentId } = e.detail;
+      if (commentId) {
+        setActiveDrawerSection('comments');
+        // Wait for comments drawer to render and load
+        setTimeout(() => {
+          const el = document.getElementById(commentId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add(
+              'bg-amber-100',
+              'transition-colors',
+              'duration-1000',
+            );
+            setTimeout(() => el.classList.remove('bg-amber-100'), 3000);
+          }
+        }, 1500);
+      }
+    };
+    window.addEventListener('po-deep-link', handleDeepLink);
+    return () => window.removeEventListener('po-deep-link', handleDeepLink);
+  }, []);
 
   useEffect(() => {
     if (
@@ -2849,7 +2876,8 @@ Supply Chain CRM Coordinator`;
                             return (
                               <div
                                 key={node.id}
-                                className="flex flex-col relative mb-3"
+                                id={node.id} // Added id for deep link scrolling
+                                className="flex flex-col relative mb-3 scroll-mt-20"
                               >
                                 <div className="flex gap-3 group relative transition-colors items-start">
                                   <div

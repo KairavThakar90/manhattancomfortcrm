@@ -14,9 +14,11 @@ import {
   getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 export default function POManagementPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     purchaseOrders,
     vendors,
@@ -39,6 +41,31 @@ export default function POManagementPage() {
   // Lift state for server-side pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { poId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (poId) {
+      const cleanId = poId.replace(/^PO-/i, '');
+      const fullPoId = `PO-${cleanId}`;
+      if (selectedPOId !== fullPoId && selectedPOId !== cleanId) {
+        setSelectedPOId(fullPoId);
+      }
+
+      const commentId = searchParams.get('comment_id');
+      if (commentId) {
+        // give the PO data some time to load / or just try dispatching event
+        setTimeout(() => {
+          window.dispatchEvent(
+            new CustomEvent('po-deep-link', {
+              detail: { poId: fullPoId, commentId },
+            }),
+          );
+        }, 500);
+      }
+    }
+  }, [poId, searchParams, selectedPOId, setSelectedPOId]);
+
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -471,7 +498,15 @@ export default function POManagementPage() {
         emails={emailLogs}
         userRole={userRole}
         selectedPOId={selectedPOId}
-        onSelectPO={setSelectedPOId}
+        onSelectPO={(id) => {
+          setSelectedPOId(id);
+          if (!id) {
+            navigate('/purchase-orders', { replace: true });
+          } else {
+            // Optional: If you want to update the URL when a PO is selected, you can do so here:
+            // navigate(`/purchase-orders/${String(id).replace(/^PO-/, '')}`, { replace: true });
+          }
+        }}
         onUpdatePO={handlePOUpdateCascade}
         onAddComment={handleAddComment}
         onAddEmailLog={handleAddEmailLog}
