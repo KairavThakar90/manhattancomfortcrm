@@ -1717,7 +1717,7 @@ Supply Chain CRM Coordinator`;
             onClick={() => handleSort('eta')}
           >
             <div className="flex flex-col">
-              <span>Scheduled Delivery</span>
+              <span>ETA Delivery</span>
               <span className="text-[9px] text-slate-400 normal-case">
                 (YYYY-MM-DD)
               </span>
@@ -2571,6 +2571,18 @@ Supply Chain CRM Coordinator`;
                                     selectedPO.id.replace(/^PO-/i, ''),
                                     Number(leadTimeDays),
                                   );
+                                  const updatedPOs = purchaseOrders.map(
+                                    (p: any) =>
+                                      p.id === selectedPO.id ||
+                                      p.uuid === selectedPO.uuid
+                                        ? {
+                                            ...p,
+                                            containerLeadTimeDays:
+                                              Number(leadTimeDays),
+                                          }
+                                        : p,
+                                  );
+                                  dispatch(setPurchaseOrdersList(updatedPOs));
                                   onAddActivity(
                                     `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
                                     'PO Updated',
