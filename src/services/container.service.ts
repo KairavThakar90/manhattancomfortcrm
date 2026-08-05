@@ -14,6 +14,9 @@ export async function getContainers(params?: {
   page?: number;
   page_size?: number;
   search?: string;
+  date_from?: string;
+
+  received?: boolean;
 }) {
   const { data } = await apiClient.get(CONTAINERS_LIST, { params });
   return data;

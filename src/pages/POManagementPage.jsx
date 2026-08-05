@@ -14,9 +14,11 @@ import {
   getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
 import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 export default function POManagementPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     purchaseOrders,
     vendors,
@@ -39,12 +41,38 @@ export default function POManagementPage() {
   // Lift state for server-side pagination and filtering
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { poId } = useParams();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (poId) {
+      const cleanId = poId.replace(/^PO-/i, '');
+      const fullPoId = `PO-${cleanId}`;
+      if (selectedPOId !== fullPoId && selectedPOId !== cleanId) {
+        setSelectedPOId(fullPoId);
+      }
+
+      const commentId = searchParams.get('comment_id');
+      if (commentId) {
+        // give the PO data some time to load / or just try dispatching event
+        setTimeout(() => {
+          window.dispatchEvent(
+            new CustomEvent('po-deep-link', {
+              detail: { poId: fullPoId, commentId },
+            }),
+          );
+        }, 500);
+      }
+    }
+  }, [poId, searchParams, selectedPOId, setSelectedPOId]);
+
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [activeSubTab, setActiveSubTab] = useState('grid');
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -85,7 +113,9 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
-        if (dateFrom) params.date_from = dateFrom;
+        if (dateFrom) {
+          params.date_from = dateFrom;
+        }
 
         if (sortConfig.key && sortConfig.direction) {
           // Map front-end keys to backend column names if necessary
@@ -94,7 +124,7 @@ export default function POManagementPage() {
             vendorName: 'vendor_name',
             invoiceDate: 'invoice_date',
             eta: 'expected_delivery_date',
-            creationDate: 'created_on',
+            creationDate: 'date_ordered',
           };
           params.ordering =
             sortConfig.direction === 'desc'
@@ -110,24 +140,26 @@ export default function POManagementPage() {
           params.vendor_id = '3f5551f4-186e-467d-9340-5b74d8e7b766'; // ABC Manufacturing default
         }
 
-        const poData = await getPurchaseOrders(params);
-        console.log('API FETCH getPurchaseOrders: success! Result:', poData);
-
         let results = [];
-        if (poData) {
-          if (Array.isArray(poData)) {
-            results = poData;
-            setTotalCount(poData.length);
-          } else if (poData.results && Array.isArray(poData.results)) {
-            results = poData.results;
-            if (typeof poData.count === 'number') {
-              setTotalCount(poData.count);
-            } else if (typeof poData.total === 'number') {
-              setTotalCount(poData.total);
-            } else if (poData.meta?.total !== undefined) {
-              setTotalCount(poData.meta.total);
-            } else {
-              setTotalCount(poData.results.length);
+        if (activeSubTab !== 'kanban') {
+          const poData = await getPurchaseOrders(params);
+          console.log('API FETCH getPurchaseOrders: success! Result:', poData);
+
+          if (poData) {
+            if (Array.isArray(poData)) {
+              results = poData;
+              setTotalCount(poData.length);
+            } else if (poData.results && Array.isArray(poData.results)) {
+              results = poData.results;
+              if (typeof poData.count === 'number') {
+                setTotalCount(poData.count);
+              } else if (typeof poData.total === 'number') {
+                setTotalCount(poData.total);
+              } else if (poData.meta?.total !== undefined) {
+                setTotalCount(poData.meta.total);
+              } else {
+                setTotalCount(poData.results.length);
+              }
             }
           }
         }
@@ -159,9 +191,29 @@ export default function POManagementPage() {
             } else if (po.expected_delivery_date) {
               eta = po.expected_delivery_date.split('T')[0];
             }
-            const creationDate = po.created_on
-              ? po.created_on.split('T')[0]
+            // Order Date column maps to date_ordered (same field the date filter uses)
+            const rawOrderDate = po.date_ordered || po.created_on;
+            const creationDate = rawOrderDate
+              ? String(rawOrderDate).split('T')[0]
               : 'N/A';
+
+            // Dynamically find containers array in case the API field name is non-standard
+            let foundContainers = po.containers || [];
+            if (foundContainers.length === 0) {
+              for (const key in po) {
+                if (
+                  Array.isArray(po[key]) &&
+                  po[key].length > 0 &&
+                  typeof po[key][0] === 'object' &&
+                  po[key][0] !== null &&
+                  ('sellercloud_container_id' in po[key][0] ||
+                    'container_name' in po[key][0])
+                ) {
+                  foundContainers = po[key];
+                  break;
+                }
+              }
+            }
 
             return {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
@@ -177,7 +229,9 @@ export default function POManagementPage() {
               total_qty_received: po.total_qty_received,
               total_qty_remaining: po.total_qty_remaining,
               container: po.container || 'N/A',
+              containers: foundContainers,
               containerNames: po.container_names || [],
+              containerIds: po.container_ids || po.container_names || [],
               invoiceStatus: po.invoice_status || po.invoiceStatus || null,
               invoiceFile:
                 po.invoiceFile ||
@@ -198,7 +252,11 @@ export default function POManagementPage() {
               expected_delivery_date: eta,
               creationDate,
               containerLeadTimeDays:
-                po.container_lead_time_days || po.containerLeadTimeDays || null,
+                po.container_lead_time_days ||
+                po.containerLeadTimeDays ||
+                po.leadtime ||
+                po.lead_time ||
+                null,
               delayedDays: po.delayedDays || 0,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
@@ -224,6 +282,7 @@ export default function POManagementPage() {
                   }))
                 : po.items || [],
               productionStage: po.productionStage || 'Assembly',
+              vendor_status: po.vendor_status || 'NOT_STARTED',
               commentsCount:
                 po.total_comments_count ??
                 po.commentsCount ??
@@ -236,83 +295,86 @@ export default function POManagementPage() {
           });
 
         if (!cancelled) {
-          const mappedPOs = mapPOData(results);
-          handleUpdatePOs(mappedPOs);
-          dispatch(setPurchaseOrdersList(mappedPOs));
+          if (activeSubTab !== 'kanban') {
+            const mappedPOs = mapPOData(results);
+            handleUpdatePOs(mappedPOs);
+            dispatch(setPurchaseOrdersList(mappedPOs));
+          }
 
-          // Fetch Kanban specific statuses concurrently
-          try {
-            const allFiltersRes = await getPurchaseOrdersAllFilters(
-              params.vendor_id,
-            );
-
-            const safeMap = (arr) => {
-              if (!Array.isArray(arr)) return [];
-              const mappedArr = mapPOData(arr);
-              if (vendorFilter === 'all' && userRole !== 'Vendor')
-                return mappedArr;
-
-              const targetVendor =
-                userRole === 'Vendor' ? 'VEND-001' : vendorFilter;
-              return mappedArr.filter(
-                (po) =>
-                  po.vendorId === targetVendor || po.vendor_id === targetVendor,
+          // Fetch Kanban specific statuses concurrently only in Kanban view
+          if (activeSubTab === 'kanban') {
+            try {
+              const allFiltersRes = await getPurchaseOrdersAllFilters(
+                params.vendor_id,
               );
-            };
 
-            if (
-              allFiltersRes &&
-              !Array.isArray(allFiltersRes) &&
-              (allFiltersRes.new_arrivals || allFiltersRes.invoice_delayed)
-            ) {
-              dispatch(
-                setKanbanList({
-                  new_without_invoice: safeMap(
-                    allFiltersRes.new_arrivals?.data || [],
-                  ),
-                  invoice_delayed: safeMap(
-                    allFiltersRes.invoice_delayed?.data || [],
-                  ),
-                  delivery_overdue: safeMap(
-                    allFiltersRes.delivery_overdue?.data || [],
-                  ),
-                  remaining_items: safeMap(
-                    allFiltersRes.remaining_items?.data || [],
-                  ),
-                }),
-              );
-            } else {
-              // Fallback if the backend returned a flat array or something else
-              let rawArr = [];
-              if (Array.isArray(allFiltersRes)) rawArr = allFiltersRes;
-              else if (allFiltersRes?.results) rawArr = allFiltersRes.results;
+              const safeMap = (arr) => {
+                if (!Array.isArray(arr)) return [];
+                const mappedArr = mapPOData(arr);
+                if (userRole === 'Vendor') return mappedArr;
+                if (vendorFilter === 'all') return mappedArr;
 
-              const mapped = safeMap(rawArr);
-              dispatch(
-                setKanbanList({
-                  new_without_invoice: mapped.filter(
-                    (po) => po.status === 'New' || po.status === '1. New',
-                  ),
-                  invoice_delayed: mapped.filter(
-                    (po) =>
-                      po.status === 'Invoice Delayed' ||
-                      po.status === '2. Invoice Delayed',
-                  ),
-                  delivery_overdue: mapped.filter(
-                    (po) =>
-                      po.status === 'Delivery Delayed' ||
-                      po.status === '3. Delivery Delayed',
-                  ),
-                  remaining_items: mapped.filter(
-                    (po) =>
-                      po.status === 'Remaining Order Items' ||
-                      po.status === '4. Remaining Order Items',
-                  ),
-                }),
-              );
+                return mappedArr.filter(
+                  (po) =>
+                    po.vendorId === vendorFilter ||
+                    po.vendor_id === vendorFilter,
+                );
+              };
+
+              if (
+                allFiltersRes &&
+                !Array.isArray(allFiltersRes) &&
+                (allFiltersRes.new_arrivals || allFiltersRes.invoice_delayed)
+              ) {
+                dispatch(
+                  setKanbanList({
+                    new_without_invoice: safeMap(
+                      allFiltersRes.new_arrivals?.data || [],
+                    ),
+                    invoice_delayed: safeMap(
+                      allFiltersRes.invoice_delayed?.data || [],
+                    ),
+                    delivery_overdue: safeMap(
+                      allFiltersRes.delivery_overdue?.data || [],
+                    ),
+                    remaining_items: safeMap(
+                      allFiltersRes.remaining_items?.data || [],
+                    ),
+                  }),
+                );
+              } else {
+                // Fallback if the backend returned a flat array or something else
+                let rawArr = [];
+                if (Array.isArray(allFiltersRes)) rawArr = allFiltersRes;
+                else if (allFiltersRes?.results) rawArr = allFiltersRes.results;
+
+                const mapped = safeMap(rawArr);
+                dispatch(
+                  setKanbanList({
+                    new_without_invoice: mapped.filter(
+                      (po) => po.status === 'New' || po.status === '1. New',
+                    ),
+                    invoice_delayed: mapped.filter(
+                      (po) =>
+                        po.status === 'Invoice Delayed' ||
+                        po.status === '2. Invoice Delayed',
+                    ),
+                    delivery_overdue: mapped.filter(
+                      (po) =>
+                        po.status === 'Delivery Delayed' ||
+                        po.status === '3. Delivery Delayed',
+                    ),
+                    remaining_items: mapped.filter(
+                      (po) =>
+                        po.status === 'Remaining Order Items' ||
+                        po.status === '4. Remaining Order Items',
+                    ),
+                  }),
+                );
+              }
+            } catch (kanbanErr) {
+              console.error('Failed to fetch kanban data', kanbanErr);
             }
-          } catch (kanbanErr) {
-            console.error('Failed to fetch kanban data', kanbanErr);
           }
         }
       } catch (err) {
@@ -328,10 +390,13 @@ export default function POManagementPage() {
       }
     }
 
-    fetchData();
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 400);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -344,6 +409,7 @@ export default function POManagementPage() {
     userRole,
     refreshTrigger,
     sortConfig,
+    activeSubTab,
   ]);
 
   const kanbanList = useSelector(
@@ -452,7 +518,15 @@ export default function POManagementPage() {
         emails={emailLogs}
         userRole={userRole}
         selectedPOId={selectedPOId}
-        onSelectPO={setSelectedPOId}
+        onSelectPO={(id) => {
+          setSelectedPOId(id);
+          if (!id) {
+            navigate('/purchase-orders', { replace: true });
+          } else {
+            // Optional: If you want to update the URL when a PO is selected, you can do so here:
+            // navigate(`/purchase-orders/${String(id).replace(/^PO-/, '')}`, { replace: true });
+          }
+        }}
         onUpdatePO={handlePOUpdateCascade}
         onAddComment={handleAddComment}
         onAddEmailLog={handleAddEmailLog}
@@ -474,6 +548,8 @@ export default function POManagementPage() {
         onDateFromChange={handleDateFromChange}
         sortConfig={sortConfig}
         onSortChange={(key, direction) => setSortConfig({ key, direction })}
+        activeSubTab={activeSubTab}
+        onActiveSubTabChange={setActiveSubTab}
       />
     </>
   );

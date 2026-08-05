@@ -61,6 +61,7 @@ export interface PurchaseOrder {
   skus: string[];
   items: POItem[];
   productionStage: ProductionStage;
+  vendor_status?: string;
   commentsCount: number;
   emailCount: number;
   containerLeadTimeDays?: number | null;

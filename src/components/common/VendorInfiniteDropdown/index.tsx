@@ -120,7 +120,7 @@ export default function VendorInfiniteDropdown({
 
       {isOpen && (
         <div className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-2 animate-scaleUp max-h-80 flex flex-col min-w-[200px]">
-          <div className="relative mb-2 shrink-0">
+          {/* <div className="relative mb-2 shrink-0">
             <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
@@ -129,7 +129,7 @@ export default function VendorInfiniteDropdown({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-hidden focus:bg-white focus:border-indigo-500 transition text-slate-800"
             />
-          </div>
+          </div> */}
 
           <div
             ref={listRef}

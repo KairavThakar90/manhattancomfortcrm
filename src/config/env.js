@@ -10,7 +10,7 @@ export const ENV = {
   // Internal API (Your backend/database APIs)
   API_BASE_URL:
     import.meta.env.VITE_API_BASE_URL ||
-    'https://manhattancomfortcrm-backend.vercel.app/api/v1',
+    'https://www.buysiponline.com/api/v1',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '15000', 10),
 
   // Third-party Integrations

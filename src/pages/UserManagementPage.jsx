@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Users, Search, RefreshCw, Plus, KeyRound } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -26,6 +26,15 @@ export default function UserManagementPage() {
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
+
+  const userTableRef = useRef(null);
+
+  // Scroll users table to top after pagination changes
+  useEffect(() => {
+    if (userTableRef.current) {
+      userTableRef.current.scrollTop = 0;
+    }
+  }, [page, pageSize]);
 
   const handleRefresh = () => {
     dispatch(fetchUsers())
@@ -171,6 +180,7 @@ export default function UserManagementPage() {
             keyField="id"
             containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+            tableWrapperRef={userTableRef}
             theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
             tableClassName="w-full text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-slate-100"
