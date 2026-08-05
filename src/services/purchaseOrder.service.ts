@@ -73,6 +73,7 @@ export interface CreatePOPayload {
 
 export interface UpdatePOPayload {
   status?: string;
+  vendor_status?: string;
   eta?: string;
   container?: string;
   items?: PurchaseOrderItem[];
@@ -95,7 +96,7 @@ export async function getPurchaseOrders(params?: {
   status?: string;
   ordering?: string;
   date_from?: string;
-  date_to?: string;
+
   page?: number;
   page_size?: number;
   limit?: number;

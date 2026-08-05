@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import { fetchUsers } from '../store/userSlice';
@@ -56,6 +57,7 @@ import {
   getItemComments,
   postItemComment,
   updateItemComment,
+  updatePurchaseOrder,
 } from '../services/purchaseOrder.service';
 import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
@@ -66,6 +68,133 @@ import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
+import ContainerDetailsModal from './ContainerDetailsModal';
+import { getContainerDetails } from '../services/container.service';
+
+interface DataTableProps {
+  columns: any[];
+  data: any[];
+  keyField?: string;
+  emptyMessage?: React.ReactNode;
+  isLoading?: boolean;
+  containerClassName?: string;
+  tableWrapperClassName?: string;
+  tableWrapperRef?: React.Ref<HTMLDivElement>;
+  tableClassName?: string;
+  theadClassName?: string;
+  defaultThClassName?: string;
+  tbodyClassName?: string;
+  trClassName?: string | ((row: any, rowIndex: number) => string);
+  defaultTdClassName?: string;
+  pagination?: React.ReactNode;
+}
+const TypedDataTable = DataTable as React.FC<DataTableProps>;
+
+const VendorStatusDropdown = ({
+  poId,
+  currentStatus,
+  onUpdate,
+}: {
+  poId: string;
+  currentStatus: string;
+  onUpdate: (poId: string, status: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const statuses = [
+    'NOT_STARTED',
+    'IN_PRODUCTION',
+    'DELAYED',
+    'COMPLETED',
+    'NOT_PLANNED',
+    'PLANNED',
+    'PARTIALLY_SHIPPED',
+    'SHIPPED',
+  ];
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="w-full flex items-center justify-between text-xs font-medium border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer outline-hidden"
+      >
+        <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
+        <ChevronDown
+          className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="bg-white border border-slate-200 rounded-md shadow-lg z-[9999] overflow-hidden text-xs max-h-60 overflow-y-auto"
+          >
+            {statuses.map((s) => (
+              <button
+                key={s}
+                className={`w-full text-left px-3 py-2 transition-colors ${
+                  currentStatus === s
+                    ? 'bg-indigo-50/50 text-indigo-700 font-bold'
+                    : 'text-slate-700 font-medium hover:bg-slate-50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onUpdate(poId, s);
+                  setIsOpen(false);
+                }}
+              >
+                {s.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
 
 interface POManagementProps {
   loading?: boolean;
@@ -107,6 +236,8 @@ interface POManagementProps {
   onPageSizeChange?: (size: number) => void;
   sortConfig?: { key: string | null; direction: 'asc' | 'desc' | null };
   onSortChange?: (key: string | null, direction: 'asc' | 'desc' | null) => void;
+  activeSubTab?: 'grid' | 'kanban' | 'calendar';
+  onActiveSubTabChange?: (tab: 'grid' | 'kanban' | 'calendar') => void;
 }
 
 export default function POManagement({
@@ -139,6 +270,8 @@ export default function POManagement({
   onPageSizeChange: propOnPageSizeChange,
   sortConfig: propSortConfig,
   onSortChange: propOnSortChange,
+  activeSubTab: propActiveSubTab,
+  onActiveSubTabChange: propOnActiveSubTabChange,
 }: POManagementProps) {
   const reduxPOs = useSelector((state: any) => state.purchaseOrders.list);
   const kanbanList = useSelector(
@@ -149,9 +282,13 @@ export default function POManagement({
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
-  const [activeSubTab, setActiveSubTab] = useState<
+  const [localActiveSubTab, setLocalActiveSubTab] = useState<
     'grid' | 'kanban' | 'calendar'
   >('grid');
+
+  const activeSubTab =
+    propActiveSubTab !== undefined ? propActiveSubTab : localActiveSubTab;
+  const setActiveSubTab = propOnActiveSubTabChange || setLocalActiveSubTab;
 
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
@@ -197,6 +334,42 @@ export default function POManagement({
   // Item Comments Modal
   const [selectedItemForComments, setSelectedItemForComments] =
     useState<any>(null);
+
+  // Container Details Modal
+  const [viewingContainerDetails, setViewingContainerDetails] =
+    useState<any>(null);
+  const [isContainerModalLoading, setIsContainerModalLoading] = useState(false);
+  // Track which PO rows have their container list fully expanded
+  const [expandedContainerRows, setExpandedContainerRows] = useState<
+    Set<string>
+  >(new Set());
+
+  const handleOpenContainerDetails = async (containerId: string) => {
+    setIsContainerModalLoading(true);
+    try {
+      // Create a mock object so the modal opens immediately with loading state (optional)
+      setViewingContainerDetails({ name: containerId, id: containerId });
+
+      const rawResp = await getContainerDetails(containerId);
+      const detailsResp = Array.isArray(rawResp) ? rawResp[0] : rawResp;
+
+      const rawDetails = detailsResp?.details || detailsResp?.items || [];
+      const safeDetails = Array.isArray(rawDetails) ? rawDetails : [];
+
+      setViewingContainerDetails({
+        id: containerId,
+        name: containerId,
+        ...detailsResp,
+        details: safeDetails,
+      });
+    } catch (err) {
+      console.error('Failed to load container details:', err);
+      toast.error(`Could not load details for container ${containerId}`);
+      setViewingContainerDetails(null);
+    } finally {
+      setIsContainerModalLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleOpenItemComments = (e: any) => {
@@ -489,15 +662,58 @@ export default function POManagement({
   const [itemsPageSize, setItemsPageSize] = useState(10);
   const [isItemsPaginationLoading, setIsItemsPaginationLoading] =
     useState(false);
+  const itemsTableRef = useRef<HTMLDivElement>(null);
+  const poTableRef = useRef<HTMLDivElement>(null);
+
+  // Scroll items table back to top after pagination changes (runs post-render)
+  useEffect(() => {
+    if (itemsTableRef.current) {
+      itemsTableRef.current.scrollTop = 0;
+    }
+  }, [itemsCurrentPage, itemsPageSize]);
+
+  // Scroll main PO table back to top after pagination changes (runs post-render)
+  useEffect(() => {
+    if (poTableRef.current) {
+      poTableRef.current.scrollTop = 0;
+    }
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     if (selectedPOId) {
-      setActiveDrawerSection('details');
+      // Don't auto-reset to 'details' if we are responding to a deep link
+      if (activeDrawerSection !== 'comments') {
+        setActiveDrawerSection('details');
+      }
       setItemsCurrentPage(1);
       setCommentScope('po');
       setSelectedSkuId(null);
     }
   }, [selectedPOId]);
+
+  useEffect(() => {
+    const handleDeepLink = (e: any) => {
+      const { commentId } = e.detail;
+      if (commentId) {
+        setActiveDrawerSection('comments');
+        // Wait for comments drawer to render and load
+        setTimeout(() => {
+          const el = document.getElementById(commentId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add(
+              'bg-amber-100',
+              'transition-colors',
+              'duration-1000',
+            );
+            setTimeout(() => el.classList.remove('bg-amber-100'), 3000);
+          }
+        }, 1500);
+      }
+    };
+    window.addEventListener('po-deep-link', handleDeepLink);
+    return () => window.removeEventListener('po-deep-link', handleDeepLink);
+  }, []);
 
   useEffect(() => {
     if (
@@ -620,12 +836,7 @@ export default function POManagement({
 
       // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
       if (userRole === 'Vendor') {
-        return (
-          matchesSearchOrServer &&
-          matchesStatusOrServer &&
-          matchesDate &&
-          po.vendorId === 'VEND-001'
-        );
+        return matchesSearchOrServer && matchesStatusOrServer && matchesDate;
       }
 
       return matchesSearchOrServer && matchesStatusOrServer && matchesDate;
@@ -1282,6 +1493,23 @@ Supply Chain CRM Coordinator`;
     );
   };
 
+  const handleVendorStatusUpdate = (poId: string, newStatus: string) => {
+    updatePurchaseOrder(poId, { vendor_status: newStatus })
+      .then(() => {
+        const updatedPOs = purchaseOrders.map((p) =>
+          p.id === poId || (p as any).uuid === poId
+            ? { ...p, vendor_status: newStatus }
+            : p,
+        );
+        dispatch(setPurchaseOrdersList(updatedPOs));
+        toast.success(`Vendor Status updated to ${newStatus}`);
+      })
+      .catch((err) => {
+        console.error('Failed to update vendor status:', err);
+        toast.error('Failed to update status');
+      });
+  };
+
   const poColumns = React.useMemo(
     () => [
       {
@@ -1431,6 +1659,7 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
+
       {
         header: 'PO Items',
         accessor: 'items',
@@ -1564,6 +1793,23 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
+      ...(userRole === 'Vendor'
+        ? [
+            {
+              header: 'Status',
+              accessor: 'vendor_status',
+              headerClassName: 'px-6 py-4 bg-slate-50 relative',
+              className: 'px-6 py-4 min-w-[200px]',
+              render: (po: any) => (
+                <VendorStatusDropdown
+                  poId={po.id}
+                  currentStatus={po.vendor_status || 'NOT_STARTED'}
+                  onUpdate={handleVendorStatusUpdate}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         header: (
           <div
@@ -1571,7 +1817,7 @@ Supply Chain CRM Coordinator`;
             onClick={() => handleSort('eta')}
           >
             <div className="flex flex-col">
-              <span>Scheduled Delivery</span>
+              <span>ETA Delivery</span>
               <span className="text-[9px] text-slate-400 normal-case">
                 (YYYY-MM-DD)
               </span>
@@ -1614,27 +1860,113 @@ Supply Chain CRM Coordinator`;
         ),
       },
       {
-        header: 'Container Count',
-        accessor: 'containerNames',
-        headerClassName: 'px-6 py-4 bg-slate-50',
-        className: 'px-6 py-4 text-slate-600 font-mono text-xs',
-        render: (po: any) =>
-          po.containerNames && po.containerNames.length > 0 ? (
-            <span
-              title={po.containerNames.join(', ')}
-              className="text-[11px] font-bold text-slate-700"
-            >
-              {po.containerNames.length}
-            </span>
-          ) : !po.container || po.container === 'N/A' ? (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
-              N/A
-            </span>
-          ) : (
-            <span className="truncate max-w-[150px] inline-block align-bottom">
-              {po.container}
-            </span>
-          ),
+        header: 'Containers',
+        accessor: 'containerIds',
+        headerClassName:
+          'px-6 py-4 bg-slate-50 w-[200px] min-w-[200px] max-w-[200px]',
+        className:
+          'px-6 py-4 text-slate-600 font-mono text-xs w-[200px] max-w-[200px]',
+        render: (po: any) => {
+          let cArray = po.containers || [];
+          if (!cArray || cArray.length === 0) {
+            let fallbackIds = po.containerIds || po.containerNames || [];
+            if (!fallbackIds || fallbackIds.length === 0) {
+              if (po.container && po.container !== 'N/A') {
+                fallbackIds = String(po.container)
+                  .split(',')
+                  .map((c) => c.trim())
+                  .filter(Boolean);
+              }
+            }
+            cArray = fallbackIds.map((id: string) => ({
+              id,
+              name: id,
+              container_name: id,
+              sellercloud_container_id: id,
+            }));
+          }
+
+          if (!cArray || cArray.length === 0) {
+            return (
+              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+                N/A
+              </span>
+            );
+          }
+          const poKey = String(po.id || po.uuid || po.containerIds);
+          const isExpanded = expandedContainerRows.has(poKey);
+          const maxShow = 4;
+          const visible = isExpanded ? cArray : cArray.slice(0, maxShow);
+          const overflow = cArray.length - maxShow;
+          return (
+            <div className="flex flex-wrap gap-1 max-w-[188px]">
+              {visible.map((cObj: any, idx: number) => {
+                const isObj = typeof cObj === 'object' && cObj !== null;
+                const cId = isObj
+                  ? cObj.id ||
+                    cObj.sellercloud_container_id ||
+                    cObj.name ||
+                    cObj.container_name
+                  : cObj;
+                const displayName = isObj
+                  ? cObj.sellercloud_container_id ||
+                    cObj.container_name ||
+                    cObj.name ||
+                    cId
+                  : cId;
+                return (
+                  <React.Fragment key={String(cId) + idx}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenContainerDetails(String(cId));
+                      }}
+                      className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer truncate max-w-[80px]"
+                      title={String(displayName)}
+                    >
+                      {String(displayName)}
+                    </button>
+                    {idx < visible.length - 1 && (
+                      <span className="text-slate-400">,</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {!isExpanded && overflow > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedContainerRows((prev) => {
+                      const next = new Set(prev);
+                      next.add(poKey);
+                      return next;
+                    });
+                  }}
+                  className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  title="Show all containers"
+                >
+                  +{overflow} more
+                </button>
+              )}
+              {isExpanded && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedContainerRows((prev) => {
+                      const next = new Set(prev);
+                      next.delete(poKey);
+                      return next;
+                    });
+                  }}
+                  className="text-[10px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  title="Show less"
+                >
+                  Show less
+                </button>
+              )}
+            </div>
+          );
+        },
       },
       {
         header: 'Comments',
@@ -1692,7 +2024,14 @@ Supply Chain CRM Coordinator`;
         ),
       },
     ],
-    [activeSortConfig, handleSort, selectedPOId, onSelectPO],
+    [
+      activeSortConfig,
+      handleSort,
+      selectedPOId,
+      onSelectPO,
+      userRole,
+      purchaseOrders,
+    ],
   );
 
   const poItemColumns = React.useMemo(
@@ -1846,17 +2185,36 @@ Supply Chain CRM Coordinator`;
             );
           return (
             <div className="flex flex-col gap-0.5">
-              {item.containers.map((c: any, idx: number) => (
-                <span
-                  key={idx}
-                  className="bg-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
-                >
-                  {c.container_name || 'Unnamed'}{' '}
-                  <strong className="text-slate-600">
-                    ({c.qty_in_container})
-                  </strong>
-                </span>
-              ))}
+              {item.containers.map((c: any, idx: number) => {
+                const isObj = typeof c === 'object' && c !== null;
+                const cDbId = isObj ? c.id : null;
+                const cScId = isObj ? c.sellercloud_container_id : null;
+                const cName = isObj
+                  ? c.container_name || c.name || 'Unnamed'
+                  : String(c);
+                const cClickId = isObj
+                  ? c.id ||
+                    c.sellercloud_container_id ||
+                    c.name ||
+                    c.container_name
+                  : c;
+                const qty = isObj ? (c.qty_in_container ?? 0) : 0;
+                const displayId = cScId || cDbId;
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (cClickId)
+                        handleOpenContainerDetails(String(cClickId));
+                    }}
+                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors font-mono text-[11px]"
+                  >
+                    {displayId ? `[${displayId}]` : ''}
+                    {cName}({qty})
+                  </button>
+                );
+              })}
             </div>
           );
         },
@@ -1872,16 +2230,29 @@ Supply Chain CRM Coordinator`;
           return (
             <div className="flex flex-col gap-0.5">
               {item.containers.map((c: any, idx: number) => {
-                const rawDate = c.estimated_arrival_date || c.received_date;
+                const isObj = typeof c === 'object' && c !== null;
+                const rawDate = isObj
+                  ? c.estimated_arrival_date || c.received_date
+                  : null;
                 const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
+                const cId = isObj
+                  ? c.id ||
+                    c.sellercloud_container_id ||
+                    c.name ||
+                    c.container_name
+                  : c;
                 return (
-                  <span
+                  <button
                     key={idx}
-                    className="bg-slate-50 border border-slate-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (cId) handleOpenContainerDetails(String(cId));
+                    }}
+                    className="bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
                   >
                     ETA:{' '}
                     <strong className="text-indigo-600">{displayDate}</strong>
-                  </span>
+                  </button>
                 );
               })}
             </div>
@@ -2102,12 +2473,13 @@ Supply Chain CRM Coordinator`;
       {activeSubTab === 'grid' && (
         <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
           {loading && <TableLoader message="Please wait a moment..." />}
-          <DataTable
+          <TypedDataTable
             columns={poColumns}
             data={paginatedPOs}
             keyField="id"
             containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+            tableWrapperRef={poTableRef}
             theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
             tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-slate-100"
@@ -2418,6 +2790,18 @@ Supply Chain CRM Coordinator`;
                                     selectedPO.id.replace(/^PO-/i, ''),
                                     Number(leadTimeDays),
                                   );
+                                  const updatedPOs = purchaseOrders.map(
+                                    (p: any) =>
+                                      p.id === selectedPO.id ||
+                                      p.uuid === selectedPO.uuid
+                                        ? {
+                                            ...p,
+                                            containerLeadTimeDays:
+                                              Number(leadTimeDays),
+                                          }
+                                        : p,
+                                  );
+                                  dispatch(setPurchaseOrdersList(updatedPOs));
                                   onAddActivity(
                                     `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
                                     'PO Updated',
@@ -2462,7 +2846,7 @@ Supply Chain CRM Coordinator`;
                         <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
                           Item Specifications (Products)
                         </h5>
-                        <DataTable
+                        <TypedDataTable
                           columns={poItemColumns}
                           data={paginatedItems}
                           keyField="sku"
@@ -2471,6 +2855,7 @@ Supply Chain CRM Coordinator`;
                           }
                           containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
                           tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                          tableWrapperRef={itemsTableRef}
                           theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
                           tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
                           tbodyClassName="divide-y divide-slate-100 text-slate-700"
@@ -2684,7 +3069,8 @@ Supply Chain CRM Coordinator`;
                             return (
                               <div
                                 key={node.id}
-                                className="flex flex-col relative mb-3"
+                                id={node.id} // Added id for deep link scrolling
+                                className="flex flex-col relative mb-3 scroll-mt-20"
                               >
                                 <div className="flex gap-3 group relative transition-colors items-start">
                                   <div
@@ -3517,6 +3903,17 @@ Supply Chain CRM Coordinator`;
         targetItem={selectedItemForComments}
         selectedPO={selectedPO}
         onAddActivity={onAddActivity}
+      />
+
+      <ContainerDetailsModal
+        container={viewingContainerDetails}
+        isLoading={isContainerModalLoading}
+        onClose={() => setViewingContainerDetails(null)}
+        onRefresh={() => {
+          if (viewingContainerDetails?.id) {
+            handleOpenContainerDetails(viewingContainerDetails.id);
+          }
+        }}
       />
     </div>
   );

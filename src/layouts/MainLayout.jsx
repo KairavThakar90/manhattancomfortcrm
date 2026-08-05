@@ -30,7 +30,7 @@ export default function MainLayout() {
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
   const [modalVisible, setModalVisible] = useState(false);
 

@@ -23,7 +23,13 @@ export default function LoginPage() {
         : localStorage.removeItem('rememberedUsername');
       setIsAuthenticated(true);
     } catch (err) {
-      setError(err.message || 'An error occurred during login.');
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail;
+      setError(
+        backendMessage || err.message || 'An error occurred during login.',
+      );
     } finally {
       setLoading(false);
     }

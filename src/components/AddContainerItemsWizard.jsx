@@ -153,13 +153,20 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
     if (!item) return;
 
     const maxQty =
-      item.remaining_qty !== undefined
-        ? item.remaining_qty
-        : item.unreceived_qty !== undefined
-          ? item.unreceived_qty
-          : item.qty_ordered !== undefined
-            ? item.qty_ordered
-            : item.qty || 1000;
+      item.qty_remaining !== undefined
+        ? item.qty_remaining
+        : item.remaining_qty !== undefined
+          ? item.remaining_qty
+          : item.unreceived_qty !== undefined
+            ? item.unreceived_qty
+            : item.qty_ordered !== undefined
+              ? item.qty_ordered
+              : item.qty || 1000;
+
+    const originalQty =
+      item.qty_ordered !== undefined
+        ? item.qty_ordered
+        : item.qty || item.maxQty || 1000;
 
     setSelectedItems((prev) => [
       ...prev,
@@ -167,6 +174,7 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
         ...item,
         allocateQty: '',
         maxQty: maxQty,
+        originalQty: originalQty,
         name: item.product_name || item.name || 'Unknown Item',
       },
     ]);
