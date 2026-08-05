@@ -372,11 +372,15 @@ export default function ContainerFlowPage() {
   }, [fetchContainerAPI]);
 
   useEffect(() => {
+    let timeoutId;
     if (showList) {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         fetchTablePage();
-      }, 0);
+      }, 400);
     }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [showList, fetchTablePage]);
 
   const loadMoreContainers = () => {
@@ -387,10 +391,16 @@ export default function ContainerFlowPage() {
     }
   };
 
+  const containerSearchTimeout = useRef(null);
+
   const handleContainerSearch = (query) => {
     setContainerSearch(query);
     setContainerPage(1);
-    fetchContainerAPI(1, query, false);
+    if (containerSearchTimeout.current)
+      clearTimeout(containerSearchTimeout.current);
+    containerSearchTimeout.current = setTimeout(() => {
+      fetchContainerAPI(1, query, false);
+    }, 400);
   };
 
   const containerDropdownItems = useMemo(() => {

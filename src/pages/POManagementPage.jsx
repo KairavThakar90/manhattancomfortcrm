@@ -332,10 +332,13 @@ export default function POManagementPage() {
       }
     }
 
-    fetchData();
+    const timeoutId = setTimeout(() => {
+      fetchData();
+    }, 400);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
