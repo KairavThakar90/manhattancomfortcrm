@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://manhattancomfortcrm-backend.vercel.app/api/$1"
+      "destination": "https://www.buysiponline.com/api/$1"
     },
     {
       "source": "/(.*)",
