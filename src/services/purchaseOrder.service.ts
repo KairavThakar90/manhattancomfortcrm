@@ -73,6 +73,7 @@ export interface CreatePOPayload {
 
 export interface UpdatePOPayload {
   status?: string;
+  vendor_status?: string;
   eta?: string;
   container?: string;
   items?: PurchaseOrderItem[];

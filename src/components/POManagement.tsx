@@ -56,6 +56,7 @@ import {
   getItemComments,
   postItemComment,
   updateItemComment,
+  updatePurchaseOrder,
 } from '../services/purchaseOrder.service';
 import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
@@ -628,12 +629,7 @@ export default function POManagement({
 
       // Role-based restrictions: if Vendor role, can ONLY see their own POs (Rule 13)
       if (userRole === 'Vendor') {
-        return (
-          matchesSearchOrServer &&
-          matchesStatusOrServer &&
-          matchesDate &&
-          po.vendorId === 'VEND-001'
-        );
+        return matchesSearchOrServer && matchesStatusOrServer && matchesDate;
       }
 
       return matchesSearchOrServer && matchesStatusOrServer && matchesDate;
@@ -1290,6 +1286,23 @@ Supply Chain CRM Coordinator`;
     );
   };
 
+  const handleVendorStatusUpdate = (poId: string, newStatus: string) => {
+    updatePurchaseOrder(poId, { vendor_status: newStatus })
+      .then(() => {
+        const updatedPOs = purchaseOrders.map((p) =>
+          p.id === poId || (p as any).uuid === poId
+            ? { ...p, vendor_status: newStatus }
+            : p,
+        );
+        dispatch(setPurchaseOrdersList(updatedPOs));
+        toast.success(`Vendor Status updated to ${newStatus}`);
+      })
+      .catch((err) => {
+        console.error('Failed to update vendor status:', err);
+        toast.error('Failed to update status');
+      });
+  };
+
   const poColumns = React.useMemo(
     () => [
       {
@@ -1439,6 +1452,42 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
+      ...(userRole === 'Vendor'
+        ? [
+            {
+              header: 'Status',
+              accessor: 'vendor_status',
+              headerClassName: 'px-6 py-4 bg-slate-50 relative',
+              className: 'px-6 py-4',
+              render: (po: any) => (
+                <div onClick={(e: any) => e.stopPropagation()}>
+                  <select
+                    className="text-xs font-medium border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors w-full cursor-pointer outline-none"
+                    value={po.vendor_status || 'NOT_STARTED'}
+                    onChange={(e) =>
+                      handleVendorStatusUpdate(po.id, e.target.value)
+                    }
+                  >
+                    {[
+                      'NOT_STARTED',
+                      'IN_PRODUCTION',
+                      'DELAYED',
+                      'COMPLETED',
+                      'NOT_PLANNED',
+                      'PLANNED',
+                      'PARTIALLY_SHIPPED',
+                      'SHIPPED',
+                    ].map((statusMode) => (
+                      <option key={statusMode} value={statusMode}>
+                        {statusMode.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ),
+            },
+          ]
+        : []),
       {
         header: 'PO Items',
         accessor: 'items',
@@ -1700,7 +1749,14 @@ Supply Chain CRM Coordinator`;
         ),
       },
     ],
-    [activeSortConfig, handleSort, selectedPOId, onSelectPO],
+    [
+      activeSortConfig,
+      handleSort,
+      selectedPOId,
+      onSelectPO,
+      userRole,
+      purchaseOrders,
+    ],
   );
 
   const poItemColumns = React.useMemo(

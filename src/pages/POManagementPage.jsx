@@ -231,6 +231,7 @@ export default function POManagementPage() {
                   }))
                 : po.items || [],
               productionStage: po.productionStage || 'Assembly',
+              vendor_status: po.vendor_status || 'NOT_STARTED',
               commentsCount:
                 po.total_comments_count ??
                 po.commentsCount ??
@@ -263,7 +264,7 @@ export default function POManagementPage() {
                   return mappedArr;
 
                 const targetVendor =
-                  userRole === 'Vendor' ? 'VEND-001' : vendorFilter;
+                  userRole === 'Vendor' ? params.vendor_id : vendorFilter;
                 return mappedArr.filter(
                   (po) =>
                     po.vendorId === targetVendor ||
