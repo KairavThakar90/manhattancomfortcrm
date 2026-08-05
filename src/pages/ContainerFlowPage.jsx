@@ -22,6 +22,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Filter,
   FileSpreadsheet,
   Download,
   Upload,
@@ -37,6 +38,7 @@ import FullPageLoader from '../components/common/FullPageLoader';
 import TableLoader from '../components/common/TableLoader';
 import SellerCloudSyncLoading from '../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../components/common/DateFilterInput';
+import WarehouseInfiniteDropdown from '../components/common/WarehouseInfiniteDropdown';
 import { getPurchaseOrders } from '../services/purchaseOrder.service';
 import {
   getContainers,
@@ -100,6 +102,7 @@ export default function ContainerFlowPage() {
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
   const [dateFrom, setDateFrom] = useState('');
+  const [warehouseFilter, setWarehouseFilter] = useState('all');
 
   const containerTableRef = useRef(null);
 
@@ -312,6 +315,9 @@ export default function ContainerFlowPage() {
       if (dateFrom) {
         params.date_from = dateFrom;
       }
+      if (warehouseFilter && warehouseFilter !== 'all') {
+        params.sellercloud_warehouse_id = warehouseFilter;
+      }
       const data = await getContainers(params);
       const results = Array.isArray(data)
         ? data
@@ -333,7 +339,14 @@ export default function ContainerFlowPage() {
       setListLoading(false);
       setHasLoadedInitial(true);
     }
-  }, [dispatch, listPage, listPageSize, listSearchQuery, dateFrom]);
+  }, [
+    dispatch,
+    listPage,
+    listPageSize,
+    listSearchQuery,
+    dateFrom,
+    warehouseFilter,
+  ]);
 
   const handleContainerPageChange = (newPage) => {
     setIsPaginating(true);
@@ -1154,6 +1167,26 @@ export default function ContainerFlowPage() {
                   }}
                   className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
                 />
+              </div>
+              {/* Warehouse Filter */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                    Warehouse:
+                  </span>
+                </div>
+                <div className="w-48">
+                  <WarehouseInfiniteDropdown
+                    value={warehouseFilter}
+                    onChange={(val) => {
+                      setWarehouseFilter(val);
+                      setListPage(1);
+                    }}
+                    showAllOption={true}
+                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                  />
+                </div>
               </div>
               {/* Order Date Filter - inline */}
               <div className="flex items-center gap-2 flex-shrink-0">
