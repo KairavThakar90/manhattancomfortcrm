@@ -320,9 +320,7 @@ export default function POManagementPage() {
           // Fetch Kanban specific statuses concurrently only in Kanban view
           if (activeSubTab === 'kanban') {
             try {
-              const allFiltersRes = await getPurchaseOrdersAllFilters(
-                params.vendor_id,
-              );
+              const allFiltersRes = await getPurchaseOrdersAllFilters(params);
 
               const safeMap = (arr) => {
                 if (!Array.isArray(arr)) return [];

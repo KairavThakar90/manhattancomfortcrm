@@ -115,11 +115,7 @@ export async function exportPurchaseOrdersCSV(payload?: any) {
 }
 
 /** Fetch all purchase orders filters */
-export async function getPurchaseOrdersAllFilters(vendorId?: string) {
-  const params: any = {};
-  if (vendorId) {
-    params.vendor_id = vendorId;
-  }
+export async function getPurchaseOrdersAllFilters(params?: any) {
   const { data } = await apiClient.get(PO_FILTERS_ALL, { params });
   return data;
 }

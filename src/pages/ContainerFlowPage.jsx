@@ -1140,13 +1140,13 @@ export default function ContainerFlowPage() {
               <Upload className="h-3.5 w-3.5" />
               <span>Export CSV</span>
             </button>
-            <button
+            {/* <button
               onClick={handleCreateContainer}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Container
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -1165,8 +1165,19 @@ export default function ContainerFlowPage() {
                     setListSearchQuery(e.target.value);
                     setListPage(1);
                   }}
-                  className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                  className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
                 />
+                {listSearchQuery && (
+                  <button
+                    onClick={() => {
+                      setListSearchQuery('');
+                      setListPage(1);
+                    }}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition p-0.5 rounded-full hover:bg-slate-200"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               {/* Warehouse Filter */}
               <div className="flex items-center gap-2 flex-shrink-0">
