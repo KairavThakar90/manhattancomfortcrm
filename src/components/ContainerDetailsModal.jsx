@@ -52,7 +52,9 @@ export default function ContainerDetailsModal({
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm text-slate-500 font-medium">
                     {container.sellercloud_container_id || 'Unnamed'}
-                    {container.name ? ` (${container.name})` : ''}
+                    {container.name && container.name !== container.id
+                      ? ` (${container.name})`
+                      : ''}
                   </span>
                 </div>
               </div>

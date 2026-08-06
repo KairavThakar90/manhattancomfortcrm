@@ -363,11 +363,17 @@ export default function POManagement({
     new Set(),
   );
 
-  const handleOpenContainerDetails = async (containerId: string) => {
+  const handleOpenContainerDetails = async (
+    containerId: string,
+    customName?: string,
+  ) => {
     setIsContainerModalLoading(true);
     try {
       // Create a mock object so the modal opens immediately with loading state (optional)
-      setViewingContainerDetails({ name: containerId, id: containerId });
+      setViewingContainerDetails({
+        name: customName || containerId,
+        id: containerId,
+      });
 
       const rawResp = await getContainerDetails(containerId);
       const detailsResp = Array.isArray(rawResp) ? rawResp[0] : rawResp;
@@ -375,10 +381,16 @@ export default function POManagement({
       const rawDetails = detailsResp?.details || detailsResp?.items || [];
       const safeDetails = Array.isArray(rawDetails) ? rawDetails : [];
 
+      const finalName =
+        detailsResp?.container_name ||
+        detailsResp?.name ||
+        customName ||
+        containerId;
+
       setViewingContainerDetails({
         id: containerId,
-        name: containerId,
         ...detailsResp,
+        name: finalName,
         details: safeDetails,
       });
     } catch (err) {
@@ -1956,7 +1968,10 @@ Supply Chain CRM Coordinator`;
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleOpenContainerDetails(String(cId));
+                        const cNameToPass = isObj
+                          ? cObj.container_name || cObj.name
+                          : undefined;
+                        handleOpenContainerDetails(String(cId), cNameToPass);
                       }}
                       className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer truncate max-w-[80px]"
                       title={String(displayName)}
@@ -2243,7 +2258,10 @@ Supply Chain CRM Coordinator`;
                     onClick={(e) => {
                       e.stopPropagation();
                       if (cClickId)
-                        handleOpenContainerDetails(String(cClickId));
+                        handleOpenContainerDetails(
+                          String(cClickId),
+                          String(cName),
+                        );
                     }}
                     className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors font-mono text-[11px]"
                   >
@@ -2283,7 +2301,12 @@ Supply Chain CRM Coordinator`;
                     key={idx}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (cId) handleOpenContainerDetails(String(cId));
+                      if (cId) {
+                        const passName = isObj
+                          ? c.container_name || c.name
+                          : undefined;
+                        handleOpenContainerDetails(String(cId), passName);
+                      }
                     }}
                     className="bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
                   >
@@ -4061,7 +4084,11 @@ Supply Chain CRM Coordinator`;
         onClose={() => setViewingContainerDetails(null)}
         onRefresh={() => {
           if (viewingContainerDetails?.id) {
-            handleOpenContainerDetails(viewingContainerDetails.id);
+            handleOpenContainerDetails(
+              viewingContainerDetails.id,
+              viewingContainerDetails.container_name ||
+                viewingContainerDetails.name,
+            );
           }
         }}
       />
