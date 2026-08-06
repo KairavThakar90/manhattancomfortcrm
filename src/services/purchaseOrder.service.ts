@@ -158,7 +158,8 @@ export async function patchPurchaseOrder(
 
 /** Update purchase order status */
 export async function updatePOStatus(id: string, status: string): Promise<any> {
-  const { data } = await apiClient.patch(PO_STATUS_UPDATE(id), { status });
+  const cleanId = id.replace(/^PO-/i, '');
+  const { data } = await apiClient.patch(PO_STATUS_UPDATE(cleanId), { status });
   return data;
 }
 

@@ -58,6 +58,7 @@ import {
   postItemComment,
   updateItemComment,
   updatePurchaseOrder,
+  updatePOStatus,
 } from '../services/purchaseOrder.service';
 import { getUsers, User } from '../services/user.service';
 import Pagination from './common/Pagination';
@@ -1519,11 +1520,11 @@ Supply Chain CRM Coordinator`;
   };
 
   const handleVendorStatusUpdate = (poId: string, newStatus: string) => {
-    updatePurchaseOrder(poId, { vendor_status: newStatus })
+    updatePOStatus(poId, newStatus)
       .then(() => {
         const updatedPOs = purchaseOrders.map((p) =>
           p.id === poId || (p as any).uuid === poId
-            ? { ...p, vendor_status: newStatus }
+            ? { ...p, status: newStatus }
             : p,
         );
         dispatch(setPurchaseOrdersList(updatedPOs));
@@ -1822,13 +1823,13 @@ Supply Chain CRM Coordinator`;
         ? [
             {
               header: 'Status',
-              accessor: 'vendor_status',
+              accessor: 'status',
               headerClassName: 'px-6 py-4 bg-slate-50 relative',
               className: 'px-6 py-4 min-w-[200px]',
               render: (po: any) => (
                 <VendorStatusDropdown
                   poId={po.id}
-                  currentStatus={po.vendor_status || 'NOT_STARTED'}
+                  currentStatus={po.status || 'NOT_STARTED'}
                   onUpdate={handleVendorStatusUpdate}
                 />
               ),

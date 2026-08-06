@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import {
-  updatePOStatus,
   getPurchaseOrderById,
+  updatePOStatus,
 } from '../services/purchaseOrder.service';
 import {
   Users,
@@ -455,15 +455,6 @@ export default function VendorManagement({
                         }
                         disabled={isUpdatingStatusId === po.id}
                         onChange={async (e) => {
-                          const displayToApiMap: Record<string, string> = {
-                            New: 'NEW',
-                            Production: 'IN_PRODUCTION',
-                            'In Production': 'IN_PRODUCTION',
-                            'Ready to Ship': 'READY_TO_SHIP',
-                            'In Transit': 'IN_TRANSIT',
-                            Delivered: 'DELIVERED',
-                            Delayed: 'DELAYED',
-                          };
                           const apiToDisplayMap: Record<string, string> = {
                             NEW: 'New',
                             IN_PRODUCTION: 'Production',
@@ -480,22 +471,13 @@ export default function VendorManagement({
                           try {
                             const dbId = po.uuid || po.id.replace(/^PO-/i, '');
 
-                            // 1. Update Status via PATCH
+                            // 1. Update Status via /Status endpoint
                             await updatePOStatus(dbId, newApiStatus);
 
-                            // 2. Call GET API to status check
-                            const serverPo = await getPurchaseOrderById(dbId);
-                            // Some apis return { data: PO } depending on axios interceptor shape,
-                            // but service unpacks {data} generally. We fallback to display if missing.
-                            const verifiedStatus =
-                              (serverPo as any)?.status_label ||
-                              newDisplayStatus;
-
-                            // 3. Merging explicitly to preserve UI-mapped shape
-                            // (Prevents PO disappearing due to erased vendorId)
+                            // 2. Set the status current directly in the selected PO item
                             const frontendUpdatedPO = {
                               ...po,
-                              status: verifiedStatus,
+                              status: newApiStatus,
                             };
 
                             if (onUpdatePO) {
@@ -503,7 +485,7 @@ export default function VendorManagement({
                             }
 
                             onAddActivity(
-                              `Updated PO ${po.id} status to ${verifiedStatus}`,
+                              `Updated PO ${po.id} status to ${newDisplayStatus}`,
                               'PO Updated',
                             );
                             toast.success(

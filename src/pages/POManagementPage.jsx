@@ -187,7 +187,7 @@ export default function POManagementPage() {
                   0,
                 )
               : 0;
-            let status = po.status_label || 'N/A';
+            let status = po.status_label || po.status || 'N/A';
             let eta = 'N/A';
             const leadDays =
               po.container_lead_time_days || po.containerLeadTimeDays;
