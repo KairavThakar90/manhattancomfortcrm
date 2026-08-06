@@ -321,6 +321,10 @@ export default function POManagement({
   // Editing Comment State
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>('');
+  const [highlightedCommentId, setHighlightedCommentId] = useState<
+    string | null
+  >(null);
+  const [isLocatingComment, setIsLocatingComment] = useState(false);
 
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -695,20 +699,30 @@ export default function POManagement({
     const handleDeepLink = (e: any) => {
       const { commentId } = e.detail;
       if (commentId) {
+        setHighlightedCommentId(commentId);
         setActiveDrawerSection('comments');
-        // Wait for comments drawer to render and load
-        setTimeout(() => {
+
+        // Show full page loading process
+        setIsLocatingComment(true);
+
+        const maxAttempts = 40; // 10 seconds total
+        let attempts = 0;
+
+        const checkInterval = setInterval(() => {
+          attempts++;
           const el = document.getElementById(commentId);
           if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add(
-              'bg-amber-100',
-              'transition-colors',
-              'duration-1000',
-            );
-            setTimeout(() => el.classList.remove('bg-amber-100'), 3000);
+            clearInterval(checkInterval);
+            setIsLocatingComment(false);
+            setTimeout(() => {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            setIsLocatingComment(false);
+            toast.error('Could not locate the specific comment.');
           }
-        }, 1500);
+        }, 250);
       }
     };
     window.addEventListener('po-deep-link', handleDeepLink);
@@ -2590,6 +2604,9 @@ Supply Chain CRM Coordinator`;
         isOpen={isSyncing}
         onForceClose={() => setIsSyncing(false)}
       />
+      {isLocatingComment && (
+        <FullPageLoader message="Locating shared comment..." />
+      )}
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO && (
         <div
@@ -3070,7 +3087,11 @@ Supply Chain CRM Coordinator`;
                               <div
                                 key={node.id}
                                 id={node.id} // Added id for deep link scrolling
-                                className="flex flex-col relative mb-3 scroll-mt-20"
+                                className={`flex flex-col relative mb-3 scroll-mt-20 ${
+                                  highlightedCommentId === node.id
+                                    ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
+                                    : ''
+                                }`}
                               >
                                 <div className="flex gap-3 group relative transition-colors items-start">
                                   <div
