@@ -22,15 +22,17 @@ export default function CompanyDropdown({
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch once on first open
+  // Fetch once on first open or if we have a specific value we need to resolve
   useEffect(() => {
-    if (!isOpen || companies.length > 0) return;
+    const needsFetch = isOpen || (value && value !== 'all');
+    if (!needsFetch || companies.length > 0) return;
+
     setLoading(true);
     getCompanies()
       .then((list) => setCompanies(list))
       .catch(() => setCompanies([]))
       .finally(() => setLoading(false));
-  }, [isOpen]);
+  }, [isOpen, value, companies.length]);
 
   // Close on outside click
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function CompanyDropdown({
       ? placeholder
       : companies.find(
           (c) => String(c.sellercloud_company_id || c.id) === String(value),
-        )?.name || value;
+        )?.name || (loading ? 'Loading...' : value);
 
   return (
     <div className="relative inline-block w-full" ref={containerRef}>

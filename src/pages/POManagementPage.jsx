@@ -77,7 +77,7 @@ export default function POManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
-  const [companyFilter, setCompanyFilter] = useState('279');
+  const [companyFilter, setCompanyFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [activeSubTab, setActiveSubTab] = useState('grid');
