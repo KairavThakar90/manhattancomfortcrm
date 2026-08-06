@@ -7,7 +7,9 @@ import {
   Package,
   CheckCircle2,
   ExternalLink,
+  Copy,
 } from 'lucide-react';
+import { Tooltip } from 'react-tooltip';
 import DataTable from './common/DataTable';
 import Pagination from './common/Pagination';
 
@@ -150,6 +152,35 @@ export default function ContainerDetailsModal({
                         ),
                       },
                       {
+                        header: 'SKU',
+                        accessor: 'sku',
+                        headerClassName: 'px-3 py-2 bg-white w-24',
+                        className: 'px-3 py-2 max-w-[100px]',
+                        render: (item) => (
+                          <div className="flex items-center gap-1.5 group">
+                            <span
+                              className="font-mono text-slate-700 truncate cursor-help flex-1 min-w-0"
+                              data-tooltip-id="sku-tooltip"
+                              data-tooltip-content={item.sku || 'N/A'}
+                            >
+                              {item.sku || '-'}
+                            </span>
+                            {item.sku && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(item.sku);
+                                }}
+                                className="text-slate-300 hover:text-indigo-600 transition-colors shrink-0"
+                                title="Copy SKU"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
                         header: 'PRODUCT NAME',
                         accessor: 'product_name',
                         headerClassName: 'px-3 py-2 bg-white',
@@ -217,6 +248,18 @@ export default function ContainerDetailsModal({
           </div>
         </div>
       </div>
+      <Tooltip
+        id="sku-tooltip"
+        positionStrategy="fixed"
+        place="top"
+        className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center"
+        style={{
+          backgroundColor: '#6366f1',
+          color: '#ffffff',
+          borderRadius: '8px',
+          padding: '8px 12px',
+        }}
+      />
     </>,
     document.body,
   );
