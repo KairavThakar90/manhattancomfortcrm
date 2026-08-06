@@ -42,7 +42,10 @@ export default function MainLayout() {
 
   // Auto-redirect vendor users to purchase orders
   useEffect(() => {
-    if (userRole === 'Vendor' && location.pathname === '/') {
+    if (
+      userRole === 'Vendor' &&
+      !location.pathname.startsWith('/purchase-orders')
+    ) {
       navigate('/purchase-orders', { replace: true });
     }
   }, [userRole, location.pathname, navigate]);
