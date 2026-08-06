@@ -1714,7 +1714,13 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
         render: (po: any) => (
-          <span title={po.companyName}>{po.companyName}</span>
+          <span
+            className="cursor-pointer inline-block w-full truncate"
+            data-tooltip-id="po-item-tooltip"
+            data-tooltip-content={po.companyName}
+          >
+            {po.companyName}
+          </span>
         ),
       },
 
@@ -2386,6 +2392,23 @@ Supply Chain CRM Coordinator`;
 
   return (
     <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
+        <Tooltip
+          id="po-item-tooltip"
+          place="top"
+          positionStrategy="fixed"
+          style={{
+            backgroundColor: '#4f46e5',
+            color: '#ffffff',
+            fontWeight: 500,
+            fontSize: '11px',
+            zIndex: 100,
+            padding: '4px 8px',
+            borderRadius: '6px',
+            maxWidth: '300px',
+          }}
+        />
+      </div>
       {/* Tab Header Controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4 flex-shrink-0">
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
@@ -3011,23 +3034,7 @@ Supply Chain CRM Coordinator`;
                             }
                             emptyMessage="No items specified for this purchase order."
                           />
-                          <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
-                            <Tooltip
-                              id="po-item-tooltip"
-                              place="top"
-                              positionStrategy="fixed"
-                              style={{
-                                backgroundColor: '#4f46e5',
-                                color: '#ffffff',
-                                fontWeight: 500,
-                                fontSize: '11px',
-                                zIndex: 100,
-                                padding: '4px 8px',
-                                borderRadius: '6px',
-                                maxWidth: '300px',
-                              }}
-                            />
-                          </div>
+
                           {totalItemsCount > 0 && (
                             <div className="mt-2 border border-slate-100 rounded-lg p-1 bg-white">
                               <Pagination
