@@ -12,6 +12,7 @@ import {
   PO_ITEM_COMMENTS,
   PO_ITEM_COMMENT_UPDATE,
   PO_SYNC,
+  PO_STATUS_UPDATE,
 } from '../utils/endpoints';
 
 // ==========================================
@@ -152,6 +153,12 @@ export async function patchPurchaseOrder(
   payload: Partial<UpdatePOPayload>,
 ): Promise<PurchaseOrder> {
   const { data } = await apiClient.patch<PurchaseOrder>(PO_UPDATE(id), payload);
+  return data;
+}
+
+/** Update purchase order status */
+export async function updatePOStatus(id: string, status: string): Promise<any> {
+  const { data } = await apiClient.patch(PO_STATUS_UPDATE(id), { status });
   return data;
 }
 

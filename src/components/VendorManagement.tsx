@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import {
+  updatePOStatus,
+  getPurchaseOrderById,
+} from '../services/purchaseOrder.service';
 import {
   Users,
   User,
@@ -27,6 +32,7 @@ interface VendorManagementProps {
     msg: string,
     type: 'PO Updated' | 'Email Sent' | 'Invoice Uploaded' | 'Vendor Comment',
   ) => void;
+  onUpdatePO?: (updatedPo: PurchaseOrder) => void;
 }
 
 export default function VendorManagement({
@@ -34,10 +40,14 @@ export default function VendorManagement({
   purchaseOrders,
   onUpdateVendor,
   onAddActivity,
+  onUpdatePO,
 }: VendorManagementProps) {
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [isEditingContact, setIsEditingContact] = useState(false);
   const [editForm, setEditForm] = useState<Vendor | null>(null);
+  const [isUpdatingStatusId, setIsUpdatingStatusId] = useState<string | null>(
+    null,
+  );
 
   const selectedVendor = vendors.find((v) => v.id === selectedVendorId);
 
@@ -411,15 +421,111 @@ export default function VendorManagement({
                       <span className="font-bold font-mono text-slate-800">
                         {po.id}
                       </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          po.status === 'Delayed'
-                            ? 'bg-rose-50 text-rose-600'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
+                      <select
+                        className={`px-2 py-0.5 rounded-md text-[9px] font-bold border-0 cursor-pointer outline-hidden focus:ring-2 focus:ring-indigo-500
+                          ${po.status === 'Delayed' ? 'bg-rose-50 text-rose-600' : 'bg-slate-200 text-slate-600'}
+                          ${isUpdatingStatusId === po.id ? 'opacity-50' : ''}
+                        `}
+                        value={
+                          ['New', 'NEW'].includes(po.status as string)
+                            ? 'NEW'
+                            : [
+                                  'Production',
+                                  'In Production',
+                                  'IN_PRODUCTION',
+                                ].includes(po.status as string)
+                              ? 'IN_PRODUCTION'
+                              : ['Ready to Ship', 'READY_TO_SHIP'].includes(
+                                    po.status as string,
+                                  )
+                                ? 'READY_TO_SHIP'
+                                : ['In Transit', 'IN_TRANSIT'].includes(
+                                      po.status as string,
+                                    )
+                                  ? 'IN_TRANSIT'
+                                  : ['Delivered', 'DELIVERED'].includes(
+                                        po.status as string,
+                                      )
+                                    ? 'DELIVERED'
+                                    : ['Delayed', 'DELAYED'].includes(
+                                          po.status as string,
+                                        )
+                                      ? 'DELAYED'
+                                      : (po.status as string)
+                        }
+                        disabled={isUpdatingStatusId === po.id}
+                        onChange={async (e) => {
+                          const displayToApiMap: Record<string, string> = {
+                            New: 'NEW',
+                            Production: 'IN_PRODUCTION',
+                            'In Production': 'IN_PRODUCTION',
+                            'Ready to Ship': 'READY_TO_SHIP',
+                            'In Transit': 'IN_TRANSIT',
+                            Delivered: 'DELIVERED',
+                            Delayed: 'DELAYED',
+                          };
+                          const apiToDisplayMap: Record<string, string> = {
+                            NEW: 'New',
+                            IN_PRODUCTION: 'Production',
+                            READY_TO_SHIP: 'Ready to Ship',
+                            IN_TRANSIT: 'In Transit',
+                            DELIVERED: 'Delivered',
+                            DELAYED: 'Delayed',
+                          };
+
+                          const newApiStatus = e.target.value;
+                          const newDisplayStatus =
+                            apiToDisplayMap[newApiStatus] || newApiStatus;
+                          setIsUpdatingStatusId(po.id);
+                          try {
+                            const dbId = po.uuid || po.id.replace(/^PO-/i, '');
+
+                            // 1. Update Status via PATCH
+                            await updatePOStatus(dbId, newApiStatus);
+
+                            // 2. Call GET API to status check
+                            const serverPo = await getPurchaseOrderById(dbId);
+                            // Some apis return { data: PO } depending on axios interceptor shape,
+                            // but service unpacks {data} generally. We fallback to display if missing.
+                            const verifiedStatus =
+                              (serverPo as any)?.status_label ||
+                              newDisplayStatus;
+
+                            // 3. Merging explicitly to preserve UI-mapped shape
+                            // (Prevents PO disappearing due to erased vendorId)
+                            const frontendUpdatedPO = {
+                              ...po,
+                              status: verifiedStatus,
+                            };
+
+                            if (onUpdatePO) {
+                              onUpdatePO(frontendUpdatedPO);
+                            }
+
+                            onAddActivity(
+                              `Updated PO ${po.id} status to ${verifiedStatus}`,
+                              'PO Updated',
+                            );
+                            toast.success(
+                              `PO ${po.id} status verified and updated!`,
+                            );
+                          } catch (err: any) {
+                            console.error(err);
+                            toast.error(
+                              `Failed to update status: ${err.message}`,
+                            );
+                          } finally {
+                            setIsUpdatingStatusId(null);
+                          }
+                        }}
                       >
-                        {po.status}
-                      </span>
+                        <option value="NEW">New</option>
+                        <option value="IN_PRODUCTION">Production</option>
+                        <option value="READY_TO_SHIP">Ready to Ship</option>
+                        <option value="IN_TRANSIT">In Transit</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="DELAYED">Delayed</option>
+                      </select>
                     </div>
                   ))}
                   {vendorPOs.length === 0 && (

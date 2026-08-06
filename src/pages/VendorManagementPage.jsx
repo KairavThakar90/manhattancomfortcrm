@@ -3,8 +3,13 @@ import VendorManagement from '../components/VendorManagement';
 import { useCRM } from '../hooks/useCRM';
 
 export default function VendorManagementPage() {
-  const { vendors, purchaseOrders, handleUpdateVendors, handleAddActivity } =
-    useCRM();
+  const {
+    vendors,
+    purchaseOrders,
+    handleUpdateVendors,
+    handleAddActivity,
+    handleUpdatePOs,
+  } = useCRM();
 
   return (
     <VendorManagement
@@ -12,6 +17,10 @@ export default function VendorManagementPage() {
       purchaseOrders={purchaseOrders}
       onUpdateVendor={handleUpdateVendors}
       onAddActivity={handleAddActivity}
+      onUpdatePO={(po) => {
+        const updated = purchaseOrders.map((p) => (p.id === po.id ? po : p));
+        handleUpdatePOs(updated);
+      }}
     />
   );
 }
