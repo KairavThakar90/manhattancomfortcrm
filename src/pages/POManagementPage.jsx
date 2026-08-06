@@ -237,6 +237,12 @@ export default function POManagementPage() {
               orderId: po.order_number || 'N/A',
               vendorId: frontVendorId,
               vendorName,
+              companyName:
+                po.company_name ||
+                po.company?.name ||
+                po.companyName ||
+                po.sellercloud_company_name ||
+                '-',
               status,
               orderedQty,
               receivedQty,

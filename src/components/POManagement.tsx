@@ -1708,6 +1708,15 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-6 py-4 bg-slate-50',
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
+      {
+        header: 'Company Name',
+        accessor: 'companyName',
+        headerClassName: 'px-6 py-4 bg-slate-50',
+        className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
+        render: (po: any) => (
+          <span title={po.companyName}>{po.companyName}</span>
+        ),
+      },
 
       {
         header: 'PO Items',
