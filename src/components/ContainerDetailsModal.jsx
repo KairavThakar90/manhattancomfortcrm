@@ -159,7 +159,7 @@ export default function ContainerDetailsModal({
                         render: (item) => (
                           <div className="flex items-center gap-1.5 group">
                             <span
-                              className="font-mono text-slate-700 truncate cursor-help flex-1 min-w-0"
+                              className="font-mono text-slate-700 truncate cursor-pointer flex-1 min-w-0"
                               data-tooltip-id="sku-tooltip"
                               data-tooltip-content={item.sku || 'N/A'}
                             >
