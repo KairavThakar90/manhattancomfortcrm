@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import LoginPage from '../pages/LoginPage';
-import SupportPage from '../pages/SupportPage';
+
 import NotFoundPage from '../pages/NotFoundPage';
 import { appRoutes } from './routes';
 import { RefreshCw } from 'lucide-react';
@@ -20,7 +20,6 @@ export default function AppRoutes() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/support" element={<SupportPage />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

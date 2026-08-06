@@ -59,9 +59,12 @@ apiClient.interceptors.response.use(
       error.response?.status >= 500 ||
       (!error.response && error.message === 'Network Error')
     ) {
-      if (!skipGlobalError && !window.location.pathname.includes('/support')) {
-        // Redirect on server errors or network disconnects
-        window.location.href = '/support';
+      if (!skipGlobalError) {
+        // We temporarily removed the redirect to /support
+        console.error(
+          'Server error or network disconnect caught in interceptor.',
+          error,
+        );
       }
     }
 
