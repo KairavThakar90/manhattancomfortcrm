@@ -700,6 +700,9 @@ export default function POManagement({
       setItemsCurrentPage(1);
       setCommentScope('po');
       setSelectedSkuId(null);
+      setHighlightedCommentId(null);
+      setSelectedItemForComments(null);
+      setViewingContainerDetails(null);
     }
   }, [selectedPOId]);
 

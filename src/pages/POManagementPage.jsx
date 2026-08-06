@@ -45,6 +45,13 @@ export default function POManagementPage() {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Prevent react-router deferred prop updates from resurrecting a deeply-linked PO
+    // after we have already navigated away synchronously.
+    const isShowingPO =
+      typeof window !== 'undefined' &&
+      window.location.pathname.match(/\/purchase-orders\/[^/]+/);
+    if (!isShowingPO) return;
+
     if (poId) {
       const cleanId = poId.replace(/^PO-/i, '');
       const fullPoId = `PO-${cleanId}`;
@@ -519,12 +526,9 @@ export default function POManagementPage() {
         userRole={userRole}
         selectedPOId={selectedPOId}
         onSelectPO={(id) => {
-          setSelectedPOId(id);
+          setSelectedPOId(id || null);
           if (!id) {
             navigate('/purchase-orders', { replace: true });
-          } else {
-            // Optional: If you want to update the URL when a PO is selected, you can do so here:
-            // navigate(`/purchase-orders/${String(id).replace(/^PO-/, '')}`, { replace: true });
           }
         }}
         onUpdatePO={handlePOUpdateCascade}

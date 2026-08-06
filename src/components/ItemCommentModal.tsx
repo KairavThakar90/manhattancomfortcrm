@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import {
   X,
@@ -407,7 +408,7 @@ export default function ItemCommentModal({
   if (!isOpen) return null;
   const rootNodes = buildTree(fetchedComments);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 overflow-hidden"
       onClick={onClose}
@@ -611,6 +612,7 @@ export default function ItemCommentModal({
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
