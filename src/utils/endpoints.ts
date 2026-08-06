@@ -45,6 +45,11 @@ export const PO_SYNC = '/purchase-orders/sync';
 export const PO_STATUS_UPDATE = (id: string) => `/purchase-orders/${id}/status`;
 
 // ------------------------------------------
+// Company Endpoints
+// ------------------------------------------
+export const COMPANIES_LIST = '/companies';
+
+// ------------------------------------------
 // Vendor Endpoints
 // ------------------------------------------
 export const VENDORS_LIST = '/vendors';

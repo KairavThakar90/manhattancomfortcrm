@@ -77,6 +77,7 @@ export default function POManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
+  const [companyFilter, setCompanyFilter] = useState('279');
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -96,6 +97,10 @@ export default function POManagementPage() {
   };
   const handleVendorFilterChange = (val) => {
     setVendorFilter(val);
+    setCurrentPage(1);
+  };
+  const handleCompanyFilterChange = (val) => {
+    setCompanyFilter(val);
     setCurrentPage(1);
   };
   const [dateFrom, setDateFrom] = useState('');
@@ -141,6 +146,10 @@ export default function POManagementPage() {
 
         if (vendorFilter !== 'all') {
           params.vendor_id = vendorFilter;
+        }
+
+        if (companyFilter !== 'all') {
+          params.sellercloud_company_id = companyFilter;
         }
 
         if (userRole === 'Vendor') {
@@ -412,6 +421,7 @@ export default function POManagementPage() {
     searchQuery,
     statusFilter,
     vendorFilter,
+    companyFilter,
     dateFrom,
     userRole,
     refreshTrigger,
@@ -548,6 +558,8 @@ export default function POManagementPage() {
         onStatusFilterChange={handleStatusFilterChange}
         vendorFilter={vendorFilter}
         onVendorFilterChange={handleVendorFilterChange}
+        companyFilter={companyFilter}
+        onCompanyFilterChange={handleCompanyFilterChange}
         dateFrom={dateFrom}
         onDateFromChange={handleDateFromChange}
         sortConfig={sortConfig}

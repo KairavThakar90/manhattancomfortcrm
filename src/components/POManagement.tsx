@@ -66,6 +66,7 @@ import TableLoader from './common/TableLoader';
 import FullPageLoader from './common/FullPageLoader';
 import ItemCommentModal from './ItemCommentModal';
 import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
+import CompanyDropdown from './common/CompanyDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
@@ -231,6 +232,8 @@ interface POManagementProps {
   onStatusFilterChange?: (val: string) => void;
   vendorFilter?: string;
   onVendorFilterChange?: (val: string) => void;
+  companyFilter?: string;
+  onCompanyFilterChange?: (val: string) => void;
   dateFrom?: string;
   onDateFromChange?: (val: string) => void;
   pageSize?: number;
@@ -265,6 +268,8 @@ export default function POManagement({
   onStatusFilterChange: propOnStatusFilterChange,
   vendorFilter: propVendorFilter,
   onVendorFilterChange: propOnVendorFilterChange,
+  companyFilter: propCompanyFilter,
+  onCompanyFilterChange: propOnCompanyFilterChange,
   dateFrom: propDateFrom,
   onDateFromChange: propOnDateFromChange,
   pageSize: propPageSize,
@@ -295,6 +300,7 @@ export default function POManagement({
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
+  const [localCompanyFilter, setLocalCompanyFilter] = useState<string>('279');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
 
   // Comments state fetched from detail API
@@ -2468,6 +2474,29 @@ Supply Chain CRM Coordinator`;
                     onChange={setVendorFilter}
                     showAllOption={true}
                     placeholder="All Vendors"
+                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                  />
+                </div>
+              </div>
+            )}
+            {userRole !== 'Vendor' && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Filter className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500">
+                    Company:
+                  </span>
+                </div>
+                <div className="w-40">
+                  <CompanyDropdown
+                    value={propCompanyFilter ?? localCompanyFilter}
+                    onChange={(val) => {
+                      if (propOnCompanyFilterChange)
+                        propOnCompanyFilterChange(val);
+                      else setLocalCompanyFilter(val);
+                    }}
+                    showAllOption={true}
+                    placeholder="All Companies"
                     className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
                   />
                 </div>
