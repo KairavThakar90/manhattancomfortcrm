@@ -324,7 +324,10 @@ export default function POManagement({
   const [highlightedCommentId, setHighlightedCommentId] = useState<
     string | null
   >(null);
-  const [isLocatingComment, setIsLocatingComment] = useState(false);
+  const [isLocatingComment, setIsLocatingComment] = useState(
+    typeof window !== 'undefined' &&
+      window.location.search.includes('comment_id'),
+  );
 
   // Mention Tagging State
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -660,7 +663,12 @@ export default function POManagement({
   // Detail drawer sub-sections
   const [activeDrawerSection, setActiveDrawerSection] = useState<
     'details' | 'comments' | 'ocr' | 'emails'
-  >('details');
+  >(
+    typeof window !== 'undefined' &&
+      window.location.search.includes('comment_id')
+      ? 'comments'
+      : 'details',
+  );
 
   const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
@@ -2608,52 +2616,73 @@ Supply Chain CRM Coordinator`;
         <FullPageLoader message="Locating shared comment..." />
       )}
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
-      {selectedPO && (
-        <div
-          onClick={() => {
-            onSelectPO(null);
-            setIsCommentOnlyView(false);
-          }}
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
-        >
+      {selectedPO &&
+        createPortal(
           <div
-            onClick={(e) => e.stopPropagation()}
-            className={`bg-white rounded-2xl border border-slate-100 shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp`}
+            onClick={() => {
+              onSelectPO(null);
+              setIsCommentOnlyView(false);
+            }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
           >
-            {/* Header */}
-            {!isCommentOnlyView && (
-              <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
-                    {selectedPO.id}
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">
-                      {selectedPO.vendorName}
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                      Order ID:{' '}
-                      {!selectedPO.orderId || selectedPO.orderId === 'N/A'
-                        ? 'Stock'
-                        : selectedPO.orderId}{' '}
-                      • Created: {selectedPO.creationDate}
-                    </p>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`bg-white rounded-2xl border border-slate-100 shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp`}
+            >
+              {/* Header */}
+              {!isCommentOnlyView && (
+                <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                      {selectedPO.id}
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        {selectedPO.vendorName}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        Order ID:{' '}
+                        {!selectedPO.orderId || selectedPO.orderId === 'N/A'
+                          ? 'Stock'
+                          : selectedPO.orderId}{' '}
+                        • Created: {selectedPO.creationDate}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {selectedPO.sellercloud_link && (
+                      <button
+                        onClick={() =>
+                          window.open(selectedPO.sellercloud_link, '_blank')
+                        }
+                        className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Open in Sellercloud
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        onSelectPO(null);
+                        setIsCommentOnlyView(false);
+                      }}
+                      className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
                 </div>
+              )}
 
-                <div className="flex items-center gap-2">
-                  {selectedPO.sellercloud_link && (
-                    <button
-                      onClick={() =>
-                        window.open(selectedPO.sellercloud_link, '_blank')
-                      }
-                      className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open in Sellercloud
-                    </button>
-                  )}
-
+              {isCommentOnlyView && (
+                <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      {selectedPO.id} - Comments
+                    </h3>
+                  </div>
                   <button
                     onClick={() => {
                       onSelectPO(null);
@@ -2664,106 +2693,52 @@ Supply Chain CRM Coordinator`;
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {isCommentOnlyView && (
-              <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    {selectedPO.id} - Comments
-                  </h3>
+              {/* Tab Selection inside Modal */}
+              {!isCommentOnlyView && (
+                <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
+                  {(['details', 'comments'] as const).map((section) => (
+                    <button
+                      key={section}
+                      onClick={() => setActiveDrawerSection(section)}
+                      className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
+                        activeDrawerSection === section
+                          ? 'border-indigo-600 text-indigo-600 bg-white'
+                          : 'border-transparent text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {section}
+                    </button>
+                  ))}
                 </div>
-                <button
-                  onClick={() => {
-                    onSelectPO(null);
-                    setIsCommentOnlyView(false);
-                  }}
-                  className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            )}
+              )}
 
-            {/* Tab Selection inside Modal */}
-            {!isCommentOnlyView && (
-              <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
-                {(['details', 'comments'] as const).map((section) => (
-                  <button
-                    key={section}
-                    onClick={() => setActiveDrawerSection(section)}
-                    className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
-                      activeDrawerSection === section
-                        ? 'border-indigo-600 text-indigo-600 bg-white'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    {section}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="p-6 flex-1 flex flex-col min-h-0">
-              {/* TAB: DETAILS */}
-              {activeDrawerSection === 'details' && !isCommentOnlyView && (
-                <div className="flex-1 flex flex-col min-h-0">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-                    {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
-                    <div className="space-y-3 md:col-span-3 flex flex-col min-h-0">
-                      <div className="grid grid-cols-5 gap-4 shrink-0">
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                          <span className="text-[10px] text-slate-400 font-medium block">
-                            Order ID
-                          </span>
-                          <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {!selectedPO.orderId || selectedPO.orderId === 'N/A'
-                              ? 'Stock'
-                              : selectedPO.orderId}
-                          </strong>
-                        </div>
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                          <span className="text-[10px] text-slate-400 font-medium block">
-                            Ordered Quantity
-                          </span>
-                          <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.orderedQty ||
-                              allItemsForPO.reduce(
-                                (sum: number, i: any) =>
-                                  sum +
-                                  (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
-                                0,
-                              )}{' '}
-                            units
-                          </strong>
-                        </div>
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                          <span className="text-[10px] text-slate-400 font-medium block">
-                            Received Quantity
-                          </span>
-                          <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {selectedPO.receivedQty ||
-                              allItemsForPO.reduce(
-                                (sum: number, i: any) =>
-                                  sum +
-                                  (i.qty_received ??
-                                    i.receivedQty ??
-                                    i.received_qty ??
-                                    0),
-                                0,
-                              )}{' '}
-                            units
-                          </strong>
-                        </div>
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                          <span className="text-[10px] text-slate-400 font-medium block">
-                            Remaining Quantity
-                          </span>
-                          <strong className="text-sm font-bold text-slate-800 font-mono">
-                            {Math.max(
-                              0,
-                              (selectedPO.orderedQty ||
+              <div className="p-6 flex-1 flex flex-col min-h-0">
+                {/* TAB: DETAILS */}
+                {activeDrawerSection === 'details' && !isCommentOnlyView && (
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
+                      {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
+                      <div className="space-y-3 md:col-span-3 flex flex-col min-h-0">
+                        <div className="grid grid-cols-5 gap-4 shrink-0">
+                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              Order ID
+                            </span>
+                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                              {!selectedPO.orderId ||
+                              selectedPO.orderId === 'N/A'
+                                ? 'Stock'
+                                : selectedPO.orderId}
+                            </strong>
+                          </div>
+                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              Ordered Quantity
+                            </span>
+                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                              {selectedPO.orderedQty ||
                                 allItemsForPO.reduce(
                                   (sum: number, i: any) =>
                                     sum +
@@ -2772,74 +2747,114 @@ Supply Chain CRM Coordinator`;
                                       i.orderedQty ??
                                       0),
                                   0,
-                                )) -
-                                (selectedPO.receivedQty ||
+                                )}{' '}
+                              units
+                            </strong>
+                          </div>
+                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              Received Quantity
+                            </span>
+                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                              {selectedPO.receivedQty ||
+                                allItemsForPO.reduce(
+                                  (sum: number, i: any) =>
+                                    sum +
+                                    (i.qty_received ??
+                                      i.receivedQty ??
+                                      i.received_qty ??
+                                      0),
+                                  0,
+                                )}{' '}
+                              units
+                            </strong>
+                          </div>
+                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              Remaining Quantity
+                            </span>
+                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                              {Math.max(
+                                0,
+                                (selectedPO.orderedQty ||
                                   allItemsForPO.reduce(
                                     (sum: number, i: any) =>
                                       sum +
-                                      (i.qty_received ??
-                                        i.receivedQty ??
-                                        i.received_qty ??
+                                      (i.qty_ordered ??
+                                        i.qty ??
+                                        i.orderedQty ??
                                         0),
                                     0,
-                                  )),
-                            )}{' '}
-                            units
-                          </strong>
-                        </div>
-                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                          <label className="text-[10px] text-slate-400 font-medium block mb-1">
-                            Enter lead days for po order
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={leadTimeDays}
-                              onChange={(e) => setLeadTimeDays(e.target.value)}
-                              className="w-full text-sm font-bold text-slate-800 font-mono bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                              placeholder="0"
-                            />
-                            <button
-                              onClick={async () => {
-                                if (!leadTimeDays) return;
-                                try {
-                                  await updatePOLeadTime(
-                                    selectedPO.id.replace(/^PO-/i, ''),
-                                    Number(leadTimeDays),
-                                  );
-                                  const updatedPOs = purchaseOrders.map(
-                                    (p: any) =>
-                                      p.id === selectedPO.id ||
-                                      p.uuid === selectedPO.uuid
-                                        ? {
-                                            ...p,
-                                            containerLeadTimeDays:
-                                              Number(leadTimeDays),
-                                          }
-                                        : p,
-                                  );
-                                  dispatch(setPurchaseOrdersList(updatedPOs));
-                                  onAddActivity(
-                                    `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
-                                    'PO Updated',
-                                  );
-                                  toast.success(
-                                    'Lead time updated successfully!',
-                                  );
-                                } catch (error) {
-                                  console.error(error);
-                                  toast.error('Failed to update lead time.');
-                                }
-                              }}
-                              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors"
-                            >
-                              {selectedPO.containerLeadTimeDays
-                                ? 'Update'
-                                : 'Save'}
-                            </button>
+                                  )) -
+                                  (selectedPO.receivedQty ||
+                                    allItemsForPO.reduce(
+                                      (sum: number, i: any) =>
+                                        sum +
+                                        (i.qty_received ??
+                                          i.receivedQty ??
+                                          i.received_qty ??
+                                          0),
+                                      0,
+                                    )),
+                              )}{' '}
+                              units
+                            </strong>
                           </div>
-                        </div>
-                        {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
+                            <label className="text-[10px] text-slate-400 font-medium block mb-1">
+                              Enter lead days for po order
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={leadTimeDays}
+                                onChange={(e) =>
+                                  setLeadTimeDays(e.target.value)
+                                }
+                                className="w-full text-sm font-bold text-slate-800 font-mono bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                placeholder="0"
+                              />
+                              <button
+                                onClick={async () => {
+                                  if (!leadTimeDays) return;
+                                  try {
+                                    await updatePOLeadTime(
+                                      selectedPO.id.replace(/^PO-/i, ''),
+                                      Number(leadTimeDays),
+                                    );
+                                    const updatedPOs = purchaseOrders.map(
+                                      (p: any) =>
+                                        p.id === selectedPO.id ||
+                                        p.uuid === selectedPO.uuid
+                                          ? {
+                                              ...p,
+                                              containerLeadTimeDays:
+                                                Number(leadTimeDays),
+                                            }
+                                          : p,
+                                    );
+                                    dispatch(setPurchaseOrdersList(updatedPOs));
+                                    onAddActivity(
+                                      `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
+                                      'PO Updated',
+                                    );
+                                    toast.success(
+                                      'Lead time updated successfully!',
+                                    );
+                                  } catch (error) {
+                                    console.error(error);
+                                    toast.error('Failed to update lead time.');
+                                  }
+                                }}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors"
+                              >
+                                {selectedPO.containerLeadTimeDays
+                                  ? 'Update'
+                                  : 'Save'}
+                              </button>
+                            </div>
+                          </div>
+                          {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Container IDs
                           </span>
@@ -2857,1049 +2872,1080 @@ Supply Chain CRM Coordinator`;
                             {selectedPO.expected_delivery_date || selectedPO.eta || 'N/A'}
                           </strong>
                         </div> */}
-                      </div>
-
-                      <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex-1 flex flex-col min-h-0 mt-3">
-                        <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
-                          Item Specifications (Products)
-                        </h5>
-                        <TypedDataTable
-                          columns={poItemColumns}
-                          data={paginatedItems}
-                          keyField="sku"
-                          isLoading={
-                            isLoadingComments || isItemsPaginationLoading
-                          }
-                          containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
-                          tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
-                          tableWrapperRef={itemsTableRef}
-                          theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
-                          tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
-                          tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                          trClassName={(item: any) =>
-                            `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
-                          }
-                          emptyMessage="No items specified for this purchase order."
-                        />
-                        <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
-                          <Tooltip
-                            id="po-item-tooltip"
-                            place="top"
-                            positionStrategy="fixed"
-                            style={{
-                              backgroundColor: '#4f46e5',
-                              color: '#ffffff',
-                              fontWeight: 500,
-                              fontSize: '11px',
-                              zIndex: 100,
-                              padding: '4px 8px',
-                              borderRadius: '6px',
-                              maxWidth: '300px',
-                            }}
-                          />
                         </div>
-                        {totalItemsCount > 0 && (
-                          <div className="mt-2 border border-slate-100 rounded-lg p-1 bg-white">
-                            <Pagination
-                              currentPage={itemsCurrentPage}
-                              totalCount={totalItemsCount}
-                              pageSize={itemsPageSize}
-                              onPageChange={(page) => {
-                                setIsItemsPaginationLoading(true);
-                                setItemsCurrentPage(page);
-                                setTimeout(
-                                  () => setIsItemsPaginationLoading(false),
-                                  300,
-                                );
-                              }}
-                              onPageSizeChange={(newSize) => {
-                                setIsItemsPaginationLoading(true);
-                                setItemsPageSize(newSize);
-                                setItemsCurrentPage(1);
-                                setTimeout(
-                                  () => setIsItemsPaginationLoading(false),
-                                  300,
-                                );
+
+                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex-1 flex flex-col min-h-0 mt-3">
+                          <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
+                            Item Specifications (Products)
+                          </h5>
+                          <TypedDataTable
+                            columns={poItemColumns}
+                            data={paginatedItems}
+                            keyField="sku"
+                            isLoading={
+                              isLoadingComments || isItemsPaginationLoading
+                            }
+                            containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
+                            tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                            tableWrapperRef={itemsTableRef}
+                            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
+                            tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+                            tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                            trClassName={(item: any) =>
+                              `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
+                            }
+                            emptyMessage="No items specified for this purchase order."
+                          />
+                          <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
+                            <Tooltip
+                              id="po-item-tooltip"
+                              place="top"
+                              positionStrategy="fixed"
+                              style={{
+                                backgroundColor: '#4f46e5',
+                                color: '#ffffff',
+                                fontWeight: 500,
+                                fontSize: '11px',
+                                zIndex: 100,
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                maxWidth: '300px',
                               }}
                             />
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: COMMENTS DISCUSSION ENGINE */}
-              {activeDrawerSection === 'comments' && (
-                <div className="flex-1 flex flex-col min-h-0 gap-4">
-                  {isCommentOnlyView && (
-                    <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                        Discussion Scope
-                      </label>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setIsScopeDropdownOpen(!isScopeDropdownOpen)
-                          }
-                          className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 flex items-center justify-between focus:outline-hidden focus:border-indigo-500 text-slate-700"
-                        >
-                          <span className="truncate">
-                            {commentScope === 'po'
-                              ? 'General PO Comments'
-                              : selectedPO?.items?.find(
-                                    (i: any) =>
-                                      (i.id || i.sku) === selectedSkuId,
-                                  )
-                                ? `SKU: ${selectedPO?.items?.find((i: any) => (i.id || i.sku) === selectedSkuId)?.sku}`
-                                : 'General PO Comments'}
-                          </span>
-                          <ChevronDown
-                            className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isScopeDropdownOpen ? 'rotate-180' : ''}`}
-                          />
-                        </button>
-
-                        {isScopeDropdownOpen && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden text-xs max-h-60 overflow-y-auto">
-                            <button
-                              className={`w-full text-left px-3 py-2 font-bold hover:bg-slate-50 transition-colors ${commentScope === 'po' ? 'bg-indigo-50/50 text-indigo-700' : 'text-slate-700'}`}
-                              onClick={() => {
-                                setCommentScope('po');
-                                setSelectedSkuId(null);
-                                setIsScopeDropdownOpen(false);
-                              }}
-                            >
-                              General PO Comments
-                            </button>
-
-                            {selectedPO?.items?.length > 0 && (
-                              <div className="px-3 py-1.5 bg-slate-50 border-y border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                SKU-wise Comments
-                              </div>
-                            )}
-
-                            {selectedPO?.items?.map((item: any) => {
-                              const itemId = item.id || item.sku;
-                              const isSelected =
-                                commentScope === 'sku' &&
-                                selectedSkuId === itemId;
-                              return (
-                                <button
-                                  key={`sku-${itemId}`}
-                                  className={`w-full text-left px-3 py-2 transition-colors ${isSelected ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                                  onClick={() => {
-                                    setCommentScope('sku');
-                                    setSelectedSkuId(itemId);
-                                    setIsScopeDropdownOpen(false);
-                                  }}
-                                >
-                                  SKU: {item.sku}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
-                    {(
-                      isCommentOnlyView && commentScope === 'sku'
-                        ? isLoadingSkuComments
-                        : isLoadingComments
-                    ) ? (
-                      <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                        <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
-                        <p className="text-xs text-slate-500 font-medium font-mono">
-                          Loading messages...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {(() => {
-                          const commentMap = new Map<string, any>();
-                          (isCommentOnlyView && commentScope === 'sku'
-                            ? fetchedSkuComments
-                            : selectedPOComments
-                          ).forEach((c) => {
-                            commentMap.set(c.id, { ...c, children: [] });
-                          });
-
-                          const rootNodes: any[] = [];
-                          (isCommentOnlyView && commentScope === 'sku'
-                            ? fetchedSkuComments
-                            : selectedPOComments
-                          ).forEach((c) => {
-                            const node = commentMap.get(c.id);
-                            if (
-                              node.parentId &&
-                              commentMap.has(node.parentId)
-                            ) {
-                              commentMap.get(node.parentId).children.push(node);
-                            } else {
-                              rootNodes.push(node);
-                            }
-                          });
-
-                          // Sort chronologically (assuming timestamp ordering natively or enforce here)
-                          const sortNodes = (nodes: any[]) => {
-                            return nodes.sort(
-                              (a, b) =>
-                                new Date(a.timestamp).getTime() -
-                                new Date(b.timestamp).getTime(),
-                            );
-                          };
-
-                          const renderCommentTree = (
-                            node: any,
-                            depth: number = 0,
-                          ) => {
-                            const isMeStr = (node.user || '').toLowerCase();
-                            const isMe =
-                              isMeStr === 'sourcing lead (you)' ||
-                              (currentUser &&
-                                (isMeStr ===
-                                  `${currentUser.first_name || ''} ${currentUser.last_name || ''}`
-                                    .trim()
-                                    .toLowerCase() ||
-                                  isMeStr ===
-                                    String(
-                                      currentUser.username || '',
-                                    ).toLowerCase() ||
-                                  isMeStr ===
-                                    String(
-                                      currentUser.email || '',
-                                    ).toLowerCase() ||
-                                  isMeStr ===
-                                    String(
-                                      currentUser.first_name || '',
-                                    ).toLowerCase() ||
-                                  (currentUser.id &&
-                                    String(node.userId) ===
-                                      String(currentUser.id))));
-
-                            const isCollapsed =
-                              collapsedComments[node.id] || false;
-
-                            return (
-                              <div
-                                key={node.id}
-                                id={node.id} // Added id for deep link scrolling
-                                className={`flex flex-col relative mb-3 scroll-mt-20 ${
-                                  highlightedCommentId === node.id
-                                    ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
-                                    : ''
-                                }`}
-                              >
-                                <div className="flex gap-3 group relative transition-colors items-start">
-                                  <div
-                                    className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
-                                  >
-                                    {(node.user[0] || 'U').toUpperCase()}
-                                  </div>
-                                  <div
-                                    className={`flex-1 min-w-0 flex flex-col p-3 rounded-2xl border ${isMe ? 'bg-indigo-50/30 border-indigo-100 shadow-sm' : 'bg-white border-slate-100/80 shadow-xs'}`}
-                                  >
-                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                      <span className="font-bold text-[13px] text-slate-800">
-                                        {node.user}
-                                      </span>
-                                      <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                                        {node.timestamp}
-                                      </span>
-                                      {!isMe && node.role && (
-                                        <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded-sm">
-                                          {node.role}
-                                        </span>
-                                      )}
-                                    </div>
-                                    {editingCommentId === node.id ? (
-                                      <div className="flex flex-col gap-2 w-full mt-1">
-                                        <textarea
-                                          value={editingCommentText}
-                                          onChange={(e) =>
-                                            setEditingCommentText(
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="w-full text-[13px] text-slate-800 p-2 rounded border border-indigo-200 bg-white focus:outline-hidden focus:border-indigo-400"
-                                          rows={2}
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setEditingCommentId(null);
-                                              setEditingCommentText('');
-                                            }}
-                                            className="text-[11px] text-slate-500 hover:text-slate-700 px-2 py-1"
-                                          >
-                                            Cancel
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              handleUpdateSubmit(node.id)
-                                            }
-                                            className="text-[11px] bg-indigo-600 text-white font-semibold rounded px-3 py-1 hover:bg-indigo-700"
-                                          >
-                                            Save
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
-                                        {node.message
-                                          .split(/(@[\w.-]+)/g)
-                                          .map((part: string, i: number) =>
-                                            part.startsWith('@') ? (
-                                              <span
-                                                key={i}
-                                                className="font-bold text-indigo-600"
-                                              >
-                                                {part}
-                                              </span>
-                                            ) : (
-                                              part
-                                            ),
-                                          )}
-                                      </p>
-                                    )}
-
-                                    {/* Action Bar */}
-                                    <div className="flex items-center gap-4 mt-2">
-                                      {isMe && editingCommentId !== node.id && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setEditingCommentId(node.id);
-                                            setEditingCommentText(node.message);
-                                          }}
-                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
-                                        >
-                                          <Pencil className="h-3 w-3" /> Edit
-                                        </button>
-                                      )}
-
-                                      {!isMe && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setReplyToCommentId(node.id);
-                                            setReplyToUser(node.user);
-                                            setReplyToText(node.message);
-                                          }}
-                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
-                                        >
-                                          <Reply className="h-3 w-3" /> Reply
-                                        </button>
-                                      )}
-                                      {node.children.length > 0 && (
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            setCollapsedComments((prev) => ({
-                                              ...prev,
-                                              [node.id]: !prev[node.id],
-                                            }))
-                                          }
-                                          className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
-                                        >
-                                          {isCollapsed ? (
-                                            <>
-                                              <MessageSquare className="h-3 w-3" />{' '}
-                                              Expand {node.children.length}{' '}
-                                              replies
-                                            </>
-                                          ) : (
-                                            <>
-                                              <ChevronUp className="h-3 w-3" />{' '}
-                                              Collapse
-                                            </>
-                                          )}
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Nested Children */}
-                                {!isCollapsed && node.children.length > 0 && (
-                                  <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative">
-                                    {sortNodes(node.children).map(
-                                      (child: any) =>
-                                        renderCommentTree(child, depth + 1),
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          };
-
-                          return (
-                            <div className="flex flex-col">
-                              {sortNodes(rootNodes).map((root) =>
-                                renderCommentTree(root, 0),
-                              )}
+                          {totalItemsCount > 0 && (
+                            <div className="mt-2 border border-slate-100 rounded-lg p-1 bg-white">
+                              <Pagination
+                                currentPage={itemsCurrentPage}
+                                totalCount={totalItemsCount}
+                                pageSize={itemsPageSize}
+                                onPageChange={(page) => {
+                                  setIsItemsPaginationLoading(true);
+                                  setItemsCurrentPage(page);
+                                  setTimeout(
+                                    () => setIsItemsPaginationLoading(false),
+                                    300,
+                                  );
+                                }}
+                                onPageSizeChange={(newSize) => {
+                                  setIsItemsPaginationLoading(true);
+                                  setItemsPageSize(newSize);
+                                  setItemsCurrentPage(1);
+                                  setTimeout(
+                                    () => setIsItemsPaginationLoading(false),
+                                    300,
+                                  );
+                                }}
+                              />
                             </div>
-                          );
-                        })()}
-                        {(commentScope === 'po'
-                          ? selectedPOComments
-                          : fetchedSkuComments
-                        ).length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
-                            <MessageSquare className="h-8 w-8 text-slate-400" />
-                            <p className="text-xs text-slate-500 font-medium font-mono">
-                              No comment
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  <form
-                    onSubmit={handlePostComment}
-                    className="flex flex-col gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
-                  >
-                    {replyToUser && (
-                      <div className="flex flex-col bg-slate-100 rounded-lg p-2.5 border-l-4 border-l-indigo-500 mb-1 animate-fadeIn relative group overflow-hidden">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-extrabold text-indigo-700">
-                            {replyToUser}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReplyToCommentId(null);
-                              setReplyToUser(null);
-                              setReplyToText(null);
-                            }}
-                            className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded p-1 transition"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
-                          {replyToText
-                            ?.split(/(@[\w.-]+)/g)
-                            .map((part: string, i: number) =>
-                              part.startsWith('@') ? (
-                                <span
-                                  key={i}
-                                  className="font-bold text-indigo-500 not-italic"
-                                >
-                                  {part}
-                                </span>
-                              ) : (
-                                part
-                              ),
-                            )}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <div className="flex-1 relative">
-                        {showMentionDropdown && (
-                          <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
-                            <div className="max-h-48 overflow-y-auto py-1">
-                              {(() => {
-                                let taggableUsers = [...(reduxUsers || [])];
-                                if (selectedPO?.vendorName) {
-                                  taggableUsers.unshift({
-                                    id: selectedPO.vendorId || 'vendor',
-                                    full_name: selectedPO.vendorName,
-                                    username: selectedPO.vendorName.replace(
-                                      /\s+/g,
-                                      '',
-                                    ),
-                                    email: 'Vendor (Owner)',
-                                  });
-                                }
-                                // Remove current user safely by matching actual IDs
-                                if (currentUser) {
-                                  taggableUsers = taggableUsers.filter((u) => {
-                                    if (
-                                      currentUser.id &&
-                                      u.id === currentUser.id
-                                    )
-                                      return false;
-                                    if (
-                                      currentUser.email &&
-                                      u.email === currentUser.email
-                                    )
-                                      return false;
-                                    if (
-                                      currentUser.username &&
-                                      u.username === currentUser.username
-                                    )
-                                      return false;
-                                    return true;
-                                  });
-                                }
-
-                                const filtered = taggableUsers.filter((u) => {
-                                  const searchTargets = [
-                                    (u.full_name || '').toLowerCase(),
-                                    (u.username || '').toLowerCase(),
-                                    (u.first_name || '').toLowerCase(),
-                                    (u.last_name || '').toLowerCase(),
-                                    (u.email || '').toLowerCase(),
-                                  ];
-                                  return (
-                                    !mentionFilter ||
-                                    searchTargets.some((t) =>
-                                      t.includes(mentionFilter),
-                                    )
-                                  );
-                                });
-
-                                if (filtered.length === 0) {
-                                  return (
-                                    <div className="px-3 py-2 text-xs text-slate-400">
-                                      No users found
-                                    </div>
-                                  );
-                                }
-
-                                return filtered.map((u) => {
-                                  const displayName =
-                                    u.full_name ||
-                                    u.username ||
-                                    `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                    u.email;
-                                  const initial = (
-                                    displayName[0] || 'U'
-                                  ).toUpperCase();
-                                  return (
-                                    <button
-                                      key={u.id}
-                                      type="button"
-                                      onClick={() => handleSelectMention(u)}
-                                      className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
-                                    >
-                                      <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                                        {initial}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-slate-700 truncate">
-                                          {displayName}
-                                        </div>
-                                        <div className="text-[10px] text-slate-400 truncate">
-                                          {u.email}
-                                        </div>
-                                      </div>
-                                    </button>
-                                  );
-                                });
-                              })()}
-                            </div>
-                          </div>
-                        )}
-                        <input
-                          type="text"
-                          placeholder="Type a message... (Use @ to tag)"
-                          value={newCommentText}
-                          onChange={handleCommentTextChange}
-                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
-                      >
-                        <Send className="h-3 w-3" />
-                        <span>Comment</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {/* TAB: EMAIL HISTORY & AI GENERATOR */}
-              {activeDrawerSection === 'emails' && (
-                <div className="flex-1 flex flex-col min-h-0 gap-6 overflow-y-auto custom-scrollbar">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-700">
-                        Connected Vendor Email Engagement Logs
-                      </h4>
-                      <p className="text-[10px] text-slate-400">
-                        Track delivered outreach, opens, and replies directly
-                        inside PO context.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={generateAIFollowUp}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
-                      disabled={isGeneratingEmail}
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      <span>
-                        {isGeneratingEmail
-                          ? 'Writing...'
-                          : 'Generate AI Follow-up'}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* AI Email draft output preview */}
-                  {aiEmailGenerated && (
-                    <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
-                          <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                          <span>Prepared AI Sourcing Template</span>
-                        </span>
-                        <button
-                          onClick={() => setAiEmailGenerated(null)}
-                          className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <textarea
-                        value={aiEmailGenerated}
-                        onChange={(e) => setAiEmailGenerated(e.target.value)}
-                        rows={8}
-                        className="w-full bg-white p-3 text-xs border border-slate-200 rounded-lg font-mono leading-relaxed focus:outline-hidden"
-                      />
-
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => setAiEmailGenerated(null)}
-                          className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md text-xs font-medium"
-                        >
-                          Discard Draft
-                        </button>
-                        <button
-                          onClick={handleSendAIEmail}
-                          className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
-                        >
-                          <Send className="h-3 w-3" />
-                          <span>Send to {selectedPO.vendorName}</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Local PO outreach table */}
-                  <div className="space-y-3">
-                    {selectedPOEmails.map((email) => (
-                      <div
-                        key={email.id}
-                        className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
-                      >
-                        <div className="space-y-1">
-                          <h5 className="font-semibold text-slate-800">
-                            {email.subject}
-                          </h5>
-                          <p className="text-[10px] text-slate-400 font-mono">
-                            Sent: {email.sentAt} • Status:{' '}
-                            <strong className="text-indigo-600">
-                              {email.status}
-                            </strong>
-                          </p>
-                        </div>
-
-                        <div className="text-right space-y-1">
-                          <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">
-                            Opens: {email.openCount}
-                          </span>
-                          {email.repliedAt && (
-                            <p className="text-[9px] text-emerald-600 font-semibold font-mono">
-                              Replied: {email.repliedAt.split(' ')[1]}
-                            </p>
                           )}
                         </div>
                       </div>
-                    ))}
-                    {selectedPOEmails.length === 0 && (
-                      <p className="text-xs text-slate-400 italic text-center py-4">
-                        No emails have been logged for this Purchase Order.
-                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB: COMMENTS DISCUSSION ENGINE */}
+                {activeDrawerSection === 'comments' && (
+                  <div className="flex-1 flex flex-col min-h-0 gap-4">
+                    {isCommentOnlyView && (
+                      <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                          Discussion Scope
+                        </label>
+                        <div className="relative">
+                          <button
+                            onClick={() =>
+                              setIsScopeDropdownOpen(!isScopeDropdownOpen)
+                            }
+                            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 flex items-center justify-between focus:outline-hidden focus:border-indigo-500 text-slate-700"
+                          >
+                            <span className="truncate">
+                              {commentScope === 'po'
+                                ? 'General PO Comments'
+                                : selectedPO?.items?.find(
+                                      (i: any) =>
+                                        (i.id || i.sku) === selectedSkuId,
+                                    )
+                                  ? `SKU: ${selectedPO?.items?.find((i: any) => (i.id || i.sku) === selectedSkuId)?.sku}`
+                                  : 'General PO Comments'}
+                            </span>
+                            <ChevronDown
+                              className={`h-3.5 w-3.5 text-slate-400 transition-transform ${isScopeDropdownOpen ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+
+                          {isScopeDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden text-xs max-h-60 overflow-y-auto">
+                              <button
+                                className={`w-full text-left px-3 py-2 font-bold hover:bg-slate-50 transition-colors ${commentScope === 'po' ? 'bg-indigo-50/50 text-indigo-700' : 'text-slate-700'}`}
+                                onClick={() => {
+                                  setCommentScope('po');
+                                  setSelectedSkuId(null);
+                                  setIsScopeDropdownOpen(false);
+                                }}
+                              >
+                                General PO Comments
+                              </button>
+
+                              {selectedPO?.items?.length > 0 && (
+                                <div className="px-3 py-1.5 bg-slate-50 border-y border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                  SKU-wise Comments
+                                </div>
+                              )}
+
+                              {selectedPO?.items?.map((item: any) => {
+                                const itemId = item.id || item.sku;
+                                const isSelected =
+                                  commentScope === 'sku' &&
+                                  selectedSkuId === itemId;
+                                return (
+                                  <button
+                                    key={`sku-${itemId}`}
+                                    className={`w-full text-left px-3 py-2 transition-colors ${isSelected ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    onClick={() => {
+                                      setCommentScope('sku');
+                                      setSelectedSkuId(itemId);
+                                      setIsScopeDropdownOpen(false);
+                                    }}
+                                  >
+                                    SKU: {item.sku}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
+
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
+                      {(
+                        isCommentOnlyView && commentScope === 'sku'
+                          ? isLoadingSkuComments
+                          : isLoadingComments
+                      ) ? (
+                        <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                          <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
+                          <p className="text-xs text-slate-500 font-medium font-mono">
+                            Loading messages...
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {(() => {
+                            const commentMap = new Map<string, any>();
+                            (isCommentOnlyView && commentScope === 'sku'
+                              ? fetchedSkuComments
+                              : selectedPOComments
+                            ).forEach((c) => {
+                              commentMap.set(c.id, { ...c, children: [] });
+                            });
+
+                            const rootNodes: any[] = [];
+                            (isCommentOnlyView && commentScope === 'sku'
+                              ? fetchedSkuComments
+                              : selectedPOComments
+                            ).forEach((c) => {
+                              const node = commentMap.get(c.id);
+                              if (
+                                node.parentId &&
+                                commentMap.has(node.parentId)
+                              ) {
+                                commentMap
+                                  .get(node.parentId)
+                                  .children.push(node);
+                              } else {
+                                rootNodes.push(node);
+                              }
+                            });
+
+                            // Sort chronologically (assuming timestamp ordering natively or enforce here)
+                            const sortNodes = (nodes: any[]) => {
+                              return nodes.sort(
+                                (a, b) =>
+                                  new Date(a.timestamp).getTime() -
+                                  new Date(b.timestamp).getTime(),
+                              );
+                            };
+
+                            const renderCommentTree = (
+                              node: any,
+                              depth: number = 0,
+                            ) => {
+                              const isMeStr = (node.user || '').toLowerCase();
+                              const isMe =
+                                isMeStr === 'sourcing lead (you)' ||
+                                (currentUser &&
+                                  (isMeStr ===
+                                    `${currentUser.first_name || ''} ${currentUser.last_name || ''}`
+                                      .trim()
+                                      .toLowerCase() ||
+                                    isMeStr ===
+                                      String(
+                                        currentUser.username || '',
+                                      ).toLowerCase() ||
+                                    isMeStr ===
+                                      String(
+                                        currentUser.email || '',
+                                      ).toLowerCase() ||
+                                    isMeStr ===
+                                      String(
+                                        currentUser.first_name || '',
+                                      ).toLowerCase() ||
+                                    (currentUser.id &&
+                                      String(node.userId) ===
+                                        String(currentUser.id))));
+
+                              const isCollapsed =
+                                collapsedComments[node.id] || false;
+
+                              return (
+                                <div
+                                  key={node.id}
+                                  id={node.id} // Added id for deep link scrolling
+                                  className={`flex flex-col relative mb-3 scroll-mt-20 ${
+                                    highlightedCommentId === node.id
+                                      ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
+                                      : ''
+                                  }`}
+                                >
+                                  <div className="flex gap-3 group relative transition-colors items-start">
+                                    <div
+                                      className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
+                                    >
+                                      {(node.user[0] || 'U').toUpperCase()}
+                                    </div>
+                                    <div
+                                      className={`flex-1 min-w-0 flex flex-col p-3 rounded-2xl border ${isMe ? 'bg-indigo-50/30 border-indigo-100 shadow-sm' : 'bg-white border-slate-100/80 shadow-xs'}`}
+                                    >
+                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <span className="font-bold text-[13px] text-slate-800">
+                                          {node.user}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                          {node.timestamp}
+                                        </span>
+                                        {!isMe && node.role && (
+                                          <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded-sm">
+                                            {node.role}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {editingCommentId === node.id ? (
+                                        <div className="flex flex-col gap-2 w-full mt-1">
+                                          <textarea
+                                            value={editingCommentText}
+                                            onChange={(e) =>
+                                              setEditingCommentText(
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="w-full text-[13px] text-slate-800 p-2 rounded border border-indigo-200 bg-white focus:outline-hidden focus:border-indigo-400"
+                                            rows={2}
+                                          />
+                                          <div className="flex justify-end gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setEditingCommentId(null);
+                                                setEditingCommentText('');
+                                              }}
+                                              className="text-[11px] text-slate-500 hover:text-slate-700 px-2 py-1"
+                                            >
+                                              Cancel
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleUpdateSubmit(node.id)
+                                              }
+                                              className="text-[11px] bg-indigo-600 text-white font-semibold rounded px-3 py-1 hover:bg-indigo-700"
+                                            >
+                                              Save
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
+                                          {node.message
+                                            .split(/(@[\w.-]+)/g)
+                                            .map((part: string, i: number) =>
+                                              part.startsWith('@') ? (
+                                                <span
+                                                  key={i}
+                                                  className="font-bold text-indigo-600"
+                                                >
+                                                  {part}
+                                                </span>
+                                              ) : (
+                                                part
+                                              ),
+                                            )}
+                                        </p>
+                                      )}
+
+                                      {/* Action Bar */}
+                                      <div className="flex items-center gap-4 mt-2">
+                                        {isMe &&
+                                          editingCommentId !== node.id && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setEditingCommentId(node.id);
+                                                setEditingCommentText(
+                                                  node.message,
+                                                );
+                                              }}
+                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                            >
+                                              <Pencil className="h-3 w-3" />{' '}
+                                              Edit
+                                            </button>
+                                          )}
+
+                                        {!isMe && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setReplyToCommentId(node.id);
+                                              setReplyToUser(node.user);
+                                              setReplyToText(node.message);
+                                            }}
+                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                          >
+                                            <Reply className="h-3 w-3" /> Reply
+                                          </button>
+                                        )}
+                                        {node.children.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setCollapsedComments((prev) => ({
+                                                ...prev,
+                                                [node.id]: !prev[node.id],
+                                              }))
+                                            }
+                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                                          >
+                                            {isCollapsed ? (
+                                              <>
+                                                <MessageSquare className="h-3 w-3" />{' '}
+                                                Expand {node.children.length}{' '}
+                                                replies
+                                              </>
+                                            ) : (
+                                              <>
+                                                <ChevronUp className="h-3 w-3" />{' '}
+                                                Collapse
+                                              </>
+                                            )}
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Nested Children */}
+                                  {!isCollapsed && node.children.length > 0 && (
+                                    <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative">
+                                      {sortNodes(node.children).map(
+                                        (child: any) =>
+                                          renderCommentTree(child, depth + 1),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            };
+
+                            return (
+                              <div className="flex flex-col">
+                                {sortNodes(rootNodes).map((root) =>
+                                  renderCommentTree(root, 0),
+                                )}
+                              </div>
+                            );
+                          })()}
+                          {(commentScope === 'po'
+                            ? selectedPOComments
+                            : fetchedSkuComments
+                          ).length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
+                              <MessageSquare className="h-8 w-8 text-slate-400" />
+                              <p className="text-xs text-slate-500 font-medium font-mono">
+                                No comment
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    <form
+                      onSubmit={handlePostComment}
+                      className="flex flex-col gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
+                    >
+                      {replyToUser && (
+                        <div className="flex flex-col bg-slate-100 rounded-lg p-2.5 border-l-4 border-l-indigo-500 mb-1 animate-fadeIn relative group overflow-hidden">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs font-extrabold text-indigo-700">
+                              {replyToUser}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyToCommentId(null);
+                                setReplyToUser(null);
+                                setReplyToText(null);
+                              }}
+                              className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded p-1 transition"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
+                            {replyToText
+                              ?.split(/(@[\w.-]+)/g)
+                              .map((part: string, i: number) =>
+                                part.startsWith('@') ? (
+                                  <span
+                                    key={i}
+                                    className="font-bold text-indigo-500 not-italic"
+                                  >
+                                    {part}
+                                  </span>
+                                ) : (
+                                  part
+                                ),
+                              )}
+                          </p>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          {showMentionDropdown && (
+                            <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
+                              <div className="max-h-48 overflow-y-auto py-1">
+                                {(() => {
+                                  let taggableUsers = [...(reduxUsers || [])];
+                                  if (selectedPO?.vendorName) {
+                                    taggableUsers.unshift({
+                                      id: selectedPO.vendorId || 'vendor',
+                                      full_name: selectedPO.vendorName,
+                                      username: selectedPO.vendorName.replace(
+                                        /\s+/g,
+                                        '',
+                                      ),
+                                      email: 'Vendor (Owner)',
+                                    });
+                                  }
+                                  // Remove current user safely by matching actual IDs
+                                  if (currentUser) {
+                                    taggableUsers = taggableUsers.filter(
+                                      (u) => {
+                                        if (
+                                          currentUser.id &&
+                                          u.id === currentUser.id
+                                        )
+                                          return false;
+                                        if (
+                                          currentUser.email &&
+                                          u.email === currentUser.email
+                                        )
+                                          return false;
+                                        if (
+                                          currentUser.username &&
+                                          u.username === currentUser.username
+                                        )
+                                          return false;
+                                        return true;
+                                      },
+                                    );
+                                  }
+
+                                  const filtered = taggableUsers.filter((u) => {
+                                    const searchTargets = [
+                                      (u.full_name || '').toLowerCase(),
+                                      (u.username || '').toLowerCase(),
+                                      (u.first_name || '').toLowerCase(),
+                                      (u.last_name || '').toLowerCase(),
+                                      (u.email || '').toLowerCase(),
+                                    ];
+                                    return (
+                                      !mentionFilter ||
+                                      searchTargets.some((t) =>
+                                        t.includes(mentionFilter),
+                                      )
+                                    );
+                                  });
+
+                                  if (filtered.length === 0) {
+                                    return (
+                                      <div className="px-3 py-2 text-xs text-slate-400">
+                                        No users found
+                                      </div>
+                                    );
+                                  }
+
+                                  return filtered.map((u) => {
+                                    const displayName =
+                                      u.full_name ||
+                                      u.username ||
+                                      `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                      u.email;
+                                    const initial = (
+                                      displayName[0] || 'U'
+                                    ).toUpperCase();
+                                    return (
+                                      <button
+                                        key={u.id}
+                                        type="button"
+                                        onClick={() => handleSelectMention(u)}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
+                                      >
+                                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                                          {initial}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-semibold text-slate-700 truncate">
+                                            {displayName}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 truncate">
+                                            {u.email}
+                                          </div>
+                                        </div>
+                                      </button>
+                                    );
+                                  });
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                          <input
+                            type="text"
+                            placeholder="Type a message... (Use @ to tag)"
+                            value={newCommentText}
+                            onChange={handleCommentTextChange}
+                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                        >
+                          <Send className="h-3 w-3" />
+                          <span>Comment</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* TAB: EMAIL HISTORY & AI GENERATOR */}
+                {activeDrawerSection === 'emails' && (
+                  <div className="flex-1 flex flex-col min-h-0 gap-6 overflow-y-auto custom-scrollbar">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-700">
+                          Connected Vendor Email Engagement Logs
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          Track delivered outreach, opens, and replies directly
+                          inside PO context.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={generateAIFollowUp}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
+                        disabled={isGeneratingEmail}
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>
+                          {isGeneratingEmail
+                            ? 'Writing...'
+                            : 'Generate AI Follow-up'}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* AI Email draft output preview */}
+                    {aiEmailGenerated && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
+                            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+                            <span>Prepared AI Sourcing Template</span>
+                          </span>
+                          <button
+                            onClick={() => setAiEmailGenerated(null)}
+                            className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <textarea
+                          value={aiEmailGenerated}
+                          onChange={(e) => setAiEmailGenerated(e.target.value)}
+                          rows={8}
+                          className="w-full bg-white p-3 text-xs border border-slate-200 rounded-lg font-mono leading-relaxed focus:outline-hidden"
+                        />
+
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setAiEmailGenerated(null)}
+                            className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md text-xs font-medium"
+                          >
+                            Discard Draft
+                          </button>
+                          <button
+                            onClick={handleSendAIEmail}
+                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
+                          >
+                            <Send className="h-3 w-3" />
+                            <span>Send to {selectedPO.vendorName}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Local PO outreach table */}
+                    <div className="space-y-3">
+                      {selectedPOEmails.map((email) => (
+                        <div
+                          key={email.id}
+                          className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                        >
+                          <div className="space-y-1">
+                            <h5 className="font-semibold text-slate-800">
+                              {email.subject}
+                            </h5>
+                            <p className="text-[10px] text-slate-400 font-mono">
+                              Sent: {email.sentAt} • Status:{' '}
+                              <strong className="text-indigo-600">
+                                {email.status}
+                              </strong>
+                            </p>
+                          </div>
+
+                          <div className="text-right space-y-1">
+                            <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">
+                              Opens: {email.openCount}
+                            </span>
+                            {email.repliedAt && (
+                              <p className="text-[9px] text-emerald-600 font-semibold font-mono">
+                                Replied: {email.repliedAt.split(' ')[1]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {selectedPOEmails.length === 0 && (
+                        <p className="text-xs text-slate-400 italic text-center py-4">
+                          No emails have been logged for this Purchase Order.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {showCreateModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            onClick={() => setShowCreateModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <h3 className="font-display font-bold text-slate-900 text-base">
+                  Generate New Purchase Order
+                </h3>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreatePO} className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    Target Manufacturing Vendor
+                  </label>
+                  <VendorInfiniteDropdown
+                    value={newPO.vendorId}
+                    onChange={(val) => setNewPO.vendorId(val)}
+                    placeholder="-- Choose Vendor --"
+                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                      Ordered Quantity (Units)
+                    </label>
+                    <input
+                      type="number"
+                      value={newPO.orderedQty}
+                      onChange={(e) =>
+                        setNewPO.orderedQty(Number(e.target.value))
+                      }
+                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                      Estimated Arrival ETA
+                    </label>
+                    <input
+                      type="date"
+                      value={newPO.eta}
+                      onChange={(e) => setNewPO.eta(e.target.value)}
+                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      required
+                    />
                   </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                      SKU Number
+                    </label>
+                    <input
+                      type="text"
+                      value={newPO.sku}
+                      onChange={(e) => setNewPO.sku(e.target.value)}
+                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                      Fulfillment Container ID (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CNT-095"
+                      value={newPO.container}
+                      onChange={(e) => setNewPO.container(e.target.value)}
+                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                      Component Description
+                    </label>
+                    <input
+                      type="text"
+                      value={newPO.itemName}
+                      onChange={(e) => setNewPO.itemName(e.target.value)}
+                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                  >
+                    Generate Sourcing PO
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
-      {/* MODAL: CREATE PURCHASE ORDER FORM (Rule 2) */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h3 className="font-display font-bold text-slate-900 text-base">
-                Generate New Purchase Order
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreatePO} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-600 block mb-1">
-                  Target Manufacturing Vendor
-                </label>
-                <VendorInfiniteDropdown
-                  value={newPO.vendorId}
-                  onChange={(val) => setNewPO.vendorId(val)}
-                  placeholder="-- Choose Vendor --"
-                  className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Ordered Quantity (Units)
-                  </label>
-                  <input
-                    type="number"
-                    value={newPO.orderedQty}
-                    onChange={(e) =>
-                      setNewPO.orderedQty(Number(e.target.value))
-                    }
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Estimated Arrival ETA
-                  </label>
-                  <input
-                    type="date"
-                    value={newPO.eta}
-                    onChange={(e) => setNewPO.eta(e.target.value)}
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    SKU Number
-                  </label>
-                  <input
-                    type="text"
-                    value={newPO.sku}
-                    onChange={(e) => setNewPO.sku(e.target.value)}
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Fulfillment Container ID (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., CNT-095"
-                    value={newPO.container}
-                    onChange={(e) => setNewPO.container(e.target.value)}
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
-                    Component Description
-                  </label>
-                  <input
-                    type="text"
-                    value={newPO.itemName}
-                    onChange={(e) => setNewPO.itemName(e.target.value)}
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+      {showImportModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            onClick={() => setShowImportModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <h3 className="font-display font-bold text-slate-900 text-base">
+                  Bulk Sourcing PO CSV Importer
+                </h3>
                 <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
-                >
-                  Generate Sourcing PO
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: IMPORT CSV FORM (Rule 12) */}
-      {showImportModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h3 className="font-display font-bold text-slate-900 text-base">
-                Bulk Sourcing PO CSV Importer
-              </h3>
-              <button
-                onClick={() => setShowImportModal(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleImportCSV} className="space-y-4">
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Paste your spreadsheet rows below to import Purchase Orders in
-                bulk. Follow the expected format carefully.
-              </p>
-
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono text-[10px] text-slate-600 leading-tight">
-                <strong>Expected Fields:</strong> vendor_id, status, quantity,
-                eta_yyyy_mm_dd, sku
-                <br />
-                <strong>Example Row:</strong> VEND-001, Production, 750,
-                2026-08-30, SKU-5501
-              </div>
-
-              <div>
-                <textarea
-                  placeholder="VEND-001,Production,750,2026-08-30,SKU-5501&#10;VEND-004,In Transit,1200,2026-07-28,SKU-2041"
-                  value={importCsvText}
-                  onChange={(e) => setImportCsvText(e.target.value)}
-                  rows={6}
-                  className="w-full bg-slate-50 p-3 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:bg-white focus:border-indigo-500 transition"
-                />
-              </div>
-
-              {importFeedback && (
-                <div
-                  className={`p-2.5 rounded-lg border font-semibold text-xs text-center ${
-                    importFeedback.includes('Successfully')
-                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                      : 'bg-rose-50 border-rose-100 text-rose-700'
-                  }`}
-                >
-                  {importFeedback}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
-                <button
-                  type="button"
                   onClick={() => setShowImportModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
-                >
-                  Parse & Synchronize Rows
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* MODAL: EXPORT CSV FORM */}
-      {showExportModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-xl w-full animate-scaleUp max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
-              <h3 className="font-display font-bold text-slate-900 text-base">
-                Export Purchase Orders
-              </h3>
-              <button
-                onClick={() => setShowExportModal(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-6">
-              {/* Filter Status */}
-              <div>
-                <label className="text-sm font-bold text-slate-700 block mb-2">
-                  Filter Data
-                </label>
-                <select
-                  value={exportFilterStatus}
-                  onChange={(e) => setExportFilterStatus(e.target.value)}
-                  className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-hidden focus:border-indigo-500 focus:bg-white text-slate-700 transition"
-                >
-                  <option value="all">No Filter (All Data)</option>
-                  <option value="invoice_delayed">
-                    Invoice Delayed (Missing &gt; 10 days)
-                  </option>
-                  <option value="delivery_delayed">
-                    Delivery Delayed (ETA Passed)
-                  </option>
-                  <option value="lefts_items">
-                    Incomplete Receiving (Lefts Items)
-                  </option>
-                </select>
-              </div>
-
-              {/* Columns Selection */}
-              <div>
-                <label className="text-sm font-bold text-slate-700 block mb-2">
-                  Select Columns
-                </label>
-                <p className="text-xs text-slate-500 mb-4">
-                  Choose the fields to include in your CSV export. Including
-                  Item-Level columns will output one row per item.
+              <form onSubmit={handleImportCSV} className="space-y-4">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Paste your spreadsheet rows below to import Purchase Orders in
+                  bulk. Follow the expected format carefully.
                 </p>
 
-                <div className="space-y-5">
-                  <div>
-                    <h4 className="text-xs font-bold text-indigo-700 mb-2.5 uppercase tracking-wide border-b border-indigo-100 pb-1">
-                      PO-Level Columns
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {PO_LEVEL_COLUMNS.map((col) => (
-                        <label
-                          key={col}
-                          className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={exportColumns.includes(col)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setExportColumns((C) => {
-                                  const next = [...C, col];
-                                  if (col === 'Comments') {
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono text-[10px] text-slate-600 leading-tight">
+                  <strong>Expected Fields:</strong> vendor_id, status, quantity,
+                  eta_yyyy_mm_dd, sku
+                  <br />
+                  <strong>Example Row:</strong> VEND-001, Production, 750,
+                  2026-08-30, SKU-5501
+                </div>
+
+                <div>
+                  <textarea
+                    placeholder="VEND-001,Production,750,2026-08-30,SKU-5501&#10;VEND-004,In Transit,1200,2026-07-28,SKU-2041"
+                    value={importCsvText}
+                    onChange={(e) => setImportCsvText(e.target.value)}
+                    rows={6}
+                    className="w-full bg-slate-50 p-3 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:bg-white focus:border-indigo-500 transition"
+                  />
+                </div>
+
+                {importFeedback && (
+                  <div
+                    className={`p-2.5 rounded-lg border font-semibold text-xs text-center ${
+                      importFeedback.includes('Successfully')
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                        : 'bg-rose-50 border-rose-100 text-rose-700'
+                    }`}
+                  >
+                    {importFeedback}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowImportModal(false)}
+                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                  >
+                    Parse & Synchronize Rows
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* MODAL: EXPORT CSV FORM */}
+      {showExportModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            onClick={() => setShowExportModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-xl w-full animate-scaleUp max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+                <h3 className="font-display font-bold text-slate-900 text-base">
+                  Export Purchase Orders
+                </h3>
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-6">
+                {/* Filter Status */}
+                <div>
+                  <label className="text-sm font-bold text-slate-700 block mb-2">
+                    Filter Data
+                  </label>
+                  <select
+                    value={exportFilterStatus}
+                    onChange={(e) => setExportFilterStatus(e.target.value)}
+                    className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-hidden focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                  >
+                    <option value="all">No Filter (All Data)</option>
+                    <option value="invoice_delayed">
+                      Invoice Delayed (Missing &gt; 10 days)
+                    </option>
+                    <option value="delivery_delayed">
+                      Delivery Delayed (ETA Passed)
+                    </option>
+                    <option value="lefts_items">
+                      Incomplete Receiving (Lefts Items)
+                    </option>
+                  </select>
+                </div>
+
+                {/* Columns Selection */}
+                <div>
+                  <label className="text-sm font-bold text-slate-700 block mb-2">
+                    Select Columns
+                  </label>
+                  <p className="text-xs text-slate-500 mb-4">
+                    Choose the fields to include in your CSV export. Including
+                    Item-Level columns will output one row per item.
+                  </p>
+
+                  <div className="space-y-5">
+                    <div>
+                      <h4 className="text-xs font-bold text-indigo-700 mb-2.5 uppercase tracking-wide border-b border-indigo-100 pb-1">
+                        PO-Level Columns
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {PO_LEVEL_COLUMNS.map((col) => (
+                          <label
+                            key={col}
+                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={exportColumns.includes(col)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setExportColumns((C) => {
+                                    const next = [...C, col];
+                                    if (col === 'Comments') {
+                                      if (!next.includes('PO ID'))
+                                        next.push('PO ID');
+                                      if (!next.includes('PO Title'))
+                                        next.push('PO Title');
+                                    }
+                                    return next;
+                                  });
+                                } else {
+                                  setExportColumns((C) =>
+                                    C.filter((c) => c !== col),
+                                  );
+                                }
+                              }}
+                              className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                            />
+                            {col}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold text-emerald-700 mb-2.5 uppercase tracking-wide border-b border-emerald-100 pb-1">
+                        Item-Level Columns
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {ITEM_LEVEL_COLUMNS.map((col) => (
+                          <label
+                            key={col}
+                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={exportColumns.includes(col)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setExportColumns((C) => {
+                                    const next = [...C, col];
                                     if (!next.includes('PO ID'))
                                       next.push('PO ID');
                                     if (!next.includes('PO Title'))
                                       next.push('PO Title');
-                                  }
-                                  return next;
-                                });
-                              } else {
-                                setExportColumns((C) =>
-                                  C.filter((c) => c !== col),
-                                );
-                              }
-                            }}
-                            className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
-                          />
-                          {col}
-                        </label>
-                      ))}
+                                    return next;
+                                  });
+                                } else {
+                                  setExportColumns((C) =>
+                                    C.filter((c) => c !== col),
+                                  );
+                                }
+                              }}
+                              className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                            />
+                            {col}
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <h4 className="text-xs font-bold text-emerald-700 mb-2.5 uppercase tracking-wide border-b border-emerald-100 pb-1">
-                      Item-Level Columns
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {ITEM_LEVEL_COLUMNS.map((col) => (
-                        <label
-                          key={col}
-                          className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={exportColumns.includes(col)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setExportColumns((C) => {
-                                  const next = [...C, col];
-                                  if (!next.includes('PO ID'))
-                                    next.push('PO ID');
-                                  if (!next.includes('PO Title'))
-                                    next.push('PO Title');
-                                  return next;
-                                });
-                              } else {
-                                setExportColumns((C) =>
-                                  C.filter((c) => c !== col),
-                                );
-                              }
-                            }}
-                            className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
-                          />
-                          {col}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-bold text-sky-700 mb-2.5 uppercase tracking-wide border-b border-sky-100 pb-1">
-                      Container-Level Columns
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {CONTAINER_LEVEL_COLUMNS.map((col) => (
-                        <label
-                          key={col}
-                          className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={exportColumns.includes(col)}
-                            onChange={(e) => {
-                              if (e.target.checked)
-                                setExportColumns((C) => [...C, col]);
-                              else
-                                setExportColumns((C) =>
-                                  C.filter((c) => c !== col),
-                                );
-                            }}
-                            className="rounded text-sky-600 focus:ring-sky-500 border-slate-300"
-                          />
-                          {col}
-                        </label>
-                      ))}
+                    <div>
+                      <h4 className="text-xs font-bold text-sky-700 mb-2.5 uppercase tracking-wide border-b border-sky-100 pb-1">
+                        Container-Level Columns
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {CONTAINER_LEVEL_COLUMNS.map((col) => (
+                          <label
+                            key={col}
+                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={exportColumns.includes(col)}
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setExportColumns((C) => [...C, col]);
+                                else
+                                  setExportColumns((C) =>
+                                    C.filter((c) => c !== col),
+                                  );
+                              }}
+                              className="rounded text-sky-600 focus:ring-sky-500 border-slate-300"
+                            />
+                            {col}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end gap-2 border-t border-slate-100 p-5 shrink-0 bg-slate-50/50 rounded-b-2xl">
-              <button
-                type="button"
-                onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeExportCSV}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Generate CSV
-              </button>
+              <div className="flex justify-end gap-2 border-t border-slate-100 p-5 shrink-0 bg-slate-50/50 rounded-b-2xl">
+                <button
+                  type="button"
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeExportCSV}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Generate CSV
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
       {/* FullPageLoader removed in favor of localized TableLoaders for syncing */}
 
       {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}

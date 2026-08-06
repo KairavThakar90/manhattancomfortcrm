@@ -408,8 +408,14 @@ export default function ItemCommentModal({
   const rootNodes = buildTree(fetchedComments);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 overflow-hidden">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col h-full animate-fadeInUpBig">
+    <div
+      className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 overflow-hidden"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col h-full animate-fadeInUpBig"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between shrink-0 bg-slate-50/50 rounded-t-2xl">
           <div className="flex-1 w-full relative">

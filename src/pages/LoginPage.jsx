@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import LoginPageComponent from '../components/LoginPage';
 import { useCRM } from '../hooks/useCRM';
 import { login } from '../services/auth.service';
@@ -8,6 +8,7 @@ export default function LoginPage() {
   const { isAuthenticated, setIsAuthenticated } = useCRM();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const location = useLocation();
 
   // Restore the remembered username if present
   const initialUsername = localStorage.getItem('rememberedUsername') || '';
@@ -35,8 +36,12 @@ export default function LoginPage() {
     }
   };
 
+  const fromPath = location.state?.from?.pathname || '/purchase-orders';
+  const fromSearch = location.state?.from?.search || '';
+  const from = `${fromPath}${fromSearch}`;
+
   return isAuthenticated ? (
-    <Navigate to="/purchase-orders" replace />
+    <Navigate to={from} replace />
   ) : (
     <LoginPageComponent
       onLogin={handleLogin}
