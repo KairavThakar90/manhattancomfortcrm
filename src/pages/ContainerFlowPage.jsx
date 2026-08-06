@@ -1159,7 +1159,7 @@ export default function ContainerFlowPage() {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search by Container ID, Name, Warehouse, ETA, Status..."
+                  placeholder="Smart Search: Container Id,Container number..."
                   value={listSearchQuery}
                   onChange={(e) => {
                     setListSearchQuery(e.target.value);
