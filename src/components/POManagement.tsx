@@ -358,6 +358,11 @@ export default function POManagement({
     Set<string>
   >(new Set());
 
+  // Track which Kanban cards are expanded
+  const [expandedKanbanCards, setExpandedKanbanCards] = useState<Set<string>>(
+    new Set(),
+  );
+
   const handleOpenContainerDetails = async (containerId: string) => {
     setIsContainerModalLoading(true);
     try {
@@ -2588,22 +2593,24 @@ Supply Chain CRM Coordinator`;
                       <div
                         key={po.id}
                         onClick={() => onSelectPO(po.id)}
-                        className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-2 relative group"
+                        className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-3 relative group"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-xs font-bold text-slate-800">
                             {po.id}
                           </span>
                           <span
-                            className={`px-1.5 py-0.5 rounded-xs text-[9px] font-bold ${
+                            className={`px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${
+                              po.vendor_status === 'DELAYED' ||
                               po.status === 'Delayed'
                                 ? 'bg-rose-50 text-rose-700'
-                                : po.status === 'In Transit'
+                                : po.vendor_status === 'SHIPPED' ||
+                                    po.status === 'In Transit'
                                   ? 'bg-indigo-50 text-indigo-700'
                                   : 'bg-emerald-50 text-emerald-700'
                             }`}
                           >
-                            {po.status}
+                            {po.vendor_status || po.status || 'N/A'}
                           </span>
                         </div>
 
@@ -2611,20 +2618,55 @@ Supply Chain CRM Coordinator`;
                           <p className="text-[11px] font-bold text-slate-700 truncate">
                             {po.vendorName}
                           </p>
-                          <p className="text-[9px] text-slate-400 font-mono mt-0.5">
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                             ETA: {po.eta}
                           </p>
                         </div>
 
-                        <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[9px]">
-                          <span className="text-slate-500 font-mono">
-                            Qty:{' '}
-                            <strong className="text-slate-800 font-bold">
-                              {po.orderedQty}
-                            </strong>
+                        <div className="border-t border-slate-100/60 pt-2.5 flex flex-col gap-2 text-[10px] text-slate-500 font-mono">
+                          <div className="flex justify-between items-center">
+                            <span>
+                              Ordered:{' '}
+                              <span className="font-bold text-slate-700">
+                                {po.total_qty_ordered ?? po.orderedQty ?? 0}
+                              </span>
+                            </span>
+                            <span>
+                              Received:{' '}
+                              <span className="font-bold text-slate-700">
+                                {po.total_qty_received ?? po.receivedQty ?? 0}
+                              </span>
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span>
+                              Created:{' '}
+                              <span className="font-bold text-slate-700">
+                                {po.creationDate || 'N/A'}
+                              </span>
+                            </span>
+                            {po.container && po.container !== 'N/A' && (
+                              <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-sans">
+                                {po.container}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[10px] font-medium text-slate-600 pt-1">
+                          <span>
+                            Items:{' '}
+                            {po.total_item_count || po.items?.length || 0}
                           </span>
-                          <span className="text-[8px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm font-mono truncate max-w-[70px]">
-                            {po.container || 'No Vessel'}
+                          <span>
+                            Comments:{' '}
+                            {po.total_comments_count ?? po.commentsCount ?? 0}
+                          </span>
+                        </div>
+
+                        <div className="pt-2 flex items-center justify-center">
+                          <span className="text-[10px] font-semibold text-indigo-600 flex items-center gap-1 group-hover:text-indigo-700 transition">
+                            Show more details <ArrowRight className="h-3 w-3" />
                           </span>
                         </div>
                       </div>
