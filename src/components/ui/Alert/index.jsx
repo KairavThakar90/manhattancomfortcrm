@@ -37,7 +37,7 @@ export default function Alert({
 
   return (
     <div
-      className={`rounded-md p-4 border ${style.bg} ${style.border} ${className}`}
+      className={`rounded-md border p-4 ${style.bg} ${style.border} ${className}`}
     >
       <div className="flex">
         <div className="flex-shrink-0">{style.icon}</div>

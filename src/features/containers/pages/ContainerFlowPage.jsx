@@ -976,7 +976,7 @@ export default function ContainerFlowPage() {
         className: 'px-6 py-4 font-mono font-medium text-slate-700 text-xs',
         render: (c) => (
           <div className="flex items-center gap-1.5">
-            <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
               {c.sellercloud_container_id || c.id}
             </span>
             {c.sellercloud_link && (
@@ -986,7 +986,7 @@ export default function ContainerFlowPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                className="inline-flex shrink-0 items-center text-indigo-400 transition-colors hover:text-indigo-600"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -997,7 +997,7 @@ export default function ContainerFlowPage() {
                 handleViewContainer(c);
               }}
               title="View container details"
-              className="text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center shrink-0"
+              className="inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-blue-600"
             >
               <Eye className="h-3.5 w-3.5" />
             </button>
@@ -1046,11 +1046,11 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-center',
         render: (c) =>
           c.is_received ? (
-            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-              <CheckCircle2 className="w-3 h-3" /> Yes
+            <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
+              <CheckCircle2 className="h-3 w-3" /> Yes
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-sm text-[10px] font-bold uppercase tracking-wider border border-amber-200">
+            <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
               No
             </span>
           ),
@@ -1070,10 +1070,10 @@ export default function ContainerFlowPage() {
           <div className="flex items-center justify-end gap-2">
             <button
               onClick={() => handleViewContainer(c)}
-              className="text-blue-600 hover:text-blue-800 p-1.5 bg-blue-50 hover:bg-blue-100 rounded transition-colors"
+              className="rounded bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800"
               title="View Details"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="h-4 w-4" />
             </button>
           </div>
         ),
@@ -1084,18 +1084,18 @@ export default function ContainerFlowPage() {
 
   if (showList) {
     return (
-      <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden relative">
+      <div className="relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
         {/* Header */}
-        <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+        <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
               <Package className="h-4 w-4" />
             </div>
             <div>
-              <h1 className="text-lg font-display font-bold text-slate-800">
+              <h1 className="font-display text-lg font-bold text-slate-800">
                 Container Management
               </h1>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs font-medium text-slate-500">
                 Manage all shipping containers and PO allocations
               </p>
             </div>
@@ -1104,7 +1104,7 @@ export default function ContainerFlowPage() {
             <button
               onClick={handleSyncContainers}
               disabled={isSyncing}
-              className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -1114,7 +1114,7 @@ export default function ContainerFlowPage() {
             <button
               onClick={() => fetchTablePage()}
               disabled={listLoading}
-              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${listLoading ? 'animate-spin' : ''}`}
@@ -1123,7 +1123,7 @@ export default function ContainerFlowPage() {
             </button>
             <button
               onClick={() => setShowGlobalImport(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Import CSV</span>
@@ -1134,7 +1134,7 @@ export default function ContainerFlowPage() {
                 setExportFilterStatus('all');
                 setShowExportModal(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
             >
               <Upload className="h-3.5 w-3.5" />
               <span>Export CSV</span>
@@ -1150,12 +1150,12 @@ export default function ContainerFlowPage() {
         </div>
 
         {/* Content */}
-        <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4 relative">
-          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex-shrink-0">
+        <div className="relative flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
+          <div className="flex-shrink-0 rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
             <div className="flex items-center gap-3">
               {/* Search bar */}
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Smart Search: Container Id,Container number..."
@@ -1164,7 +1164,7 @@ export default function ContainerFlowPage() {
                     setListSearchQuery(e.target.value);
                     setListPage(1);
                   }}
-                  className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
                 />
                 {listSearchQuery && (
                   <button
@@ -1172,17 +1172,17 @@ export default function ContainerFlowPage() {
                       setListSearchQuery('');
                       setListPage(1);
                     }}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition p-0.5 rounded-full hover:bg-slate-200"
+                    className="absolute top-2.5 right-3 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
               {/* Warehouse Filter */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <Filter className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
                     Warehouse:
                   </span>
                 </div>
@@ -1194,15 +1194,15 @@ export default function ContainerFlowPage() {
                       setListPage(1);
                     }}
                     showAllOption={true}
-                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
                   />
                 </div>
               </div>
               {/* Order Date Filter - inline */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
                     Received Date:
                   </span>
                 </div>
@@ -1217,7 +1217,7 @@ export default function ContainerFlowPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
             {(listLoading || isPaginating) && !isSyncing && (
               <TableLoader message={'Please wait a moment...'} />
             )}
@@ -1275,33 +1275,33 @@ export default function ContainerFlowPage() {
 
         {/* Export CSV Modal */}
         {showExportModal && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center animate-in fade-in p-4 overflow-y-auto w-full h-full">
-            <div className="bg-white max-w-xl w-full rounded-2xl shadow-2xl border border-slate-100 flex flex-col my-auto relative">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+          <div className="animate-in fade-in fixed inset-0 z-50 flex h-full w-full items-center justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-xs">
+            <div className="relative my-auto flex w-full max-w-xl flex-col rounded-2xl border border-slate-100 bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 p-5">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
                     Export Container Data (CSV)
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="mt-1 text-xs text-slate-500">
                     Select the filters and columns to include in your export.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowExportModal(false)}
-                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                  className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="p-5 flex flex-col gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <div className="custom-scrollbar flex max-h-[60vh] flex-col gap-6 overflow-y-auto p-5">
                 {/* Filter Section */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+                  <h4 className="mb-3 text-xs font-bold tracking-wider text-slate-700 uppercase">
                     Status Filter
                   </h4>
                   <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-2 cursor-pointer group">
+                    <label className="group flex cursor-pointer items-center gap-2">
                       <input
                         type="radio"
                         name="container-export-filter"
@@ -1309,11 +1309,11 @@ export default function ContainerFlowPage() {
                         onChange={() => setExportFilterStatus('all')}
                         className="text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
+                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-indigo-600">
                         All Containers (Pending & Received)
                       </span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer group">
+                    <label className="group flex cursor-pointer items-center gap-2">
                       <input
                         type="radio"
                         name="container-export-filter"
@@ -1321,11 +1321,11 @@ export default function ContainerFlowPage() {
                         onChange={() => setExportFilterStatus('pending')}
                         className="text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="text-sm font-medium text-slate-700 group-hover:text-amber-600 transition-colors">
+                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-amber-600">
                         Pending/In-Transit Only
                       </span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer group">
+                    <label className="group flex cursor-pointer items-center gap-2">
                       <input
                         type="radio"
                         name="container-export-filter"
@@ -1333,7 +1333,7 @@ export default function ContainerFlowPage() {
                         onChange={() => setExportFilterStatus('received')}
                         className="text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="text-sm font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
+                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-emerald-600">
                         Received Containers Only
                       </span>
                     </label>
@@ -1342,22 +1342,22 @@ export default function ContainerFlowPage() {
 
                 {/* Columns Section */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">
                       Columns to Include
                     </h4>
                     <button
                       onClick={() => setExportColumns(CONTAINER_EXPORT_COLUMNS)}
-                      className="text-[10px] uppercase font-bold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded transition"
+                      className="rounded px-2 py-1 text-[10px] font-bold text-indigo-600 uppercase transition hover:bg-indigo-50"
                     >
                       Select All
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
                     {CONTAINER_EXPORT_COLUMNS.map((col) => (
                       <label
                         key={col}
-                        className="flex items-start gap-2 cursor-pointer group"
+                        className="group flex cursor-pointer items-start gap-2"
                       >
                         <input
                           type="checkbox"
@@ -1370,9 +1370,9 @@ export default function ContainerFlowPage() {
                                 C.filter((c) => c !== col),
                               );
                           }}
-                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+                          className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span className="text-xs font-medium text-slate-600 group-hover:text-indigo-600 transition-colors leading-tight">
+                        <span className="text-xs leading-tight font-medium text-slate-600 transition-colors group-hover:text-indigo-600">
                           {CONTAINER_EXPORT_COLUMNS_LABELS[col] || col}
                         </span>
                       </label>
@@ -1381,17 +1381,17 @@ export default function ContainerFlowPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-slate-100 p-5 bg-slate-50/50 rounded-b-2xl shrink-0">
+              <div className="flex shrink-0 justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 p-5">
                 <button
                   type="button"
                   onClick={() => setShowExportModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 transition"
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeExportCSV}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
                 >
                   <Upload className="h-4 w-4" />
                   Generate CSV
@@ -1431,25 +1431,25 @@ export default function ContainerFlowPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-y-auto w-full animate-in fade-in">
+    <div className="animate-in fade-in flex h-full w-full flex-col overflow-y-auto bg-slate-50">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+      <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowList(true)}
-            className="p-1.5 hover:bg-slate-100 rounded-md text-slate-500 mr-1 transition-colors"
+            className="mr-1 rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100"
             title="Back to Container List"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="h-8 w-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
             <Package className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="text-lg font-display font-bold text-slate-800">
+            <h1 className="font-display text-lg font-bold text-slate-800">
               {isEditMode ? 'Edit Container Flow' : 'Add Container Flow'}
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs font-medium text-slate-500">
               Create and manage container allocations for Purchase Orders
             </p>
           </div>
@@ -1462,12 +1462,12 @@ export default function ContainerFlowPage() {
             !selectedWarehouseId ||
             isSaving
           }
-          className={`px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2 text-white ${
+          className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${
             selectedItems.length === 0 ||
             !estimatedArrivalDate ||
             !selectedWarehouseId ||
             isSaving
-              ? 'bg-slate-400 cursor-not-allowed'
+              ? 'cursor-not-allowed bg-slate-400'
               : 'bg-indigo-600 hover:bg-indigo-700'
           }`}
         >
@@ -1487,11 +1487,11 @@ export default function ContainerFlowPage() {
       </div>
 
       {/* Visual Stepper */}
-      <div className="w-full max-w-6xl mx-auto px-4 mt-6 mb-2">
-        <div className="flex items-center justify-between relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 rounded-full z-0"></div>
+      <div className="mx-auto mt-6 mb-2 w-full max-w-6xl px-4">
+        <div className="relative flex items-center justify-between">
+          <div className="absolute top-1/2 left-0 z-0 h-1 w-full -translate-y-1/2 rounded-full bg-slate-200"></div>
           <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-indigo-500 rounded-full z-0 transition-all duration-500 ease-in-out"
+            className="absolute top-1/2 left-0 z-0 h-1 -translate-y-1/2 rounded-full bg-indigo-500 transition-all duration-500 ease-in-out"
             style={{
               width:
                 currentStep === 1
@@ -1505,9 +1505,9 @@ export default function ContainerFlowPage() {
           ></div>
 
           {/* Step 1 */}
-          <div className="relative z-10 flex flex-col items-center group">
+          <div className="group relative z-10 flex flex-col items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 1 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 1 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 1 ? 'border-indigo-500 bg-indigo-500 text-white' : currentStep === 1 ? 'border-indigo-500 bg-white text-indigo-600 shadow-md shadow-indigo-500/20' : 'border-slate-300 bg-white text-slate-400'}`}
             >
               {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : '1'}
             </div>
@@ -1519,9 +1519,9 @@ export default function ContainerFlowPage() {
           </div>
 
           {/* Step 2 */}
-          <div className="relative z-10 flex flex-col items-center group">
+          <div className="group relative z-10 flex flex-col items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 2 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 2 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 2 ? 'border-indigo-500 bg-indigo-500 text-white' : currentStep === 2 ? 'border-indigo-500 bg-white text-indigo-600 shadow-md shadow-indigo-500/20' : 'border-slate-300 bg-white text-slate-400'}`}
             >
               {currentStep > 2 ? <CheckCircle2 className="h-4 w-4" /> : '2'}
             </div>
@@ -1533,9 +1533,9 @@ export default function ContainerFlowPage() {
           </div>
 
           {/* Step 3 */}
-          <div className="relative z-10 flex flex-col items-center group">
+          <div className="group relative z-10 flex flex-col items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep > 3 ? 'bg-indigo-500 border-indigo-500 text-white' : currentStep === 3 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 3 ? 'border-indigo-500 bg-indigo-500 text-white' : currentStep === 3 ? 'border-indigo-500 bg-white text-indigo-600 shadow-md shadow-indigo-500/20' : 'border-slate-300 bg-white text-slate-400'}`}
             >
               {currentStep > 3 ? <CheckCircle2 className="h-4 w-4" /> : '3'}
             </div>
@@ -1547,9 +1547,9 @@ export default function ContainerFlowPage() {
           </div>
 
           {/* Step 4 */}
-          <div className="relative z-10 flex flex-col items-center group">
+          <div className="group relative z-10 flex flex-col items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 border-2 ${currentStep === 4 ? 'bg-white border-indigo-500 text-indigo-600 shadow-md shadow-indigo-500/20' : 'bg-white border-slate-300 text-slate-400'}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep === 4 ? 'border-indigo-500 bg-white text-indigo-600 shadow-md shadow-indigo-500/20' : 'border-slate-300 bg-white text-slate-400'}`}
             >
               4
             </div>
@@ -1563,11 +1563,11 @@ export default function ContainerFlowPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="p-4 max-w-7xl mx-auto w-full space-y-4 pb-10">
+      <div className="mx-auto w-full max-w-7xl space-y-4 p-4 pb-10">
         {/* Step 1: Select PO */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
               1
             </span>
             <h2 className="text-base font-bold text-slate-800">
@@ -1592,12 +1592,12 @@ export default function ContainerFlowPage() {
         </div>
 
         {selectedPO && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="animate-in fade-in slide-in-from-bottom-4 grid grid-cols-1 gap-4 duration-300 md:grid-cols-3">
             {/* Step 2: Item Allocation */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-2 flex flex-col h-[525px]">
-              <div className="flex items-center justify-between mb-4">
+            <div className="flex h-[525px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-2">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
                     2
                   </span>
                   <h2 className="text-base font-bold text-slate-800">
@@ -1633,38 +1633,38 @@ export default function ContainerFlowPage() {
               </div>
 
               {selectedItems.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-lg">
-                  <Package className="h-10 w-10 text-slate-300 mb-3" />
-                  <h3 className="text-sm font-bold text-slate-700 mb-1">
+                <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <Package className="mb-3 h-10 w-10 text-slate-300" />
+                  <h3 className="mb-1 text-sm font-bold text-slate-700">
                     No items selected
                   </h3>
-                  <p className="text-xs text-slate-500 max-w-sm">
+                  <p className="max-w-sm text-xs text-slate-500">
                     Select a PO from the dropdown above to start adding items to
                     this container.
                   </p>
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="custom-scrollbar flex-1 overflow-y-auto pr-2">
                   <div className="space-y-3">
                     {selectedItems.map((item) => (
                       <div
                         key={item.sku}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 transition-colors"
+                        className="flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-white p-3 transition-colors hover:border-indigo-200 sm:flex-row sm:items-center"
                       >
                         <div className="flex items-start gap-3 overflow-hidden">
                           <div className="mt-0.5">
-                            <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-slate-100 text-slate-400">
                               <Package className="h-4 w-4" />
                             </div>
                           </div>
                           <div className="min-w-0 flex-1">
                             <p
-                              className="text-sm font-bold text-slate-800 truncate"
+                              className="truncate text-sm font-bold text-slate-800"
                               title={item.sku}
                             >
                               {item.sku}
                             </p>
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
+                            <p className="mt-0.5 truncate text-xs text-slate-500">
                               {item.name}
                             </p>
                           </div>
@@ -1672,7 +1672,7 @@ export default function ContainerFlowPage() {
 
                         <div className="flex items-start gap-3">
                           <div className="flex flex-col items-end">
-                            <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+                            <label className="mb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                               Quantity
                             </label>
                             <div className="flex items-center gap-2">
@@ -1688,38 +1688,38 @@ export default function ContainerFlowPage() {
                                 onChange={(e) =>
                                   handleQtyChange(item.sku, e.target.value)
                                 }
-                                className={`w-20 px-2 py-1 text-right font-mono font-bold text-sm bg-slate-50 border rounded focus:outline-none focus:ring-1 ${
+                                className={`w-20 rounded border bg-slate-50 px-2 py-1 text-right font-mono text-sm font-bold focus:ring-1 focus:outline-none ${
                                   item.allocateQty > item.maxQty ||
                                   item.allocateQty < 0
-                                    ? 'border-rose-300 focus:ring-rose-500 bg-rose-50 text-rose-700'
-                                    : 'border-slate-200 focus:ring-indigo-500 text-slate-800'
+                                    ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-500'
+                                    : 'border-slate-200 text-slate-800 focus:ring-indigo-500'
                                 }`}
                                 placeholder="0"
                               />
-                              <span className="text-xs text-slate-400 font-medium whitespace-nowrap w-8">
+                              <span className="w-8 text-xs font-medium whitespace-nowrap text-slate-400">
                                 / {item.maxQty}
                               </span>
                             </div>
                             {/* Inline Validation Messages */}
                             {item.allocateQty > item.maxQty && (
-                              <span className="text-[10px] text-rose-500 font-bold mt-1">
+                              <span className="mt-1 text-[10px] font-bold text-rose-500">
                                 Exceeds max ({item.maxQty})
                               </span>
                             )}
                             {item.allocateQty !== '' &&
                               item.allocateQty < 0 && (
-                                <span className="text-[10px] text-rose-500 font-bold mt-1">
+                                <span className="mt-1 text-[10px] font-bold text-rose-500">
                                   Must be &gt;= 0
                                 </span>
                               )}
                           </div>
                           <button
                             onClick={() => handleRemoveItem(item.sku)}
-                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-2 mt-4 flex-shrink-0"
+                            className="mt-4 ml-2 flex-shrink-0 rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
                             title="Remove item"
                           >
                             <svg
-                              className="w-4 h-4"
+                              className="h-4 w-4"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -1741,9 +1741,9 @@ export default function ContainerFlowPage() {
             </div>
 
             {/* Step 3: Container Details */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:col-span-1">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
                   3
                 </span>
                 <h2 className="text-base font-bold text-slate-800">
@@ -1753,7 +1753,7 @@ export default function ContainerFlowPage() {
 
               <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <label className="block text-xs font-semibold text-slate-700">
                       Container Number / Name
                     </label>
@@ -1764,7 +1764,7 @@ export default function ContainerFlowPage() {
                           setIsManualContainerEntry(!isManualContainerEntry);
                           setContainerName('');
                         }}
-                        className="text-[10px] text-indigo-600 font-bold hover:underline"
+                        className="text-[10px] font-bold text-indigo-600 hover:underline"
                       >
                         {isManualContainerEntry
                           ? 'Select Existing'
@@ -1778,7 +1778,7 @@ export default function ContainerFlowPage() {
                       value={containerName}
                       onChange={(e) => setContainerName(e.target.value)}
                       placeholder="e.g. TCNU 1234567"
-                      className="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono font-bold text-slate-800"
+                      className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     />
                   ) : (
                     <InfiniteScrollDropdown
@@ -1803,23 +1803,23 @@ export default function ContainerFlowPage() {
                 </div>
 
                 <div className="mt-3">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Estimated Arrival Date
                   </label>
-                  <div className="relative focus-within:ring-2 focus-within:ring-indigo-500 rounded-md">
+                  <div className="relative rounded-md focus-within:ring-2 focus-within:ring-indigo-500">
                     <input
                       type="text"
                       placeholder="yyyy-mm-dd"
                       value={estimatedArrivalDate}
                       readOnly
-                      className={`w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md outline-none font-medium ${
+                      className={`w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium outline-none ${
                         !estimatedArrivalDate
-                          ? 'text-slate-400 font-normal'
+                          ? 'font-normal text-slate-400'
                           : 'text-slate-800'
                       }`}
                     />
                     <Calendar
-                      className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-[15px] h-[15px] pointer-events-none ${
+                      className={`pointer-events-none absolute top-1/2 right-2.5 h-[15px] w-[15px] -translate-y-1/2 ${
                         !estimatedArrivalDate
                           ? 'text-slate-500'
                           : 'text-slate-800'
@@ -1830,13 +1830,13 @@ export default function ContainerFlowPage() {
                       min={new Date().toISOString().split('T')[0]}
                       value={estimatedArrivalDate}
                       onChange={(e) => setEstimatedArrivalDate(e.target.value)}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                     />
                   </div>
                 </div>
 
                 <div className="mt-3">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Select Warehouse
                   </label>
                   <InfiniteScrollDropdown
@@ -1851,14 +1851,14 @@ export default function ContainerFlowPage() {
                   />
                 </div>
 
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mt-3">
+                <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
                     <div>
                       <h4 className="text-xs font-bold text-blue-900">
                         PO Status
                       </h4>
-                      <p className="text-[10px] text-blue-700 mt-0.5">
+                      <p className="mt-0.5 text-[10px] text-blue-700">
                         Currently allocating items for{' '}
                         <span className="font-mono font-bold">
                           {selectedPO.sellercloud_po_id

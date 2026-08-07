@@ -163,7 +163,7 @@ export default function DateFilterInput({
           type="button"
           title={title}
           onClick={handleToggleCalendar}
-          className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 focus:bg-white text-slate-700 transition min-w-[8.5rem] text-left"
+          className="min-w-[8.5rem] rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-left text-xs text-slate-700 transition focus:border-indigo-500 focus:bg-white focus:outline-none"
         >
           {selected ? (
             <span className="font-medium">{formatDateOnly(selected)}</span>
@@ -178,7 +178,7 @@ export default function DateFilterInput({
               onChange('');
               setOpen(false);
             }}
-            className="flex items-center gap-1 text-xs text-rose-500 hover:text-rose-700 px-1.5 py-1 rounded-lg hover:bg-rose-50 transition font-medium"
+            className="flex items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-medium text-rose-500 transition hover:bg-rose-50 hover:text-rose-700"
             title="Clear date filter"
           >
             <X className="h-3 w-3" />
@@ -187,12 +187,12 @@ export default function DateFilterInput({
       </div>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-lg p-3">
+        <div className="absolute top-full right-0 z-50 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
           {/* ── Header: arrows + month/year buttons ── */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <button
               type="button"
-              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 transition"
+              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
               onClick={() => {
                 setPickerMode('none');
                 setViewMonth(new Date(currentYear, currentMonth - 1, 1));
@@ -210,7 +210,7 @@ export default function DateFilterInput({
                   setPickerMode((m) => (m === 'month' ? 'none' : 'month'))
                 }
                 className={[
-                  'flex items-center gap-0.5 text-xs font-semibold px-2 py-1 rounded-md transition',
+                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-semibold transition',
                   pickerMode === 'month'
                     ? 'bg-indigo-50 text-indigo-600'
                     : 'text-slate-700 hover:bg-slate-100',
@@ -227,7 +227,7 @@ export default function DateFilterInput({
                   setPickerMode((m) => (m === 'year' ? 'none' : 'year'))
                 }
                 className={[
-                  'flex items-center gap-0.5 text-xs font-semibold px-2 py-1 rounded-md transition',
+                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-semibold transition',
                   pickerMode === 'year'
                     ? 'bg-indigo-50 text-indigo-600'
                     : 'text-slate-700 hover:bg-slate-100',
@@ -240,7 +240,7 @@ export default function DateFilterInput({
 
             <button
               type="button"
-              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 transition"
+              className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
               onClick={() => {
                 setPickerMode('none');
                 setViewMonth(new Date(currentYear, currentMonth + 1, 1));
@@ -253,7 +253,7 @@ export default function DateFilterInput({
 
           {/* ── Month picker grid (3 × 4) ── */}
           {pickerMode === 'month' && (
-            <div className="grid grid-cols-3 gap-1 mb-2 p-1 rounded-lg bg-slate-50 border border-slate-100">
+            <div className="mb-2 grid grid-cols-3 gap-1 rounded-lg border border-slate-100 bg-slate-50 p-1">
               {MONTH_NAMES.map((name, idx) => {
                 const isActive = idx === currentMonth;
                 return (
@@ -265,10 +265,10 @@ export default function DateFilterInput({
                       setPickerMode('none');
                     }}
                     className={[
-                      'text-xs py-1.5 rounded-md font-medium transition',
+                      'rounded-md py-1.5 text-xs font-medium transition',
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-indigo-600',
+                        : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm',
                     ].join(' ')}
                   >
                     {name}
@@ -282,7 +282,7 @@ export default function DateFilterInput({
           {pickerMode === 'year' && (
             <div
               ref={yearGridRef}
-              className="grid grid-cols-4 gap-1 mb-2 p-1 rounded-lg bg-slate-50 border border-slate-100 max-h-40 overflow-y-auto"
+              className="mb-2 grid max-h-40 grid-cols-4 gap-1 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50 p-1"
             >
               {YEARS.map((yr) => {
                 const isActive = yr === currentYear;
@@ -296,10 +296,10 @@ export default function DateFilterInput({
                       setPickerMode('none');
                     }}
                     className={[
-                      'text-xs py-1.5 rounded-md font-medium transition',
+                      'rounded-md py-1.5 text-xs font-medium transition',
                       isActive
                         ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-white hover:shadow-sm hover:text-indigo-600',
+                        : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm',
                     ].join(' ')}
                   >
                     {yr}
@@ -312,11 +312,11 @@ export default function DateFilterInput({
           {/* ── Weekday headers ── */}
           {pickerMode === 'none' && (
             <>
-              <div className="grid grid-cols-7 gap-0.5 mb-1">
+              <div className="mb-1 grid grid-cols-7 gap-0.5">
                 {WEEKDAYS.map((d) => (
                   <div
                     key={d}
-                    className="text-[10px] font-semibold text-slate-400 text-center py-1"
+                    className="py-1 text-center text-[10px] font-semibold text-slate-400"
                   >
                     {d}
                   </div>
@@ -342,10 +342,10 @@ export default function DateFilterInput({
                         'h-8 w-8 rounded-md text-xs transition',
                         inMonth ? 'text-slate-700' : 'text-slate-300',
                         isSelected
-                          ? 'bg-indigo-600 text-white font-semibold hover:bg-indigo-700'
+                          ? 'bg-indigo-600 font-semibold text-white hover:bg-indigo-700'
                           : 'hover:bg-slate-100',
                         !isSelected && isToday
-                          ? 'ring-1 ring-inset ring-slate-300'
+                          ? 'ring-1 ring-slate-300 ring-inset'
                           : '',
                       ].join(' ')}
                     >

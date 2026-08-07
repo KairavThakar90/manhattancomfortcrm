@@ -27,41 +27,41 @@ export default function Pagination({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100 text-slate-500 font-medium text-xs gap-4 select-none">
+    <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-4 text-xs font-medium text-slate-500 select-none sm:flex-row">
       {/* Left side: Showing X to Y of Z */}
-      <div className="text-slate-500 font-medium order-2 sm:order-1 flex-1">
+      <div className="order-2 flex-1 font-medium text-slate-500 sm:order-1">
         Showing{' '}
-        <span className="text-slate-800 font-bold">
+        <span className="font-bold text-slate-800">
           {totalCount === 0 ? 0 : startIndex + 1}
         </span>{' '}
-        to <span className="text-slate-800 font-bold">{endIndex}</span> of{' '}
-        <span className="text-slate-800 font-bold">{totalCount}</span> entries
+        to <span className="font-bold text-slate-800">{endIndex}</span> of{' '}
+        <span className="font-bold text-slate-800">{totalCount}</span> entries
       </div>
 
       {/* Middle: Page Size Selector (5, 10, 25 only) */}
       {!hidePageSizeSelector && (
-        <div className="flex items-center gap-2 order-1 sm:order-2 flex-1 justify-center">
+        <div className="order-1 flex flex-1 items-center justify-center gap-2 sm:order-2">
           <span className="text-slate-500">Show</span>
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="bg-white border border-slate-200 text-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-indigo-500 transition cursor-pointer"
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition focus:border-indigo-500 focus:outline-hidden"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
             <option value={25}>25</option>
           </select>
-          <span className="text-slate-500 font-medium">entries per page</span>
+          <span className="font-medium text-slate-500">entries per page</span>
         </div>
       )}
 
       {/* Right side: Page navigation */}
-      <div className="flex items-center gap-1.5 order-3 flex-1 justify-end">
+      <div className="order-3 flex flex-1 items-center justify-end gap-1.5">
         <button
           type="button"
           disabled={normalizedCurrentPage === 1}
           onClick={() => onPageChange(normalizedCurrentPage - 1)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
+          className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
@@ -71,7 +71,7 @@ export default function Pagination({
             <button
               type="button"
               onClick={() => onPageChange(1)}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold cursor-pointer"
+              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-bold text-slate-600 hover:bg-slate-50"
             >
               1
             </button>
@@ -86,10 +86,10 @@ export default function Pagination({
             key={pg}
             type="button"
             onClick={() => onPageChange(pg)}
-            className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+            className={`cursor-pointer rounded-lg px-3 py-1.5 font-bold transition ${
               normalizedCurrentPage === pg
                 ? 'bg-indigo-600 text-white shadow-xs'
-                : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
             {pg}
@@ -104,7 +104,7 @@ export default function Pagination({
             <button
               type="button"
               onClick={() => onPageChange(totalPages)}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-bold cursor-pointer"
+              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-bold text-slate-600 hover:bg-slate-50"
             >
               {totalPages}
             </button>
@@ -115,7 +115,7 @@ export default function Pagination({
           type="button"
           disabled={normalizedCurrentPage === totalPages}
           onClick={() => onPageChange(normalizedCurrentPage + 1)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-slate-600 font-semibold cursor-pointer"
+          className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>

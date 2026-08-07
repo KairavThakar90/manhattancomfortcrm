@@ -80,10 +80,10 @@ export default function InfiniteScrollDropdown({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between border text-sm px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${disabled ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-50 border-slate-200 text-slate-800 font-bold hover:bg-slate-100'}`}
+        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none ${disabled ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500' : 'border-slate-200 bg-slate-50 font-bold text-slate-800 hover:bg-slate-100'}`}
       >
         <span
-          className={`truncate ${!selectedItem && !value ? 'text-slate-400 font-normal' : ''}`}
+          className={`truncate ${!selectedItem && !value ? 'font-normal text-slate-400' : ''}`}
         >
           {selectedItem ? selectedItem.label : value || placeholder}
         </span>
@@ -94,26 +94,26 @@ export default function InfiniteScrollDropdown({
 
       {isOpen && (
         <div
-          className={`absolute z-50 w-full bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden flex flex-col ${
+          className={`absolute z-50 flex w-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg ${
             menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
           }`}
         >
-          <div className="p-2 border-b border-slate-100 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <div className="relative border-b border-slate-100 p-2">
+            <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              className="w-full pl-9 pr-9 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 py-1.5 pr-9 pl-9 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               autoFocus
             />
             {isLoading && (
-              <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 animate-spin" />
+              <Loader2 className="absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 animate-spin text-indigo-500" />
             )}
           </div>
 
-          <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
+          <div className="custom-scrollbar max-h-60 overflow-y-auto p-1">
             {items.length === 0 && !isLoading && (
               <div className="p-3 text-center text-sm text-slate-500">
                 No items found.
@@ -134,19 +134,19 @@ export default function InfiniteScrollDropdown({
                     onChange(item.value, item);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${isSelected ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-slate-700 hover:bg-slate-50 font-medium'}`}
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${isSelected ? 'bg-indigo-50 font-bold text-indigo-700' : 'font-medium text-slate-700 hover:bg-slate-50'}`}
                 >
                   <span className="truncate text-left">{item.label}</span>
                   {isSelected && (
-                    <Check className="h-4 w-4 text-indigo-600 flex-shrink-0 ml-2" />
+                    <Check className="ml-2 h-4 w-4 flex-shrink-0 text-indigo-600" />
                   )}
                 </button>
               );
             })}
 
             {isLoading && (
-              <div className="p-3 flex justify-center">
-                <Loader2 className="h-5 w-5 text-indigo-500 animate-spin" />
+              <div className="flex justify-center p-3">
+                <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
               </div>
             )}
           </div>

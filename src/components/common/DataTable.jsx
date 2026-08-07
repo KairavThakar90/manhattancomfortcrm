@@ -70,7 +70,7 @@ export default function DataTable({
               <tr>
                 <td
                   colSpan={columns.length || 1}
-                  className="p-0 relative border-b-0 h-1 overflow-hidden"
+                  className="relative h-1 overflow-hidden border-b-0 p-0"
                 >
                   <TableLoader />
                 </td>
@@ -80,7 +80,7 @@ export default function DataTable({
               <tr>
                 <td
                   colSpan={columns.length || 1}
-                  className="px-6 py-12 text-center text-slate-400 italic text-sm"
+                  className="px-6 py-12 text-center text-sm text-slate-400 italic"
                 >
                   {emptyMessage}
                 </td>

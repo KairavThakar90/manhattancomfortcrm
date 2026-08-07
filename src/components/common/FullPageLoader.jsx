@@ -8,9 +8,9 @@ export default function FullPageLoader({
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
         <span className="text-sm font-medium text-slate-500">{message}</span>
       </div>
     </div>,

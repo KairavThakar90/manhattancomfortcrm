@@ -444,15 +444,15 @@ export default function POManagementPage() {
   // Error state (only if no data to show)
   if (error && !hasLoadedInitial) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
         <div className="flex items-center gap-2 text-rose-500">
           <AlertTriangle className="h-6 w-6" />
           <h3 className="text-lg font-semibold">Failed to load data</h3>
         </div>
-        <p className="text-sm text-slate-500 max-w-md text-center">{error}</p>
+        <p className="max-w-md text-center text-sm text-slate-500">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
         >
           <RefreshCw className="h-4 w-4" />
           Retry
@@ -520,14 +520,14 @@ export default function POManagementPage() {
     <>
       {/* Show a subtle banner if API failed but we have data */}
       {error && purchaseOrders.length > 0 && (
-        <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2.5 rounded-xl text-xs font-medium">
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-700">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>
             Could not refresh from server. Showing cached data. {error}
           </span>
           <button
             onClick={() => window.location.reload()}
-            className="ml-auto text-amber-800 hover:text-amber-900 underline"
+            className="ml-auto text-amber-800 underline hover:text-amber-900"
           >
             Retry
           </button>

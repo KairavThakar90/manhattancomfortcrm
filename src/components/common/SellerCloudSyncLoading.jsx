@@ -55,13 +55,13 @@ export default function SellerCloudSyncLoading({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-hidden pointer-events-auto">
+    <div className="pointer-events-auto fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-slate-900/40 p-4 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="w-full max-w-sm bg-white/95 backdrop-blur-2xl rounded-[32px] shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] flex flex-col items-center p-8 border border-white relative overflow-hidden"
+        className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-[32px] border border-white bg-white/95 p-8 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] backdrop-blur-2xl"
       >
         {onForceClose && (
           <>
@@ -69,14 +69,14 @@ export default function SellerCloudSyncLoading({
               onClick={onForceClose}
               data-tooltip-id="force-close-tooltip"
               data-tooltip-content="⚠️ Warning: Do not close if data is still processing"
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+              className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
             <Tooltip
               id="force-close-tooltip"
               place="bottom"
-              className="z-[999999] shadow-xl text-center tracking-wide"
+              className="z-[999999] text-center tracking-wide shadow-xl"
               style={{
                 backgroundColor: '#6366f1',
                 color: '#ffffff',
@@ -90,29 +90,29 @@ export default function SellerCloudSyncLoading({
         )}
 
         {/* Ambient Glow Effects */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-[40px] animate-[pulse_4s_ease-in-out_infinite]" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[40px] animate-[pulse_5s_ease-in-out_infinite]" />
+        <div className="absolute -top-24 -right-24 h-48 w-48 animate-[pulse_4s_ease-in-out_infinite] rounded-full bg-indigo-500/10 blur-[40px]" />
+        <div className="absolute -bottom-24 -left-24 h-48 w-48 animate-[pulse_5s_ease-in-out_infinite] rounded-full bg-emerald-500/10 blur-[40px]" />
 
         {/* Central Spinner */}
-        <div className="relative flex items-center justify-center w-24 h-24 mb-6 z-10">
-          <div className="absolute inset-0 rounded-full border-[3px] border-indigo-50 border-dashed animate-[spin_10s_linear_infinite]" />
+        <div className="relative z-10 mb-6 flex h-24 w-24 items-center justify-center">
+          <div className="absolute inset-0 animate-[spin_10s_linear_infinite] rounded-full border-[3px] border-dashed border-indigo-50" />
           <motion.div
             className="absolute inset-2 rounded-full border-[3px] border-indigo-500 border-t-transparent border-l-transparent"
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
           />
-          <div className="bg-indigo-50/50 text-indigo-600 rounded-full w-14 h-14 flex items-center justify-center relative shadow-sm border border-indigo-100">
-            <Loader2 className="w-6 h-6 animate-spin" />
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50/50 text-indigo-600 shadow-sm">
+            <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         </div>
 
         {/* Titles & Messages */}
-        <div className="flex flex-col items-center text-center z-10 w-full mb-8">
-          <h2 className="text-[19px] font-black text-slate-800 mb-2 font-display tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
+        <div className="z-10 mb-8 flex w-full flex-col items-center text-center">
+          <h2 className="font-display mb-2 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-[19px] font-black tracking-tight text-slate-800 text-transparent">
             {title}
           </h2>
 
-          <div className="h-5 w-full flex justify-center items-center overflow-hidden">
+          <div className="flex h-5 w-full items-center justify-center overflow-hidden">
             <AnimatePresence mode="popLayout">
               <motion.span
                 key={msgIndex}
@@ -120,7 +120,7 @@ export default function SellerCloudSyncLoading({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center"
+                className="text-center text-[11px] font-bold tracking-widest text-slate-400 uppercase"
               >
                 {MESSAGES[msgIndex]}
               </motion.span>
@@ -129,9 +129,9 @@ export default function SellerCloudSyncLoading({
         </div>
 
         {/* Sleek Progress Bar */}
-        <div className="w-full bg-slate-100 rounded-full overflow-hidden p-0.5 relative shadow-inner z-10">
+        <div className="relative z-10 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 shadow-inner">
           <motion.div
-            className="absolute top-0 bottom-0 left-0 w-1/3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full shadow-sm"
+            className="absolute top-0 bottom-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 shadow-sm"
             animate={{
               x: ['-100%', '300%'],
             }}

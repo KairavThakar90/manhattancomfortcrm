@@ -98,10 +98,10 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="flex min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
       {/* 1. INTERACTIVE NAVIGATION SIDEBAR */}
       <aside
-        className={`bg-indigo-950 text-indigo-200 flex flex-col justify-between border-r border-indigo-900 flex-shrink-0 select-none transition-all duration-300 ease-in-out ${
+        className={`flex flex-shrink-0 flex-col justify-between border-r border-indigo-900 bg-indigo-950 text-indigo-200 transition-all duration-300 ease-in-out select-none ${
           sidebarOpen ? 'w-64 p-5' : 'w-16 p-3'
         }`}
       >
@@ -111,15 +111,15 @@ export default function MainLayout() {
             className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}
           >
             {sidebarOpen && (
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xs font-bold border border-indigo-500 flex-shrink-0">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-indigo-500 bg-indigo-600 font-bold text-white shadow-xs">
                   <Layers className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-display font-extrabold text-white text-sm tracking-tight truncate">
+                  <h1 className="font-display truncate text-sm font-extrabold tracking-tight text-white">
                     Manhattan Comfort
                   </h1>
-                  <span className="text-[10px] text-indigo-400 font-mono tracking-widest uppercase font-bold">
+                  <span className="font-mono text-[10px] font-bold tracking-widest text-indigo-400 uppercase">
                     PO &amp; CRM
                   </span>
                 </div>
@@ -129,7 +129,7 @@ export default function MainLayout() {
             {/* Collapse/Expand button — always in the top corner */}
             <button
               onClick={() => setSidebarOpen((o) => !o)}
-              className="flex-shrink-0 p-2 rounded-xl text-indigo-400 hover:text-white hover:bg-indigo-800/60 transition-colors cursor-pointer"
+              className="flex-shrink-0 cursor-pointer rounded-xl p-2 text-indigo-400 transition-colors hover:bg-indigo-800/60 hover:text-white"
               title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
               {sidebarOpen ? (
@@ -154,15 +154,15 @@ export default function MainLayout() {
                       !sidebarOpen ? `${tab.label} — Coming Soon` : undefined
                     }
                     onClick={() => openComingSoon(tab)}
-                    className={`w-full flex items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition cursor-pointer ${
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition ${
                       sidebarOpen
                         ? 'px-3.5 py-2.5'
-                        : 'px-2.5 py-2.5 justify-center'
-                    } hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300`}
+                        : 'justify-center px-2.5 py-2.5'
+                    } text-indigo-300 hover:bg-indigo-900/45 hover:text-indigo-100`}
                   >
                     <IconComp className="h-4 w-4 flex-shrink-0 text-indigo-400" />
                     {sidebarOpen && (
-                      <span className="truncate flex-1 text-left">
+                      <span className="flex-1 truncate text-left">
                         {tab.label}
                       </span>
                     )}
@@ -177,14 +177,14 @@ export default function MainLayout() {
                   onClick={() => handleNavClick(tab.id, tab.path)}
                   title={!sidebarOpen ? tab.label : undefined}
                   className={({ isActive }) =>
-                    `w-full flex items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition ${
+                    `flex w-full items-center gap-3 rounded-xl text-xs font-semibold tracking-wide transition ${
                       sidebarOpen
                         ? 'px-3.5 py-2.5'
-                        : 'px-2.5 py-2.5 justify-center'
+                        : 'justify-center px-2.5 py-2.5'
                     } ${
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-sm font-bold border border-indigo-500'
-                        : 'hover:bg-indigo-900/45 hover:text-indigo-100 text-indigo-300'
+                        ? 'border border-indigo-500 bg-indigo-600 font-bold text-white shadow-sm'
+                        : 'text-indigo-300 hover:bg-indigo-900/45 hover:text-indigo-100'
                     }`
                   }
                 >
@@ -206,27 +206,27 @@ export default function MainLayout() {
 
         {/* User context footer */}
         <div
-          className={`border-t border-indigo-900/60 pt-4 flex items-center ${
+          className={`flex items-center border-t border-indigo-900/60 pt-4 ${
             sidebarOpen ? 'justify-between px-2' : 'justify-center'
           }`}
         >
           {sidebarOpen ? (
             <>
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 bg-indigo-800 rounded-full flex items-center justify-center font-bold text-white shadow-xs uppercase flex-shrink-0">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-800 font-bold text-white uppercase shadow-xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
                     : userRole.slice(0, 1)}
                 </div>
-                <div className="text-xs min-w-0">
+                <div className="min-w-0 text-xs">
                   <span
-                    className="block text-indigo-100 font-bold truncate text-[11px]"
+                    className="block truncate text-[11px] font-bold text-indigo-100"
                     title={user?.full_name || 'You'}
                   >
                     {user?.full_name || 'You'}
                   </span>
                   <span
-                    className="block text-indigo-400 text-[10px] truncate"
+                    className="block truncate text-[10px] text-indigo-400"
                     title={user?.email || userRole}
                   >
                     {user?.email || userRole}
@@ -235,7 +235,7 @@ export default function MainLayout() {
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors flex-shrink-0"
+                className="flex-shrink-0 rounded-lg p-2 text-indigo-400 transition-colors hover:bg-indigo-600 hover:text-white"
                 title="Log out"
               >
                 <LogOut className="h-4 w-4" />
@@ -245,7 +245,7 @@ export default function MainLayout() {
             <button
               onClick={handleLogout}
               title="Log out"
-              className="p-2 text-indigo-400 hover:text-white hover:bg-indigo-600 rounded-lg transition-colors"
+              className="rounded-lg p-2 text-indigo-400 transition-colors hover:bg-indigo-600 hover:text-white"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -254,11 +254,11 @@ export default function MainLayout() {
       </aside>
 
       {/* Main Outer Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <main className="flex h-screen flex-1 flex-col overflow-hidden">
         {/* TOP INTERACTIVE CONTROL HEADER */}
-        <header className="h-16 bg-white border-b border-slate-100 flex-shrink-0 px-6 flex items-center justify-between shadow-2xs">
+        <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-2xs">
           <div className="flex items-center gap-2">
-            <h2 className="font-display font-extrabold text-slate-900 text-sm tracking-tight uppercase">
+            <h2 className="font-display text-sm font-extrabold tracking-tight text-slate-900 uppercase">
               {getPageTitle()}
             </h2>
           </div>
@@ -268,11 +268,11 @@ export default function MainLayout() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-lg shadow-2xs transition"
+                className="rounded-lg border border-slate-200 p-2 text-slate-600 shadow-2xs transition hover:bg-slate-50"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-rose-600 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center animate-bounce shadow-xs">
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 animate-bounce items-center justify-center rounded-full bg-rose-600 text-[9px] font-extrabold text-white shadow-xs">
                     {unreadCount}
                   </span>
                 )}
@@ -280,39 +280,39 @@ export default function MainLayout() {
 
               {/* FLOATING NOTIFICATION CENTER SLIDEOVER */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-4 space-y-3 animate-fadeIn">
+                <div className="animate-fadeIn absolute right-0 z-50 mt-2 w-80 space-y-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
                   <div className="flex items-center justify-between border-b border-slate-50 pb-2">
                     <span className="text-xs font-bold text-slate-800">
                       Sourcing Alerts Desk
                     </span>
                     <button
                       onClick={handleMarkAllNotificationsRead}
-                      className="text-[10px] text-indigo-600 hover:underline font-semibold"
+                      className="text-[10px] font-semibold text-indigo-600 hover:underline"
                     >
                       Clear alerts
                     </button>
                   </div>
 
-                  <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                  <div className="max-h-[240px] space-y-2 overflow-y-auto pr-1">
                     {notifications.map((ntf) => (
                       <div
                         key={ntf.id}
                         onClick={() => handleNotificationSelect(ntf)}
-                        className={`p-2.5 rounded-xl border text-xs cursor-pointer transition ${
+                        className={`cursor-pointer rounded-xl border p-2.5 text-xs transition ${
                           ntf.read
-                            ? 'bg-white border-slate-100 text-slate-500'
-                            : 'bg-indigo-50/30 border-indigo-100 text-slate-800 font-medium'
+                            ? 'border-slate-100 bg-white text-slate-500'
+                            : 'border-indigo-100 bg-indigo-50/30 font-medium text-slate-800'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-[11px]">
+                          <span className="text-[11px] font-bold">
                             {ntf.title}
                           </span>
-                          <span className="text-[8px] text-slate-400 font-mono">
+                          <span className="font-mono text-[8px] text-slate-400">
                             {ntf.timestamp.split(' ')[1]}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-1 leading-normal">
+                        <p className="mt-1 text-[10px] leading-normal text-slate-500">
                           {ntf.message}
                         </p>
                       </div>
@@ -326,30 +326,30 @@ export default function MainLayout() {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 text-xs border border-slate-100 p-1.5 pr-3 rounded-lg bg-slate-50/50 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/50 p-1.5 pr-3 text-xs transition-colors hover:bg-slate-100"
               >
-                <div className="h-6 w-6 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-xs uppercase shadow-2xs">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-xs font-bold text-white uppercase shadow-2xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
                     : userRole.slice(0, 1)}
                 </div>
-                <span className="font-bold text-slate-800 text-[11px]">
+                <span className="text-[11px] font-bold text-slate-800">
                   {user?.full_name || userRole}
                 </span>
               </button>
 
               {/* USER DROPDOWN MENU */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-xl shadow-xl z-50 py-2 animate-fadeIn font-sans">
+                <div className="animate-fadeIn absolute right-0 z-50 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-2 font-sans shadow-xl">
                   {user && (
-                    <div className="px-4 py-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-800 truncate">
+                    <div className="border-b border-slate-100 px-4 py-2">
+                      <p className="truncate text-xs font-bold text-slate-800">
                         {user.full_name}
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className="truncate text-[10px] text-slate-400">
                         {user.email}
                       </p>
-                      <span className="text-[9px] mt-1 bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded-sm inline-block uppercase tracking-wider">
+                      <span className="mt-1 inline-block rounded-sm bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-indigo-700 uppercase">
                         {userRole}
                       </span>
                     </div>
@@ -359,7 +359,7 @@ export default function MainLayout() {
                       setShowUserMenu(false);
                       handleLogout();
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+                    className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="font-semibold">Log out</span>
@@ -372,9 +372,9 @@ export default function MainLayout() {
 
         {/* INTERNAL VIEWPORT PORTAL */}
         <div
-          className={`flex-1 p-6 min-h-0 ${
+          className={`min-h-0 flex-1 p-6 ${
             ['/purchase-orders', '/containers'].includes(location.pathname)
-              ? 'overflow-hidden flex flex-col'
+              ? 'flex flex-col overflow-hidden'
               : 'overflow-y-auto'
           }`}
         >
@@ -389,7 +389,7 @@ export default function MainLayout() {
           return (
             <div
               className={`fixed inset-0 z-[9999] flex items-center justify-center transition-all duration-300 ${
-                modalVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                modalVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
               }`}
               onClick={closeComingSoon}
             >
@@ -404,61 +404,61 @@ export default function MainLayout() {
               <div
                 className={`relative z-10 w-[340px] transition-all duration-300 ${
                   modalVisible
-                    ? 'opacity-100 scale-100 translate-y-0'
-                    : 'opacity-0 scale-90 translate-y-4'
+                    ? 'translate-y-0 scale-100 opacity-100'
+                    : 'translate-y-4 scale-90 opacity-0'
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="bg-indigo-950 border border-indigo-700/60 rounded-3xl shadow-2xl p-8 text-center overflow-hidden">
+                <div className="overflow-hidden rounded-3xl border border-indigo-700/60 bg-indigo-950 p-8 text-center shadow-2xl">
                   {/* Animated glow rings */}
-                  <div className="relative flex items-center justify-center mb-6">
+                  <div className="relative mb-6 flex items-center justify-center">
                     <div
-                      className="absolute h-28 w-28 rounded-full border border-indigo-500/20 animate-ping"
+                      className="absolute h-28 w-28 animate-ping rounded-full border border-indigo-500/20"
                       style={{ animationDuration: '2s' }}
                     />
                     <div
-                      className="absolute h-20 w-20 rounded-full border border-indigo-500/30 animate-ping"
+                      className="absolute h-20 w-20 animate-ping rounded-full border border-indigo-500/30"
                       style={{
                         animationDuration: '2.5s',
                         animationDelay: '0.3s',
                       }}
                     />
-                    <div className="h-14 w-14 rounded-2xl bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center shadow-lg shadow-indigo-900">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/50 bg-indigo-600/30 shadow-lg shadow-indigo-900">
                       <ModalIcon className="h-7 w-7 text-indigo-300" />
                     </div>
                   </div>
 
                   {/* Rocket badge */}
-                  <div className="flex items-center justify-center gap-1.5 mb-3">
-                    <Rocket className="h-3 w-3 text-indigo-400 animate-bounce" />
-                    <span className="text-[10px] font-extrabold tracking-[0.2em] uppercase text-indigo-400">
+                  <div className="mb-3 flex items-center justify-center gap-1.5">
+                    <Rocket className="h-3 w-3 animate-bounce text-indigo-400" />
+                    <span className="text-[10px] font-extrabold tracking-[0.2em] text-indigo-400 uppercase">
                       Coming Soon
                     </span>
                     <Rocket
-                      className="h-3 w-3 text-indigo-400 animate-bounce"
+                      className="h-3 w-3 animate-bounce text-indigo-400"
                       style={{ animationDelay: '0.15s' }}
                     />
                   </div>
 
-                  <h2 className="text-white font-extrabold text-lg leading-tight mb-2">
+                  <h2 className="mb-2 text-lg leading-tight font-extrabold text-white">
                     {comingSoonModal.label}
                   </h2>
-                  <p className="text-indigo-300/70 text-xs leading-relaxed mb-6">
+                  <p className="mb-6 text-xs leading-relaxed text-indigo-300/70">
                     This feature is under active development and will be
                     available in an upcoming release.
                   </p>
 
                   {/* Progress bar animation */}
-                  <div className="w-full bg-indigo-900/60 rounded-full h-1 mb-6 overflow-hidden">
+                  <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-indigo-900/60">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
                       style={{ width: '65%', animation: 'none' }}
                     />
                   </div>
 
                   <button
                     onClick={closeComingSoon}
-                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold tracking-wide transition-colors"
+                    className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold tracking-wide text-white transition-colors hover:bg-indigo-500"
                   >
                     Got it
                   </button>
@@ -467,7 +467,7 @@ export default function MainLayout() {
                 {/* Close icon */}
                 <button
                   onClick={closeComingSoon}
-                  className="absolute top-3 right-3 p-1.5 rounded-lg text-indigo-400 hover:text-white hover:bg-indigo-800/60 transition-colors"
+                  className="absolute top-3 right-3 rounded-lg p-1.5 text-indigo-400 transition-colors hover:bg-indigo-800/60 hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Eye,
@@ -8,7 +8,13 @@ import {
   CheckCircle2,
   ExternalLink,
   Copy,
+  Truck,
+  Edit2,
+  Save,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { updateContainer } from '../services/container.service';
 import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
@@ -21,6 +27,67 @@ export default function ContainerDetailsModal({
 }) {
   const [itemsPage, setItemsPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
+  const [activeTab, setActiveTab] = useState('details');
+  const [isSaving, setIsSaving] = useState(false);
+  const [trackingData, setTrackingData] = useState({});
+
+  useEffect(() => {
+    if (container) {
+      setTrackingData({
+        container_name: container.container_name || container.name || '',
+        door: container.door || '',
+        date_dropped_off: container.date_dropped_off
+          ? container.date_dropped_off.split('T')[0]
+          : '',
+        date_emptied: container.date_emptied
+          ? container.date_emptied.split('T')[0]
+          : '',
+        unloaded_by: container.unloaded_by || '',
+        country_of_origin: container.country_of_origin || '',
+        unload_cost: container.unload_cost || '',
+        container_cost_drayage: container.container_cost_drayage || '',
+        customs_duty_misc: container.customs_duty_misc || '',
+        per_diem: container.per_diem || '',
+        factory_credit_needed: container.factory_credit_needed || '',
+        receiving_closure_notes: container.receiving_closure_notes || '',
+      });
+    }
+  }, [container]);
+
+  const handleSaveTracking = async () => {
+    try {
+      setIsSaving(true);
+      const payload = { ...trackingData };
+      [
+        'unload_cost',
+        'container_cost_drayage',
+        'customs_duty_misc',
+        'per_diem',
+      ].forEach((k) => {
+        if (payload[k]) {
+          payload[k] = parseFloat(payload[k]);
+        } else {
+          payload[k] = 0;
+        }
+      });
+      ['date_dropped_off', 'date_emptied'].forEach((k) => {
+        if (!payload[k]) payload[k] = null;
+      });
+
+      await updateContainer(container.id, payload);
+      toast.success('Tracking details updated successfully');
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      toast.error('Failed to update tracking details');
+      console.error(e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTrackingChange = (field, value) => {
+    setTrackingData((prev) => ({ ...prev, [field]: value }));
+  };
 
   if (!container) return null;
 
@@ -34,25 +101,25 @@ export default function ContainerDetailsModal({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
         onClick={onClose}
       >
         <div
-          className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200"
+          className="animate-in fade-in zoom-in-95 flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                <Eye className="w-5 h-5" />
+                <Eye className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800 leading-tight">
+                <h3 className="text-lg leading-tight font-bold text-slate-800">
                   Container Details
                 </h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-slate-500 font-medium flex items-center gap-2">
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium text-slate-500">
                     <span>
                       {container.sellercloud_container_id || 'Unnamed'}
                       {container.name && container.name !== container.id
@@ -61,10 +128,10 @@ export default function ContainerDetailsModal({
                     </span>
                     <span className="text-slate-300">•</span>
                     <span
-                      className={`px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${
+                      className={`rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
                         container.is_received
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border-amber-200 bg-amber-50 text-amber-700'
                       }`}
                     >
                       {container.is_received ? 'Received' : 'In Transit'}
@@ -75,7 +142,7 @@ export default function ContainerDetailsModal({
                         <>
                           <span className="text-slate-300">•</span>
                           <span className="flex items-center gap-1 text-xs">
-                            <Calendar className="w-3.5 h-3.5" />
+                            <Calendar className="h-3.5 w-3.5" />
                             <span>
                               {String(container.received_date).split('T')[0]}
                             </span>
@@ -92,7 +159,7 @@ export default function ContainerDetailsModal({
                   onClick={() =>
                     window.open(container.sellercloud_link, '_blank')
                   }
-                  className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2 cursor-pointer"
+                  className="mr-2 flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open in Sellercloud
@@ -100,173 +167,399 @@ export default function ContainerDetailsModal({
               )}
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Close modal"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 flex flex-col flex-1 min-h-0">
-            {/* Top Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 shrink-0">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm shadow-slate-100/50 hover:border-indigo-200 hover:shadow-indigo-50 transition-all duration-200">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                  Arrival Date
-                </p>
-                <p className="text-base font-bold text-slate-800">
-                  {container.arrivalDate || 'Pending'}
-                </p>
-              </div>
-
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm shadow-slate-100/50 hover:border-emerald-200 hover:shadow-emerald-50 transition-all duration-200">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <Package className="w-3.5 h-3.5 text-emerald-500" />
-                  Total Item
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-slate-800">
-                    {totalItems}
-                  </span>
-                  <span className="text-sm font-medium text-slate-500">
-                    units
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm shadow-slate-100/50 hover:border-amber-200 hover:shadow-amber-50 transition-all duration-200">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-amber-500" />
-                  Status
-                </p>
-                <div className="inline-flex mt-1">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold ${container.is_received ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}
-                  >
-                    {container.is_received ? 'Received' : 'In Transit'}
-                  </span>
-                </div>
-              </div>
+          <div className="flex min-h-0 flex-1 flex-col p-6">
+            {/* Tabs */}
+            <div className="mb-6 flex shrink-0 border-b border-slate-200">
+              <button
+                className={`w-1/2 border-b-2 py-3 text-center text-sm font-bold transition-colors ${activeTab === 'details' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setActiveTab('details')}
+              >
+                Details
+              </button>
+              <button
+                className={`w-1/2 border-b-2 py-3 text-center text-sm font-bold transition-colors ${activeTab === 'comments' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setActiveTab('comments')}
+              >
+                Comments
+              </button>
             </div>
 
-            {/* Items Table */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)] flex-1 flex flex-col min-h-0 mt-2 overflow-hidden">
-              <div className="flex items-center justify-between shrink-0 px-5 pt-5 pb-4">
-                <h4 className="text-sm font-bold text-slate-900 shrink-0">
-                  Allocated Items
-                </h4>
-              </div>
+            {activeTab === 'details' && (
+              <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-indigo-200 hover:shadow-indigo-50">
+                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                    Arrival Date
+                  </p>
+                  <p className="text-base font-bold text-slate-800">
+                    {container.arrivalDate || 'Pending'}
+                  </p>
+                </div>
 
-              {allItems.length > 0 || isLoading ? (
-                <>
-                  <DataTable
-                    isLoading={isLoading}
-                    columns={[
-                      {
-                        header: 'VENDOR NAME',
-                        accessor: 'vendor_name',
-                        headerClassName: 'px-3 py-2 w-1/3 bg-white',
-                        className: 'px-3 py-2 max-w-[120px]',
-                        render: (item) => (
-                          <span className="font-mono font-bold text-slate-500 truncate block">
-                            {item.vendor_name || 'N/A'}
-                          </span>
-                        ),
-                      },
-                      {
-                        header: 'SKU',
-                        accessor: 'sku',
-                        headerClassName: 'px-3 py-2 bg-white w-24',
-                        className: 'px-3 py-2 max-w-[100px]',
-                        render: (item) => (
-                          <div className="flex items-center gap-1.5 group">
-                            <span
-                              className="font-mono text-slate-700 truncate cursor-pointer flex-1 min-w-0"
-                              data-tooltip-id="sku-tooltip"
-                              data-tooltip-content={item.sku || 'N/A'}
-                            >
-                              {item.sku || '-'}
-                            </span>
-                            {item.sku && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator.clipboard.writeText(item.sku);
-                                }}
-                                className="text-slate-300 hover:text-indigo-600 transition-colors shrink-0"
-                                title="Copy SKU"
-                              >
-                                <Copy className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ),
-                      },
-                      {
-                        header: 'PRODUCT NAME',
-                        accessor: 'product_name',
-                        headerClassName: 'px-3 py-2 bg-white',
-                        className: 'px-3 py-2 max-w-[150px]',
-                        render: (item) => (
-                          <span className="font-medium text-slate-800 line-clamp-1">
-                            {item.product_name || item.name || '-'}
-                          </span>
-                        ),
-                      },
-                      {
-                        header: 'QTY ASSIGNED',
-                        accessor: 'qty',
-                        headerClassName: 'px-3 py-2 text-right w-32 bg-white',
-                        className: 'px-3 py-2 text-right font-mono font-medium',
-                        render: (item) =>
-                          item.qty_in_container || item.qty || 0,
-                      },
-                    ]}
-                    data={paginatedItems}
-                    keyField="product_name"
-                    theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
-                    tableClassName="w-full text-left text-xs border-collapse"
-                    tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                    trClassName="hover:bg-slate-50/50 transition-colors"
-                    containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
-                    tableWrapperClassName=""
-                  />
-                  <Pagination
-                    currentPage={itemsPage}
-                    totalCount={totalItems}
-                    pageSize={itemsPageSize}
-                    onPageChange={(pg) => setItemsPage(pg)}
-                    onPageSizeChange={(size) => {
-                      setItemsPageSize(size);
-                      setItemsPage(1);
-                    }}
-                  />
-                </>
-              ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-                    <Package className="w-8 h-8 text-slate-300" />
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-emerald-200 hover:shadow-emerald-50">
+                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    <Package className="h-3.5 w-3.5 text-emerald-500" />
+                    Total Item
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold text-slate-800">
+                      {totalItems}
+                    </span>
+                    <span className="text-sm font-medium text-slate-500">
+                      units
+                    </span>
                   </div>
-                  <p className="text-slate-500 font-medium mb-1">
-                    No items allocated
-                  </p>
-                  <p className="text-sm text-slate-400 max-w-sm">
-                    This container currently does not have any purchase order
-                    items assigned to it.
-                  </p>
                 </div>
-              )}
-            </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-amber-200 hover:shadow-amber-50">
+                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                    Status
+                  </p>
+                  <div className="mt-1 inline-flex">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
+                    >
+                      {container.is_received ? 'Received' : 'In Transit'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'comments' && (
+              <div className="mb-8 shrink-0 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
+                      <Truck className="h-3.5 w-3.5" />
+                    </div>
+                    Tracking & Financials
+                  </h4>
+                  <button
+                    onClick={handleSaveTracking}
+                    className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Save className="h-3 w-3" />
+                    )}
+                    Save Changes
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Container Name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.container_name || ''}
+                      onChange={(e) =>
+                        handleTrackingChange('container_name', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Door
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.door || ''}
+                      onChange={(e) =>
+                        handleTrackingChange('door', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Date Dropped Off
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.date_dropped_off || ''}
+                      onChange={(e) =>
+                        handleTrackingChange('date_dropped_off', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Date Emptied
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.date_emptied || ''}
+                      onChange={(e) =>
+                        handleTrackingChange('date_emptied', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Unloaded By
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.unloaded_by || ''}
+                      onChange={(e) =>
+                        handleTrackingChange('unloaded_by', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Country Of Origin
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.country_of_origin || ''}
+                      onChange={(e) =>
+                        handleTrackingChange(
+                          'country_of_origin',
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Unload Cost
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.unload_cost || ''}
+                        onChange={(e) =>
+                          handleTrackingChange('unload_cost', e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Container Cost Drayage
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.container_cost_drayage || ''}
+                        onChange={(e) =>
+                          handleTrackingChange(
+                            'container_cost_drayage',
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Customs Duty Misc
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.customs_duty_misc || ''}
+                        onChange={(e) =>
+                          handleTrackingChange(
+                            'customs_duty_misc',
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Per Diem
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.per_diem || ''}
+                        onChange={(e) =>
+                          handleTrackingChange('per_diem', e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Factory Credit Needed
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.factory_credit_needed || ''}
+                      onChange={(e) =>
+                        handleTrackingChange(
+                          'factory_credit_needed',
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                      Receiving Closure Notes
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      value={trackingData.receiving_closure_notes || ''}
+                      onChange={(e) =>
+                        handleTrackingChange(
+                          'receiving_closure_notes',
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'details' && (
+              <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)]">
+                <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
+                  <h4 className="shrink-0 text-sm font-bold text-slate-900">
+                    Allocated Items
+                  </h4>
+                </div>
+
+                {allItems.length > 0 || isLoading ? (
+                  <>
+                    <DataTable
+                      isLoading={isLoading}
+                      columns={[
+                        {
+                          header: 'VENDOR NAME',
+                          accessor: 'vendor_name',
+                          headerClassName: 'px-3 py-2 w-1/3 bg-white',
+                          className: 'px-3 py-2 max-w-[120px]',
+                          render: (item) => (
+                            <span className="block truncate font-mono font-bold text-slate-500">
+                              {item.vendor_name || 'N/A'}
+                            </span>
+                          ),
+                        },
+                        {
+                          header: 'SKU',
+                          accessor: 'sku',
+                          headerClassName: 'px-3 py-2 bg-white w-24',
+                          className: 'px-3 py-2 max-w-[100px]',
+                          render: (item) => (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="cursor-help font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+                                data-tooltip-id="sku-tooltip"
+                                data-tooltip-content={item.sku || 'N/A'}
+                              >
+                                {item.sku || '-'}
+                              </span>
+                            </div>
+                          ),
+                        },
+                        {
+                          header: 'PRODUCT NAME',
+                          accessor: 'product_name',
+                          headerClassName: 'px-3 py-2 bg-white',
+                          className: 'px-3 py-2 max-w-[150px]',
+                          render: (item) => (
+                            <span className="line-clamp-1 font-medium text-slate-800">
+                              {item.product_name || item.name || '-'}
+                            </span>
+                          ),
+                        },
+                        {
+                          header: 'QTY ASSIGNED',
+                          accessor: 'qty',
+                          headerClassName: 'px-3 py-2 text-right w-32 bg-white',
+                          className:
+                            'px-3 py-2 text-right font-mono font-medium',
+                          render: (item) =>
+                            item.qty_in_container || item.qty || 0,
+                        },
+                      ]}
+                      data={paginatedItems}
+                      keyField="product_name"
+                      theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
+                      tableClassName="w-full text-left text-xs border-collapse"
+                      tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                      trClassName="hover:bg-slate-50/50 transition-colors"
+                      containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
+                      tableWrapperClassName=""
+                    />
+                    <Pagination
+                      currentPage={itemsPage}
+                      totalCount={totalItems}
+                      pageSize={itemsPageSize}
+                      onPageChange={(pg) => setItemsPage(pg)}
+                      onPageSizeChange={(size) => {
+                        setItemsPageSize(size);
+                        setItemsPage(1);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
+                      <Package className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <p className="mb-1 font-medium text-slate-500">
+                      No items allocated
+                    </p>
+                    <p className="max-w-sm text-sm text-slate-400">
+                      This container currently does not have any purchase order
+                      items assigned to it.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <div className="flex justify-end border-t border-slate-100 bg-slate-50 px-6 py-4">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors cursor-pointer shadow-sm"
+              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
             >
               Close View
             </button>
@@ -277,7 +570,7 @@ export default function ContainerDetailsModal({
         id="sku-tooltip"
         positionStrategy="fixed"
         place="top"
-        className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center"
+        className="z-[100] max-w-xs text-center text-xs leading-relaxed font-semibold tracking-wide shadow-xl"
         style={{
           backgroundColor: '#6366f1',
           color: '#ffffff',

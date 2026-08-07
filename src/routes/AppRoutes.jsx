@@ -9,8 +9,8 @@ import { appRoutes } from './routes';
 import { RefreshCw } from 'lucide-react';
 
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-full w-full">
-    <RefreshCw className="h-8 w-8 text-indigo-500 animate-spin" />
+  <div className="flex h-full w-full items-center justify-center">
+    <RefreshCw className="h-8 w-8 animate-spin text-indigo-500" />
   </div>
 );
 

@@ -86,7 +86,7 @@ export default function UserManagementPage() {
         headerClassName: 'px-6 py-3 bg-slate-50 text-left w-[160px]',
         className: 'px-6 py-3 w-[160px]',
         render: (u) => (
-          <span className="inline-flex items-center bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-indigo-100">
+          <span className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-bold tracking-wider text-indigo-700 uppercase">
             {u.role || 'User'}
           </span>
         ),
@@ -101,13 +101,13 @@ export default function UserManagementPage() {
             {currentUser?.id && String(currentUser.id) === String(u.id) ? (
               <button
                 onClick={() => setShowChangePasswordModal(true)}
-                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition"
+                className="rounded-md p-1.5 text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
                 title="Change Password"
               >
-                <KeyRound className="w-4 h-4" />
+                <KeyRound className="h-4 w-4" />
               </button>
             ) : (
-              <span className="text-slate-200 text-xs">—</span>
+              <span className="text-xs text-slate-200">—</span>
             )}
           </div>
         ),
@@ -117,18 +117,18 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden relative animate-in fade-in">
+    <div className="animate-in fade-in relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+      <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
             <Users className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="text-lg font-display font-bold text-slate-800">
+            <h1 className="font-display text-lg font-bold text-slate-800">
               User Management
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs font-medium text-slate-500">
               Manage system users and access roles
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function UserManagementPage() {
           <button
             onClick={() => fetchUsers(true)}
             disabled={loading}
-            className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition disabled:opacity-50"
+            className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
@@ -146,7 +146,7 @@ export default function UserManagementPage() {
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
           >
             <Plus className="h-3.5 w-3.5" />
             Add User
@@ -155,10 +155,10 @@ export default function UserManagementPage() {
       </div>
 
       {/* Content */}
-      <div className="p-4 flex-1 w-full min-h-0 flex flex-col gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-3 flex-shrink-0 justify-between">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
+        <div className="flex flex-shrink-0 flex-col justify-between gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm md:flex-row md:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by name, email, or role..."
@@ -167,12 +167,12 @@ export default function UserManagementPage() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:bg-white transition"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-4 pl-9 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 relative">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
           {loading && <TableLoader message="Loading users..." />}
           <DataTable
             columns={userColumns}
