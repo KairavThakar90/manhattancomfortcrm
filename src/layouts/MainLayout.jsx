@@ -11,7 +11,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
-import { logout } from '../services/auth.service';
+import { logout } from '../features/auth/services/auth.service';
 import { navItems } from '../utils/navigation';
 
 export default function MainLayout() {

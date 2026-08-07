@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import LoginPageComponent from '../components/LoginPage';
-import { useCRM } from '../hooks/useCRM';
+import { useCRM } from '../../../hooks/useCRM';
 import { login } from '../services/auth.service';
 
 export default function LoginPage() {

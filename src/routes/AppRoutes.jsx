@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import ProtectedRoute from '../components/ProtectedRoute';
-import LoginPage from '../pages/LoginPage';
+import ProtectedRoute from '../features/auth/components/ProtectedRoute';
+import LoginPage from '../features/auth/pages/LoginPage';
 
 import NotFoundPage from '../pages/NotFoundPage';
 import { appRoutes } from './routes';

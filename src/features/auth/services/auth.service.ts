@@ -1,10 +1,10 @@
-import apiClient from './api';
+import apiClient from '../../../services/api';
 import {
   AUTH_LOGIN,
   AUTH_LOGOUT,
   AUTH_ME,
   AUTH_REFRESH,
-} from '../utils/endpoints';
+} from '../../../utils/endpoints';
 
 // ==========================================
 // Auth Service
@@ -25,7 +25,7 @@ export interface LoginResponse {
   token?: string; // fallback in case api sends it
 }
 
-import { UserRole } from '../types';
+import { UserRole } from '../../../types';
 
 /**
  * Map backend user role to frontend UserRole.
