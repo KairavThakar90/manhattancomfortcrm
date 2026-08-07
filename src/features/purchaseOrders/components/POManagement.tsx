@@ -2811,6 +2811,7 @@ Supply Chain CRM Coordinator`;
       )}
       <SellerCloudSyncLoading
         isOpen={isSyncing}
+        title="Syncing  Order Data"
         onForceClose={() => setIsSyncing(false)}
       />
       {isLocatingComment && (

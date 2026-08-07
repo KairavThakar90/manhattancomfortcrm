@@ -17,6 +17,7 @@ const MESSAGES = [
 export default function SellerCloudSyncLoading({
   isOpen,
   onForceClose = null,
+  title = 'Syncing Container Data',
 }) {
   const [msgIndex, setMsgIndex] = useState(0);
 
@@ -108,7 +109,7 @@ export default function SellerCloudSyncLoading({
         {/* Titles & Messages */}
         <div className="flex flex-col items-center text-center z-10 w-full mb-8">
           <h2 className="text-[19px] font-black text-slate-800 mb-2 font-display tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
-            Syncing Container Data
+            {title}
           </h2>
 
           <div className="h-5 w-full flex justify-center items-center overflow-hidden">
