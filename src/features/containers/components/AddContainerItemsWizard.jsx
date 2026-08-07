@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Package, X, CheckCircle2, Save } from 'lucide-react';
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import { getContainerPOItems } from '../services/container.service';
-import { getPurchaseOrders } from '../../../services/purchaseOrder.service';
+import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
 import { toast } from 'react-toastify';
 
 export default function AddContainerItemsWizard({ onClose, onConfirm }) {

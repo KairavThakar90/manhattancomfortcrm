@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
-import { fetchUsers } from '../features/users/store/userSlice';
+import { fetchUsers } from '../../../features/users/store/userSlice';
 import {
   Search,
   Filter,
@@ -44,8 +44,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
-import { PurchaseOrder, Vendor, Comment, EmailLog, UserRole } from '../types';
-import { useCRM } from '../hooks/useCRM';
+import {
+  PurchaseOrder,
+  Vendor,
+  Comment,
+  EmailLog,
+  UserRole,
+} from '../../../types';
+import { useCRM } from '../../../hooks/useCRM';
 import {
   updatePOLeadTime,
   exportPurchaseOrdersCSV,
@@ -60,18 +66,18 @@ import {
   updatePurchaseOrder,
   updatePOStatus,
 } from '../services/purchaseOrder.service';
-import { getUsers, User } from '../features/users/services/user.service';
-import Pagination from './common/Pagination';
-import TableLoader from './common/TableLoader';
-import FullPageLoader from './common/FullPageLoader';
-import ItemCommentModal from './ItemCommentModal';
-import VendorInfiniteDropdown from './common/VendorInfiniteDropdown';
-import CompanyDropdown from './common/CompanyDropdown';
-import DataTable from './common/DataTable';
-import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
-import DateFilterInput from './common/DateFilterInput';
-import ContainerDetailsModal from '../features/containers/components/ContainerDetailsModal';
-import { getContainerDetails } from '../features/containers/services/container.service';
+import { getUsers, User } from '../../../features/users/services/user.service';
+import Pagination from '../../../components/common/Pagination';
+import TableLoader from '../../../components/common/TableLoader';
+import FullPageLoader from '../../../components/common/FullPageLoader';
+import ItemCommentModal from '../../../components/ItemCommentModal';
+import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
+import CompanyDropdown from '../../../components/common/CompanyDropdown';
+import DataTable from '../../../components/common/DataTable';
+import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
+import DateFilterInput from '../../../components/common/DateFilterInput';
+import ContainerDetailsModal from '../../../features/containers/components/ContainerDetailsModal';
+import { getContainerDetails } from '../../../features/containers/services/container.service';
 
 interface DataTableProps {
   columns: any[];
@@ -908,7 +914,7 @@ export default function POManagement({
     }
 
     if (propOnSortChange) {
-      propOnSortChange(direction ? key : null, direction);
+      propOnSortChange(direction ? String(key) : null, direction);
     } else {
       setLocalSortConfig({ key: direction ? key : null, direction });
     }

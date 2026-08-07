@@ -2,7 +2,9 @@ import React, { lazy } from 'react';
 
 // Lazy loading the pages
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
-const POManagementPage = lazy(() => import('../pages/POManagementPage'));
+const POManagementPage = lazy(
+  () => import('../features/purchaseOrders/pages/POManagementPage'),
+);
 const ContainerFlowPage = lazy(
   () => import('../features/containers/pages/ContainerFlowPage'),
 );

@@ -25,7 +25,7 @@ import {
   getItemComments,
   postItemComment,
   updateItemComment,
-} from '../services/purchaseOrder.service';
+} from '../features/purchaseOrders/services/purchaseOrder.service';
 import { POItem, PurchaseOrder } from '../types';
 
 interface ItemCommentModalProps {

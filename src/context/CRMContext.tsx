@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
-import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
+import { setPurchaseOrdersList } from '../features/purchaseOrders/store/purchaseOrderSlice';
 import { CRMStore } from '../data';
 import {
   UserRole,

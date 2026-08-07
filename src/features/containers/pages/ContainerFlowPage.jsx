@@ -39,7 +39,7 @@ import TableLoader from '../../../components/common/TableLoader';
 import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../../../components/common/DateFilterInput';
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
-import { getPurchaseOrders } from '../../../services/purchaseOrder.service';
+import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
 import {
   getContainers,
   getContainerPOItems,

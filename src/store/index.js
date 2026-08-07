@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import purchaseOrderReducer from './purchaseOrderSlice';
+import purchaseOrderReducer from '../features/purchaseOrders/store/purchaseOrderSlice';
 import vendorReducer from './vendorSlice';
 import containerReducer from '../features/containers/store/containerSlice';
 

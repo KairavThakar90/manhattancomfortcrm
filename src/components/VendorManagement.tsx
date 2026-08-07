@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import {
   getPurchaseOrderById,
   updatePOStatus,
-} from '../services/purchaseOrder.service';
+} from '../features/purchaseOrders/services/purchaseOrder.service';
 import {
   Users,
   User,

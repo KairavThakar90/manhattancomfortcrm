@@ -1,4 +1,4 @@
-import apiClient from './api';
+import apiClient from '../../../services/api';
 import {
   PO_LIST,
   PO_BY_ID,
@@ -13,7 +13,7 @@ import {
   PO_ITEM_COMMENT_UPDATE,
   PO_SYNC,
   PO_STATUS_UPDATE,
-} from '../utils/endpoints';
+} from '../../../utils/endpoints';
 
 // ==========================================
 // Purchase Order Service

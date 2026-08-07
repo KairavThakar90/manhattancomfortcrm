@@ -6,7 +6,7 @@ import {
   setAllPurchaseOrders,
 } from '../store/purchaseOrderSlice';
 import POManagement from '../components/POManagement';
-import { useCRM } from '../hooks/useCRM';
+import { useCRM } from '../../../hooks/useCRM';
 import {
   getPurchaseOrders,
   createPurchaseOrder,
