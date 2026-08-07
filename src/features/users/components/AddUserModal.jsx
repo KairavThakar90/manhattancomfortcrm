@@ -121,11 +121,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
   const reactSelectStyles = {
     control: (base, state) => ({
       ...base,
-      backgroundColor: '#f8fafc',
-      borderColor: state.isFocused ? '#6366f1' : '#e2e8f0',
+      backgroundColor: '#f8fafc', // bg-slate-50
+      borderColor: state.isFocused ? '#6366f1' : '#e2e8f0', // indigo-500 : slate-200
       borderRadius: '0.5rem',
-      padding: '0 4px',
-      minHeight: '38px',
+      padding: '0',
+      minHeight: '38px', // match input height
+      fontSize: '0.875rem', // text-sm
       boxShadow: state.isFocused ? '0 0 0 2px rgba(99, 102, 241, 0.2)' : 'none',
       '&:hover': {
         borderColor: state.isFocused ? '#6366f1' : '#cbd5e1',
@@ -133,20 +134,23 @@ export default function AddUserModal({ onClose, onSuccess }) {
     }),
     valueContainer: (base) => ({
       ...base,
-      padding: '2px 8px',
+      padding: '2px 12px',
     }),
     input: (base) => ({
       ...base,
       margin: '0',
       padding: '0',
+      fontSize: '0.875rem',
     }),
     placeholder: (base) => ({
       ...base,
-      color: '#64748b',
+      color: '#94a3b8', // slate-400 placeholder
+      fontSize: '0.875rem',
     }),
     singleValue: (base) => ({
       ...base,
-      color: '#1e293b',
+      color: '#1e293b', // slate-800
+      fontSize: '0.875rem',
     }),
     option: (base, state) => ({
       ...base,
@@ -157,6 +161,8 @@ export default function AddUserModal({ onClose, onSuccess }) {
           : 'white',
       color: state.isSelected ? '#4f46e5' : '#334155',
       cursor: 'pointer',
+      fontSize: '0.875rem',
+      padding: '8px 12px',
       '&:active': {
         backgroundColor: '#eef2ff',
       },
