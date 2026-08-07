@@ -21,6 +21,7 @@ import {
   CONTAINER_VALIDATE_ITEMS_BULK,
 } from '../../../utils/endpoints';
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
+import { getWarehouses } from '../../../services/warehouse.service';
 import { createContainer } from '../services/container.service';
 import AddContainerItemsWizard from './AddContainerItemsWizard';
 
@@ -47,16 +48,14 @@ export default function ImportItemsModal({
   const [showContainerDetails, setShowContainerDetails] = useState(false);
 
   useEffect(() => {
-    import('../../../services/warehouse.service').then(({ getWarehouses }) => {
-      getWarehouses()
-        .then((data) => {
-          const results = Array.isArray(data)
-            ? data
-            : data.results || data.data || [];
-          setWarehousesList(results);
-        })
-        .catch((err) => console.error(err));
-    });
+    getWarehouses()
+      .then((data) => {
+        const results = Array.isArray(data)
+          ? data
+          : data.results || data.data || [];
+        setWarehousesList(results);
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   const warehouseDropdownItems = useMemo(() => {

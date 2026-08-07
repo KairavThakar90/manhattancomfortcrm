@@ -39,6 +39,7 @@ import TableLoader from '../../../components/common/TableLoader';
 import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../../../components/common/DateFilterInput';
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
+import { getWarehouses } from '../../../services/warehouse.service';
 import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
 import {
   getContainers,
@@ -156,16 +157,14 @@ export default function ContainerFlowPage() {
   // Fetch warehouses
   const [warehousesList, setWarehousesList] = useState([]);
   useEffect(() => {
-    import('../../../services/warehouse.service').then(({ getWarehouses }) => {
-      getWarehouses()
-        .then((data) => {
-          const results = Array.isArray(data)
-            ? data
-            : data.results || data.data || [];
-          setWarehousesList(results);
-        })
-        .catch((err) => console.error(err));
-    });
+    getWarehouses()
+      .then((data) => {
+        const results = Array.isArray(data)
+          ? data
+          : data.results || data.data || [];
+        setWarehousesList(results);
+      })
+      .catch((err) => console.error(err));
   }, []);
   const [warehouseSearch, setWarehouseSearch] = useState('');
   const warehouseDropdownItems = useMemo(() => {
