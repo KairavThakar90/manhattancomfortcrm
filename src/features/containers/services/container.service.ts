@@ -1,4 +1,4 @@
-import apiClient from './api';
+import apiClient from '../../../services/api';
 import {
   CONTAINERS_LIST,
   CONTAINER_PO_ITEMS,
@@ -8,7 +8,7 @@ import {
   CONTAINER_DETAILS,
   CONTAINER_SYNC,
   CONTAINERS_EXPORT_CSV,
-} from '../utils/endpoints';
+} from '../../../utils/endpoints';
 
 export async function getContainers(params?: {
   page?: number;

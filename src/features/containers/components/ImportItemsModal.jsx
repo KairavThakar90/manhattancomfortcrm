@@ -13,14 +13,14 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import apiClient from '../services/api';
+import apiClient from '../../../services/api';
 import {
   CONTAINER_ITEMS_IMPORT,
   CONTAINERS_LIST,
   CONTAINER_IMPORT_PREVIEW,
   CONTAINER_VALIDATE_ITEMS_BULK,
-} from '../utils/endpoints';
-import InfiniteScrollDropdown from './InfiniteScrollDropdown';
+} from '../../../utils/endpoints';
+import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import { createContainer } from '../services/container.service';
 import AddContainerItemsWizard from './AddContainerItemsWizard';
 
@@ -47,7 +47,7 @@ export default function ImportItemsModal({
   const [showContainerDetails, setShowContainerDetails] = useState(false);
 
   useEffect(() => {
-    import('../services/warehouse.service').then(({ getWarehouses }) => {
+    import('../../../services/warehouse.service').then(({ getWarehouses }) => {
       getWarehouses()
         .then((data) => {
           const results = Array.isArray(data)

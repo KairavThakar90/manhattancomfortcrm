@@ -70,8 +70,8 @@ import CompanyDropdown from './common/CompanyDropdown';
 import DataTable from './common/DataTable';
 import SellerCloudSyncLoading from './common/SellerCloudSyncLoading';
 import DateFilterInput from './common/DateFilterInput';
-import ContainerDetailsModal from './ContainerDetailsModal';
-import { getContainerDetails } from '../services/container.service';
+import ContainerDetailsModal from '../features/containers/components/ContainerDetailsModal';
+import { getContainerDetails } from '../features/containers/services/container.service';
 
 interface DataTableProps {
   columns: any[];

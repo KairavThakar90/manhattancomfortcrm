@@ -29,17 +29,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-import InfiniteScrollDropdown from '../components/InfiniteScrollDropdown';
-import Pagination from '../components/common/Pagination';
-import DataTable from '../components/common/DataTable';
+import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
+import Pagination from '../../../components/common/Pagination';
+import DataTable from '../../../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
 import ImportItemsModal from '../components/ImportItemsModal';
-import FullPageLoader from '../components/common/FullPageLoader';
-import TableLoader from '../components/common/TableLoader';
-import SellerCloudSyncLoading from '../components/common/SellerCloudSyncLoading';
-import DateFilterInput from '../components/common/DateFilterInput';
-import WarehouseInfiniteDropdown from '../components/common/WarehouseInfiniteDropdown';
-import { getPurchaseOrders } from '../services/purchaseOrder.service';
+import FullPageLoader from '../../../components/common/FullPageLoader';
+import TableLoader from '../../../components/common/TableLoader';
+import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
+import DateFilterInput from '../../../components/common/DateFilterInput';
+import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
+import { getPurchaseOrders } from '../../../services/purchaseOrder.service';
 import {
   getContainers,
   getContainerPOItems,
@@ -156,7 +156,7 @@ export default function ContainerFlowPage() {
   // Fetch warehouses
   const [warehousesList, setWarehousesList] = useState([]);
   useEffect(() => {
-    import('../services/warehouse.service').then(({ getWarehouses }) => {
+    import('../../../services/warehouse.service').then(({ getWarehouses }) => {
       getWarehouses()
         .then((data) => {
           const results = Array.isArray(data)

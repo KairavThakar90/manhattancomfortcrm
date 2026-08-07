@@ -10,8 +10,8 @@ import {
   Copy,
 } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
-import DataTable from './common/DataTable';
-import Pagination from './common/Pagination';
+import DataTable from '../../../components/common/DataTable';
+import Pagination from '../../../components/common/Pagination';
 
 export default function ContainerDetailsModal({
   container,

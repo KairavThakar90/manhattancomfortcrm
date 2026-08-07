@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import purchaseOrderReducer from './purchaseOrderSlice';
 import vendorReducer from './vendorSlice';
-import containerReducer from './containerSlice';
+import containerReducer from '../features/containers/store/containerSlice';
 
 import userReducer from '../features/users/store/userSlice';
 
