@@ -3,7 +3,7 @@ import purchaseOrderReducer from './purchaseOrderSlice';
 import vendorReducer from './vendorSlice';
 import containerReducer from './containerSlice';
 
-import userReducer from './userSlice';
+import userReducer from '../features/users/store/userSlice';
 
 export const store = configureStore({
   reducer: {

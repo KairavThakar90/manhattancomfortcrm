@@ -12,7 +12,9 @@ const TeamChatPage = lazy(() => import('../pages/TeamChatPage'));
 const AIAssistantPage = lazy(() => import('../pages/AIAssistantPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const AdminPanelPage = lazy(() => import('../pages/AdminPanelPage'));
-const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
+const UserManagementPage = lazy(
+  () => import('../features/users/pages/UserManagementPage'),
+);
 
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },

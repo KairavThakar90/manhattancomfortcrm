@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X, UserPlus, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createUser } from '../services/user.service';
-import { fetchVendorsPage } from '../store/vendorSlice';
+import { fetchVendorsPage } from '../../../store/vendorSlice';
 
 export default function AddUserModal({ onClose, onSuccess }) {
   const dispatch = useDispatch();

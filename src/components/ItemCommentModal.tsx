@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
-import { User } from '../services/user.service';
+import { User } from '../features/users/services/user.service';
 import { toast } from 'react-toastify';
 
 const formatUtcTimestamp = (ts: any) => {

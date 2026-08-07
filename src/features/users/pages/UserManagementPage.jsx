@@ -3,12 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Users, Search, RefreshCw, Plus, KeyRound } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
-import { useCRM } from '../hooks/useCRM';
+import { useCRM } from '../../../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
-import Pagination from '../components/common/Pagination';
-import TableLoader from '../components/common/TableLoader';
-import DataTable from '../components/common/DataTable';
+import Pagination from '../../../components/common/Pagination';
+import TableLoader from '../../../components/common/TableLoader';
+import DataTable from '../../../components/common/DataTable';
 
 export default function UserManagementPage() {
   const dispatch = useDispatch();

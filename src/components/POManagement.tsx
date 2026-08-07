@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
-import { fetchUsers } from '../store/userSlice';
+import { fetchUsers } from '../features/users/store/userSlice';
 import {
   Search,
   Filter,
@@ -60,7 +60,7 @@ import {
   updatePurchaseOrder,
   updatePOStatus,
 } from '../services/purchaseOrder.service';
-import { getUsers, User } from '../services/user.service';
+import { getUsers, User } from '../features/users/services/user.service';
 import Pagination from './common/Pagination';
 import TableLoader from './common/TableLoader';
 import FullPageLoader from './common/FullPageLoader';

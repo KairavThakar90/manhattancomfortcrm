@@ -1,11 +1,11 @@
-import apiClient from './api';
+import apiClient from '../../../services/api';
 import {
   USERS_LIST,
   USERS_BY_ID,
   AUTH_REGISTER,
   USERS_UPDATE,
   USERS_DELETE,
-} from '../utils/endpoints';
+} from '../../../utils/endpoints';
 
 // ==========================================
 // User Service

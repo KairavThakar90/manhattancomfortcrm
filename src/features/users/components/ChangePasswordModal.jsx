@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, KeyRound, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import apiClient from '../services/api';
-import { AUTH_UPDATE_PASSWORD } from '../utils/endpoints';
+import apiClient from '../../../services/api';
+import { AUTH_UPDATE_PASSWORD } from '../../../utils/endpoints';
 
 export default function ChangePasswordModal({ onClose }) {
   const [form, setForm] = useState({ password: '', confirm_password: '' });
