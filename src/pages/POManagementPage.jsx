@@ -60,12 +60,13 @@ export default function POManagementPage() {
       }
 
       const commentId = searchParams.get('comment_id');
-      if (commentId) {
+      const itemId = searchParams.get('item_id');
+      if (commentId || itemId) {
         // give the PO data some time to load / or just try dispatching event
         setTimeout(() => {
           window.dispatchEvent(
             new CustomEvent('po-deep-link', {
-              detail: { poId: fullPoId, commentId },
+              detail: { poId: fullPoId, commentId, itemId },
             }),
           );
         }, 500);
@@ -283,6 +284,7 @@ export default function POManagementPage() {
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
                 ? po.items.map((item) => ({
+                    ...item,
                     sku: item.sku || 'N/A',
                     name: item.product_name || item.name || 'N/A',
                     qty:

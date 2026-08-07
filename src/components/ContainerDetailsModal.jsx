@@ -52,11 +52,36 @@ export default function ContainerDetailsModal({
                   Container Details
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-slate-500 font-medium">
-                    {container.sellercloud_container_id || 'Unnamed'}
-                    {container.name && container.name !== container.id
-                      ? ` (${container.name})`
-                      : ''}
+                  <span className="text-sm text-slate-500 font-medium flex items-center gap-2">
+                    <span>
+                      {container.sellercloud_container_id || 'Unnamed'}
+                      {container.name && container.name !== container.id
+                        ? ` (${container.name})`
+                        : ''}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider border ${
+                        container.is_received
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}
+                    >
+                      {container.is_received ? 'Received' : 'In Transit'}
+                    </span>
+                    {container.is_received &&
+                      container.received_date &&
+                      container.received_date !== 'N/A' && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="flex items-center gap-1 text-xs">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>
+                              {String(container.received_date).split('T')[0]}
+                            </span>
+                          </span>
+                        </>
+                      )}
                   </span>
                 </div>
               </div>

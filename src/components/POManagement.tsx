@@ -348,6 +348,54 @@ export default function POManagement({
   // Item Comments Modal
   const [selectedItemForComments, setSelectedItemForComments] =
     useState<any>(null);
+  const [deepLinkItemId, setDeepLinkItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (deepLinkItemId) {
+      let foundItem = null;
+
+      // Try scanning detailedPOItems first
+      if (detailedPOItems && detailedPOItems.length > 0) {
+        foundItem = detailedPOItems.find(
+          (i) =>
+            String(i.id) === deepLinkItemId ||
+            String(i.sellercloud_item_id) === deepLinkItemId ||
+            String(i.sku) === deepLinkItemId,
+        );
+      }
+
+      // If not found in detailed yet, try checking the global purchaseOrders
+      if (!foundItem && purchaseOrders) {
+        for (const po of purchaseOrders) {
+          if (po.items && Array.isArray(po.items)) {
+            const match = po.items.find(
+              (i: any) =>
+                String(i.id) === deepLinkItemId ||
+                String(i.sellercloud_item_id) === deepLinkItemId ||
+                String(i.sku) === deepLinkItemId,
+            );
+            if (match) {
+              foundItem = match;
+              break;
+            }
+          }
+        }
+      }
+
+      if (foundItem) {
+        setSelectedItemForComments(foundItem);
+        setDeepLinkItemId(null);
+      } else if (detailedPOItems && detailedPOItems.length > 0) {
+        // Only fallback if detailed items have loaded and it's STILL not found
+        setSelectedItemForComments({
+          id: deepLinkItemId,
+          sku: 'Unknown SKU',
+          name: 'Details Not Found',
+        });
+        setDeepLinkItemId(null);
+      }
+    }
+  }, [deepLinkItemId, detailedPOItems, purchaseOrders]);
 
   // Container Details Modal
   const [viewingContainerDetails, setViewingContainerDetails] =
@@ -732,15 +780,24 @@ export default function POManagement({
 
   useEffect(() => {
     const handleDeepLink = (e: any) => {
-      const { commentId } = e.detail;
+      const { commentId, itemId } = e.detail;
+
+      if (itemId) {
+        setDeepLinkItemId(String(itemId));
+      }
+
       if (commentId) {
         setHighlightedCommentId(commentId);
-        setActiveDrawerSection('comments');
+
+        // If it's an item comment, we don't necessarily want to open the PO comment drawer
+        if (!itemId) {
+          setActiveDrawerSection('comments');
+        }
 
         // Show full page loading process
         setIsLocatingComment(true);
 
-        const maxAttempts = 40; // 10 seconds total
+        const maxAttempts = 60; // 15 seconds total to wait for item modal and comments to load
         let attempts = 0;
 
         const checkInterval = setInterval(() => {
@@ -4092,6 +4149,7 @@ Supply Chain CRM Coordinator`;
         targetItem={selectedItemForComments}
         selectedPO={selectedPO}
         onAddActivity={onAddActivity}
+        highlightedCommentId={highlightedCommentId}
       />
 
       <ContainerDetailsModal

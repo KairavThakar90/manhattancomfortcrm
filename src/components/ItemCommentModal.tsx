@@ -34,6 +34,7 @@ interface ItemCommentModalProps {
   targetItem: POItem;
   selectedPO: PurchaseOrder;
   onAddActivity: (msg: string, type: string) => void;
+  highlightedCommentId?: string | null;
 }
 
 export default function ItemCommentModal({
@@ -42,6 +43,7 @@ export default function ItemCommentModal({
   targetItem,
   selectedPO,
   onAddActivity,
+  highlightedCommentId,
 }: ItemCommentModalProps) {
   const { user: currentUser } = useCRM();
   const reduxUsers = useSelector((state: any) => state.users?.list || []);
@@ -273,7 +275,15 @@ export default function ItemCommentModal({
     const isCollapsed = collapsedComments[node.id] || false;
 
     return (
-      <div key={node.id} className="flex flex-col relative mb-4">
+      <div
+        key={node.id}
+        id={node.id}
+        className={`flex flex-col relative mb-4 scroll-mt-20 ${
+          highlightedCommentId === node.id
+            ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
+            : ''
+        }`}
+      >
         <div className="flex gap-3 group relative transition-colors items-start">
           <div
             className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
