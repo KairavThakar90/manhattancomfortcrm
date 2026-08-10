@@ -99,7 +99,7 @@ export async function verify2FA(
   username: string,
   otp: string,
 ): Promise<LoginResponse> {
-  const reqData = { username, otp };
+  const reqData = { email: username, code: otp };
 
   const { data } = await apiClient.post<LoginResponse>(
     AUTH_VERIFY_2FA,
