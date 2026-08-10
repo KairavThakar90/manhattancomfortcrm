@@ -988,7 +988,7 @@ export default function ContainerFlowPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex shrink-0 items-center text-indigo-400 transition-colors hover:text-indigo-600"
+                className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -1033,7 +1033,7 @@ export default function ContainerFlowPage() {
         header: 'Total Received',
         accessor: 'total_qty_received',
         headerClassName: 'px-4 py-3',
-        className: 'px-4 py-4 font-bold text-indigo-600',
+        className: 'px-4 py-4 font-bold text-slate-700',
       },
       {
         header: 'ETA (Delivery)',
