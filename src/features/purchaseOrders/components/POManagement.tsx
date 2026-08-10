@@ -73,7 +73,7 @@ import TableLoader from '../../../components/common/TableLoader';
 import FullPageLoader from '../../../components/common/FullPageLoader';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
-import CompanyDropdown from '../../../components/common/CompanyDropdown';
+import CustomerDropdown from '../../../components/common/CustomerDropdown';
 import DataTable from '../../../components/common/DataTable';
 import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../../../components/common/DateFilterInput';
@@ -239,8 +239,8 @@ interface POManagementProps {
   onStatusFilterChange?: (val: string) => void;
   vendorFilter?: string;
   onVendorFilterChange?: (val: string) => void;
-  companyFilter?: string;
-  onCompanyFilterChange?: (val: string) => void;
+  customerFilter?: string;
+  onCustomerFilterChange?: (val: string) => void;
   dateFrom?: string;
   onDateFromChange?: (val: string) => void;
   pageSize?: number;
@@ -275,8 +275,8 @@ export default function POManagement({
   onStatusFilterChange: propOnStatusFilterChange,
   vendorFilter: propVendorFilter,
   onVendorFilterChange: propOnVendorFilterChange,
-  companyFilter: propCompanyFilter,
-  onCompanyFilterChange: propOnCompanyFilterChange,
+  customerFilter: propCustomerFilter,
+  onCustomerFilterChange: propOnCustomerFilterChange,
   dateFrom: propDateFrom,
   onDateFromChange: propOnDateFromChange,
   pageSize: propPageSize,
@@ -307,7 +307,7 @@ export default function POManagement({
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
-  const [localCompanyFilter, setLocalCompanyFilter] = useState<string>('279');
+  const [localCustomerFilter, setLocalCustomerFilter] = useState<string>('all');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
 
   // Comments state fetched from detail API
@@ -1773,19 +1773,39 @@ Supply Chain CRM Coordinator`;
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
       {
-        header: 'Company Name',
-        accessor: 'companyName',
+        header: 'Customer Name',
+        accessor: 'customerName',
         headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
-        render: (po: any) => (
-          <span
-            className="inline-block w-full cursor-pointer truncate"
-            data-tooltip-id="po-item-tooltip"
-            data-tooltip-content={po.companyName}
-          >
-            {po.companyName}
-          </span>
-        ),
+        render: (po: any) => {
+          let customerName = 'N/A';
+
+          const cust = Array.isArray(po.customer)
+            ? po.customer[0]
+            : po.customer;
+
+          if (cust && (cust.first_name || cust.last_name)) {
+            customerName =
+              `${cust.first_name || ''} ${cust.last_name || ''}`.trim();
+          } else if (po.first_name || po.last_name) {
+            customerName =
+              `${po.first_name || ''} ${po.last_name || ''}`.trim();
+          } else if (po.customerName || po.customer_name) {
+            customerName = po.customerName || po.customer_name;
+          } else if (cust && (cust.customer_name || cust.name)) {
+            customerName = cust.customer_name || cust.name;
+          }
+
+          return (
+            <span
+              className="inline-block w-full cursor-pointer truncate"
+              data-tooltip-id="po-item-tooltip"
+              data-tooltip-content={customerName}
+            >
+              {customerName}
+            </span>
+          );
+        },
       },
 
       {
@@ -2615,19 +2635,19 @@ Supply Chain CRM Coordinator`;
                 <div className="flex items-center gap-1">
                   <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
                   <span className="text-mc-gray-soft text-xs font-bold">
-                    Company:
+                    Customer:
                   </span>
                 </div>
                 <div className="w-40">
-                  <CompanyDropdown
-                    value={propCompanyFilter ?? localCompanyFilter}
+                  <CustomerDropdown
+                    value={propCustomerFilter ?? localCustomerFilter}
                     onChange={(val) => {
-                      if (propOnCompanyFilterChange)
-                        propOnCompanyFilterChange(val);
-                      else setLocalCompanyFilter(val);
+                      if (propOnCustomerFilterChange)
+                        propOnCustomerFilterChange(val);
+                      else setLocalCustomerFilter(val);
                     }}
                     showAllOption={true}
-                    placeholder="All Companies"
+                    placeholder="All Customers"
                     className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                   />
                 </div>

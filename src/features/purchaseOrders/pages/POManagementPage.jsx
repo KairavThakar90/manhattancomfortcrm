@@ -78,7 +78,7 @@ export default function POManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
-  const [companyFilter, setCompanyFilter] = useState('all');
+  const [customerFilter, setCustomerFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -100,8 +100,8 @@ export default function POManagementPage() {
     setVendorFilter(val);
     setCurrentPage(1);
   };
-  const handleCompanyFilterChange = (val) => {
-    setCompanyFilter(val);
+  const handleCustomerFilterChange = (val) => {
+    setCustomerFilter(val);
     setCurrentPage(1);
   };
   const [dateFrom, setDateFrom] = useState('');
@@ -149,8 +149,8 @@ export default function POManagementPage() {
           params.vendor_id = vendorFilter;
         }
 
-        if (companyFilter !== 'all') {
-          params.sellercloud_company_id = companyFilter;
+        if (customerFilter !== 'all') {
+          params.customer_id = customerFilter;
         }
 
         if (userRole === 'Vendor') {
@@ -244,6 +244,8 @@ export default function POManagementPage() {
                 po.companyName ||
                 po.sellercloud_company_name ||
                 '-',
+              customer: po.customer || null,
+              customerName: po.first_name || po.customerName || null,
               status,
               orderedQty,
               receivedQty,
@@ -427,7 +429,7 @@ export default function POManagementPage() {
     searchQuery,
     statusFilter,
     vendorFilter,
-    companyFilter,
+    customerFilter,
     dateFrom,
     userRole,
     refreshTrigger,
@@ -564,8 +566,8 @@ export default function POManagementPage() {
         onStatusFilterChange={handleStatusFilterChange}
         vendorFilter={vendorFilter}
         onVendorFilterChange={handleVendorFilterChange}
-        companyFilter={companyFilter}
-        onCompanyFilterChange={handleCompanyFilterChange}
+        customerFilter={customerFilter}
+        onCustomerFilterChange={handleCustomerFilterChange}
         dateFrom={dateFrom}
         onDateFromChange={handleDateFromChange}
         sortConfig={sortConfig}
