@@ -161,7 +161,7 @@ const VendorStatusDropdown = ({
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="w-full flex items-center justify-between text-xs font-medium border border-slate-200 rounded-md px-2 py-1.5 bg-white text-slate-700 hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer outline-hidden"
+        className="flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 outline-hidden transition-colors hover:border-indigo-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
       >
         <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
         <ChevronDown
@@ -178,15 +178,15 @@ const VendorStatusDropdown = ({
               left: coords.left,
               width: coords.width,
             }}
-            className="bg-white border border-slate-200 rounded-md shadow-lg z-[9999] overflow-hidden text-xs max-h-60 overflow-y-auto"
+            className="z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg"
           >
             {statuses.map((s) => (
               <button
                 key={s}
-                className={`w-full text-left px-3 py-2 transition-colors ${
+                className={`w-full px-3 py-2 text-left transition-colors ${
                   currentStatus === s
-                    ? 'bg-indigo-50/50 text-indigo-700 font-bold'
-                    : 'text-slate-700 font-medium hover:bg-slate-50'
+                    ? 'bg-indigo-50/50 font-bold text-indigo-700'
+                    : 'font-medium text-slate-700 hover:bg-slate-50'
                 }`}
                 onClick={(e: any) => {
                   e.stopPropagation();
@@ -1649,10 +1649,10 @@ Supply Chain CRM Coordinator`;
           'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) => (
-          <div className="flex flex-col gap-1 items-start">
-            <div className="flex items-center gap-1.5 max-w-[120px] overflow-hidden whitespace-nowrap text-ellipsis">
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex max-w-[120px] items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
               <span
-                className="text-slate-900 font-bold font-mono text-[10px] truncate"
+                className="truncate font-mono text-[10px] font-bold text-slate-900"
                 title={String(po.id).replace(/^PO-/i, '')}
               >
                 {String(po.id).replace(/^PO-/i, '')}
@@ -1664,7 +1664,7 @@ Supply Chain CRM Coordinator`;
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e: any) => e.stopPropagation()}
-                  className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                  className="inline-flex shrink-0 items-center text-indigo-400 transition-colors hover:text-indigo-600"
                 >
                   <ExternalLink className="h-3 w-3" />
                 </a>
@@ -1678,16 +1678,16 @@ Supply Chain CRM Coordinator`;
                   onSelectPO(po.id);
                   setActiveDrawerSection('details');
                 }}
-                className="text-slate-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0 ml-0.5"
+                className="ml-0.5 inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-indigo-600"
               >
                 <Eye className="h-3 w-3" />
               </button>
               {po.status === 'Delayed' && (
-                <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-rose-500" />
               )}
             </div>
             {po.containerLeadTimeDays && (
-              <span className="text-slate-500 font-mono text-[9px]">
+              <span className="font-mono text-[9px] text-slate-500">
                 Lead Days: {po.containerLeadTimeDays}d
               </span>
             )}
@@ -1704,7 +1704,7 @@ Supply Chain CRM Coordinator`;
             <span
               className={
                 !po.orderId || po.orderId === 'N/A'
-                  ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                  ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
                   : 'text-[11px] font-bold text-slate-700'
               }
             >
@@ -1717,7 +1717,7 @@ Supply Chain CRM Coordinator`;
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e: any) => e.stopPropagation()}
-                className="text-indigo-400 hover:text-indigo-600 transition-colors inline-flex items-center shrink-0"
+                className="inline-flex shrink-0 items-center text-indigo-400 transition-colors hover:text-indigo-600"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -1760,7 +1760,7 @@ Supply Chain CRM Coordinator`;
               {po.creationDate}
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+            <span className="rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500">
               N/A
             </span>
           ),
@@ -1778,7 +1778,7 @@ Supply Chain CRM Coordinator`;
         className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
         render: (po: any) => (
           <span
-            className="cursor-pointer inline-block w-full truncate"
+            className="inline-block w-full cursor-pointer truncate"
             data-tooltip-id="po-item-tooltip"
             data-tooltip-content={po.companyName}
           >
@@ -1805,7 +1805,7 @@ Supply Chain CRM Coordinator`;
               }
               className={
                 itemCount === 'N/A' || itemCount === 0
-                  ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                  ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
                   : 'text-[11px] font-bold text-slate-700'
               }
             >
@@ -1865,19 +1865,19 @@ Supply Chain CRM Coordinator`;
               {po.invoiceDetails.date}
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+            <span className="rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500">
               N/A
             </span>
           ),
       },
       {
         header: (
-          <div className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold text-slate-600">
+          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-600 uppercase">
             Invoice Delay Status
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-              className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
+              className="ml-1 flex cursor-pointer items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 p-[1.5px] text-indigo-600 outline-hidden transition-colors hover:bg-indigo-600 hover:text-white"
             >
               <Info className="h-3 w-3" />
             </div>
@@ -1892,13 +1892,13 @@ Supply Chain CRM Coordinator`;
           const createdOn = (po as any).created_on || po.creationDate;
           if (invoiceDate)
             return (
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-emerald-50 border-emerald-100 text-emerald-700">
+              <span className="rounded-sm border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
                 On Time
               </span>
             );
           if (!createdOn || createdOn === 'N/A')
             return (
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+              <span className="rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500">
                 N/A
               </span>
             );
@@ -1909,12 +1909,12 @@ Supply Chain CRM Coordinator`;
           );
           if (diffDays > 10)
             return (
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-rose-50 border-rose-100 text-rose-700 animate-pulse">
+              <span className="animate-pulse rounded-sm border border-rose-100 bg-rose-50 px-2 py-0.5 font-mono text-[10px] text-rose-700">
                 Delay
               </span>
             );
           return (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-amber-50 border-amber-100 text-amber-700">
+            <span className="rounded-sm border border-amber-100 bg-amber-50 px-2 py-0.5 font-mono text-[10px] text-amber-700">
               Pending
             </span>
           );
@@ -1963,7 +1963,7 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
-              className="flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-colors p-[1.5px] cursor-pointer outline-hidden ml-1"
+              className="ml-1 flex cursor-pointer items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 p-[1.5px] text-indigo-600 outline-hidden transition-colors hover:bg-indigo-600 hover:text-white"
               onClick={(e: any) => e.stopPropagation()}
             >
               <Info className="h-3 w-3" />
@@ -1978,7 +1978,7 @@ Supply Chain CRM Coordinator`;
           <span
             className={
               !po.expected_delivery_date || po.expected_delivery_date === 'N/A'
-                ? 'px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500'
+                ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
                 : 'text-[11px] font-bold text-slate-700'
             }
           >
@@ -2015,7 +2015,7 @@ Supply Chain CRM Coordinator`;
 
           if (!cArray || cArray.length === 0) {
             return (
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono border bg-slate-50 border-slate-200 text-slate-500">
+              <span className="rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500">
                 N/A
               </span>
             );
@@ -2026,7 +2026,7 @@ Supply Chain CRM Coordinator`;
           const visible = isExpanded ? cArray : cArray.slice(0, maxShow);
           const overflow = cArray.length - maxShow;
           return (
-            <div className="flex flex-wrap gap-1 max-w-[188px]">
+            <div className="flex max-w-[188px] flex-wrap gap-1">
               {visible.map((cObj: any, idx: number) => {
                 const isObj = typeof cObj === 'object' && cObj !== null;
                 const cId = isObj
@@ -2051,7 +2051,7 @@ Supply Chain CRM Coordinator`;
                           : undefined;
                         handleOpenContainerDetails(String(cId), cNameToPass);
                       }}
-                      className="text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer truncate max-w-[80px]"
+                      className="max-w-[80px] cursor-pointer truncate text-indigo-600 hover:text-indigo-800 hover:underline"
                       title={String(displayName)}
                     >
                       {String(displayName)}
@@ -2072,7 +2072,7 @@ Supply Chain CRM Coordinator`;
                       return next;
                     });
                   }}
-                  className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  className="cursor-pointer rounded border border-indigo-200 bg-indigo-50 px-1 text-[10px] leading-[18px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-100"
                   title="Show all containers"
                 >
                   +{overflow} more
@@ -2088,7 +2088,7 @@ Supply Chain CRM Coordinator`;
                       return next;
                     });
                   }}
-                  className="text-[10px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded px-1 leading-[18px] cursor-pointer transition-colors"
+                  className="cursor-pointer rounded border border-slate-200 bg-slate-100 px-1 text-[10px] leading-[18px] font-semibold text-slate-500 transition-colors hover:bg-slate-200"
                   title="Show less"
                 >
                   Show less
@@ -2117,16 +2117,16 @@ Supply Chain CRM Coordinator`;
                   setActiveDrawerSection('comments');
                 }, 10);
               }}
-              className={`relative p-2 rounded-xl border transition ${
+              className={`relative rounded-xl border p-2 transition ${
                 hasComments
-                  ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300'
-                  : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100'
+                  : 'border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
               }`}
               title="View Comments"
             >
               <MessageSquare className="h-5 w-5" />
               {hasComments && (
-                <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[18px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-xs border border-white">
+                <span className="absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
                   {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
                 </span>
               )}
@@ -2146,7 +2146,7 @@ Supply Chain CRM Coordinator`;
               setIsCommentOnlyView(false);
               onSelectPO(po.id);
             }}
-            className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
+            className="inline-flex items-center gap-1 rounded-md p-1 font-semibold text-indigo-600 hover:bg-indigo-50"
           >
             <Eye className="h-3.5 w-3.5" />
             <span></span>
@@ -2172,9 +2172,9 @@ Supply Chain CRM Coordinator`;
         headerClassName: 'px-3 py-2 bg-slate-50',
         className: 'px-3 py-2 max-w-[120px]',
         render: (item: any) => (
-          <div className="flex items-center gap-1 group">
+          <div className="group flex items-center gap-1">
             <span
-              className="font-mono font-bold text-slate-500 truncate cursor-pointer"
+              className="cursor-pointer truncate font-mono font-bold text-slate-500"
               data-tooltip-id="po-item-tooltip"
               data-tooltip-content={item.sku}
             >
@@ -2187,7 +2187,7 @@ Supply Chain CRM Coordinator`;
                 navigator.clipboard.writeText(item.sku);
                 toast.success('SKU copied!');
               }}
-              className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0"
+              className="shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:text-indigo-600"
             >
               <Copy className="h-3 w-3" />
             </button>
@@ -2207,9 +2207,9 @@ Supply Chain CRM Coordinator`;
             item.ProductName ||
             'Unknown Product';
           return (
-            <div className="flex items-start gap-1 group">
+            <div className="group flex items-start gap-1">
               <span
-                className="font-medium text-slate-800 line-clamp-1 cursor-pointer"
+                className="line-clamp-1 cursor-pointer font-medium text-slate-800"
                 data-tooltip-id="po-item-tooltip"
                 data-tooltip-content={productName}
               >
@@ -2222,7 +2222,7 @@ Supply Chain CRM Coordinator`;
                   navigator.clipboard.writeText(productName);
                   toast.success('Product Name copied!');
                 }}
-                className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-indigo-600 shrink-0 mt-0.5"
+                className="mt-0.5 shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:text-indigo-600"
               >
                 <Copy className="h-3 w-3" />
               </button>
@@ -2309,7 +2309,7 @@ Supply Chain CRM Coordinator`;
         render: (item: any) => {
           if (!item.containers || item.containers.length === 0)
             return (
-              <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded-sm border border-slate-200">
+              <span className="rounded-sm border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] text-slate-400">
                 Unassigned
               </span>
             );
@@ -2341,7 +2341,7 @@ Supply Chain CRM Coordinator`;
                           String(cName),
                         );
                     }}
-                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors font-mono text-[11px]"
+                    className="cursor-pointer rounded-sm bg-indigo-50 px-1.5 py-0.5 text-left font-mono text-[11px] whitespace-nowrap text-indigo-700 transition-colors hover:bg-indigo-100"
                   >
                     {displayId ? `[${displayId}]` : ''}
                     {cName}({qty})
@@ -2386,7 +2386,7 @@ Supply Chain CRM Coordinator`;
                         handleOpenContainerDetails(String(cId), passName);
                       }
                     }}
-                    className="bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 rounded-sm px-1.5 py-0.5 whitespace-nowrap text-left cursor-pointer transition-colors"
+                    className="cursor-pointer rounded-sm border border-slate-100 bg-slate-50 px-1.5 py-0.5 text-left whitespace-nowrap transition-colors hover:border-indigo-200 hover:bg-indigo-50"
                   >
                     ETA:{' '}
                     <strong className="text-indigo-600">{displayDate}</strong>
@@ -2432,16 +2432,16 @@ Supply Chain CRM Coordinator`;
                   toast.error('This item lacks an identifier.');
                 }
               }}
-              className={`p-1.5 rounded-lg transition border relative inline-flex ${
+              className={`relative inline-flex rounded-lg border p-1.5 transition ${
                 count > 0
-                  ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100 hover:border-blue-300'
-                  : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'
+                  ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100'
+                  : 'border-slate-200 bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600'
               }`}
               title="Item Comments"
             >
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="h-4 w-4" />
               {count > 0 && (
-                <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[18px] px-1 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs border border-white">
+                <span className="absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-white bg-rose-500 px-1 text-[9px] font-bold text-white shadow-xs">
                   {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
                 </span>
               )}
@@ -2454,8 +2454,8 @@ Supply Chain CRM Coordinator`;
   );
 
   return (
-    <div className="space-y-6 flex flex-col flex-1 min-h-0 overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
+    <div className="relative flex min-h-0 flex-1 flex-col space-y-6 overflow-hidden">
+      <div className="absolute top-0 left-0 z-[9999] h-0 w-0 overflow-visible">
         <Tooltip
           id="po-item-tooltip"
           place="top"
@@ -2473,11 +2473,11 @@ Supply Chain CRM Coordinator`;
         />
       </div>
       {/* Tab Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4 flex-shrink-0">
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
+      <div className="flex flex-shrink-0 flex-col gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-xs md:flex-row md:items-center md:justify-between">
+        <div className="flex w-fit items-center gap-1 rounded-lg bg-slate-100 p-1">
           <button
             onClick={() => setActiveSubTab('grid')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               activeSubTab === 'grid'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -2489,7 +2489,7 @@ Supply Chain CRM Coordinator`;
 
           <button
             onClick={() => setActiveSubTab('kanban')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               activeSubTab === 'kanban'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -2501,7 +2501,7 @@ Supply Chain CRM Coordinator`;
         </div>
 
         {/* Global actions: Create PO, Import, Export */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           {/* <button
             onClick={() => setShowImportModal(true)}
             className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
@@ -2515,7 +2515,7 @@ Supply Chain CRM Coordinator`;
               <button
                 onClick={handleSyncSellerCloud}
                 disabled={isSyncing}
-                className="flex items-center gap-1 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 text-xs font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -2528,7 +2528,7 @@ Supply Chain CRM Coordinator`;
                 <button
                   onClick={onRefreshData}
                   disabled={loading}
-                  className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
@@ -2538,7 +2538,7 @@ Supply Chain CRM Coordinator`;
               )}
               <button
                 onClick={handleExportCSVClick}
-                className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+                className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
               >
                 <Upload className="h-3.5 w-3.5" />
                 <span>Export CSV</span>
@@ -2559,30 +2559,30 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-xs flex flex-col gap-3 flex-shrink-0">
+      <div className="flex flex-shrink-0 flex-col gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
         {/* Row 1: Search + Vendor filter */}
-        <div className="flex flex-col md:flex-row md:items-center gap-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
           {activeSubTab === 'kanban' && (
             <div className="flex-1">
-              <h3 className="font-display font-bold text-slate-900 text-sm">
+              <h3 className="font-display text-sm font-bold text-slate-900">
                 Purchase Order Overview
               </h3>
             </div>
           )}
           {activeSubTab !== 'kanban' && (
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Smart Search: PO number, Order id, Vendor..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition p-0.5 rounded-full hover:bg-slate-200"
+                  className="absolute top-2.5 right-3 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -2605,7 +2605,7 @@ Supply Chain CRM Coordinator`;
                     onChange={setVendorFilter}
                     showAllOption={true}
                     placeholder="All Vendors"
-                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -2628,7 +2628,7 @@ Supply Chain CRM Coordinator`;
                     }}
                     showAllOption={true}
                     placeholder="All Companies"
-                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 w-full"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -2637,7 +2637,7 @@ Supply Chain CRM Coordinator`;
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
                     Order Date:
                   </span>
                 </div>
@@ -2657,8 +2657,8 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 1: MASTER GRID VIEW */}
       {activeSubTab === 'grid' && (
-        <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden flex-1 flex flex-col min-h-0 relative">
-          {loading && <TableLoader message="Please wait a moment..." />}
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
+          {loading && <TableLoader />}
           <TypedDataTable
             columns={poColumns}
             data={paginatedPOs}
@@ -2690,9 +2690,9 @@ Supply Chain CRM Coordinator`;
 
       {/* SUB-VIEW 2: KANBAN PRODUCTION STAGES */}
       {activeSubTab === 'kanban' && (
-        <div className="flex-1 min-h-0 relative flex flex-col">
-          {loading && <TableLoader message="Please wait a moment..." />}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 overflow-y-auto min-h-0 pb-4">
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {loading && <TableLoader />}
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pb-4 md:grid-cols-4">
             {[
               { name: '1. New', key: 'new_without_invoice' },
               { name: '2. Invoice Delayed', key: 'invoice_delayed' },
@@ -2703,30 +2703,30 @@ Supply Chain CRM Coordinator`;
               return (
                 <div
                   key={stage}
-                  className="bg-slate-100/50 p-4 rounded-xl border border-slate-200/50 flex flex-col min-h-[500px]"
+                  className="flex min-h-[500px] flex-col rounded-xl border border-slate-200/50 bg-slate-100/50 p-4"
                 >
-                  <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-2">
-                    <h4 className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-200 pb-2">
+                    <h4 className="text-xs font-bold tracking-wide text-slate-800 uppercase">
                       {stage}
                     </h4>
-                    <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-700">
                       {stagePOs.length}
                     </span>
                   </div>
 
-                  <div className="space-y-3 flex-1 overflow-y-auto">
+                  <div className="flex-1 space-y-3 overflow-y-auto">
                     {stagePOs.map((po) => (
                       <div
                         key={po.id}
                         onClick={() => onSelectPO(po.id)}
-                        className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer space-y-3 relative group"
+                        className="group relative cursor-pointer space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs transition hover:shadow-md"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-xs font-bold text-slate-800">
                             {po.id}
                           </span>
                           <span
-                            className={`px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${
+                            className={`rounded-xs px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase ${
                               po.vendor_status === 'DELAYED' ||
                               po.status === 'Delayed'
                                 ? 'bg-rose-50 text-rose-700'
@@ -2741,16 +2741,16 @@ Supply Chain CRM Coordinator`;
                         </div>
 
                         <div>
-                          <p className="text-[11px] font-bold text-slate-700 truncate">
+                          <p className="truncate text-[11px] font-bold text-slate-700">
                             {po.vendorName}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          <p className="mt-0.5 font-mono text-[10px] text-slate-400">
                             ETA: {po.eta}
                           </p>
                         </div>
 
-                        <div className="border-t border-slate-100/60 pt-2.5 flex flex-col gap-2 text-[10px] text-slate-500 font-mono">
-                          <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-2 border-t border-slate-100/60 pt-2.5 font-mono text-[10px] text-slate-500">
+                          <div className="flex items-center justify-between">
                             <span>
                               Ordered:{' '}
                               <span className="font-bold text-slate-700">
@@ -2764,7 +2764,7 @@ Supply Chain CRM Coordinator`;
                               </span>
                             </span>
                           </div>
-                          <div className="flex justify-between items-center">
+                          <div className="flex items-center justify-between">
                             <span>
                               Created:{' '}
                               <span className="font-bold text-slate-700">
@@ -2772,14 +2772,14 @@ Supply Chain CRM Coordinator`;
                               </span>
                             </span>
                             {po.container && po.container !== 'N/A' && (
-                              <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-sans">
+                              <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-sans text-[9px] text-slate-600">
                                 {po.container}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-center text-[10px] font-medium text-slate-600 pt-1">
+                        <div className="flex items-center justify-between pt-1 text-[10px] font-medium text-slate-600">
                           <span>
                             Items:{' '}
                             {po.total_item_count || po.items?.length || 0}
@@ -2790,15 +2790,15 @@ Supply Chain CRM Coordinator`;
                           </span>
                         </div>
 
-                        <div className="pt-2 flex items-center justify-center">
-                          <span className="text-[10px] font-semibold text-indigo-600 flex items-center gap-1 group-hover:text-indigo-700 transition">
+                        <div className="flex items-center justify-center pt-2">
+                          <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 transition group-hover:text-indigo-700">
                             Show more details <ArrowRight className="h-3 w-3" />
                           </span>
                         </div>
                       </div>
                     ))}
                     {stagePOs.length === 0 && (
-                      <div className="h-32 rounded-lg border border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-400 italic">
+                      <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400 italic">
                         No orders in stage
                       </div>
                     )}
@@ -2825,24 +2825,24 @@ Supply Chain CRM Coordinator`;
               onSelectPO(null);
               setIsCommentOnlyView(false);
             }}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`bg-white rounded-2xl border border-slate-100 shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} w-full h-[85vh] max-h-[85vh] flex flex-col overflow-hidden animate-scaleUp`}
+              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} animate-scaleUp flex h-[85vh] max-h-[85vh] w-full flex-col overflow-hidden`}
             >
               {/* Header */}
               {!isCommentOnlyView && (
-                <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                <div className="z-20 flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-base font-bold font-mono text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg">
+                    <span className="rounded-lg border border-slate-200 bg-white px-3 py-1 font-mono text-base font-bold text-slate-900">
                       {selectedPO.id}
                     </span>
                     <div>
                       <h3 className="text-sm font-bold text-slate-800">
                         {selectedPO.vendorName}
                       </h3>
-                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      <p className="mt-0.5 font-mono text-[10px] text-slate-400">
                         Order ID:{' '}
                         {!selectedPO.orderId || selectedPO.orderId === 'N/A'
                           ? 'Stock'
@@ -2858,7 +2858,7 @@ Supply Chain CRM Coordinator`;
                         onClick={() =>
                           window.open(selectedPO.sellercloud_link, '_blank')
                         }
-                        className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm border border-indigo-100 mr-2"
+                        className="mr-2 flex items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Open in Sellercloud
@@ -2870,7 +2870,7 @@ Supply Chain CRM Coordinator`;
                         onSelectPO(null);
                         setIsCommentOnlyView(false);
                       }}
-                      className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-200"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -2879,7 +2879,7 @@ Supply Chain CRM Coordinator`;
               )}
 
               {isCommentOnlyView && (
-                <div className="bg-slate-50 p-4 border-b border-slate-100 flex items-center justify-between z-20">
+                <div className="z-20 flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4">
                   <div className="flex items-center gap-3">
                     <h3 className="text-sm font-bold text-slate-800">
                       {selectedPO.id} - Comments
@@ -2890,7 +2890,7 @@ Supply Chain CRM Coordinator`;
                       onSelectPO(null);
                       setIsCommentOnlyView(false);
                     }}
-                    className="p-1.5 hover:bg-slate-200 rounded-md text-slate-400"
+                    className="rounded-md p-1.5 text-slate-400 hover:bg-slate-200"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -2899,14 +2899,14 @@ Supply Chain CRM Coordinator`;
 
               {/* Tab Selection inside Modal */}
               {!isCommentOnlyView && (
-                <div className="flex border-b border-slate-100 bg-slate-50/50 z-20">
+                <div className="z-20 flex border-b border-slate-100 bg-slate-50/50">
                   {(['details', 'comments'] as const).map((section) => (
                     <button
                       key={section}
                       onClick={() => setActiveDrawerSection(section)}
-                      className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
+                      className={`flex-1 border-b-2 py-3 text-xs font-bold capitalize transition ${
                         activeDrawerSection === section
-                          ? 'border-indigo-600 text-indigo-600 bg-white'
+                          ? 'border-indigo-600 bg-white text-indigo-600'
                           : 'border-transparent text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -2916,30 +2916,30 @@ Supply Chain CRM Coordinator`;
                 </div>
               )}
 
-              <div className="p-6 flex-1 flex flex-col min-h-0">
+              <div className="flex min-h-0 flex-1 flex-col p-6">
                 {/* TAB: DETAILS */}
                 {activeDrawerSection === 'details' && !isCommentOnlyView && (
-                  <div className="flex-1 flex flex-col min-h-0">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
+                  <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 md:grid-cols-3">
                       {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
-                      <div className="space-y-3 md:col-span-3 flex flex-col min-h-0">
-                        <div className="grid grid-cols-5 gap-4 shrink-0">
-                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] text-slate-400 font-medium block">
+                      <div className="flex min-h-0 flex-col space-y-3 md:col-span-3">
+                        <div className="grid shrink-0 grid-cols-5 gap-4">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                            <span className="block text-[10px] font-medium text-slate-400">
                               Order ID
                             </span>
-                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                            <strong className="font-mono text-sm font-bold text-slate-800">
                               {!selectedPO.orderId ||
                               selectedPO.orderId === 'N/A'
                                 ? 'Stock'
                                 : selectedPO.orderId}
                             </strong>
                           </div>
-                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] text-slate-400 font-medium block">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                            <span className="block text-[10px] font-medium text-slate-400">
                               Ordered Quantity
                             </span>
-                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                            <strong className="font-mono text-sm font-bold text-slate-800">
                               {selectedPO.orderedQty ||
                                 allItemsForPO.reduce(
                                   (sum: number, i: any) =>
@@ -2953,11 +2953,11 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] text-slate-400 font-medium block">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                            <span className="block text-[10px] font-medium text-slate-400">
                               Received Quantity
                             </span>
-                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                            <strong className="font-mono text-sm font-bold text-slate-800">
                               {selectedPO.receivedQty ||
                                 allItemsForPO.reduce(
                                   (sum: number, i: any) =>
@@ -2971,11 +2971,11 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] text-slate-400 font-medium block">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                            <span className="block text-[10px] font-medium text-slate-400">
                               Remaining Quantity
                             </span>
-                            <strong className="text-sm font-bold text-slate-800 font-mono">
+                            <strong className="font-mono text-sm font-bold text-slate-800">
                               {Math.max(
                                 0,
                                 (selectedPO.orderedQty ||
@@ -3002,8 +3002,8 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
-                            <label className="text-[10px] text-slate-400 font-medium block mb-1">
+                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                            <label className="mb-1 block text-[10px] font-medium text-slate-400">
                               Enter lead days for po order
                             </label>
                             <div className="flex gap-2">
@@ -3013,7 +3013,7 @@ Supply Chain CRM Coordinator`;
                                 onChange={(e) =>
                                   setLeadTimeDays(e.target.value)
                                 }
-                                className="w-full text-sm font-bold text-slate-800 font-mono bg-white border border-slate-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                className="w-full rounded border border-slate-200 bg-white px-2 py-1 font-mono text-sm font-bold text-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                 placeholder="0"
                               />
                               <button
@@ -3048,7 +3048,7 @@ Supply Chain CRM Coordinator`;
                                     toast.error('Failed to update lead time.');
                                   }
                                 }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold whitespace-nowrap transition-colors"
+                                className="rounded bg-indigo-600 px-3 py-1 text-xs font-semibold whitespace-nowrap text-white transition-colors hover:bg-indigo-700"
                               >
                                 {selectedPO.containerLeadTimeDays
                                   ? 'Update'
@@ -3076,8 +3076,8 @@ Supply Chain CRM Coordinator`;
                         </div> */}
                         </div>
 
-                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex-1 flex flex-col min-h-0 mt-3">
-                          <h5 className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider shrink-0">
+                        <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                          <h5 className="mb-3 shrink-0 text-xs font-bold tracking-wider text-slate-700 uppercase">
                             Item Specifications (Products)
                           </h5>
                           <TypedDataTable
@@ -3100,7 +3100,7 @@ Supply Chain CRM Coordinator`;
                           />
 
                           {totalItemsCount > 0 && (
-                            <div className="mt-2 border border-slate-100 rounded-lg p-1 bg-white">
+                            <div className="mt-2 rounded-lg border border-slate-100 bg-white p-1">
                               <Pagination
                                 currentPage={itemsCurrentPage}
                                 totalCount={totalItemsCount}
@@ -3133,10 +3133,10 @@ Supply Chain CRM Coordinator`;
 
                 {/* TAB: COMMENTS DISCUSSION ENGINE */}
                 {activeDrawerSection === 'comments' && (
-                  <div className="flex-1 flex flex-col min-h-0 gap-4">
+                  <div className="flex min-h-0 flex-1 flex-col gap-4">
                     {isCommentOnlyView && (
-                      <div className="flex flex-col gap-2 shrink-0 bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                      <div className="mt-1 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                        <label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
                           Discussion Scope
                         </label>
                         <div className="relative">
@@ -3144,7 +3144,7 @@ Supply Chain CRM Coordinator`;
                             onClick={() =>
                               setIsScopeDropdownOpen(!isScopeDropdownOpen)
                             }
-                            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-md p-2 flex items-center justify-between focus:outline-hidden focus:border-indigo-500 text-slate-700"
+                            className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-hidden"
                           >
                             <span className="truncate">
                               {commentScope === 'po'
@@ -3162,9 +3162,9 @@ Supply Chain CRM Coordinator`;
                           </button>
 
                           {isScopeDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden text-xs max-h-60 overflow-y-auto">
+                            <div className="absolute top-full right-0 left-0 z-50 mt-1 max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg">
                               <button
-                                className={`w-full text-left px-3 py-2 font-bold hover:bg-slate-50 transition-colors ${commentScope === 'po' ? 'bg-indigo-50/50 text-indigo-700' : 'text-slate-700'}`}
+                                className={`w-full px-3 py-2 text-left font-bold transition-colors hover:bg-slate-50 ${commentScope === 'po' ? 'bg-indigo-50/50 text-indigo-700' : 'text-slate-700'}`}
                                 onClick={() => {
                                   setCommentScope('po');
                                   setSelectedSkuId(null);
@@ -3175,7 +3175,7 @@ Supply Chain CRM Coordinator`;
                               </button>
 
                               {selectedPO?.items?.length > 0 && (
-                                <div className="px-3 py-1.5 bg-slate-50 border-y border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <div className="border-y border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                   SKU-wise Comments
                                 </div>
                               )}
@@ -3188,7 +3188,7 @@ Supply Chain CRM Coordinator`;
                                 return (
                                   <button
                                     key={`sku-${itemId}`}
-                                    className={`w-full text-left px-3 py-2 transition-colors ${isSelected ? 'bg-indigo-50/50 text-indigo-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    className={`w-full px-3 py-2 text-left transition-colors ${isSelected ? 'bg-indigo-50/50 font-bold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}
                                     onClick={() => {
                                       setCommentScope('sku');
                                       setSelectedSkuId(itemId);
@@ -3205,15 +3205,15 @@ Supply Chain CRM Coordinator`;
                       </div>
                     )}
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-3.5 custom-scrollbar">
+                    <div className="custom-scrollbar flex-1 space-y-3.5 overflow-y-auto pr-2">
                       {(
                         isCommentOnlyView && commentScope === 'sku'
                           ? isLoadingSkuComments
                           : isLoadingComments
                       ) ? (
-                        <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                          <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
-                          <p className="text-xs text-slate-500 font-medium font-mono">
+                        <div className="flex flex-col items-center justify-center space-y-3 py-12">
+                          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                          <p className="font-mono text-xs font-medium text-slate-500">
                             Loading messages...
                           </p>
                         </div>
@@ -3290,36 +3290,36 @@ Supply Chain CRM Coordinator`;
                                 <div
                                   key={node.id}
                                   id={node.id} // Added id for deep link scrolling
-                                  className={`flex flex-col relative mb-3 scroll-mt-20 ${
+                                  className={`relative mb-3 flex scroll-mt-20 flex-col ${
                                     highlightedCommentId === node.id
-                                      ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
+                                      ? 'rounded-xl p-1 ring-2 ring-red-500 transition-all duration-1000 ring-inset'
                                       : ''
                                   }`}
                                 >
-                                  <div className="flex gap-3 group relative transition-colors items-start">
+                                  <div className="group relative flex items-start gap-3 transition-colors">
                                     <div
-                                      className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
+                                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-xs font-bold shadow-sm ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
                                     >
                                       {(node.user[0] || 'U').toUpperCase()}
                                     </div>
                                     <div
-                                      className={`flex-1 min-w-0 flex flex-col p-3 rounded-2xl border ${isMe ? 'bg-indigo-50/30 border-indigo-100 shadow-sm' : 'bg-white border-slate-100/80 shadow-xs'}`}
+                                      className={`flex min-w-0 flex-1 flex-col rounded-2xl border p-3 ${isMe ? 'border-indigo-100 bg-indigo-50/30 shadow-sm' : 'border-slate-100/80 bg-white shadow-xs'}`}
                                     >
-                                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <span className="font-bold text-[13px] text-slate-800">
+                                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                                        <span className="text-[13px] font-bold text-slate-800">
                                           {node.user}
                                         </span>
-                                        <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                        <span className="text-[10px] font-medium whitespace-nowrap text-slate-400">
                                           {node.timestamp}
                                         </span>
                                         {!isMe && node.role && (
-                                          <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded-sm">
+                                          <span className="rounded-sm border border-slate-100 bg-slate-50 px-1 py-0.5 text-[8px] font-bold text-slate-500 uppercase">
                                             {node.role}
                                           </span>
                                         )}
                                       </div>
                                       {editingCommentId === node.id ? (
-                                        <div className="flex flex-col gap-2 w-full mt-1">
+                                        <div className="mt-1 flex w-full flex-col gap-2">
                                           <textarea
                                             value={editingCommentText}
                                             onChange={(e) =>
@@ -3327,7 +3327,7 @@ Supply Chain CRM Coordinator`;
                                                 e.target.value,
                                               )
                                             }
-                                            className="w-full text-[13px] text-slate-800 p-2 rounded border border-indigo-200 bg-white focus:outline-hidden focus:border-indigo-400"
+                                            className="w-full rounded border border-indigo-200 bg-white p-2 text-[13px] text-slate-800 focus:border-indigo-400 focus:outline-hidden"
                                             rows={2}
                                           />
                                           <div className="flex justify-end gap-2">
@@ -3337,7 +3337,7 @@ Supply Chain CRM Coordinator`;
                                                 setEditingCommentId(null);
                                                 setEditingCommentText('');
                                               }}
-                                              className="text-[11px] text-slate-500 hover:text-slate-700 px-2 py-1"
+                                              className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-700"
                                             >
                                               Cancel
                                             </button>
@@ -3346,14 +3346,14 @@ Supply Chain CRM Coordinator`;
                                               onClick={() =>
                                                 handleUpdateSubmit(node.id)
                                               }
-                                              className="text-[11px] bg-indigo-600 text-white font-semibold rounded px-3 py-1 hover:bg-indigo-700"
+                                              className="rounded bg-indigo-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700"
                                             >
                                               Save
                                             </button>
                                           </div>
                                         </div>
                                       ) : (
-                                        <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
+                                        <p className="text-[13px] leading-relaxed break-words whitespace-pre-wrap text-slate-600">
                                           {node.message
                                             .split(/(@[\w.-]+)/g)
                                             .map((part: string, i: number) =>
@@ -3372,7 +3372,7 @@ Supply Chain CRM Coordinator`;
                                       )}
 
                                       {/* Action Bar */}
-                                      <div className="flex items-center gap-4 mt-2">
+                                      <div className="mt-2 flex items-center gap-4">
                                         {isMe &&
                                           editingCommentId !== node.id && (
                                             <button
@@ -3383,7 +3383,7 @@ Supply Chain CRM Coordinator`;
                                                   node.message,
                                                 );
                                               }}
-                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-indigo-600"
                                             >
                                               <Pencil className="h-3 w-3" />{' '}
                                               Edit
@@ -3398,7 +3398,7 @@ Supply Chain CRM Coordinator`;
                                               setReplyToUser(node.user);
                                               setReplyToText(node.message);
                                             }}
-                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-indigo-600"
                                           >
                                             <Reply className="h-3 w-3" /> Reply
                                           </button>
@@ -3412,7 +3412,7 @@ Supply Chain CRM Coordinator`;
                                                 [node.id]: !prev[node.id],
                                               }))
                                             }
-                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 transition hover:text-indigo-600"
                                           >
                                             {isCollapsed ? (
                                               <>
@@ -3434,7 +3434,7 @@ Supply Chain CRM Coordinator`;
 
                                   {/* Nested Children */}
                                   {!isCollapsed && node.children.length > 0 && (
-                                    <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative">
+                                    <div className="relative mt-3 ml-4 flex flex-col border-l-[1.5px] border-slate-200/80 pl-4 sm:ml-6 sm:pl-6">
                                       {sortNodes(node.children).map(
                                         (child: any) =>
                                           renderCommentTree(child, depth + 1),
@@ -3457,9 +3457,9 @@ Supply Chain CRM Coordinator`;
                             ? selectedPOComments
                             : fetchedSkuComments
                           ).length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-8 space-y-2 opacity-70">
+                            <div className="flex flex-col items-center justify-center space-y-2 py-8 opacity-70">
                               <MessageSquare className="h-8 w-8 text-slate-400" />
-                              <p className="text-xs text-slate-500 font-medium font-mono">
+                              <p className="font-mono text-xs font-medium text-slate-500">
                                 No comment
                               </p>
                             </div>
@@ -3470,11 +3470,11 @@ Supply Chain CRM Coordinator`;
 
                     <form
                       onSubmit={handlePostComment}
-                      className="flex flex-col gap-2 border-t border-slate-100 pt-3 shrink-0 relative"
+                      className="relative flex shrink-0 flex-col gap-2 border-t border-slate-100 pt-3"
                     >
                       {replyToUser && (
-                        <div className="flex flex-col bg-slate-100 rounded-lg p-2.5 border-l-4 border-l-indigo-500 mb-1 animate-fadeIn relative group overflow-hidden">
-                          <div className="flex items-center justify-between mb-0.5">
+                        <div className="animate-fadeIn group relative mb-1 flex flex-col overflow-hidden rounded-lg border-l-4 border-l-indigo-500 bg-slate-100 p-2.5">
+                          <div className="mb-0.5 flex items-center justify-between">
                             <span className="text-xs font-extrabold text-indigo-700">
                               {replyToUser}
                             </span>
@@ -3485,12 +3485,12 @@ Supply Chain CRM Coordinator`;
                                 setReplyToUser(null);
                                 setReplyToText(null);
                               }}
-                              className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded p-1 transition"
+                              className="rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
                           </div>
-                          <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
+                          <p className="line-clamp-1 pr-6 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
                             {replyToText
                               ?.split(/(@[\w.-]+)/g)
                               .map((part: string, i: number) =>
@@ -3509,9 +3509,9 @@ Supply Chain CRM Coordinator`;
                         </div>
                       )}
                       <div className="flex gap-2">
-                        <div className="flex-1 relative">
+                        <div className="relative flex-1">
                           {showMentionDropdown && (
-                            <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
+                            <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
                               <div className="max-h-48 overflow-y-auto py-1">
                                 {(() => {
                                   let taggableUsers = [...(reduxUsers || [])];
@@ -3588,16 +3588,16 @@ Supply Chain CRM Coordinator`;
                                         key={u.id}
                                         type="button"
                                         onClick={() => handleSelectMention(u)}
-                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
                                       >
-                                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700">
                                           {initial}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-semibold text-slate-700 truncate">
+                                        <div className="min-w-0 flex-1">
+                                          <div className="truncate font-semibold text-slate-700">
                                             {displayName}
                                           </div>
-                                          <div className="text-[10px] text-slate-400 truncate">
+                                          <div className="truncate text-[10px] text-slate-400">
                                             {u.email}
                                           </div>
                                         </div>
@@ -3613,12 +3613,12 @@ Supply Chain CRM Coordinator`;
                             placeholder="Type a message... (Use @ to tag)"
                             value={newCommentText}
                             onChange={handleCommentTextChange}
-                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
                           />
                         </div>
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+                          className="flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-700"
                         >
                           <Send className="h-3 w-3" />
                           <span>Comment</span>
@@ -3630,7 +3630,7 @@ Supply Chain CRM Coordinator`;
 
                 {/* TAB: EMAIL HISTORY & AI GENERATOR */}
                 {activeDrawerSection === 'emails' && (
-                  <div className="flex-1 flex flex-col min-h-0 gap-6 overflow-y-auto custom-scrollbar">
+                  <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="text-xs font-bold text-slate-700">
@@ -3644,7 +3644,7 @@ Supply Chain CRM Coordinator`;
 
                       <button
                         onClick={generateAIFollowUp}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
+                        className="flex items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100"
                         disabled={isGeneratingEmail}
                       >
                         <Sparkles className="h-3.5 w-3.5" />
@@ -3658,15 +3658,15 @@ Supply Chain CRM Coordinator`;
 
                     {/* AI Email draft output preview */}
                     {aiEmailGenerated && (
-                      <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
+                      <div className="animate-fadeIn space-y-3 rounded-xl border border-indigo-100 bg-slate-50 p-4">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
+                          <span className="flex items-center gap-1 text-xs font-bold text-indigo-950">
                             <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
                             <span>Prepared AI Sourcing Template</span>
                           </span>
                           <button
                             onClick={() => setAiEmailGenerated(null)}
-                            className="p-1 hover:bg-slate-200 rounded-md text-slate-400"
+                            className="rounded-md p-1 text-slate-400 hover:bg-slate-200"
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -3676,19 +3676,19 @@ Supply Chain CRM Coordinator`;
                           value={aiEmailGenerated}
                           onChange={(e) => setAiEmailGenerated(e.target.value)}
                           rows={8}
-                          className="w-full bg-white p-3 text-xs border border-slate-200 rounded-lg font-mono leading-relaxed focus:outline-hidden"
+                          className="w-full rounded-lg border border-slate-200 bg-white p-3 font-mono text-xs leading-relaxed focus:outline-hidden"
                         />
 
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => setAiEmailGenerated(null)}
-                            className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-md text-xs font-medium"
+                            className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600"
                           >
                             Discard Draft
                           </button>
                           <button
                             onClick={handleSendAIEmail}
-                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
+                            className="flex items-center gap-1 rounded-md bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-indigo-700"
                           >
                             <Send className="h-3 w-3" />
                             <span>Send to {selectedPO.vendorName}</span>
@@ -3702,13 +3702,13 @@ Supply Chain CRM Coordinator`;
                       {selectedPOEmails.map((email) => (
                         <div
                           key={email.id}
-                          className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                          className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs"
                         >
                           <div className="space-y-1">
                             <h5 className="font-semibold text-slate-800">
                               {email.subject}
                             </h5>
-                            <p className="text-[10px] text-slate-400 font-mono">
+                            <p className="font-mono text-[10px] text-slate-400">
                               Sent: {email.sentAt} • Status:{' '}
                               <strong className="text-indigo-600">
                                 {email.status}
@@ -3716,12 +3716,12 @@ Supply Chain CRM Coordinator`;
                             </p>
                           </div>
 
-                          <div className="text-right space-y-1">
-                            <span className="font-mono text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">
+                          <div className="space-y-1 text-right">
+                            <span className="rounded-sm bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600">
                               Opens: {email.openCount}
                             </span>
                             {email.repliedAt && (
-                              <p className="text-[9px] text-emerald-600 font-semibold font-mono">
+                              <p className="font-mono text-[9px] font-semibold text-emerald-600">
                                 Replied: {email.repliedAt.split(' ')[1]}
                               </p>
                             )}
@@ -3729,7 +3729,7 @@ Supply Chain CRM Coordinator`;
                         </div>
                       ))}
                       {selectedPOEmails.length === 0 && (
-                        <p className="text-xs text-slate-400 italic text-center py-4">
+                        <p className="py-4 text-center text-xs text-slate-400 italic">
                           No emails have been logged for this Purchase Order.
                         </p>
                       )}
@@ -3745,20 +3745,20 @@ Supply Chain CRM Coordinator`;
       {showCreateModal &&
         createPortal(
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
             onClick={() => setShowCreateModal(false)}
           >
             <div
-              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp"
+              className="animate-scaleUp w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <h3 className="font-display font-bold text-slate-900 text-base">
+              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 className="font-display text-base font-bold text-slate-900">
                   Generate New Purchase Order
                 </h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -3766,41 +3766,48 @@ Supply Chain CRM Coordinator`;
 
               <form onSubmit={handleCreatePO} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 block mb-1">
+                  <label className="mb-1 block text-xs font-semibold text-slate-600">
                     Target Manufacturing Vendor
                   </label>
                   <VendorInfiniteDropdown
                     value={newPO.vendorId}
-                    onChange={(val) => setNewPO.vendorId(val)}
+                    onChange={(val) =>
+                      setNewPO((prev) => ({ ...prev, vendorId: val }))
+                    }
                     placeholder="-- Choose Vendor --"
-                    className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 focus:outline-hidden"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    <label className="mb-1 block text-xs font-semibold text-slate-600">
                       Ordered Quantity (Units)
                     </label>
                     <input
                       type="number"
                       value={newPO.orderedQty}
                       onChange={(e) =>
-                        setNewPO.orderedQty(Number(e.target.value))
+                        setNewPO((prev) => ({
+                          ...prev,
+                          orderedQty: Number(e.target.value),
+                        }))
                       }
-                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm focus:outline-hidden"
                       required
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    <label className="mb-1 block text-xs font-semibold text-slate-600">
                       Estimated Arrival ETA
                     </label>
                     <input
                       type="date"
                       value={newPO.eta}
-                      onChange={(e) => setNewPO.eta(e.target.value)}
-                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      onChange={(e) =>
+                        setNewPO((prev) => ({ ...prev, eta: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono text-sm focus:outline-hidden"
                       required
                     />
                   </div>
@@ -3808,55 +3815,67 @@ Supply Chain CRM Coordinator`;
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    <label className="mb-1 block text-xs font-semibold text-slate-600">
                       SKU Number
                     </label>
                     <input
                       type="text"
                       value={newPO.sku}
-                      onChange={(e) => setNewPO.sku(e.target.value)}
-                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      onChange={(e) =>
+                        setNewPO((prev) => ({ ...prev, sku: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono text-sm focus:outline-hidden"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    <label className="mb-1 block text-xs font-semibold text-slate-600">
                       Fulfillment Container ID (Optional)
                     </label>
                     <input
                       type="text"
                       placeholder="e.g., CNT-095"
                       value={newPO.container}
-                      onChange={(e) => setNewPO.container(e.target.value)}
-                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      onChange={(e) =>
+                        setNewPO((prev) => ({
+                          ...prev,
+                          container: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono text-sm focus:outline-hidden"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">
+                    <label className="mb-1 block text-xs font-semibold text-slate-600">
                       Component Description
                     </label>
                     <input
                       type="text"
                       value={newPO.itemName}
-                      onChange={(e) => setNewPO.itemName(e.target.value)}
-                      className="w-full p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden"
+                      onChange={(e) =>
+                        setNewPO((prev) => ({
+                          ...prev,
+                          itemName: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm focus:outline-hidden"
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+                <div className="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                    className="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
                   >
                     Generate Sourcing PO
                   </button>
@@ -3870,32 +3889,32 @@ Supply Chain CRM Coordinator`;
       {showImportModal &&
         createPortal(
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
             onClick={() => setShowImportModal(false)}
           >
             <div
-              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-lg w-full p-6 animate-scaleUp"
+              className="animate-scaleUp w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-                <h3 className="font-display font-bold text-slate-900 text-base">
+              <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 className="font-display text-base font-bold text-slate-900">
                   Bulk Sourcing PO CSV Importer
                 </h3>
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               <form onSubmit={handleImportCSV} className="space-y-4">
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs leading-relaxed text-slate-500">
                   Paste your spreadsheet rows below to import Purchase Orders in
                   bulk. Follow the expected format carefully.
                 </p>
 
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono text-[10px] text-slate-600 leading-tight">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-[10px] leading-tight text-slate-600">
                   <strong>Expected Fields:</strong> vendor_id, status, quantity,
                   eta_yyyy_mm_dd, sku
                   <br />
@@ -3909,33 +3928,33 @@ Supply Chain CRM Coordinator`;
                     value={importCsvText}
                     onChange={(e) => setImportCsvText(e.target.value)}
                     rows={6}
-                    className="w-full bg-slate-50 p-3 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:bg-white focus:border-indigo-500 transition"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
                   />
                 </div>
 
                 {importFeedback && (
                   <div
-                    className={`p-2.5 rounded-lg border font-semibold text-xs text-center ${
+                    className={`rounded-lg border p-2.5 text-center text-xs font-semibold ${
                       importFeedback.includes('Successfully')
-                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                        : 'bg-rose-50 border-rose-100 text-rose-700'
+                        ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                        : 'border-rose-100 bg-rose-50 text-rose-700'
                     }`}
                   >
                     {importFeedback}
                   </div>
                 )}
 
-                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+                <div className="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-4">
                   <button
                     type="button"
                     onClick={() => setShowImportModal(false)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                    className="rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
                   >
                     Parse & Synchronize Rows
                   </button>
@@ -3950,35 +3969,35 @@ Supply Chain CRM Coordinator`;
       {showExportModal &&
         createPortal(
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
             onClick={() => setShowExportModal(false)}
           >
             <div
-              className="bg-white rounded-2xl border border-slate-100 shadow-xl max-w-xl w-full animate-scaleUp max-h-[90vh] flex flex-col"
+              className="animate-scaleUp flex max-h-[90vh] w-full max-w-xl flex-col rounded-2xl border border-slate-100 bg-white shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
-                <h3 className="font-display font-bold text-slate-900 text-base">
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
+                <h3 className="font-display text-base font-bold text-slate-900">
                   Export Purchase Orders
                 </h3>
                 <button
                   onClick={() => setShowExportModal(false)}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition"
+                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-6">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
                 {/* Filter Status */}
                 <div>
-                  <label className="text-sm font-bold text-slate-700 block mb-2">
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
                     Filter Data
                   </label>
                   <select
                     value={exportFilterStatus}
                     onChange={(e) => setExportFilterStatus(e.target.value)}
-                    className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:outline-hidden focus:border-indigo-500 focus:bg-white text-slate-700 transition"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700 transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
                   >
                     <option value="all">No Filter (All Data)</option>
                     <option value="invoice_delayed">
@@ -3995,24 +4014,24 @@ Supply Chain CRM Coordinator`;
 
                 {/* Columns Selection */}
                 <div>
-                  <label className="text-sm font-bold text-slate-700 block mb-2">
+                  <label className="mb-2 block text-sm font-bold text-slate-700">
                     Select Columns
                   </label>
-                  <p className="text-xs text-slate-500 mb-4">
+                  <p className="mb-4 text-xs text-slate-500">
                     Choose the fields to include in your CSV export. Including
                     Item-Level columns will output one row per item.
                   </p>
 
                   <div className="space-y-5">
                     <div>
-                      <h4 className="text-xs font-bold text-indigo-700 mb-2.5 uppercase tracking-wide border-b border-indigo-100 pb-1">
+                      <h4 className="mb-2.5 border-b border-indigo-100 pb-1 text-xs font-bold tracking-wide text-indigo-700 uppercase">
                         PO-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {PO_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
                           >
                             <input
                               type="checkbox"
@@ -4035,7 +4054,7 @@ Supply Chain CRM Coordinator`;
                                   );
                                 }
                               }}
-                              className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                             />
                             {col}
                           </label>
@@ -4044,14 +4063,14 @@ Supply Chain CRM Coordinator`;
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-bold text-emerald-700 mb-2.5 uppercase tracking-wide border-b border-emerald-100 pb-1">
+                      <h4 className="mb-2.5 border-b border-emerald-100 pb-1 text-xs font-bold tracking-wide text-emerald-700 uppercase">
                         Item-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {ITEM_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
                           >
                             <input
                               type="checkbox"
@@ -4072,7 +4091,7 @@ Supply Chain CRM Coordinator`;
                                   );
                                 }
                               }}
-                              className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                              className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                             />
                             {col}
                           </label>
@@ -4081,14 +4100,14 @@ Supply Chain CRM Coordinator`;
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-bold text-sky-700 mb-2.5 uppercase tracking-wide border-b border-sky-100 pb-1">
+                      <h4 className="mb-2.5 border-b border-sky-100 pb-1 text-xs font-bold tracking-wide text-sky-700 uppercase">
                         Container-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {CONTAINER_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 p-1 rounded transition select-none"
+                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
                           >
                             <input
                               type="checkbox"
@@ -4101,7 +4120,7 @@ Supply Chain CRM Coordinator`;
                                     C.filter((c) => c !== col),
                                   );
                               }}
-                              className="rounded text-sky-600 focus:ring-sky-500 border-slate-300"
+                              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                             />
                             {col}
                           </label>
@@ -4112,17 +4131,17 @@ Supply Chain CRM Coordinator`;
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-slate-100 p-5 shrink-0 bg-slate-50/50 rounded-b-2xl">
+              <div className="flex shrink-0 justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 p-5">
                 <button
                   type="button"
                   onClick={() => setShowExportModal(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium bg-white hover:bg-slate-100 transition"
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeExportCSV}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
                 >
                   <Upload className="h-4 w-4" />
                   Generate CSV
@@ -4135,12 +4154,12 @@ Supply Chain CRM Coordinator`;
       {/* FullPageLoader removed in favor of localized TableLoaders for syncing */}
 
       {/* Modal Tooltips wrapper to prevent Flexbox flow interference */}
-      <div className="absolute top-0 left-0 w-0 h-0 z-[9999] overflow-visible">
+      <div className="absolute top-0 left-0 z-[9999] h-0 w-0 overflow-visible">
         <Tooltip
           id="po-metrics-tooltip"
           positionStrategy="fixed"
           place="top"
-          className="max-w-xs z-[100] text-xs font-semibold leading-relaxed shadow-xl tracking-wide text-center"
+          className="z-[100] max-w-xs text-center text-xs leading-relaxed font-semibold tracking-wide shadow-xl"
           style={{
             backgroundColor: '#6366f1',
             color: '#ffffff',
