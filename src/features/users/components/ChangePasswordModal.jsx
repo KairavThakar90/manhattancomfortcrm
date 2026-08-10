@@ -57,19 +57,19 @@ export default function ChangePasswordModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="animate-in fade-in zoom-in-95 flex w-full max-w-md flex-col rounded-2xl bg-white shadow-xl">
+    <div className="bg-mc-black/30 fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="animate-in fade-in zoom-in-95 border-mc-beige-dark bg-mc-white flex w-full max-w-md flex-col rounded-xl border shadow-none">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="border-mc-beige-dark flex items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+            <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
               <KeyRound className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-800">
+              <h2 className="text-mc-black text-sm font-bold">
                 Change Password
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-mc-gray-soft text-[11px]">
                 Set a new password for your account
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function ChangePasswordModal({ onClose }) {
           <button
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100"
+            className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black rounded-lg p-1.5 transition"
           >
             <X className="h-4 w-4" />
           </button>
@@ -87,13 +87,14 @@ export default function ChangePasswordModal({ onClose }) {
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
           {/* New Password */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1.5 block text-xs font-semibold">
               New Password
             </label>
             <div className="relative">
               <input
                 type={showPw ? 'text' : 'password'}
                 name="password"
+                autoComplete="new-password"
                 value={form.password}
                 onChange={handleChange}
                 disabled={loading}
@@ -101,14 +102,14 @@ export default function ChangePasswordModal({ onClose }) {
                 className={`w-full rounded-lg border py-2.5 pr-10 pl-3 text-sm transition focus:bg-white focus:outline-none ${
                   errors.password
                     ? 'border-rose-400 bg-rose-50 focus:border-rose-500'
-                    : 'border-slate-200 bg-slate-50 focus:border-indigo-500'
+                    : 'border-mc-beige-dark bg-mc-white focus:border-mc-gold'
                 }`}
               />
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="text-mc-gray-soft hover:text-mc-black absolute top-1/2 right-2.5 -translate-y-1/2"
               >
                 {showPw ? (
                   <EyeOff className="h-4 w-4" />
@@ -124,13 +125,14 @@ export default function ChangePasswordModal({ onClose }) {
 
           {/* Confirm Password */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1.5 block text-xs font-semibold">
               Confirm Password
             </label>
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
                 name="confirm_password"
+                autoComplete="new-password"
                 value={form.confirm_password}
                 onChange={handleChange}
                 disabled={loading}
@@ -138,14 +140,14 @@ export default function ChangePasswordModal({ onClose }) {
                 className={`w-full rounded-lg border py-2.5 pr-10 pl-3 text-sm transition focus:bg-white focus:outline-none ${
                   errors.confirm_password
                     ? 'border-rose-400 bg-rose-50 focus:border-rose-500'
-                    : 'border-slate-200 bg-slate-50 focus:border-indigo-500'
+                    : 'border-mc-beige-dark bg-mc-white focus:border-mc-gold'
                 }`}
               />
               <button
                 type="button"
                 tabIndex={-1}
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="text-mc-gray-soft hover:text-mc-black absolute top-1/2 right-2.5 -translate-y-1/2"
               >
                 {showConfirm ? (
                   <EyeOff className="h-4 w-4" />
@@ -167,14 +169,14 @@ export default function ChangePasswordModal({ onClose }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
+              className="bg-mc-beige-light text-mc-gray-soft hover:bg-mc-beige-dark hover:text-mc-black rounded-lg px-4 py-2 text-xs font-bold transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+              className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-5 py-2 text-xs font-bold transition hover:opacity-80 disabled:opacity-60"
             >
               {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {loading ? 'Updating...' : 'Update Password'}

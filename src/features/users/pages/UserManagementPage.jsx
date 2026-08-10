@@ -67,8 +67,8 @@ export default function UserManagementPage() {
       {
         header: 'Name',
         accessor: 'name',
-        headerClassName: 'px-6 py-3 bg-slate-50 text-left w-[220px]',
-        className: 'px-6 py-3 font-semibold text-slate-800 text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[220px]',
+        className: 'px-6 py-3 font-semibold text-mc-black text-sm',
         render: (u) =>
           u.full_name ||
           `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
@@ -77,16 +77,16 @@ export default function UserManagementPage() {
       {
         header: 'Email',
         accessor: 'email',
-        headerClassName: 'px-6 py-3 bg-slate-50 text-left',
-        className: 'px-6 py-3 text-slate-500 text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left',
+        className: 'px-6 py-3 text-mc-gray-soft text-sm',
       },
       {
         header: 'Role',
         accessor: 'role',
-        headerClassName: 'px-6 py-3 bg-slate-50 text-left w-[160px]',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[160px]',
         className: 'px-6 py-3 w-[160px]',
         render: (u) => (
-          <span className="inline-flex items-center rounded-md border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-bold tracking-wider text-indigo-700 uppercase">
+          <span className="border-mc-beige-dark bg-mc-beige-light text-mc-black inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase">
             {u.role || 'User'}
           </span>
         ),
@@ -94,20 +94,20 @@ export default function UserManagementPage() {
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-3 bg-slate-50 text-center w-[90px]',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[90px]',
         className: 'px-6 py-3 w-[90px] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
             {currentUser?.id && String(currentUser.id) === String(u.id) ? (
               <button
                 onClick={() => setShowChangePasswordModal(true)}
-                className="rounded-md p-1.5 text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
                 title="Change Password"
               >
                 <KeyRound className="h-4 w-4" />
               </button>
             ) : (
-              <span className="text-xs text-slate-200">—</span>
+              <span className="text-xs text-slate-300">—</span>
             )}
           </div>
         ),
@@ -117,18 +117,18 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div className="animate-in fade-in relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
+    <div className="animate-in fade-in bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
+      <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b px-5 py-3 shadow-none">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+          <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
             <Users className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="font-display text-lg font-bold text-slate-800">
+            <h1 className="font-display text-mc-black text-lg font-bold">
               User Management
             </h1>
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-mc-gray-soft text-xs font-medium">
               Manage system users and access roles
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function UserManagementPage() {
           <button
             onClick={() => fetchUsers(true)}
             disabled={loading}
-            className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+            className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
@@ -146,7 +146,7 @@ export default function UserManagementPage() {
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+            className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition-colors hover:opacity-80"
           >
             <Plus className="h-3.5 w-3.5" />
             Add User
@@ -156,9 +156,9 @@ export default function UserManagementPage() {
 
       {/* Content */}
       <div className="flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
-        <div className="flex flex-shrink-0 flex-col justify-between gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm md:flex-row md:items-center">
+        <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col justify-between gap-3 rounded-xl border p-4 shadow-none md:flex-row md:items-center">
           <div className="relative flex-1">
-            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+            <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
             <input
               type="text"
               placeholder="Search by name, email, or role..."
@@ -167,12 +167,12 @@ export default function UserManagementPage() {
                 setSearchQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-4 pl-9 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-none"
+              className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-4 pl-9 text-sm transition focus:outline-none"
             />
           </div>
         </div>
 
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+        <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-none">
           {loading && <TableLoader message="Loading users..." />}
           <DataTable
             columns={userColumns}
@@ -181,10 +181,10 @@ export default function UserManagementPage() {
             containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
             tableWrapperRef={userTableRef}
-            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+            theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
             tableClassName="w-full text-left text-xs border-collapse"
-            tbodyClassName="divide-y divide-slate-100"
-            trClassName="hover:bg-slate-50 hover:bg-opacity-50 transition"
+            tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
+            trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
             emptyMessage={
               searchQuery ? 'No users matched your search.' : 'No users found.'
             }

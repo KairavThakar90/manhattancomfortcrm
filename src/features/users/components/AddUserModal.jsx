@@ -67,17 +67,17 @@ function CustomSelect({
     <>
       <div className={`relative ${className || ''}`} ref={dropdownRef}>
         <div
-          className={`flex w-full cursor-pointer items-center justify-between rounded-lg border bg-slate-50 px-3 py-2 text-sm transition-colors focus:outline-none ${error ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 hover:border-slate-300 focus:ring-2 focus:ring-indigo-500'}`}
+          className={`bg-mc-white flex w-full cursor-pointer items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors focus:outline-none ${error ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark hover:border-mc-gold focus:ring-mc-gold focus:ring-2'}`}
           onClick={() => setIsOpen(!isOpen)}
           tabIndex={0}
         >
           <span
-            className={selectedOption ? 'text-slate-800' : 'text-slate-500'}
+            className={selectedOption ? 'text-mc-black' : 'text-mc-gray-soft'}
           >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown
-            className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`text-mc-gray-soft h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </div>
@@ -91,12 +91,12 @@ function CustomSelect({
               left: rect.left + window.scrollX,
               width: rect.width,
             }}
-            className="absolute z-[9999] max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+            className="border-mc-beige-dark bg-mc-white absolute z-[9999] max-h-60 overflow-y-auto rounded-lg border py-1 shadow-none"
           >
             {options.map((opt) => (
               <div
                 key={opt.value}
-                className={`cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-slate-50 ${value === opt.value ? 'bg-indigo-50/50 font-medium text-indigo-600' : 'text-slate-700'}`}
+                className={`hover:bg-mc-beige-light cursor-pointer px-3 py-2 text-sm transition-colors ${value === opt.value ? 'bg-mc-beige-light text-mc-black font-bold' : 'text-mc-gray-dark'}`}
                 onClick={() => {
                   onChange(opt.value);
                   setIsOpen(false);
@@ -121,15 +121,15 @@ export default function AddUserModal({ onClose, onSuccess }) {
   const reactSelectStyles = {
     control: (base, state) => ({
       ...base,
-      backgroundColor: '#f8fafc', // bg-slate-50
-      borderColor: state.isFocused ? '#6366f1' : '#e2e8f0', // indigo-500 : slate-200
+      backgroundColor: '#ffffff',
+      borderColor: state.isFocused ? '#c9963a' : '#e7dbc6',
       borderRadius: '0.5rem',
       padding: '0',
-      minHeight: '38px', // match input height
-      fontSize: '0.875rem', // text-sm
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(99, 102, 241, 0.2)' : 'none',
+      minHeight: '38px',
+      fontSize: '0.875rem',
+      boxShadow: state.isFocused ? '0 0 0 1px #c9963a' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#6366f1' : '#cbd5e1',
+        borderColor: state.isFocused ? '#c9963a' : '#c9963a',
       },
     }),
     valueContainer: (base) => ({
@@ -144,36 +144,35 @@ export default function AddUserModal({ onClose, onSuccess }) {
     }),
     placeholder: (base) => ({
       ...base,
-      color: '#94a3b8', // slate-400 placeholder
+      color: '#333333',
       fontSize: '0.875rem',
     }),
     singleValue: (base) => ({
       ...base,
-      color: '#1e293b', // slate-800
+      color: '#1a1a1a',
       fontSize: '0.875rem',
     }),
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? '#eef2ff'
+        ? '#f6efe1'
         : state.isFocused
-          ? '#f8fafc'
+          ? '#f6efe1'
           : 'white',
-      color: state.isSelected ? '#4f46e5' : '#334155',
+      color: state.isSelected ? '#000000' : '#1a1a1a',
       cursor: 'pointer',
       fontSize: '0.875rem',
       padding: '8px 12px',
       '&:active': {
-        backgroundColor: '#eef2ff',
+        backgroundColor: '#e7dbc6',
       },
     }),
     menu: (base) => ({
       ...base,
       borderRadius: '0.5rem',
       marginTop: '4px',
-      boxShadow:
-        '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      border: '1px solid #e2e8f0',
+      boxShadow: 'none',
+      border: '1px solid #e7dbc6',
       zIndex: 9999,
     }),
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -263,25 +262,25 @@ export default function AddUserModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+    <div className="animate-in fade-in bg-mc-black/30 fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="border-mc-beige-dark relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border bg-white shadow-none">
+        <div className="border-mc-beige-dark bg-mc-white flex items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+            <div className="bg-mc-beige-light text-mc-black flex h-10 w-10 items-center justify-center rounded-lg">
               <UserPlus className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg leading-tight font-bold text-slate-800">
+              <h3 className="text-mc-black text-lg leading-tight font-bold">
                 Add New User
               </h3>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-mc-gray-soft text-xs font-medium">
                 Create a new system user profile
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black rounded-lg p-2 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -289,11 +288,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
 
         <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-6 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1 block text-xs font-semibold">
               First Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
+              autoComplete="new-password"
               value={formData.firstName}
               onChange={(e) => {
                 setFormData((p) => ({ ...p, firstName: e.target.value }));
@@ -301,7 +301,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   setErrors((p) => ({ ...p, firstName: undefined }));
               }}
               placeholder="e.g. Jane"
-              className={`w-full border bg-slate-50 px-3 py-2 text-sm ${errors.firstName ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg transition-colors focus:ring-2 focus:outline-none`}
+              className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.firstName ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:ring-mc-gold focus:border-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
             />
             {errors.firstName && (
               <p className="mt-1 text-[10px] font-medium text-rose-500">
@@ -311,11 +311,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1 block text-xs font-semibold">
               Last Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
+              autoComplete="new-password"
               value={formData.lastName}
               onChange={(e) => {
                 setFormData((p) => ({ ...p, lastName: e.target.value }));
@@ -323,7 +324,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   setErrors((p) => ({ ...p, lastName: undefined }));
               }}
               placeholder="e.g. Doe"
-              className={`w-full border bg-slate-50 px-3 py-2 text-sm ${errors.lastName ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg transition-colors focus:ring-2 focus:outline-none`}
+              className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.lastName ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:ring-mc-gold focus:border-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
             />
             {errors.lastName && (
               <p className="mt-1 text-[10px] font-medium text-rose-500">
@@ -333,7 +334,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1 block text-xs font-semibold">
               Role <span className="text-rose-500">*</span>
             </label>
             <CustomSelect
@@ -356,7 +357,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
           {formData.role === 'vendor' && (
             <>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Vendor <span className="text-rose-500">*</span>
                 </label>
                 <CustomSelect
@@ -383,7 +384,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Country
                 </label>
 
@@ -408,7 +409,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
               </div>
 
               <div className="relative z-50">
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Phone
                 </label>
                 <PhoneInput
@@ -419,8 +420,8 @@ export default function AddUserModal({ onClose, onSuccess }) {
                     width: '100%',
                     height: '38px',
                     borderRadius: '0.5rem',
-                    backgroundColor: '#f8fafc',
-                    borderColor: '#e2e8f0',
+                    backgroundColor: '#ffffff',
+                    borderColor: '#e7dbc6',
                   }}
                   containerStyle={{ width: '100%' }}
                   dropdownStyle={{
@@ -430,14 +431,14 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   }}
                   buttonStyle={{
                     borderRadius: '0.5rem 0 0 0.5rem',
-                    borderColor: '#e2e8f0',
-                    backgroundColor: '#f8fafc',
+                    borderColor: '#e7dbc6',
+                    backgroundColor: '#f6efe1',
                   }}
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Payment Terms
                 </label>
                 <input
@@ -450,12 +451,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
                     }))
                   }
                   placeholder="e.g. Net 30"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="border-mc-beige-dark bg-mc-white focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Container Lead Time (Days)
                 </label>
                 <input
@@ -470,18 +471,19 @@ export default function AddUserModal({ onClose, onSuccess }) {
                     }))
                   }
                   placeholder="14"
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="border-mc-beige-dark bg-mc-white focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                 />
               </div>
             </>
           )}
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1 block text-xs font-semibold">
               Email <span className="text-rose-500">*</span>
             </label>
             <input
               type="email"
+              autoComplete="new-password"
               value={formData.email}
               onChange={(e) => {
                 setFormData((p) => ({ ...p, email: e.target.value }));
@@ -489,7 +491,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   setErrors((p) => ({ ...p, email: undefined }));
               }}
               placeholder="e.g. jane@company.com"
-              className={`w-full border bg-slate-50 px-3 py-2 text-sm ${errors.email ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg transition-colors focus:ring-2 focus:outline-none`}
+              className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.email ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:border-mc-gold focus:ring-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
             />
             {errors.email && (
               <p className="mt-1 text-[10px] font-medium text-rose-500">
@@ -499,11 +501,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-700">
+            <label className="text-mc-black mb-1 block text-xs font-semibold">
               Password <span className="text-rose-500">*</span>
             </label>
             <input
               type="password"
+              autoComplete="new-password"
               value={formData.password}
               onChange={(e) => {
                 setFormData((p) => ({ ...p, password: e.target.value }));
@@ -511,7 +514,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   setErrors((p) => ({ ...p, password: undefined }));
               }}
               placeholder="Create a strong password"
-              className={`w-full border bg-slate-50 px-3 py-2 text-sm ${errors.password ? 'border-rose-300 focus:ring-rose-500' : 'border-slate-200 focus:ring-indigo-500'} rounded-lg transition-colors focus:ring-2 focus:outline-none`}
+              className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.password ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:border-mc-gold focus:ring-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
             />
             {errors.password && (
               <p className="mt-1 text-[10px] font-medium text-rose-500">
@@ -521,12 +524,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
           </div>
         </div>
 
-        <div className="mt-auto flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+        <div className="border-mc-beige-dark bg-mc-white mt-auto flex items-center justify-end gap-3 border-t px-6 py-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+            className="bg-mc-beige-light text-mc-gray-soft hover:bg-mc-beige-dark hover:text-mc-black rounded-lg px-4 py-2 text-sm font-bold transition disabled:opacity-50"
           >
             Cancel
           </button>
@@ -534,7 +537,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
             type="button"
             onClick={handleSave}
             disabled={isSubmitting}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
+            className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold shadow-none transition hover:opacity-80 disabled:opacity-60"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Save User
