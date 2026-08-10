@@ -111,18 +111,12 @@ export default function MainLayout() {
             className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}
           >
             {sidebarOpen && (
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="border-mc-gold bg-mc-gold flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border font-bold text-white shadow-xs">
-                  <Layers className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="font-display text-mc-black truncate text-sm font-extrabold tracking-tight">
-                    Manhattan Comfort
-                  </h1>
-                  <span className="text-mc-gray-soft font-mono text-[10px] font-bold tracking-widest uppercase">
-                    PO &amp; CRM
-                  </span>
-                </div>
+              <div className="flex min-w-0 items-center pr-2">
+                <img
+                  src="https://www.manhattancomfort.com/media/wysiwyg/Manhattan_Comfort_Logo_Black.png"
+                  alt="Manhattan Comfort Logo"
+                  className="h-9 w-auto object-contain"
+                />
               </div>
             )}
 
