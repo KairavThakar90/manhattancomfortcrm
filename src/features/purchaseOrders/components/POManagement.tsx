@@ -292,6 +292,9 @@ export default function POManagement({
   );
   const dispatch = useDispatch();
   const { user: currentUser } = useCRM();
+  const isVendor =
+    currentUser?.role === 'Vendor' ||
+    localStorage.getItem('userRole') === 'Vendor';
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -1658,7 +1661,7 @@ Supply Chain CRM Coordinator`;
               >
                 {String(po.id).replace(/^PO-/i, '')}
               </span>
-              {po.delta_sellercloud_link && (
+              {po.delta_sellercloud_link && !isVendor && (
                 <a
                   title="Open in Sellercloud (Purchasing)"
                   href={po.delta_sellercloud_link}
@@ -1711,7 +1714,7 @@ Supply Chain CRM Coordinator`;
             >
               {!po.orderId || po.orderId === 'N/A' ? 'Stock' : po.orderId}
             </span>
-            {po.sellercloud_link && (
+            {po.sellercloud_link && !isVendor && (
               <a
                 title="Open in Sellercloud (Order)"
                 href={po.sellercloud_link}
@@ -2532,18 +2535,20 @@ Supply Chain CRM Coordinator`;
 
           {activeSubTab !== 'kanban' && (
             <>
-              <button
-                onClick={handleSyncSellerCloud}
-                disabled={isSyncing}
-                className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
-                />
-                <span>
-                  {isSyncing ? 'Syncing...' : 'Sync Order SellerCloud'}
-                </span>
-              </button>
+              {!isVendor && (
+                <button
+                  onClick={handleSyncSellerCloud}
+                  disabled={isSyncing}
+                  className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
+                  />
+                  <span>
+                    {isSyncing ? 'Syncing...' : 'Sync Order SellerCloud'}
+                  </span>
+                </button>
+              )}
               {onRefreshData && (
                 <button
                   onClick={onRefreshData}
@@ -2873,7 +2878,7 @@ Supply Chain CRM Coordinator`;
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {selectedPO.sellercloud_link && (
+                    {selectedPO.sellercloud_link && !isVendor && (
                       <button
                         onClick={() =>
                           window.open(selectedPO.sellercloud_link, '_blank')

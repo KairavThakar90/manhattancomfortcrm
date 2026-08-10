@@ -252,7 +252,7 @@ function LoginPageContent({
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="peer text-mc-gold focus:ring-mc-gold/50 checked:bg-mc-gold checked:border-mc-gold h-4 w-4 cursor-pointer appearance-none rounded border-slate-300 bg-white transition-colors"
+                      className="peer text-mc-gold focus:ring-mc-gold/50 checked:bg-mc-gold checked:border-mc-gold h-4 w-4 cursor-pointer appearance-none rounded border border-slate-300 bg-white transition-colors"
                     />
                     <svg
                       className="pointer-events-none absolute top-0.5 left-0.5 h-3 w-3 text-white opacity-0 peer-checked:opacity-100"
