@@ -1646,7 +1646,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'id',
         headerClassName:
-          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4  cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) => (
           <div className="flex flex-col items-start gap-1">
@@ -1697,7 +1697,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Order Id',
         accessor: 'orderId',
-        headerClassName: 'px-6 py-4 bg-mc-beige-light',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4',
         render: (po: any) => (
           <div className="flex items-center gap-1.5">
@@ -1752,7 +1752,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'creationDate',
         headerClassName:
-          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4  cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) =>
           po.creationDate && po.creationDate !== 'N/A' ? (
@@ -1768,13 +1768,13 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Vendor',
         accessor: 'vendorName',
-        headerClassName: 'px-6 py-4 bg-mc-beige-light',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4 text-slate-700 font-medium',
       },
       {
         header: 'Company Name',
         accessor: 'companyName',
-        headerClassName: 'px-6 py-4 bg-mc-beige-light',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
         render: (po: any) => (
           <span
@@ -1790,7 +1790,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'PO Items',
         accessor: 'items',
-        headerClassName: 'px-6 py-4 bg-mc-beige-light',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4',
         render: (po: any) => {
           const itemCount =
@@ -1817,7 +1817,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Ordered / Received Qty',
         accessor: 'orderedQty',
-        headerClassName: 'px-6 py-4 bg-mc-white',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4 text-slate-600',
         render: (po: any) => {
           const ordered = po.total_qty_ordered || po.orderedQty || 0;
@@ -1857,7 +1857,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'invoiceDetails',
         headerClassName:
-          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4  cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) =>
           po.invoiceDetails?.date ? (
@@ -1884,7 +1884,7 @@ Supply Chain CRM Coordinator`;
           </div>
         ),
         accessor: 'invoiceDelayStatus',
-        headerClassName: 'px-6 py-4 bg-mc-beige-light',
+        headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4',
         render: (po: any) => {
           const invoiceDate =
@@ -1925,7 +1925,7 @@ Supply Chain CRM Coordinator`;
             {
               header: 'Status',
               accessor: 'status',
-              headerClassName: 'px-6 py-4 bg-mc-beige-light relative',
+              headerClassName: 'px-6 py-4  relative',
               className: 'px-6 py-4 min-w-[200px]',
               render: (po: any) => (
                 <VendorStatusDropdown
@@ -1972,7 +1972,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'expected_delivery_date',
         headerClassName:
-          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4  cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4 text-slate-600 font-mono',
         render: (po: any) => (
           <span
@@ -1989,8 +1989,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Containers',
         accessor: 'containerIds',
-        headerClassName:
-          'px-6 py-4 bg-mc-beige-light w-[200px] min-w-[200px] max-w-[200px]',
+        headerClassName: 'px-6 py-4  w-[200px] min-w-[200px] max-w-[200px]',
         className:
           'px-6 py-4 text-slate-600 font-mono text-xs w-[200px] max-w-[200px]',
         render: (po: any) => {
@@ -2101,8 +2100,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Comments',
         accessor: 'commentsCount',
-        headerClassName:
-          'px-4 py-4 bg-mc-beige-light text-center flex-shrink-0 w-20',
+        headerClassName: 'px-4 py-4  text-center flex-shrink-0 w-20',
         className: 'px-4 py-4 text-center',
         render: (po: any) => {
           const count =
@@ -2138,7 +2136,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-4 bg-mc-white text-center',
+        headerClassName: 'px-6 py-4  text-center',
         className: 'px-6 py-4 text-center',
         render: (po: any) => (
           <button
@@ -2170,7 +2168,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'SKU',
         accessor: 'sku',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light',
+        headerClassName: 'px-3 py-2 ',
         className: 'px-3 py-2 max-w-[120px]',
         render: (item: any) => (
           <div className="group flex items-center gap-1">
@@ -2198,7 +2196,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Product Name',
         accessor: 'name', // Or perhaps accessor isn't strict, but render handles it
-        headerClassName: 'px-3 py-2 bg-mc-beige-light',
+        headerClassName: 'px-3 py-2 ',
         className: 'px-3 py-2 max-w-[150px]',
         render: (item: any) => {
           const productName =
@@ -2234,7 +2232,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Ordered Qty',
         accessor: 'qty',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-right',
+        headerClassName: 'px-3 py-2  text-right',
         className: 'px-3 py-2 text-right font-mono font-medium',
         render: (item: any) => {
           const qty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
@@ -2244,7 +2242,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Received Qty',
         accessor: 'receivedQty',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-right',
+        headerClassName: 'px-3 py-2  text-right',
         className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
         render: (item: any) => {
           const rQty =
@@ -2255,7 +2253,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Remaining Qty',
         accessor: 'remainingQty',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-right',
+        headerClassName: 'px-3 py-2  text-right',
         className: (item: any) => {
           const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
           const rQty =
@@ -2284,7 +2282,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Unit Price',
         accessor: 'unitPrice',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-right',
+        headerClassName: 'px-3 py-2  text-right',
         className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
         render: (item: any) => {
           const uPrice = item.unit_price ?? item.unitPrice ?? item.price ?? 0;
@@ -2294,7 +2292,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Total',
         accessor: 'total',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-right',
+        headerClassName: 'px-3 py-2  text-right',
         className: 'px-3 py-2 text-right font-mono font-bold text-slate-800',
         render: (item: any) => {
           const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
@@ -2305,7 +2303,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Container/Items Count',
         accessor: 'containerInfo',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-left',
+        headerClassName: 'px-3 py-2  text-left',
         className: 'px-3 py-2 text-left font-mono font-medium text-slate-600',
         render: (item: any) => {
           if (!item.containers || item.containers.length === 0)
@@ -2356,7 +2354,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Container Details',
         accessor: 'details',
-        headerClassName: 'px-3 py-2 bg-mc-beige-light text-left',
+        headerClassName: 'px-3 py-2  text-left',
         className: 'px-3 py-2 text-left font-mono text-[11px] text-slate-500',
         render: (item: any) => {
           if (!item.containers || item.containers.length === 0)
@@ -2401,7 +2399,7 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Comments',
         accessor: 'id', // or just a placeholder
-        headerClassName: 'px-6 py-4 bg-mc-white text-center w-24',
+        headerClassName: 'px-6 py-4  text-center w-24',
         className: 'px-3 py-2 text-center',
         render: (item: any) => {
           const count =

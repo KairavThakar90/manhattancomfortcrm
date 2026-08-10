@@ -27,7 +27,7 @@ export default function Pagination({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50 px-6 py-4 text-xs font-medium text-slate-500 select-none sm:flex-row">
+    <div className="flex flex-col items-center justify-between gap-4 bg-transparent px-6 py-4 text-xs font-medium text-slate-500 select-none sm:flex-row">
       {/* Left side: Showing X to Y of Z */}
       <div className="order-2 flex-1 font-medium text-slate-500 sm:order-1">
         Showing{' '}
