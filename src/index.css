@@ -18,16 +18,32 @@
 
 /* Custom scrollbar styling for slick enterprise feel */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #e7dbc6; /* mc-beige-dark */
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #c9963a; /* mc-gold */
+}
+
+/* Explicit class for elements needing standard custom scrollbar matching theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e7dbc6;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #c9963a;
 }
