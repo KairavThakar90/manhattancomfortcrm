@@ -45,7 +45,7 @@ export default function Pagination({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition focus:border-indigo-500 focus:outline-hidden"
+            className="focus:border-mc-black focus:ring-mc-black cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition focus:ring-1 focus:outline-hidden"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -88,7 +88,7 @@ export default function Pagination({
             onClick={() => onPageChange(pg)}
             className={`cursor-pointer rounded-lg px-3 py-1.5 font-bold transition ${
               normalizedCurrentPage === pg
-                ? 'bg-indigo-600 text-white shadow-xs'
+                ? 'bg-mc-black text-white shadow-xs'
                 : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
