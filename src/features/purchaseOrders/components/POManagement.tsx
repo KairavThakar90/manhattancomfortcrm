@@ -161,7 +161,7 @@ const VendorStatusDropdown = ({
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 outline-hidden transition-colors hover:border-indigo-400 focus:border-mc-black focus:ring-1 focus:ring-mc-black"
+        className="focus:border-mc-black focus:ring-mc-black flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 outline-hidden transition-colors hover:border-indigo-400 focus:ring-1"
       >
         <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
         <ChevronDown
@@ -185,7 +185,7 @@ const VendorStatusDropdown = ({
                 key={s}
                 className={`w-full px-3 py-2 text-left transition-colors ${
                   currentStatus === s
-                    ? 'bg-slate-100/50 font-bold text-mc-black'
+                    ? 'text-mc-black bg-slate-100/50 font-bold'
                     : 'font-medium text-slate-700 hover:bg-slate-50'
                 }`}
                 onClick={(e: any) => {
@@ -1631,7 +1631,7 @@ Supply Chain CRM Coordinator`;
             onClick={() => handleSort('id')}
           >
             PO Number
-            <span className="text-slate-400 group-hover:text-mc-black">
+            <span className="group-hover:text-mc-black text-slate-400">
               {activeSortConfig.key === 'id' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
@@ -1664,7 +1664,7 @@ Supply Chain CRM Coordinator`;
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e: any) => e.stopPropagation()}
-                  className="inline-flex shrink-0 items-center text-mc-gray-soft transition-colors hover:text-mc-black"
+                  className="text-mc-gray-soft hover:text-mc-black inline-flex shrink-0 items-center transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                 </a>
@@ -1678,7 +1678,7 @@ Supply Chain CRM Coordinator`;
                   onSelectPO(po.id);
                   setActiveDrawerSection('details');
                 }}
-                className="ml-0.5 inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-mc-black"
+                className="hover:text-mc-black ml-0.5 inline-flex shrink-0 items-center text-slate-400 transition-colors"
               >
                 <Eye className="h-3 w-3" />
               </button>
@@ -1717,7 +1717,7 @@ Supply Chain CRM Coordinator`;
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e: any) => e.stopPropagation()}
-                className="inline-flex shrink-0 items-center text-mc-gray-soft transition-colors hover:text-mc-black"
+                className="text-mc-gray-soft hover:text-mc-black inline-flex shrink-0 items-center transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -1737,7 +1737,7 @@ Supply Chain CRM Coordinator`;
                 (YYYY-MM-DD)
               </span>
             </div>
-            <span className="text-slate-400 group-hover:text-mc-black">
+            <span className="group-hover:text-mc-black text-slate-400">
               {activeSortConfig.key === 'creationDate' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
@@ -1842,7 +1842,7 @@ Supply Chain CRM Coordinator`;
                 (YYYY-MM-DD)
               </span>
             </div>
-            <span className="text-slate-400 group-hover:text-mc-black">
+            <span className="group-hover:text-mc-black text-slate-400">
               {activeSortConfig.key === 'invoiceDate' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
@@ -1877,7 +1877,7 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-              className="ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] text-mc-black outline-hidden transition-colors hover:bg-mc-black hover:text-white"
+              className="text-mc-black hover:bg-mc-black ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] outline-hidden transition-colors hover:text-white"
             >
               <Info className="h-3 w-3" />
             </div>
@@ -1949,7 +1949,7 @@ Supply Chain CRM Coordinator`;
                 (YYYY-MM-DD)
               </span>
             </div>
-            <span className="text-slate-400 group-hover:text-mc-black">
+            <span className="group-hover:text-mc-black text-slate-400">
               {activeSortConfig.key === 'eta' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
@@ -1963,7 +1963,7 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
-              className="ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] text-mc-black outline-hidden transition-colors hover:bg-mc-black hover:text-white"
+              className="text-mc-black hover:bg-mc-black ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] outline-hidden transition-colors hover:text-white"
               onClick={(e: any) => e.stopPropagation()}
             >
               <Info className="h-3 w-3" />
@@ -2050,7 +2050,7 @@ Supply Chain CRM Coordinator`;
                           : undefined;
                         handleOpenContainerDetails(String(cId), cNameToPass);
                       }}
-                      className="max-w-[80px] cursor-pointer truncate text-mc-black hover:text-indigo-800 hover:underline"
+                      className="text-mc-black max-w-[80px] cursor-pointer truncate hover:text-indigo-800 hover:underline"
                       title={String(displayName)}
                     >
                       {String(displayName)}
@@ -2071,7 +2071,7 @@ Supply Chain CRM Coordinator`;
                       return next;
                     });
                   }}
-                  className="cursor-pointer rounded border border-slate-300 bg-slate-100 px-1 text-[10px] leading-[18px] font-semibold text-mc-black transition-colors hover:bg-slate-200"
+                  className="text-mc-black cursor-pointer rounded border border-slate-300 bg-slate-100 px-1 text-[10px] leading-[18px] font-semibold transition-colors hover:bg-slate-200"
                   title="Show all containers"
                 >
                   +{overflow} more
@@ -2145,7 +2145,7 @@ Supply Chain CRM Coordinator`;
               setIsCommentOnlyView(false);
               onSelectPO(po.id);
             }}
-            className="inline-flex items-center gap-1 rounded-md p-1 font-semibold text-mc-black hover:bg-slate-100"
+            className="text-mc-black inline-flex items-center gap-1 rounded-md p-1 font-semibold hover:bg-slate-100"
           >
             <Eye className="h-3.5 w-3.5" />
             <span></span>
@@ -2186,7 +2186,7 @@ Supply Chain CRM Coordinator`;
                 navigator.clipboard.writeText(item.sku);
                 toast.success('SKU copied!');
               }}
-              className="shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:text-mc-black"
+              className="hover:text-mc-black shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100"
             >
               <Copy className="h-3 w-3" />
             </button>
@@ -2221,7 +2221,7 @@ Supply Chain CRM Coordinator`;
                   navigator.clipboard.writeText(productName);
                   toast.success('Product Name copied!');
                 }}
-                className="mt-0.5 shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:text-mc-black"
+                className="hover:text-mc-black mt-0.5 shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100"
               >
                 <Copy className="h-3 w-3" />
               </button>
@@ -2340,7 +2340,7 @@ Supply Chain CRM Coordinator`;
                           String(cName),
                         );
                     }}
-                    className="cursor-pointer rounded-sm bg-slate-100 px-1.5 py-0.5 text-left font-mono text-[11px] whitespace-nowrap text-mc-black transition-colors hover:bg-slate-200"
+                    className="text-mc-black cursor-pointer rounded-sm bg-slate-100 px-1.5 py-0.5 text-left font-mono text-[11px] whitespace-nowrap transition-colors hover:bg-slate-200"
                   >
                     {displayId ? `[${displayId}]` : ''}
                     {cName}({qty})
@@ -2434,7 +2434,7 @@ Supply Chain CRM Coordinator`;
               className={`relative inline-flex rounded-lg border p-1.5 transition ${
                 count > 0
                   ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100'
-                  : 'border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-mc-black'
+                  : 'hover:text-mc-black border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100'
               }`}
               title="Item Comments"
             >
@@ -2460,8 +2460,8 @@ Supply Chain CRM Coordinator`;
           place="top"
           positionStrategy="fixed"
           style={{
-            backgroundColor: '#4f46e5',
-            color: '#ffffff',
+            backgroundColor: '#F4EFE8',
+            color: '#151717',
             fontWeight: 500,
             fontSize: '11px',
             zIndex: 100,
@@ -2514,7 +2514,7 @@ Supply Chain CRM Coordinator`;
               <button
                 onClick={handleSyncSellerCloud}
                 disabled={isSyncing}
-                className="flex items-center gap-1 rounded-lg border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-bold text-mc-black transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-mc-black flex items-center gap-1 rounded-lg border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-bold transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -2576,7 +2576,7 @@ Supply Chain CRM Coordinator`;
                 placeholder="Smart Search: PO number, Order id, Vendor..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:border-mc-black focus:bg-white focus:outline-hidden"
+                className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:bg-white focus:outline-hidden"
               />
               {searchQuery && (
                 <button
@@ -2731,7 +2731,7 @@ Supply Chain CRM Coordinator`;
                                 ? 'bg-rose-50 text-rose-700'
                                 : po.vendor_status === 'SHIPPED' ||
                                     po.status === 'In Transit'
-                                  ? 'bg-slate-100 text-mc-black'
+                                  ? 'text-mc-black bg-slate-100'
                                   : 'bg-emerald-50 text-emerald-700'
                             }`}
                           >
@@ -2790,7 +2790,7 @@ Supply Chain CRM Coordinator`;
                         </div>
 
                         <div className="flex items-center justify-center pt-2">
-                          <span className="flex items-center gap-1 text-[10px] font-semibold text-mc-black transition group-hover:text-mc-black">
+                          <span className="text-mc-black group-hover:text-mc-black flex items-center gap-1 text-[10px] font-semibold transition">
                             Show more details <ArrowRight className="h-3 w-3" />
                           </span>
                         </div>
@@ -2857,7 +2857,7 @@ Supply Chain CRM Coordinator`;
                         onClick={() =>
                           window.open(selectedPO.sellercloud_link, '_blank')
                         }
-                        className="mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold text-mc-black shadow-sm transition hover:bg-slate-200"
+                        className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         Open in Sellercloud
@@ -2905,7 +2905,7 @@ Supply Chain CRM Coordinator`;
                       onClick={() => setActiveDrawerSection(section)}
                       className={`flex-1 border-b-2 py-3 text-xs font-bold capitalize transition ${
                         activeDrawerSection === section
-                          ? 'border-indigo-600 bg-white text-mc-black'
+                          ? 'text-mc-black border-indigo-600 bg-white'
                           : 'border-transparent text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -3012,7 +3012,7 @@ Supply Chain CRM Coordinator`;
                                 onChange={(e) =>
                                   setLeadTimeDays(e.target.value)
                                 }
-                                className="w-full rounded border border-slate-200 bg-white px-2 py-1 font-mono text-sm font-bold text-slate-800 focus:border-mc-black focus:ring-1 focus:ring-mc-black focus:outline-none"
+                                className="focus:border-mc-black focus:ring-mc-black w-full rounded border border-slate-200 bg-white px-2 py-1 font-mono text-sm font-bold text-slate-800 focus:ring-1 focus:outline-none"
                                 placeholder="0"
                               />
                               <button
@@ -3047,7 +3047,7 @@ Supply Chain CRM Coordinator`;
                                     toast.error('Failed to update lead time.');
                                   }
                                 }}
-                                className="rounded bg-mc-black px-3 py-1 text-xs font-semibold whitespace-nowrap text-white transition-colors hover:bg-black"
+                                className="bg-mc-black rounded px-3 py-1 text-xs font-semibold whitespace-nowrap text-white transition-colors hover:bg-black"
                               >
                                 {selectedPO.containerLeadTimeDays
                                   ? 'Update'
@@ -3143,7 +3143,7 @@ Supply Chain CRM Coordinator`;
                             onClick={() =>
                               setIsScopeDropdownOpen(!isScopeDropdownOpen)
                             }
-                            className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700 focus:border-mc-black focus:outline-hidden"
+                            className="focus:border-mc-black flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700 focus:outline-hidden"
                           >
                             <span className="truncate">
                               {commentScope === 'po'
@@ -3163,7 +3163,7 @@ Supply Chain CRM Coordinator`;
                           {isScopeDropdownOpen && (
                             <div className="absolute top-full right-0 left-0 z-50 mt-1 max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg">
                               <button
-                                className={`w-full px-3 py-2 text-left font-bold transition-colors hover:bg-slate-50 ${commentScope === 'po' ? 'bg-slate-100/50 text-mc-black' : 'text-slate-700'}`}
+                                className={`w-full px-3 py-2 text-left font-bold transition-colors hover:bg-slate-50 ${commentScope === 'po' ? 'text-mc-black bg-slate-100/50' : 'text-slate-700'}`}
                                 onClick={() => {
                                   setCommentScope('po');
                                   setSelectedSkuId(null);
@@ -3187,7 +3187,7 @@ Supply Chain CRM Coordinator`;
                                 return (
                                   <button
                                     key={`sku-${itemId}`}
-                                    className={`w-full px-3 py-2 text-left transition-colors ${isSelected ? 'bg-slate-100/50 font-bold text-mc-black' : 'text-slate-600 hover:bg-slate-50'}`}
+                                    className={`w-full px-3 py-2 text-left transition-colors ${isSelected ? 'text-mc-black bg-slate-100/50 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                                     onClick={() => {
                                       setCommentScope('sku');
                                       setSelectedSkuId(itemId);
@@ -3211,7 +3211,7 @@ Supply Chain CRM Coordinator`;
                           : isLoadingComments
                       ) ? (
                         <div className="flex flex-col items-center justify-center space-y-3 py-12">
-                          <Loader2 className="h-6 w-6 animate-spin text-mc-black" />
+                          <Loader2 className="text-mc-black h-6 w-6 animate-spin" />
                           <p className="font-mono text-xs font-medium text-slate-500">
                             Loading messages...
                           </p>
@@ -3345,7 +3345,7 @@ Supply Chain CRM Coordinator`;
                                               onClick={() =>
                                                 handleUpdateSubmit(node.id)
                                               }
-                                              className="rounded bg-mc-black px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
+                                              className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
                                             >
                                               Save
                                             </button>
@@ -3359,7 +3359,7 @@ Supply Chain CRM Coordinator`;
                                               part.startsWith('@') ? (
                                                 <span
                                                   key={i}
-                                                  className="font-bold text-mc-black"
+                                                  className="text-mc-black font-bold"
                                                 >
                                                   {part}
                                                 </span>
@@ -3382,7 +3382,7 @@ Supply Chain CRM Coordinator`;
                                                   node.message,
                                                 );
                                               }}
-                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-mc-black"
+                                              className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                                             >
                                               <Pencil className="h-3 w-3" />{' '}
                                               Edit
@@ -3397,7 +3397,7 @@ Supply Chain CRM Coordinator`;
                                               setReplyToUser(node.user);
                                               setReplyToText(node.message);
                                             }}
-                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-mc-black"
+                                            className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                                           >
                                             <Reply className="h-3 w-3" /> Reply
                                           </button>
@@ -3411,7 +3411,7 @@ Supply Chain CRM Coordinator`;
                                                 [node.id]: !prev[node.id],
                                               }))
                                             }
-                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 transition hover:text-mc-black"
+                                            className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 transition"
                                           >
                                             {isCollapsed ? (
                                               <>
@@ -3474,7 +3474,7 @@ Supply Chain CRM Coordinator`;
                       {replyToUser && (
                         <div className="animate-fadeIn group relative mb-1 flex flex-col overflow-hidden rounded-lg border-l-4 border-l-indigo-500 bg-slate-100 p-2.5">
                           <div className="mb-0.5 flex items-center justify-between">
-                            <span className="text-xs font-extrabold text-mc-black">
+                            <span className="text-mc-black text-xs font-extrabold">
                               {replyToUser}
                             </span>
                             <button
@@ -3496,7 +3496,7 @@ Supply Chain CRM Coordinator`;
                                 part.startsWith('@') ? (
                                   <span
                                     key={i}
-                                    className="font-bold text-mc-black not-italic"
+                                    className="text-mc-black font-bold not-italic"
                                   >
                                     {part}
                                   </span>
@@ -3589,7 +3589,7 @@ Supply Chain CRM Coordinator`;
                                         onClick={() => handleSelectMention(u)}
                                         className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
                                       >
-                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-mc-black">
+                                        <div className="text-mc-black flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold">
                                           {initial}
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -3612,12 +3612,12 @@ Supply Chain CRM Coordinator`;
                             placeholder="Type a message... (Use @ to tag)"
                             value={newCommentText}
                             onChange={handleCommentTextChange}
-                            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition focus:border-mc-black focus:bg-white focus:outline-hidden"
+                            className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition focus:bg-white focus:outline-hidden"
                           />
                         </div>
                         <button
                           type="submit"
-                          className="flex items-center gap-1 rounded-lg bg-mc-black px-4 py-2 text-xs font-bold text-white transition hover:bg-black"
+                          className="bg-mc-black flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-bold text-white transition hover:bg-black"
                         >
                           <Send className="h-3 w-3" />
                           <span>Comment</span>
@@ -3643,7 +3643,7 @@ Supply Chain CRM Coordinator`;
 
                       <button
                         onClick={generateAIFollowUp}
-                        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold text-mc-black transition hover:bg-slate-200"
+                        className="text-mc-black flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold transition hover:bg-slate-200"
                         disabled={isGeneratingEmail}
                       >
                         <Sparkles className="h-3.5 w-3.5" />
@@ -3660,7 +3660,7 @@ Supply Chain CRM Coordinator`;
                       <div className="animate-fadeIn space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1 text-xs font-bold text-indigo-950">
-                            <Sparkles className="h-3.5 w-3.5 text-mc-black" />
+                            <Sparkles className="text-mc-black h-3.5 w-3.5" />
                             <span>Prepared AI Sourcing Template</span>
                           </span>
                           <button
@@ -3687,7 +3687,7 @@ Supply Chain CRM Coordinator`;
                           </button>
                           <button
                             onClick={handleSendAIEmail}
-                            className="flex items-center gap-1 rounded-md bg-mc-black px-4 py-1.5 text-xs font-bold text-white hover:bg-black"
+                            className="bg-mc-black flex items-center gap-1 rounded-md px-4 py-1.5 text-xs font-bold text-white hover:bg-black"
                           >
                             <Send className="h-3 w-3" />
                             <span>Send to {selectedPO.vendorName}</span>
@@ -3874,7 +3874,7 @@ Supply Chain CRM Coordinator`;
                   </button>
                   <button
                     type="submit"
-                    className="rounded-lg bg-mc-black px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
+                    className="bg-mc-black rounded-lg px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
                   >
                     Generate Sourcing PO
                   </button>
@@ -3927,7 +3927,7 @@ Supply Chain CRM Coordinator`;
                     value={importCsvText}
                     onChange={(e) => setImportCsvText(e.target.value)}
                     rows={6}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs transition focus:border-mc-black focus:bg-white focus:outline-hidden"
+                    className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 p-3 font-mono text-xs transition focus:bg-white focus:outline-hidden"
                   />
                 </div>
 
@@ -3953,7 +3953,7 @@ Supply Chain CRM Coordinator`;
                   </button>
                   <button
                     type="submit"
-                    className="rounded-lg bg-mc-black px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
+                    className="bg-mc-black rounded-lg px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
                   >
                     Parse & Synchronize Rows
                   </button>
@@ -3996,7 +3996,7 @@ Supply Chain CRM Coordinator`;
                   <select
                     value={exportFilterStatus}
                     onChange={(e) => setExportFilterStatus(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700 transition focus:border-mc-black focus:bg-white focus:outline-hidden"
+                    className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700 transition focus:bg-white focus:outline-hidden"
                   >
                     <option value="all">No Filter (All Data)</option>
                     <option value="invoice_delayed">
@@ -4023,7 +4023,7 @@ Supply Chain CRM Coordinator`;
 
                   <div className="space-y-5">
                     <div>
-                      <h4 className="mb-2.5 border-b border-slate-200 pb-1 text-xs font-bold tracking-wide text-mc-black uppercase">
+                      <h4 className="text-mc-black mb-2.5 border-b border-slate-200 pb-1 text-xs font-bold tracking-wide uppercase">
                         PO-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
@@ -4053,7 +4053,7 @@ Supply Chain CRM Coordinator`;
                                   );
                                 }
                               }}
-                              className="rounded border-slate-300 text-mc-black focus:ring-mc-black"
+                              className="text-mc-black focus:ring-mc-black rounded border-slate-300"
                             />
                             {col}
                           </label>
@@ -4140,7 +4140,7 @@ Supply Chain CRM Coordinator`;
                 </button>
                 <button
                   onClick={executeExportCSV}
-                  className="flex items-center gap-2 rounded-lg bg-mc-black px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
+                  className="bg-mc-black flex items-center gap-2 rounded-lg px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-black"
                 >
                   <Upload className="h-4 w-4" />
                   Generate CSV
@@ -4160,8 +4160,8 @@ Supply Chain CRM Coordinator`;
           place="top"
           className="z-[100] max-w-xs text-center text-xs leading-relaxed font-semibold tracking-wide shadow-xl"
           style={{
-            backgroundColor: '#6366f1',
-            color: '#ffffff',
+            backgroundColor: '#F4EFE8',
+            color: '#151717',
             borderRadius: '8px',
             padding: '8px 12px',
           }}
