@@ -858,6 +858,7 @@ export default function ContainerFlowPage() {
       setViewingContainerDetails((prev) => ({
         ...prev,
         ...container,
+        ...data,
         details: data?.details || data?.items || container.items || [],
         po_id:
           data?.po_id ||

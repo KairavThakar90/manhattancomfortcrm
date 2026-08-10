@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Eye,
@@ -19,6 +19,8 @@ import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
 import DateFilterInput from '../../../components/common/DateFilterInput';
+import Select from 'react-select';
+import countryList from 'react-select-country-list';
 
 export default function ContainerDetailsModal({
   container,
@@ -32,6 +34,68 @@ export default function ContainerDetailsModal({
   const [isSaving, setIsSaving] = useState(false);
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
+  const countryOptions = useMemo(() => countryList().getData(), []);
+
+  const reactSelectStyles = {
+    control: (base, state) => ({
+      ...base,
+      backgroundColor: '#f8fafc',
+      borderColor: state.isFocused ? '#6366f1' : '#e2e8f0',
+      borderRadius: '0.5rem',
+      padding: '0',
+      minHeight: '38px',
+      fontSize: '0.875rem',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(99, 102, 241, 0.2)' : 'none',
+      '&:hover': {
+        borderColor: state.isFocused ? '#6366f1' : '#cbd5e1',
+      },
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: '2px 12px',
+    }),
+    input: (base) => ({
+      ...base,
+      margin: '0',
+      padding: '0',
+      fontSize: '0.875rem',
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: '#94a3b8',
+      fontSize: '0.875rem',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: '#1e293b',
+      fontSize: '0.875rem',
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? '#eef2ff'
+        : state.isFocused
+          ? '#f8fafc'
+          : 'white',
+      color: state.isSelected ? '#4f46e5' : '#334155',
+      cursor: 'pointer',
+      fontSize: '0.875rem',
+      padding: '8px 12px',
+      '&:active': {
+        backgroundColor: '#eef2ff',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      borderRadius: '0.5rem',
+      marginTop: '4px',
+      boxShadow:
+        '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      border: '1px solid #e2e8f0',
+      zIndex: 9999,
+    }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  };
 
   if (container !== prevContainer) {
     setPrevContainer(container);
@@ -415,17 +479,26 @@ export default function ContainerDetailsModal({
                       <label className="mb-1 block text-xs font-semibold text-slate-700">
                         Country Of Origin
                       </label>
-                      <input
-                        type="text"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        value={trackingData.country_of_origin || ''}
-                        placeholder="e.g. China"
-                        onChange={(e) =>
+                      <Select
+                        value={
+                          countryOptions.find(
+                            (c) =>
+                              c.label === trackingData.country_of_origin ||
+                              c.value === trackingData.country_of_origin,
+                          ) || null
+                        }
+                        onChange={(option) =>
                           handleTrackingChange(
                             'country_of_origin',
-                            e.target.value,
+                            option ? option.label : '',
                           )
                         }
+                        options={countryOptions}
+                        styles={reactSelectStyles}
+                        placeholder="Select country"
+                        isSearchable
+                        isClearable
+                        menuPortalTarget={document.body}
                       />
                     </div>
                     <div>
@@ -567,7 +640,19 @@ export default function ContainerDetailsModal({
                 {isSaving ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Save Changes
+                {container.door ||
+                container.date_dropped_off ||
+                container.date_emptied ||
+                container.unloaded_by ||
+                container.country_of_origin ||
+                container.unload_cost ||
+                container.container_cost_drayage ||
+                container.customs_duty_misc ||
+                container.per_diem ||
+                container.factory_credit_needed ||
+                container.receiving_closure_notes
+                  ? 'Update'
+                  : 'Save Changes'}
               </button>
             )}
           </div>
