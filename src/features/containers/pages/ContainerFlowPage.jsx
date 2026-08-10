@@ -999,7 +999,7 @@ export default function ContainerFlowPage() {
                 handleViewContainer(c);
               }}
               title="View container details"
-              className="inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-blue-600"
+              className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors"
             >
               <Eye className="h-3.5 w-3.5" />
             </button>
@@ -1072,7 +1072,7 @@ export default function ContainerFlowPage() {
           <div className="flex items-center justify-end gap-2">
             <button
               onClick={() => handleViewContainer(c)}
-              className="rounded bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800"
+              className="hover:text-mc-black inline-flex items-center text-slate-400 transition-colors"
               title="View Details"
             >
               <Eye className="h-4 w-4" />

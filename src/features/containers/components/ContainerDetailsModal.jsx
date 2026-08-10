@@ -40,14 +40,14 @@ export default function ContainerDetailsModal({
     control: (base, state) => ({
       ...base,
       backgroundColor: '#f8fafc',
-      borderColor: state.isFocused ? '#6366f1' : '#e2e8f0',
+      borderColor: state.isFocused ? '#151717' : '#e2e8f0',
       borderRadius: '0.5rem',
       padding: '0',
       minHeight: '38px',
       fontSize: '0.875rem',
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(99, 102, 241, 0.2)' : 'none',
+      boxShadow: state.isFocused ? '0 0 0 1px #151717' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#6366f1' : '#cbd5e1',
+        borderColor: state.isFocused ? '#151717' : '#cbd5e1',
       },
     }),
     valueContainer: (base) => ({
@@ -73,16 +73,16 @@ export default function ContainerDetailsModal({
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? '#eef2ff'
+        ? '#F4EFE8'
         : state.isFocused
           ? '#f8fafc'
           : 'white',
-      color: state.isSelected ? '#4f46e5' : '#334155',
+      color: state.isSelected ? '#151717' : '#334155',
       cursor: 'pointer',
       fontSize: '0.875rem',
       padding: '8px 12px',
       '&:active': {
-        backgroundColor: '#eef2ff',
+        backgroundColor: '#F4EFE8',
       },
     }),
     menu: (base) => ({
@@ -416,7 +416,7 @@ export default function ContainerDetailsModal({
                       </label>
                       <input
                         type="text"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                         value={trackingData.container_name || ''}
                         placeholder="e.g. CAAU1234567"
                         onChange={(e) =>
@@ -430,7 +430,7 @@ export default function ContainerDetailsModal({
                       </label>
                       <input
                         type="text"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                         value={trackingData.door || ''}
                         placeholder="e.g. Door 4"
                         onChange={(e) =>
@@ -470,7 +470,7 @@ export default function ContainerDetailsModal({
                       </label>
                       <input
                         type="text"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                         value={trackingData.unloaded_by || ''}
                         placeholder="e.g. John Doe"
                         onChange={(e) =>
@@ -514,7 +514,7 @@ export default function ContainerDetailsModal({
                         </span>
                         <input
                           type="number"
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.unload_cost || ''}
                           placeholder="0.00"
                           onChange={(e) =>
@@ -533,7 +533,7 @@ export default function ContainerDetailsModal({
                         </span>
                         <input
                           type="number"
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.container_cost_drayage || ''}
                           placeholder="0.00"
                           onChange={(e) =>
@@ -555,7 +555,7 @@ export default function ContainerDetailsModal({
                         </span>
                         <input
                           type="number"
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.customs_duty_misc || ''}
                           placeholder="0.00"
                           onChange={(e) =>
@@ -577,7 +577,7 @@ export default function ContainerDetailsModal({
                         </span>
                         <input
                           type="number"
-                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.per_diem || ''}
                           placeholder="0.00"
                           onChange={(e) =>
@@ -592,7 +592,7 @@ export default function ContainerDetailsModal({
                       </label>
                       <textarea
                         rows={3}
-                        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                         value={trackingData.factory_credit_needed || ''}
                         placeholder="e.g. Damaged panels"
                         onChange={(e) =>
@@ -609,7 +609,7 @@ export default function ContainerDetailsModal({
                       </label>
                       <textarea
                         rows={3}
-                        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                         value={trackingData.receiving_closure_notes || ''}
                         placeholder="e.g. Fully closed and processed"
                         onChange={(e) =>

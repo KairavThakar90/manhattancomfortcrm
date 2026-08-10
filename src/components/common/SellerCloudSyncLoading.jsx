@@ -78,8 +78,8 @@ export default function SellerCloudSyncLoading({
               place="bottom"
               className="z-[999999] text-center tracking-wide shadow-xl"
               style={{
-                backgroundColor: '#6366f1',
-                color: '#ffffff',
+                backgroundColor: '#F4EFE8',
+                color: '#151717',
                 borderRadius: '8px',
                 padding: '8px 12px',
                 fontWeight: '700',
@@ -90,25 +90,25 @@ export default function SellerCloudSyncLoading({
         )}
 
         {/* Ambient Glow Effects */}
-        <div className="absolute -top-24 -right-24 h-48 w-48 animate-[pulse_4s_ease-in-out_infinite] rounded-full bg-indigo-500/10 blur-[40px]" />
-        <div className="absolute -bottom-24 -left-24 h-48 w-48 animate-[pulse_5s_ease-in-out_infinite] rounded-full bg-emerald-500/10 blur-[40px]" />
+        <div className="bg-mc-gold/10 absolute -top-24 -right-24 h-48 w-48 animate-[pulse_4s_ease-in-out_infinite] rounded-full blur-[40px]" />
+        <div className="bg-mc-beige-dark/40 absolute -bottom-24 -left-24 h-48 w-48 animate-[pulse_5s_ease-in-out_infinite] rounded-full blur-[40px]" />
 
         {/* Central Spinner */}
         <div className="relative z-10 mb-6 flex h-24 w-24 items-center justify-center">
-          <div className="absolute inset-0 animate-[spin_10s_linear_infinite] rounded-full border-[3px] border-dashed border-indigo-50" />
+          <div className="border-mc-beige-dark/50 absolute inset-0 animate-[spin_10s_linear_infinite] rounded-full border-[3px] border-dashed" />
           <motion.div
-            className="absolute inset-2 rounded-full border-[3px] border-indigo-500 border-t-transparent border-l-transparent"
+            className="border-mc-gold absolute inset-2 rounded-full border-[3px] border-t-transparent border-l-transparent"
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
           />
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50/50 text-indigo-600 shadow-sm">
-            <Loader2 className="h-6 w-6 animate-spin" />
+          <div className="border-mc-beige-dark bg-mc-beige-light/50 text-mc-black relative flex h-14 w-14 items-center justify-center rounded-full border shadow-sm">
+            <Loader2 className="text-mc-gold h-6 w-6 animate-spin" />
           </div>
         </div>
 
         {/* Titles & Messages */}
         <div className="z-10 mb-8 flex w-full flex-col items-center text-center">
-          <h2 className="font-display mb-2 bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-[19px] font-black tracking-tight text-slate-800 text-transparent">
+          <h2 className="font-display text-mc-black mb-2 text-[19px] font-black tracking-tight">
             {title}
           </h2>
 
@@ -131,7 +131,7 @@ export default function SellerCloudSyncLoading({
         {/* Sleek Progress Bar */}
         <div className="relative z-10 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 shadow-inner">
           <motion.div
-            className="absolute top-0 bottom-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 shadow-sm"
+            className="bg-mc-gold absolute top-0 bottom-0 left-0 w-1/3 rounded-full shadow-sm"
             animate={{
               x: ['-100%', '300%'],
             }}
