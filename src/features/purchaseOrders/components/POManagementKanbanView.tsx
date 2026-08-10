@@ -637,7 +637,7 @@
 //           {userRole !== 'Vendor' && (
 //             <button
 //               onClick={() => setShowCreateModal(true)}
-//               className="flex items-center gap-1 px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-xs font-medium transition shadow-xs"
+//               className="flex items-center gap-1 px-3.5 py-1.5 bg-mc-black text-white rounded-lg hover:bg-black text-xs font-medium transition shadow-xs"
 //             >
 //               <Plus className="h-3.5 w-3.5" />
 //               <span>Create Purchase Order</span>
@@ -655,7 +655,7 @@
 //             placeholder="Smart Search: PO#, Vendor, SKU, Container, Invoice number..."
 //             value={searchQuery}
 //             onChange={(e) => setSearchQuery(e.target.value)}
-//             className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+//             className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-mc-black focus:bg-white transition"
 //           />
 //         </div>
 
@@ -714,7 +714,7 @@
 //                 {paginatedPOs.map((po) => (
 //                   <tr
 //                     key={po.id}
-//                     className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-indigo-50/20 font-medium' : ''}`}
+//                     className={`hover:bg-slate-50/75 transition ${selectedPOId === po.id ? 'bg-slate-100/20 font-medium' : ''}`}
 //                   >
 //                     <td className="px-6 py-4">
 //                       <div className="flex items-center gap-1">
@@ -735,7 +735,7 @@
 //                           po.status === 'Production'
 //                             ? 'bg-sky-50 text-sky-700'
 //                             : po.status === 'In Transit'
-//                               ? 'bg-indigo-50 text-indigo-700'
+//                               ? 'bg-slate-100 text-mc-black'
 //                               : po.status === 'Port of Entry'
 //                                 ? 'bg-amber-50 text-amber-700'
 //                                 : po.status === 'Delivered'
@@ -779,7 +779,7 @@
 //                           e.stopPropagation();
 //                           onSelectPO(po.id);
 //                         }}
-//                         className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md inline-flex items-center gap-1 font-semibold"
+//                         className="p-1 text-mc-black hover:bg-slate-100 rounded-md inline-flex items-center gap-1 font-semibold"
 //                       >
 //                         <Eye className="h-3.5 w-3.5" />
 //                         <span>Profile</span>
@@ -871,7 +871,7 @@
 //                               po.status === 'Delayed'
 //                                 ? 'bg-rose-50 text-rose-700'
 //                                 : po.status === 'In Transit'
-//                                   ? 'bg-indigo-50 text-indigo-700'
+//                                   ? 'bg-slate-100 text-mc-black'
 //                                   : 'bg-emerald-50 text-emerald-700'
 //                             }`}
 //                           >
@@ -919,7 +919,7 @@
 //                                   const idx = stages.indexOf(stage);
 //                                   handleMoveKanban(po, stages[idx - 1]);
 //                                 }}
-//                                 className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
+//                                 className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-mc-black rounded-sm text-[9px] font-bold"
 //                               >
 //                                 ←
 //                               </button>
@@ -940,7 +940,7 @@
 //                                   const idx = stages.indexOf(stage);
 //                                   handleMoveKanban(po, stages[idx + 1]);
 //                                 }}
-//                                 className="px-1.5 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-sm text-[9px] font-bold"
+//                                 className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-mc-black rounded-sm text-[9px] font-bold"
 //                               >
 //                                 →
 //                               </button>
@@ -982,7 +982,7 @@
 //                   orders (Schedules for July 2026).
 //                 </p>
 //               </div>
-//               <span className="text-xs font-bold text-indigo-600 font-mono">
+//               <span className="text-xs font-bold text-mc-black font-mono">
 //                 July 2026
 //               </span>
 //             </div>
@@ -1028,7 +1028,7 @@
 //                             po.status === 'Delayed'
 //                               ? 'bg-rose-50 border-rose-100 text-rose-700 font-semibold'
 //                               : po.status === 'In Transit'
-//                                 ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+//                                 ? 'bg-slate-100 border-slate-200 text-mc-black'
 //                                 : 'bg-emerald-50 border-emerald-100 text-emerald-700'
 //                           }`}
 //                           title={`${po.id}: ${po.vendorName} Container ${po.container}`}
@@ -1079,7 +1079,7 @@
 //                     selectedPO.status === 'Production'
 //                       ? 'bg-sky-50 text-sky-700'
 //                       : selectedPO.status === 'In Transit'
-//                         ? 'bg-indigo-50 text-indigo-700'
+//                         ? 'bg-slate-100 text-mc-black'
 //                         : selectedPO.status === 'Port of Entry'
 //                           ? 'bg-amber-50 text-amber-700'
 //                           : selectedPO.status === 'Delivered'
@@ -1107,7 +1107,7 @@
 //                     onClick={() => setActiveDrawerSection(section)}
 //                     className={`flex-1 py-3 text-xs font-bold capitalize border-b-2 transition ${
 //                       activeDrawerSection === section
-//                         ? 'border-indigo-600 text-indigo-600 bg-white'
+//                         ? 'border-indigo-600 text-mc-black bg-white'
 //                         : 'border-transparent text-slate-500 hover:text-slate-800'
 //                     }`}
 //                   >
@@ -1155,7 +1155,7 @@
 //                                 isCompleted
 //                                   ? 'bg-emerald-500 text-white'
 //                                   : isActive
-//                                     ? 'bg-indigo-600 text-white animate-pulse'
+//                                     ? 'bg-mc-black text-white animate-pulse'
 //                                     : 'bg-white border-2 border-slate-200 text-slate-400'
 //                               }`}
 //                             >
@@ -1166,7 +1166,7 @@
 //                               )}
 //                             </div>
 //                             <span
-//                               className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}
+//                               className={`text-[9px] mt-1.5 font-medium leading-tight ${isActive ? 'text-mc-black font-bold' : 'text-slate-400'}`}
 //                             >
 //                               {stage}
 //                             </span>
@@ -1200,7 +1200,7 @@
 //                           <span className="text-[10px] text-slate-400 font-medium block">
 //                             Container ID
 //                           </span>
-//                           <strong className="text-sm font-bold text-indigo-700 font-mono">
+//                           <strong className="text-sm font-bold text-mc-black font-mono">
 //                             {selectedPO.container || 'Awaiting Vessel Booking'}
 //                           </strong>
 //                         </div>
@@ -1266,7 +1266,7 @@
 //                                     <td className="px-3 py-2 text-right font-mono font-medium">
 //                                       ${item.unitPrice.toFixed(2)}
 //                                     </td>
-//                                     <td className="px-3 py-2 text-right font-mono font-bold text-indigo-600">
+//                                     <td className="px-3 py-2 text-right font-mono font-bold text-mc-black">
 //                                       ${(item.qty * item.unitPrice).toFixed(2)}
 //                                     </td>
 //                                   </tr>
@@ -1304,7 +1304,7 @@
 //                             <span className="text-xs font-bold text-slate-900">
 //                               {comment.user}
 //                             </span>
-//                             <span className="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-sm">
+//                             <span className="text-[9px] uppercase font-bold text-mc-black bg-slate-100 px-1.5 py-0.5 rounded-sm">
 //                               {comment.role}
 //                             </span>
 //                           </div>
@@ -1333,11 +1333,11 @@
 //                       placeholder="Ask Emily (Warehouse) or Michael (Finance) for details..."
 //                       value={newCommentText}
 //                       onChange={(e) => setNewCommentText(e.target.value)}
-//                       className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
+//                       className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-mc-black focus:bg-white transition"
 //                     />
 //                     <button
 //                       type="submit"
-//                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
+//                       className="px-4 py-2 bg-mc-black hover:bg-black text-white rounded-lg text-xs font-bold transition flex items-center gap-1"
 //                     >
 //                       <Send className="h-3 w-3" />
 //                       <span>Comment</span>
@@ -1349,9 +1349,9 @@
 //               {/* TAB: OCR INVOICE READER */}
 //               {activeDrawerSection === 'ocr' && (
 //                 <div className="space-y-6">
-//                   <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
-//                     <h4 className="text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
-//                       <Sparkles className="h-4 w-4 text-indigo-600" />
+//                   <div className="p-4 bg-slate-100/50 rounded-xl border border-slate-200">
+//                     <h4 className="text-xs font-bold text-mc-black mb-1 flex items-center gap-1.5">
+//                       <Sparkles className="h-4 w-4 text-mc-black" />
 //                       <span>AI-Powered OCR Invoice Analyzer</span>
 //                     </h4>
 //                     <p className="text-[11px] text-indigo-800 leading-relaxed">
@@ -1462,7 +1462,7 @@
 
 //                     <button
 //                       onClick={generateAIFollowUp}
-//                       className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-100"
+//                       className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-mc-black rounded-lg text-xs font-bold transition border border-slate-200"
 //                       disabled={isGeneratingEmail}
 //                     >
 //                       <Sparkles className="h-3.5 w-3.5" />
@@ -1476,10 +1476,10 @@
 
 //                   {/* AI Email draft output preview */}
 //                   {aiEmailGenerated && (
-//                     <div className="bg-slate-50 p-4 rounded-xl border border-indigo-100 space-y-3 animate-fadeIn">
+//                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 animate-fadeIn">
 //                       <div className="flex items-center justify-between">
-//                         <span className="text-xs font-bold text-indigo-950 flex items-center gap-1">
-//                           <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+//                         <span className="text-xs font-bold text-mc-black flex items-center gap-1">
+//                           <Sparkles className="h-3.5 w-3.5 text-mc-black" />
 //                           <span>Prepared AI Sourcing Template</span>
 //                         </span>
 //                         <button
@@ -1506,7 +1506,7 @@
 //                         </button>
 //                         <button
 //                           onClick={handleSendAIEmail}
-//                           className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-bold flex items-center gap-1"
+//                           className="px-4 py-1.5 bg-mc-black hover:bg-black text-white rounded-md text-xs font-bold flex items-center gap-1"
 //                         >
 //                           <Send className="h-3 w-3" />
 //                           <span>Send to {selectedPO.vendorName}</span>
@@ -1528,7 +1528,7 @@
 //                           </h5>
 //                           <p className="text-[10px] text-slate-400 font-mono">
 //                             Sent: {email.sentAt} • Status:{' '}
-//                             <strong className="text-indigo-600">
+//                             <strong className="text-mc-black">
 //                               {email.status}
 //                             </strong>
 //                           </p>
@@ -1667,7 +1667,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+//                   className="px-5 py-2 bg-mc-black hover:bg-black text-white rounded-lg text-xs font-bold shadow-xs transition"
 //                 >
 //                   Generate Sourcing PO
 //                 </button>
@@ -1713,7 +1713,7 @@
 //                   value={importCsvText}
 //                   onChange={(e) => setImportCsvText(e.target.value)}
 //                   rows={6}
-//                   className="w-full bg-slate-50 p-3 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:bg-white focus:border-indigo-500 transition"
+//                   className="w-full bg-slate-50 p-3 text-xs border border-slate-200 rounded-lg font-mono focus:outline-hidden focus:bg-white focus:border-mc-black transition"
 //                 />
 //               </div>
 
@@ -1739,7 +1739,7 @@
 //                 </button>
 //                 <button
 //                   type="submit"
-//                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+//                   className="px-5 py-2 bg-mc-black hover:bg-black text-white rounded-lg text-xs font-bold transition shadow-xs"
 //                 >
 //                   Parse & Synchronize Rows
 //                 </button>
