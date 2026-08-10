@@ -2472,7 +2472,7 @@ Supply Chain CRM Coordinator`;
         />
       </div>
       {/* Tab Header Controls */}
-      <div className="flex flex-shrink-0 flex-col gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-xs md:flex-row md:items-center md:justify-between">
+      <div className="border-mc-beige-dark flex flex-shrink-0 flex-col gap-4 rounded-xl border bg-white p-4 shadow-xs md:flex-row md:items-center md:justify-between">
         <div className="flex w-fit items-center gap-1 rounded-lg bg-slate-100 p-1">
           <button
             onClick={() => setActiveSubTab('grid')}
@@ -2558,7 +2558,7 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="flex flex-shrink-0 flex-col gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+      <div className="border-mc-beige-dark flex flex-shrink-0 flex-col gap-3 rounded-xl border bg-white p-4 shadow-xs">
         {/* Row 1: Search + Vendor filter */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           {activeSubTab === 'kanban' && (

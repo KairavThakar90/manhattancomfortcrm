@@ -8,6 +8,7 @@ import React, {
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Package,
+  Container,
   Plus,
   Save,
   AlertCircle,
@@ -1019,31 +1020,31 @@ export default function ContainerFlowPage() {
       {
         header: 'Total Items',
         accessor: 'total_items',
-        headerClassName: 'px-4 py-4 bg-slate-50',
+        headerClassName: 'px-4 py-3',
         className: 'px-4 py-4 font-bold text-slate-700',
       },
       {
         header: 'Total Qty',
         accessor: 'total_qty_in_container',
-        headerClassName: 'px-4 py-4 bg-slate-50',
+        headerClassName: 'px-4 py-3',
         className: 'px-4 py-4 font-bold text-slate-700',
       },
       {
         header: 'Total Received',
         accessor: 'total_qty_received',
-        headerClassName: 'px-4 py-4 bg-slate-50',
+        headerClassName: 'px-4 py-3',
         className: 'px-4 py-4 font-bold text-indigo-600',
       },
       {
         header: 'ETA (Delivery)',
         accessor: 'arrivalDate',
-        headerClassName: 'px-4 py-4 bg-slate-50',
+        headerClassName: 'px-4 py-3',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
         header: 'Shipping Status',
         accessor: 'is_received',
-        headerClassName: 'px-4 py-4 bg-slate-50 text-center',
+        headerClassName: 'px-4 py-3 text-center',
         className: 'px-4 py-4 text-center',
         render: (c) =>
           c.is_received ? (
@@ -1059,13 +1060,13 @@ export default function ContainerFlowPage() {
       {
         header: 'Received Date',
         accessor: 'received_date',
-        headerClassName: 'px-4 py-4 bg-slate-50',
+        headerClassName: 'px-4 py-3',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-4 bg-slate-50 text-right',
+        headerClassName: 'px-6 py-3 text-right',
         className: 'px-6 py-4 text-right',
         render: (c) => (
           <div className="flex items-center justify-end gap-2">
@@ -1089,8 +1090,8 @@ export default function ContainerFlowPage() {
         {/* Header */}
         <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-              <Package className="h-4 w-4" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+              <Container className="h-4 w-4" />
             </div>
             <div>
               <h1 className="font-display text-lg font-bold text-slate-800">
@@ -1105,7 +1106,7 @@ export default function ContainerFlowPage() {
             <button
               onClick={handleSyncContainers}
               disabled={isSyncing}
-              className="flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -1152,7 +1153,7 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="relative flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
-          <div className="flex-shrink-0 rounded-xl border border-slate-100 bg-white p-4 shadow-xs">
+          <div className="border-mc-beige-dark bg-mc-white flex-shrink-0 rounded-xl border p-4 shadow-xs">
             <div className="flex items-center gap-3">
               {/* Search bar */}
               <div className="relative flex-1">
@@ -1218,7 +1219,7 @@ export default function ContainerFlowPage() {
               </div>
             </div>
           </div>
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
+          <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
             {(listLoading || isPaginating) && !isSyncing && (
               <TableLoader message={'Please wait a moment...'} />
             )}
@@ -1229,10 +1230,11 @@ export default function ContainerFlowPage() {
               containerClassName="flex-1 flex flex-col min-h-0 w-full"
               tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
               tableWrapperRef={containerTableRef}
-              theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold sticky top-0 z-10"
+              defaultThClassName="px-6 py-3 bg-transparent"
+              theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest text-[10px] font-extrabold sticky top-0 z-10"
               tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
-              tbodyClassName="divide-y divide-slate-100"
-              trClassName="hover:bg-slate-50/75 transition"
+              tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
+              trClassName="hover:bg-mc-beige-light/30 transition bg-mc-white"
               emptyMessage={
                 listSearchQuery
                   ? 'No containers found matching your search.'
@@ -1443,8 +1445,8 @@ export default function ContainerFlowPage() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
-            <Package className="h-4 w-4" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+            <Container className="h-4 w-4" />
           </div>
           <div>
             <h1 className="font-display text-lg font-bold text-slate-800">
@@ -1635,7 +1637,7 @@ export default function ContainerFlowPage() {
 
               {selectedItems.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                  <Package className="mb-3 h-10 w-10 text-slate-300" />
+                  <Container className="mb-3 h-10 w-10 text-slate-300" />
                   <h3 className="mb-1 text-sm font-bold text-slate-700">
                     No items selected
                   </h3>
@@ -1655,7 +1657,7 @@ export default function ContainerFlowPage() {
                         <div className="flex items-start gap-3 overflow-hidden">
                           <div className="mt-0.5">
                             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-slate-100 text-slate-400">
-                              <Package className="h-4 w-4" />
+                              <Container className="h-4 w-4" />
                             </div>
                           </div>
                           <div className="min-w-0 flex-1">
