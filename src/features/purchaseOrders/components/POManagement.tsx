@@ -2118,8 +2118,8 @@ Supply Chain CRM Coordinator`;
               }}
               className={`relative rounded-xl border p-2 transition ${
                 hasComments
-                  ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100'
-                  : 'border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                  ? 'border-mc-gold/50 bg-mc-gold/10 text-mc-black hover:bg-mc-gold/20 hover:border-mc-gold'
+                  : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light/50 hover:text-mc-black text-slate-400'
               }`}
               title="View Comments"
             >
@@ -2433,8 +2433,8 @@ Supply Chain CRM Coordinator`;
               }}
               className={`relative inline-flex rounded-lg border p-1.5 transition ${
                 count > 0
-                  ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-300 hover:bg-blue-100'
-                  : 'hover:text-mc-black border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100'
+                  ? 'border-mc-gold/50 bg-mc-gold/10 text-mc-black hover:bg-mc-gold/20 hover:border-mc-gold'
+                  : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light/50 hover:text-mc-black text-slate-400'
               }`}
               title="Item Comments"
             >
@@ -2905,7 +2905,7 @@ Supply Chain CRM Coordinator`;
                       onClick={() => setActiveDrawerSection(section)}
                       className={`flex-1 border-b-2 py-3 text-xs font-bold capitalize transition ${
                         activeDrawerSection === section
-                          ? 'text-mc-black border-indigo-600 bg-white'
+                          ? 'text-mc-black border-mc-gold bg-white'
                           : 'border-transparent text-slate-500 hover:text-slate-800'
                       }`}
                     >
@@ -2923,7 +2923,7 @@ Supply Chain CRM Coordinator`;
                       {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
                       <div className="flex min-h-0 flex-col space-y-3 md:col-span-3">
                         <div className="grid shrink-0 grid-cols-5 gap-4">
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <span className="block text-[10px] font-medium text-slate-400">
                               Order ID
                             </span>
@@ -2934,7 +2934,7 @@ Supply Chain CRM Coordinator`;
                                 : selectedPO.orderId}
                             </strong>
                           </div>
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <span className="block text-[10px] font-medium text-slate-400">
                               Ordered Quantity
                             </span>
@@ -2952,7 +2952,7 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <span className="block text-[10px] font-medium text-slate-400">
                               Received Quantity
                             </span>
@@ -2970,7 +2970,7 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <span className="block text-[10px] font-medium text-slate-400">
                               Remaining Quantity
                             </span>
@@ -3001,7 +3001,7 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <label className="mb-1 block text-[10px] font-medium text-slate-400">
                               Enter lead days for po order
                             </label>
@@ -3047,7 +3047,7 @@ Supply Chain CRM Coordinator`;
                                     toast.error('Failed to update lead time.');
                                   }
                                 }}
-                                className="bg-mc-black rounded px-3 py-1 text-xs font-semibold whitespace-nowrap text-white transition-colors hover:bg-black"
+                                className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 rounded px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors hover:shadow-sm"
                               >
                                 {selectedPO.containerLeadTimeDays
                                   ? 'Update'
@@ -3075,8 +3075,8 @@ Supply Chain CRM Coordinator`;
                         </div> */}
                         </div>
 
-                        <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                          <h5 className="mb-3 shrink-0 text-xs font-bold tracking-wider text-slate-700 uppercase">
+                        <div className="border-mc-beige-dark bg-mc-white mt-3 flex min-h-0 flex-1 flex-col rounded-xl border p-4 shadow-sm">
+                          <h5 className="text-mc-black mb-3 shrink-0 text-xs font-extrabold tracking-wider uppercase">
                             Item Specifications (Products)
                           </h5>
                           <TypedDataTable
@@ -3086,20 +3086,21 @@ Supply Chain CRM Coordinator`;
                             isLoading={
                               isLoadingComments || isItemsPaginationLoading
                             }
-                            containerClassName="flex-1 flex flex-col min-h-0 rounded-lg border border-slate-100 bg-white w-full overflow-hidden"
+                            containerClassName="flex-1 flex flex-col min-h-0 rounded-xl border border-mc-beige-dark bg-mc-white w-full overflow-hidden"
                             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
                             tableWrapperRef={itemsTableRef}
-                            theadClassName="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-widest font-semibold text-[9px] sticky top-0 z-10"
+                            defaultThClassName="px-6 py-3 bg-transparent"
+                            theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
                             tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
-                            tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                            tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
                             trClassName={(item: any) =>
-                              `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-slate-50/50'}`
+                              `transition ${Math.max(0, (item.qty || 0) - (item.receivedQty || 0)) > 0 ? 'bg-mc-beige-light/30 hover:bg-mc-gold/5 text-mc-black' : 'bg-mc-white hover:bg-mc-beige-light/30'}`
                             }
                             emptyMessage="No items specified for this purchase order."
                           />
 
                           {totalItemsCount > 0 && (
-                            <div className="mt-2 rounded-lg border border-slate-100 bg-white p-1">
+                            <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
                               <Pagination
                                 currentPage={itemsCurrentPage}
                                 totalCount={totalItemsCount}

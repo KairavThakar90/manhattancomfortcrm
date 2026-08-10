@@ -178,7 +178,7 @@ export default function ContainerDetailsModal({
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <div className="bg-mc-beige-light text-mc-black flex h-10 w-10 items-center justify-center rounded-lg">
                 <Eye className="h-5 w-5" />
               </div>
               <div>
@@ -226,7 +226,7 @@ export default function ContainerDetailsModal({
                   onClick={() =>
                     window.open(container.sellercloud_link, '_blank')
                   }
-                  className="mr-2 flex cursor-pointer items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
+                  className="text-mc-black mr-2 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open in Sellercloud
@@ -245,13 +245,13 @@ export default function ContainerDetailsModal({
           {/* Tabs */}
           <div className="flex shrink-0 border-b border-slate-100 bg-slate-50/50">
             <button
-              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'details' ? 'border-indigo-600 bg-white text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'details' ? 'border-mc-gold text-mc-black bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
               onClick={() => setActiveTab('details')}
             >
               Details
             </button>
             <button
-              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'comments' ? 'border-indigo-600 bg-white text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'comments' ? 'border-mc-gold text-mc-black bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
               onClick={() => setActiveTab('comments')}
             >
               Container Tracking & Financial Information
@@ -263,9 +263,9 @@ export default function ContainerDetailsModal({
             {activeTab === 'details' && (
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-indigo-200 hover:shadow-indigo-50">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
                     <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                      <Calendar className="text-mc-black h-3.5 w-3.5" />
                       Arrival Date
                     </p>
                     <p className="text-base font-bold text-slate-800">
@@ -273,9 +273,9 @@ export default function ContainerDetailsModal({
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-emerald-200 hover:shadow-emerald-50">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
                     <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <Package className="h-3.5 w-3.5 text-emerald-500" />
+                      <Package className="text-mc-black h-3.5 w-3.5" />
                       Total Item
                     </p>
                     <div className="flex items-baseline gap-2">
@@ -288,9 +288,9 @@ export default function ContainerDetailsModal({
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-amber-200 hover:shadow-amber-50">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
                     <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                      <CheckCircle2 className="text-mc-black h-3.5 w-3.5 flex-shrink-0" />
                       Status
                     </p>
                     <div className="mt-1 inline-flex">
@@ -303,9 +303,9 @@ export default function ContainerDetailsModal({
                   </div>
                 </div>
 
-                <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)]">
+                <div className="border-mc-beige-dark bg-mc-white mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
                   <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
-                    <h4 className="shrink-0 text-sm font-bold text-slate-900">
+                    <h4 className="text-mc-black shrink-0 text-xs font-extrabold tracking-wider uppercase">
                       Allocated Items
                     </h4>
                   </div>
@@ -334,7 +334,7 @@ export default function ContainerDetailsModal({
                             render: (item) => (
                               <div className="flex items-center gap-2">
                                 <span
-                                  className="cursor-help font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+                                  className="text-mc-black decoration-mc-beige-dark hover:text-mc-gold cursor-help font-bold underline decoration-2 transition-colors"
                                   data-tooltip-id="sku-tooltip"
                                   data-tooltip-content={item.sku || 'N/A'}
                                 >
@@ -367,23 +367,26 @@ export default function ContainerDetailsModal({
                         ]}
                         data={paginatedItems}
                         keyField="product_name"
-                        theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
+                        defaultThClassName="px-6 py-3 bg-transparent"
+                        theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
                         tableClassName="w-full text-left text-xs border-collapse"
-                        tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                        trClassName="hover:bg-slate-50/50 transition-colors"
-                        containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
+                        tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
+                        trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
+                        containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg"
                         tableWrapperClassName=""
                       />
-                      <Pagination
-                        currentPage={itemsPage}
-                        totalCount={totalItems}
-                        pageSize={itemsPageSize}
-                        onPageChange={(pg) => setItemsPage(pg)}
-                        onPageSizeChange={(size) => {
-                          setItemsPageSize(size);
-                          setItemsPage(1);
-                        }}
-                      />
+                      <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
+                        <Pagination
+                          currentPage={itemsPage}
+                          totalCount={totalItems}
+                          pageSize={itemsPageSize}
+                          onPageChange={(pg) => setItemsPage(pg)}
+                          onPageSizeChange={(size) => {
+                            setItemsPageSize(size);
+                            setItemsPage(1);
+                          }}
+                        />
+                      </div>
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -634,7 +637,7 @@ export default function ContainerDetailsModal({
             {activeTab === 'comments' && (
               <button
                 onClick={handleSaveTracking}
-                className="flex cursor-pointer items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 flex cursor-pointer items-center justify-center rounded-lg px-6 py-2.5 text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -664,8 +667,8 @@ export default function ContainerDetailsModal({
         place="top"
         className="z-[100] max-w-xs text-center text-xs leading-relaxed font-semibold tracking-wide shadow-xl"
         style={{
-          backgroundColor: '#6366f1',
-          color: '#ffffff',
+          backgroundColor: '#F4EFE8',
+          color: '#151717',
           borderRadius: '8px',
           padding: '8px 12px',
         }}
