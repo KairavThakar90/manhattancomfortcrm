@@ -1843,7 +1843,7 @@ Supply Chain CRM Coordinator`;
                 (YYYY-MM-DD)
               </span>
             </div>
-            <span className="group-hover:text-mc-black text-slate-400">
+            <span className="group-hover:text-mc-black text-mc-gray-soft">
               {activeSortConfig.key === 'invoiceDate' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
@@ -1873,12 +1873,12 @@ Supply Chain CRM Coordinator`;
       },
       {
         header: (
-          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-600 uppercase">
-            Invoice Delay Status
+          <div className="flex items-center gap-1">
+            <span>Invoice Delay Status</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-              className="text-mc-black hover:bg-mc-black ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] outline-hidden transition-colors hover:text-white"
+              className="text-mc-black hover:bg-mc-black border-mc-beige-dark bg-mc-beige-light ml-1 flex cursor-pointer items-center justify-center rounded-full border p-[1.5px] outline-hidden transition-colors hover:text-white"
             >
               <Info className="h-3 w-3" />
             </div>
@@ -1946,11 +1946,11 @@ Supply Chain CRM Coordinator`;
           >
             <div className="flex flex-col">
               <span>ETA Delivery</span>
-              <span className="text-[9px] text-slate-400 normal-case">
+              <span className="text-mc-gray-soft text-[9px] normal-case">
                 (YYYY-MM-DD)
               </span>
             </div>
-            <span className="group-hover:text-mc-black text-slate-400">
+            <span className="group-hover:text-mc-black text-mc-gray-soft">
               {activeSortConfig.key === 'eta' ? (
                 activeSortConfig.direction === 'asc' ? (
                   <ArrowUp className="h-3 w-3" />
