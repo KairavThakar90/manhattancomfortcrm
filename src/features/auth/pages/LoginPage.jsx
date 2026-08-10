@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import LoginPageComponent from '../components/LoginPage';
 import { useCRM } from '../../../hooks/useCRM';
-import { login } from '../services/auth.service';
+import { login, verify2FA } from '../services/auth.service';
 
 export default function LoginPage() {
   const { isAuthenticated, setIsAuthenticated } = useCRM();
@@ -10,15 +11,36 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const location = useLocation();
 
-  // Restore the remembered username if present
   const initialUsername = localStorage.getItem('rememberedUsername') || '';
   const initialRememberMe = !!initialUsername;
 
-  const handleLogin = async (username, password, rememberMe) => {
+  const handleLogin = async (username, password) => {
     setLoading(true);
     setError('');
     try {
-      await login(username, password);
+      const response = await login(username, password);
+      if (response && response.message) {
+        toast.success(response.message);
+      }
+    } catch (err) {
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail;
+      setError(
+        backendMessage || err.message || 'An error occurred during login.',
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (username, otp, rememberMe) => {
+    setLoading(true);
+    setError('');
+    try {
+      await verify2FA(username, otp);
       rememberMe
         ? localStorage.setItem('rememberedUsername', username)
         : localStorage.removeItem('rememberedUsername');
@@ -28,9 +50,8 @@ export default function LoginPage() {
         err.response?.data?.message ||
         err.response?.data?.error ||
         err.response?.data?.detail;
-      setError(
-        backendMessage || err.message || 'An error occurred during login.',
-      );
+      setError(backendMessage || err.message || 'Invalid verification code.');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -45,6 +66,7 @@ export default function LoginPage() {
   ) : (
     <LoginPageComponent
       onLogin={handleLogin}
+      onVerifyOtp={handleVerifyOtp}
       loading={loading}
       error={error}
       initialUsername={initialUsername}

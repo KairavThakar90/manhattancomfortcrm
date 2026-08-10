@@ -4,6 +4,7 @@ import {
   AUTH_LOGOUT,
   AUTH_ME,
   AUTH_REFRESH,
+  AUTH_VERIFY_2FA,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -82,6 +83,41 @@ export async function login(
   }
 
   // Store user details & mapped role
+  if (data.user) {
+    localStorage.setItem('user', JSON.stringify(data.user));
+    const mappedRole = mapBackendRole(data.user.role);
+    localStorage.setItem('userRole', mappedRole);
+  }
+
+  return data;
+}
+
+/**
+ * Verify 2FA OTP code.
+ */
+export async function verify2FA(
+  username: string,
+  otp: string,
+): Promise<LoginResponse> {
+  const reqData = { username, otp };
+
+  const { data } = await apiClient.post<LoginResponse>(
+    AUTH_VERIFY_2FA,
+    reqData,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+
+  const token = data.access_token || data.token;
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+
   if (data.user) {
     localStorage.setItem('user', JSON.stringify(data.user));
     const mappedRole = mapBackendRole(data.user.role);
