@@ -98,10 +98,10 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="bg-mc-beige-light text-mc-black selection:bg-mc-gold flex min-h-screen font-sans antialiased selection:text-white">
       {/* 1. INTERACTIVE NAVIGATION SIDEBAR */}
       <aside
-        className={`flex flex-shrink-0 flex-col justify-between border-r border-indigo-900 bg-indigo-950 text-indigo-200 transition-all duration-300 ease-in-out select-none ${
+        className={`border-mc-beige-dark bg-mc-white text-mc-gray-soft flex flex-shrink-0 flex-col justify-between border-r transition-all duration-300 ease-in-out select-none ${
           sidebarOpen ? 'w-64 p-5' : 'w-16 p-3'
         }`}
       >
@@ -112,14 +112,14 @@ export default function MainLayout() {
           >
             {sidebarOpen && (
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-indigo-500 bg-indigo-600 font-bold text-white shadow-xs">
+                <div className="border-mc-gold bg-mc-gold flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border font-bold text-white shadow-xs">
                   <Layers className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-display truncate text-sm font-extrabold tracking-tight text-white">
+                  <h1 className="font-display text-mc-black truncate text-sm font-extrabold tracking-tight">
                     Manhattan Comfort
                   </h1>
-                  <span className="font-mono text-[10px] font-bold tracking-widest text-indigo-400 uppercase">
+                  <span className="text-mc-gray-soft font-mono text-[10px] font-bold tracking-widest uppercase">
                     PO &amp; CRM
                   </span>
                 </div>
@@ -129,7 +129,7 @@ export default function MainLayout() {
             {/* Collapse/Expand button — always in the top corner */}
             <button
               onClick={() => setSidebarOpen((o) => !o)}
-              className="flex-shrink-0 cursor-pointer rounded-xl p-2 text-indigo-400 transition-colors hover:bg-indigo-800/60 hover:text-white"
+              className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold flex-shrink-0 cursor-pointer rounded-xl p-2 transition-colors"
               title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
               {sidebarOpen ? (
@@ -158,9 +158,9 @@ export default function MainLayout() {
                       sidebarOpen
                         ? 'px-3.5 py-2.5'
                         : 'justify-center px-2.5 py-2.5'
-                    } text-indigo-300 hover:bg-indigo-900/45 hover:text-indigo-100`}
+                    } text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold`}
                   >
-                    <IconComp className="h-4 w-4 flex-shrink-0 text-indigo-400" />
+                    <IconComp className="text-mc-gray-soft h-4 w-4 flex-shrink-0" />
                     {sidebarOpen && (
                       <span className="flex-1 truncate text-left">
                         {tab.label}
@@ -183,15 +183,15 @@ export default function MainLayout() {
                         : 'justify-center px-2.5 py-2.5'
                     } ${
                       isActive
-                        ? 'border border-indigo-500 bg-indigo-600 font-bold text-white shadow-sm'
-                        : 'text-indigo-300 hover:bg-indigo-900/45 hover:text-indigo-100'
+                        ? 'bg-mc-gray-dark text-mc-white font-bold shadow-sm'
+                        : 'text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       <IconComp
-                        className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-indigo-400'}`}
+                        className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-mc-white' : 'text-mc-gray-soft'}`}
                       />
                       {sidebarOpen && (
                         <span className="truncate">{tab.label}</span>
@@ -206,27 +206,27 @@ export default function MainLayout() {
 
         {/* User context footer */}
         <div
-          className={`flex items-center border-t border-indigo-900/60 pt-4 ${
+          className={`border-mc-beige-dark flex items-center border-t pt-4 ${
             sidebarOpen ? 'justify-between px-2' : 'justify-center'
           }`}
         >
           {sidebarOpen ? (
             <>
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-800 font-bold text-white uppercase shadow-xs">
+                <div className="bg-mc-gold text-mc-white flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-bold uppercase shadow-xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
                     : userRole.slice(0, 1)}
                 </div>
                 <div className="min-w-0 text-xs">
                   <span
-                    className="block truncate text-[11px] font-bold text-indigo-100"
+                    className="text-mc-black block truncate text-[11px] font-bold"
                     title={user?.full_name || 'You'}
                   >
                     {user?.full_name || 'You'}
                   </span>
                   <span
-                    className="block truncate text-[10px] text-indigo-400"
+                    className="text-mc-gray-soft block truncate text-[10px]"
                     title={user?.email || userRole}
                   >
                     {user?.email || userRole}
@@ -235,7 +235,7 @@ export default function MainLayout() {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex-shrink-0 rounded-lg p-2 text-indigo-400 transition-colors hover:bg-indigo-600 hover:text-white"
+                className="text-mc-gray-soft hover:bg-mc-gray-dark hover:text-mc-white flex-shrink-0 rounded-lg p-2 transition-colors"
                 title="Log out"
               >
                 <LogOut className="h-4 w-4" />
@@ -245,7 +245,7 @@ export default function MainLayout() {
             <button
               onClick={handleLogout}
               title="Log out"
-              className="rounded-lg p-2 text-indigo-400 transition-colors hover:bg-indigo-600 hover:text-white"
+              className="text-mc-gray-soft hover:bg-mc-gray-dark hover:text-mc-white rounded-lg p-2 transition-colors"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -256,9 +256,9 @@ export default function MainLayout() {
       {/* Main Outer Content Area */}
       <main className="flex h-screen flex-1 flex-col overflow-hidden">
         {/* TOP INTERACTIVE CONTROL HEADER */}
-        <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-2xs">
+        <header className="border-mc-beige-dark bg-mc-white flex h-16 flex-shrink-0 items-center justify-between border-b px-6 shadow-xs">
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+            <h2 className="font-display text-mc-black text-sm font-extrabold tracking-tight uppercase">
               {getPageTitle()}
             </h2>
           </div>
@@ -326,9 +326,9 @@ export default function MainLayout() {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/50 p-1.5 pr-3 text-xs transition-colors hover:bg-slate-100"
+                className="border-mc-beige-dark bg-mc-beige-light hover:border-mc-gold flex cursor-pointer items-center gap-2 rounded-lg border p-1.5 pr-3 text-xs transition-colors"
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-xs font-bold text-white uppercase shadow-2xs">
+                <div className="bg-mc-gold text-mc-white flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold uppercase shadow-xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
                     : userRole.slice(0, 1)}
@@ -395,7 +395,7 @@ export default function MainLayout() {
             >
               {/* Backdrop */}
               <div
-                className={`absolute inset-0 bg-indigo-950/70 backdrop-blur-sm transition-opacity duration-300 ${
+                className={`bg-mc-gray-dark/70 absolute inset-0 backdrop-blur-sm transition-opacity duration-300 ${
                   modalVisible ? 'opacity-100' : 'opacity-0'
                 }`}
               />
@@ -409,56 +409,56 @@ export default function MainLayout() {
                 }`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="overflow-hidden rounded-3xl border border-indigo-700/60 bg-indigo-950 p-8 text-center shadow-2xl">
+                <div className="border-mc-beige-dark/60 bg-mc-white overflow-hidden rounded-3xl border p-8 text-center shadow-2xl">
                   {/* Animated glow rings */}
                   <div className="relative mb-6 flex items-center justify-center">
                     <div
-                      className="absolute h-28 w-28 animate-ping rounded-full border border-indigo-500/20"
+                      className="border-mc-gold/20 absolute h-28 w-28 animate-ping rounded-full border"
                       style={{ animationDuration: '2s' }}
                     />
                     <div
-                      className="absolute h-20 w-20 animate-ping rounded-full border border-indigo-500/30"
+                      className="border-mc-gold/30 absolute h-20 w-20 animate-ping rounded-full border"
                       style={{
                         animationDuration: '2.5s',
                         animationDelay: '0.3s',
                       }}
                     />
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/50 bg-indigo-600/30 shadow-lg shadow-indigo-900">
-                      <ModalIcon className="h-7 w-7 text-indigo-300" />
+                    <div className="border-mc-gold/50 bg-mc-gold/10 shadow-mc-orange/20 flex h-14 w-14 items-center justify-center rounded-2xl border shadow-lg">
+                      <ModalIcon className="text-mc-gold h-7 w-7" />
                     </div>
                   </div>
 
                   {/* Rocket badge */}
                   <div className="mb-3 flex items-center justify-center gap-1.5">
-                    <Rocket className="h-3 w-3 animate-bounce text-indigo-400" />
-                    <span className="text-[10px] font-extrabold tracking-[0.2em] text-indigo-400 uppercase">
+                    <Rocket className="text-mc-gold h-3 w-3 animate-bounce" />
+                    <span className="text-mc-gold text-[10px] font-extrabold tracking-[0.2em] uppercase">
                       Coming Soon
                     </span>
                     <Rocket
-                      className="h-3 w-3 animate-bounce text-indigo-400"
+                      className="text-mc-gold h-3 w-3 animate-bounce"
                       style={{ animationDelay: '0.15s' }}
                     />
                   </div>
 
-                  <h2 className="mb-2 text-lg leading-tight font-extrabold text-white">
+                  <h2 className="text-mc-black mb-2 text-lg leading-tight font-extrabold">
                     {comingSoonModal.label}
                   </h2>
-                  <p className="mb-6 text-xs leading-relaxed text-indigo-300/70">
+                  <p className="text-mc-gray-soft/70 mb-6 text-xs leading-relaxed">
                     This feature is under active development and will be
                     available in an upcoming release.
                   </p>
 
                   {/* Progress bar animation */}
-                  <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-indigo-900/60">
+                  <div className="bg-mc-beige-dark/60 mb-6 h-1 w-full overflow-hidden rounded-full">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                      className="from-mc-orange to-mc-gold h-full rounded-full bg-gradient-to-r"
                       style={{ width: '65%', animation: 'none' }}
                     />
                   </div>
 
                   <button
                     onClick={closeComingSoon}
-                    className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold tracking-wide text-white transition-colors hover:bg-indigo-500"
+                    className="bg-mc-gold hover:bg-mc-black w-full rounded-xl py-2.5 text-xs font-bold tracking-wide text-white transition-colors"
                   >
                     Got it
                   </button>
@@ -467,7 +467,7 @@ export default function MainLayout() {
                 {/* Close icon */}
                 <button
                   onClick={closeComingSoon}
-                  className="absolute top-3 right-3 rounded-lg p-1.5 text-indigo-400 transition-colors hover:bg-indigo-800/60 hover:text-white"
+                  className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold absolute top-3 right-3 rounded-lg p-1.5 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
