@@ -6,7 +6,7 @@ import React from 'react';
  */
 export default function TableLoader() {
   return (
-    <div className="relative h-1 w-full overflow-hidden bg-indigo-100/70">
+    <div className="bg-mc-beige-dark/40 relative h-1 w-full overflow-hidden shadow-xs">
       <style>{`
         @keyframes muiLinearProgress1 {
           0% {
@@ -40,14 +40,15 @@ export default function TableLoader() {
           position: absolute;
           top: 0;
           bottom: 0;
-          background-color: #4f46e5;
+          background-color: var(--color-mc-gold);
           animation: muiLinearProgress1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
         }
         .mui-progress-bar2 {
           position: absolute;
           top: 0;
           bottom: 0;
-          background-color: #6366f1;
+          background-color: var(--color-mc-gold);
+          opacity: 0.75;
           animation: muiLinearProgress2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite;
         }
       `}</style>
