@@ -119,7 +119,7 @@ export default function VendorInfiniteDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-2 animate-scaleUp max-h-80 flex flex-col min-w-[200px]">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-80 min-w-[200px] flex-col rounded-xl border p-2 shadow-lg">
           {/* <div className="relative mb-2 shrink-0">
             <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
@@ -134,7 +134,7 @@ export default function VendorInfiniteDropdown({
           <div
             ref={listRef}
             onScroll={handleScroll}
-            className="overflow-y-auto flex-1 max-h-48 space-y-0.5 scroll-smooth"
+            className="max-h-48 flex-1 space-y-0.5 overflow-y-auto scroll-smooth"
           >
             {showAllOption && (
               <button
@@ -143,10 +143,10 @@ export default function VendorInfiniteDropdown({
                   onChange('all');
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                   value === 'all'
-                    ? 'bg-indigo-50 text-indigo-700 font-bold'
-                    : 'text-slate-700 hover:bg-slate-50'
+                    ? 'bg-mc-beige-light text-mc-black font-bold'
+                    : 'text-mc-black hover:bg-mc-beige-light/50'
                 }`}
               >
                 <span>All Vendors</span>
@@ -162,29 +162,31 @@ export default function VendorInfiniteDropdown({
                   type="button"
                   key={vendor.id}
                   onClick={() => handleSelect(vendor.id)}
-                  className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                     isSelected
-                      ? 'bg-indigo-50 text-indigo-700 font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-mc-beige-light text-mc-black font-bold'
+                      : 'text-mc-black hover:bg-mc-beige-light/50'
                   }`}
                 >
                   <span className="truncate">
                     {vendor.name} {vendor.country ? `(${vendor.country})` : ''}
                   </span>
-                  {isSelected && <Check className="h-3.5 w-3.5" />}
+                  {isSelected && (
+                    <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
+                  )}
                 </button>
               );
             })}
 
             {!loading && vendors.length === 0 && (
-              <div className="text-center py-4 text-xs text-slate-400 italic">
+              <div className="py-4 text-center text-xs text-slate-400 italic">
                 No vendors found
               </div>
             )}
 
             {loading && (
               <div className="flex items-center justify-center py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                <Loader2 className="text-mc-gold h-4 w-4 animate-spin" />
               </div>
             )}
           </div>

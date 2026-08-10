@@ -67,8 +67,8 @@ export default function CompanyDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-2 animate-scaleUp max-h-72 flex flex-col min-w-[200px]">
-          <div className="overflow-y-auto flex-1 max-h-56 space-y-0.5 scroll-smooth">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-72 min-w-[200px] flex-col rounded-xl border p-2 shadow-lg">
+          <div className="max-h-56 flex-1 space-y-0.5 overflow-y-auto scroll-smooth">
             {showAllOption && (
               <button
                 type="button"
@@ -76,10 +76,10 @@ export default function CompanyDropdown({
                   onChange('all');
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                   value === 'all' || !value
-                    ? 'bg-indigo-50 text-indigo-700 font-bold'
-                    : 'text-slate-700 hover:bg-slate-50'
+                    ? 'bg-mc-beige-light text-mc-black font-bold'
+                    : 'text-mc-black hover:bg-mc-beige-light/50'
                 }`}
               >
                 <span>All Companies</span>
@@ -101,29 +101,29 @@ export default function CompanyDropdown({
                     onChange(compValue);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                     String(value) === compValue
-                      ? 'bg-indigo-50 text-indigo-700 font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-mc-beige-light text-mc-black font-bold'
+                      : 'text-mc-black hover:bg-mc-beige-light/50'
                   }`}
                 >
                   <span className="truncate">{company.name}</span>
                   {String(value) === compValue && (
-                    <Check className="h-3.5 w-3.5" />
+                    <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
                   )}
                 </button>
               );
             })}
 
             {!loading && companies.length === 0 && (
-              <div className="text-center py-4 text-xs text-slate-400 italic">
+              <div className="py-4 text-center text-xs text-slate-400 italic">
                 No companies found
               </div>
             )}
 
             {loading && (
               <div className="flex items-center justify-center py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                <Loader2 className="text-mc-gold h-4 w-4 animate-spin" />
               </div>
             )}
           </div>

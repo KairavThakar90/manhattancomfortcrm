@@ -92,16 +92,16 @@ export default function WarehouseInfiniteDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-2 animate-scaleUp">
-          <div className="overflow-y-auto max-h-48 space-y-0.5 scroll-smooth custom-scrollbar">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute left-0 z-50 mt-1 w-64 rounded-xl border p-2 shadow-lg">
+          <div className="custom-scrollbar max-h-48 space-y-0.5 overflow-y-auto scroll-smooth">
             {showAllOption && (
               <button
                 type="button"
                 onClick={() => handleSelect('all')}
-                className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                   value === 'all'
-                    ? 'bg-indigo-50 text-indigo-700 font-bold'
-                    : 'text-slate-700 hover:bg-slate-50'
+                    ? 'bg-mc-beige-light text-mc-black font-bold'
+                    : 'text-mc-black hover:bg-mc-beige-light/50'
                 }`}
               >
                 <span>All Warehouses</span>
@@ -118,10 +118,10 @@ export default function WarehouseInfiniteDropdown({
                   type="button"
                   key={wh.id}
                   onClick={() => handleSelect(String(optValue))}
-                  className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition flex items-center justify-between ${
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                     isSelected
-                      ? 'bg-indigo-50 text-indigo-700 font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-mc-beige-light text-mc-black font-bold'
+                      : 'text-mc-black hover:bg-mc-beige-light/50'
                   }`}
                 >
                   <div className="flex flex-col truncate">
@@ -129,26 +129,26 @@ export default function WarehouseInfiniteDropdown({
                       {wh.name || wh.warehouse_name || wh.id}
                     </span>
                     {wh.warehouse_name && wh.name && (
-                      <span className="text-[10px] text-slate-400 truncate">
+                      <span className="truncate text-[10px] text-slate-400">
                         {wh.name}
                       </span>
                     )}
                   </div>
                   {isSelected && (
-                    <Check className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+                    <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
                   )}
                 </button>
               );
             })}
 
             {loading && (
-              <div className="flex items-center justify-center py-4 text-slate-400">
-                <Loader2 className="h-4 w-4 animate-spin" />
+              <div className="text-mc-gray-soft flex items-center justify-center py-4">
+                <Loader2 className="text-mc-gold h-4 w-4 animate-spin" />
               </div>
             )}
 
             {!loading && filteredWarehouses.length === 0 && (
-              <div className="text-center py-4 text-xs text-slate-400 italic">
+              <div className="py-4 text-center text-xs text-slate-400 italic">
                 No warehouses found
               </div>
             )}

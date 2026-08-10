@@ -163,12 +163,12 @@ export default function DateFilterInput({
           type="button"
           title={title}
           onClick={handleToggleCalendar}
-          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition focus:border-indigo-500 focus:bg-white focus:outline-none"
+          className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border px-3 py-2 text-left text-sm transition focus:ring-1 focus:outline-none"
         >
           {selected ? (
-            <span className="font-medium">{formatDateOnly(selected)}</span>
+            <span className="font-bold">{formatDateOnly(selected)}</span>
           ) : (
-            <span className="text-slate-400">yyyy-mm-dd</span>
+            <span className="text-mc-gray-soft font-medium">yyyy-mm-dd</span>
           )}
         </button>
         {selected && (
@@ -187,7 +187,7 @@ export default function DateFilterInput({
       </div>
 
       {open && (
-        <div className="absolute top-full right-0 z-50 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+        <div className="border-mc-beige-dark bg-mc-white animate-scaleUp absolute top-full right-0 z-50 mt-1 w-64 rounded-xl border p-3 shadow-lg">
           {/* ── Header: arrows + month/year buttons ── */}
           <div className="mb-2 flex items-center justify-between">
             <button
@@ -210,10 +210,10 @@ export default function DateFilterInput({
                   setPickerMode((m) => (m === 'month' ? 'none' : 'month'))
                 }
                 className={[
-                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-semibold transition',
+                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-bold transition',
                   pickerMode === 'month'
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-slate-700 hover:bg-slate-100',
+                    ? 'bg-mc-beige-light text-mc-black'
+                    : 'text-mc-black hover:bg-mc-beige-light/50',
                 ].join(' ')}
               >
                 {MONTH_FULL[currentMonth]}
@@ -227,10 +227,10 @@ export default function DateFilterInput({
                   setPickerMode((m) => (m === 'year' ? 'none' : 'year'))
                 }
                 className={[
-                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-semibold transition',
+                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-bold transition',
                   pickerMode === 'year'
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-slate-700 hover:bg-slate-100',
+                    ? 'bg-mc-beige-light text-mc-black'
+                    : 'text-mc-black hover:bg-mc-beige-light/50',
                 ].join(' ')}
               >
                 {currentYear}
@@ -253,7 +253,7 @@ export default function DateFilterInput({
 
           {/* ── Month picker grid (3 × 4) ── */}
           {pickerMode === 'month' && (
-            <div className="mb-2 grid grid-cols-3 gap-1 rounded-lg border border-slate-100 bg-slate-50 p-1">
+            <div className="border-mc-beige-dark bg-mc-beige-light/30 mb-2 grid grid-cols-3 gap-1 rounded-lg border p-1">
               {MONTH_NAMES.map((name, idx) => {
                 const isActive = idx === currentMonth;
                 return (
@@ -267,8 +267,8 @@ export default function DateFilterInput({
                     className={[
                       'rounded-md py-1.5 text-xs font-medium transition',
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm',
+                        ? 'bg-mc-gold text-mc-black font-bold shadow-sm'
+                        : 'text-mc-gray-soft hover:bg-mc-white hover:text-mc-black hover:shadow-sm',
                     ].join(' ')}
                   >
                     {name}
@@ -282,7 +282,7 @@ export default function DateFilterInput({
           {pickerMode === 'year' && (
             <div
               ref={yearGridRef}
-              className="mb-2 grid max-h-40 grid-cols-4 gap-1 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50 p-1"
+              className="custom-scrollbar border-mc-beige-dark bg-mc-beige-light/30 mb-2 grid max-h-40 grid-cols-4 gap-1 overflow-y-auto rounded-lg border p-1"
             >
               {YEARS.map((yr) => {
                 const isActive = yr === currentYear;
@@ -298,8 +298,8 @@ export default function DateFilterInput({
                     className={[
                       'rounded-md py-1.5 text-xs font-medium transition',
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-white hover:text-indigo-600 hover:shadow-sm',
+                        ? 'bg-mc-gold text-mc-black font-bold shadow-sm'
+                        : 'text-mc-gray-soft hover:bg-mc-white hover:text-mc-black hover:shadow-sm',
                     ].join(' ')}
                   >
                     {yr}
@@ -316,7 +316,7 @@ export default function DateFilterInput({
                 {WEEKDAYS.map((d) => (
                   <div
                     key={d}
-                    className="py-1 text-center text-[10px] font-semibold text-slate-400"
+                    className="text-mc-gray-soft py-1 text-center text-[10px] font-bold"
                   >
                     {d}
                   </div>
@@ -340,12 +340,12 @@ export default function DateFilterInput({
                       }}
                       className={[
                         'h-8 w-8 rounded-md text-xs transition',
-                        inMonth ? 'text-slate-700' : 'text-slate-300',
+                        inMonth ? 'text-mc-black' : 'text-mc-gray-soft/50',
                         isSelected
-                          ? 'bg-indigo-600 font-semibold text-white hover:bg-indigo-700'
-                          : 'hover:bg-slate-100',
+                          ? 'bg-mc-gold text-mc-black hover:bg-mc-gold/80 font-bold hover:shadow-sm'
+                          : 'hover:bg-mc-beige-light',
                         !isSelected && isToday
-                          ? 'ring-1 ring-slate-300 ring-inset'
+                          ? 'ring-mc-beige-dark font-bold ring-1 ring-inset'
                           : '',
                       ].join(' ')}
                     >
