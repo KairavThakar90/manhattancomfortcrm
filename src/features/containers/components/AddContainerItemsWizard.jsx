@@ -230,18 +230,18 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
     <div className="animate-in fade-in fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
       <div className="slide-in-from-bottom-4 relative flex h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-slate-50 shadow-2xl duration-300">
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <div className="border-mc-beige-dark bg-mc-white flex shrink-0 items-center justify-between border-b px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">
+            <h2 className="text-mc-black text-lg font-bold">
               Manually Add Items
             </h2>
-            <p className="mt-0.5 text-xs font-medium text-slate-500">
+            <p className="text-mc-gray-soft mt-0.5 text-xs font-medium">
               Select a Purchase Order to allocate items directly
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black rounded-lg p-2 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -252,7 +252,7 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
           {/* Wizard Steps indicator */}
           <div className="relative mx-auto mb-2 flex w-full max-w-xs items-center justify-between">
             <div
-              className="absolute top-1/2 left-0 z-0 h-1 -translate-y-1/2 rounded-full bg-indigo-500 transition-all duration-500 ease-in-out"
+              className="bg-mc-gold absolute top-1/2 left-0 z-0 h-1 -translate-y-1/2 rounded-full transition-all duration-500 ease-in-out"
               style={{
                 width:
                   currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
@@ -260,24 +260,24 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
             ></div>
             <div className="relative z-10 flex flex-col items-center">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 1 ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-indigo-500 bg-white text-indigo-600 shadow-md'}`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 1 ? 'border-mc-gold bg-mc-gold text-mc-black' : 'border-mc-gold bg-mc-white text-mc-gold shadow-md'}`}
               >
                 {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : '1'}
               </div>
               <span
-                className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold ${currentStep >= 1 ? 'text-indigo-900' : 'text-slate-400'}`}
+                className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold ${currentStep >= 1 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
               >
                 Select PO
               </span>
             </div>
             <div className="relative z-10 flex flex-col items-center">
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 2 ? 'border-indigo-500 bg-indigo-500 text-white' : currentStep === 2 ? 'border-indigo-500 bg-white text-indigo-600 shadow-md' : 'border-slate-300 bg-white text-slate-400'}`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 2 ? 'border-mc-gold bg-mc-gold text-mc-black' : currentStep === 2 ? 'border-mc-gold bg-mc-white text-mc-gold shadow-md' : 'border-mc-beige-dark bg-mc-white text-mc-gray-soft'}`}
               >
                 {currentStep > 2 ? <CheckCircle2 className="h-4 w-4" /> : '2'}
               </div>
               <span
-                className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold ${currentStep >= 2 ? 'text-indigo-900' : 'text-slate-400'}`}
+                className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold ${currentStep >= 2 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
               >
                 Allocate Items
               </span>
@@ -286,12 +286,12 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
 
           <div className="mt-4">
             {/* Step 1: Select PO */}
-            <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="border-mc-beige-dark bg-mc-white mb-4 rounded-xl border p-4 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                   1
                 </span>
-                <h2 className="text-base font-bold text-slate-800">
+                <h2 className="text-mc-black text-base font-bold">
                   Select Purchase Order
                 </h2>
               </div>
@@ -314,13 +314,13 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
 
             {/* Step 2: Item Allocation */}
             {selectedPO && (
-              <div className="flex max-h-[500px] min-h-[400px] flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="border-mc-beige-dark bg-mc-white flex max-h-[500px] min-h-[400px] flex-col rounded-xl border p-4 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                    <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                       2
                     </span>
-                    <h2 className="text-base font-bold text-slate-800">
+                    <h2 className="text-mc-black text-base font-bold">
                       Allocate Items
                     </h2>
                   </div>
@@ -346,12 +346,12 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
                 </div>
 
                 {selectedItems.length === 0 ? (
-                  <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                    <Package className="mb-3 h-10 w-10 text-slate-300" />
-                    <h3 className="mb-1 text-sm font-bold text-slate-700">
+                  <div className="border-mc-beige-dark bg-mc-white flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                    <Package className="text-mc-gray-soft mb-3 h-10 w-10" />
+                    <h3 className="text-mc-black mb-1 text-sm font-bold">
                       No items selected
                     </h3>
-                    <p className="max-w-sm text-xs text-slate-500">
+                    <p className="text-mc-gray-soft max-w-sm text-xs">
                       Select a PO from the dropdown above to start adding items
                       to this container.
                     </p>
@@ -361,28 +361,27 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
                     {selectedItems.map((item) => (
                       <div
                         key={item.sku}
-                        className="flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-white p-3 transition-colors hover:border-indigo-200 sm:flex-row sm:items-center"
+                        className="border-mc-beige-dark bg-mc-white hover:border-mc-gold flex flex-col justify-between gap-4 rounded-lg border p-3 transition-colors sm:flex-row sm:items-center"
                       >
                         <div className="flex items-start gap-3 overflow-hidden">
-                          <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-slate-100 text-slate-400">
+                          <div className="bg-mc-beige-light text-mc-black mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
                             <Package className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p
-                              className="truncate text-sm font-bold text-slate-800"
+                              className="text-mc-black truncate text-sm font-bold"
                               title={item.sku}
                             >
                               {item.sku}
                             </p>
-                            <p className="mt-0.5 truncate text-xs text-slate-500">
+                            <p className="text-mc-gray-soft mt-0.5 truncate text-xs">
                               {item.name}
                             </p>
                           </div>
                         </div>
-
                         <div className="flex items-start gap-3">
                           <div className="flex flex-col items-end">
-                            <label className="mb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                            <label className="text-mc-gray-soft mb-1 text-[10px] font-bold tracking-wider uppercase">
                               Quantity
                             </label>
                             <div className="flex items-center gap-2">
@@ -398,16 +397,16 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
                                 onChange={(e) =>
                                   handleQtyChange(item.sku, e.target.value)
                                 }
-                                className={`w-20 rounded border bg-slate-50 px-2 py-1 text-right font-mono text-sm font-bold focus:ring-1 focus:outline-none ${
+                                className={`bg-mc-white w-20 rounded border px-2 py-1 text-right font-mono text-sm font-bold focus:ring-1 focus:outline-none ${
                                   item.allocateQty > item.maxQty ||
                                   item.allocateQty < 0 ||
                                   item.allocateQty === ''
                                     ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-500'
-                                    : 'border-slate-200 text-slate-800 focus:ring-indigo-500'
+                                    : 'border-mc-beige-dark text-mc-black focus:border-mc-gold focus:ring-mc-gold'
                                 }`}
                                 placeholder="0"
                               />
-                              <span className="w-8 text-xs font-medium whitespace-nowrap text-slate-400">
+                              <span className="text-mc-gray-soft w-8 text-xs font-medium whitespace-nowrap">
                                 / {item.maxQty}
                               </span>
                             </div>
@@ -419,7 +418,7 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
                           </div>
                           <button
                             onClick={() => handleRemoveItem(item.sku)}
-                            className="mt-4 ml-2 flex-shrink-0 rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                            className="text-mc-gray-soft mt-4 ml-2 flex-shrink-0 rounded-lg p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-500"
                             title="Remove item"
                           >
                             <X className="h-4 w-4" />
@@ -435,17 +434,17 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
+        <div className="border-mc-beige-dark bg-mc-white flex shrink-0 justify-end gap-3 border-t px-6 py-4">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+            className="border-mc-beige-dark bg-mc-white text-mc-black hover:bg-mc-beige-light rounded-lg border px-5 py-2 text-sm font-bold transition"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={selectedItems.length === 0}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:opacity-50"
+            className="bg-mc-black text-mc-white flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:bg-black disabled:opacity-50"
           >
             <CheckCircle2 className="h-4 w-4" />
             Add Selected Items

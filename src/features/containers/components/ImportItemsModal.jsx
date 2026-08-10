@@ -510,24 +510,24 @@ export default function ImportItemsModal({
           </div>
         )}
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div className="border-mc-beige-dark bg-mc-white flex items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+            <div className="bg-mc-beige-light text-mc-black flex h-10 w-10 items-center justify-center rounded-lg">
               <Download className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg leading-tight font-bold text-slate-800">
+              <h3 className="text-mc-black text-lg leading-tight font-bold">
                 Import Container Items
               </h3>
               <div className="mt-0.5 flex items-center gap-3">
-                <p className="text-xs font-medium text-slate-500">
+                <p className="text-mc-gray-soft text-xs font-medium">
                   Upload CSV or Excel file to add items automatically
                 </p>
-                <div className="h-1 w-1 rounded-full bg-slate-300"></div>
+                <div className="bg-mc-gray-soft h-1 w-1 rounded-full"></div>
                 <button
                   onClick={handleDownloadTemplate}
                   title="Download template"
-                  className="text-xs font-bold text-indigo-600 transition hover:text-indigo-800 hover:underline"
+                  className="text-mc-gold hover:text-mc-gold/80 text-xs font-bold transition hover:underline"
                 >
                   Download file Format
                 </button>
@@ -536,7 +536,7 @@ export default function ImportItemsModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black rounded-lg p-2 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -546,19 +546,19 @@ export default function ImportItemsModal({
         <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto p-6">
           {!file && rows.length === 0 ? (
             <div
-              className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-indigo-300 bg-white px-12 py-16 transition-colors hover:bg-slate-50"
+              className="border-mc-gold/30 bg-mc-white hover:bg-mc-beige-light/30 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-12 py-16 transition-colors"
               onClick={() => fileInputRef.current?.click()}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
               <FileSpreadsheet
-                className="mb-5 h-14 w-14 text-slate-400"
+                className="text-mc-gray-soft mb-5 h-14 w-14"
                 strokeWidth={1.5}
               />
-              <h4 className="mb-2 text-lg font-bold text-slate-700">
+              <h4 className="text-mc-black mb-2 text-lg font-bold">
                 Click to browse or drag file here
               </h4>
-              <p className="mb-6 text-sm font-medium text-slate-500">
+              <p className="text-mc-gray-soft mb-6 text-sm font-medium">
                 Accepts .xlsx, .xls, .csv
               </p>
               <button
@@ -566,7 +566,7 @@ export default function ImportItemsModal({
                   e.stopPropagation();
                   fileInputRef.current?.click();
                 }}
-                className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700"
+                className="bg-mc-beige-light text-mc-black border-mc-beige-dark hover:bg-mc-beige-dark rounded-lg border px-6 py-2.5 text-sm font-bold shadow-sm transition"
               >
                 Select File
               </button>
@@ -601,7 +601,7 @@ export default function ImportItemsModal({
                   <button
                     type="button"
                     onClick={() => setShowWizard(true)}
-                    className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-100"
+                    className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark rounded-md border px-3 py-1.5 text-xs font-bold shadow-sm transition"
                   >
                     + Add Row
                   </button>
@@ -624,14 +624,14 @@ export default function ImportItemsModal({
                           fileInputRef.current.value = '';
                         }
                       }}
-                      className="cursor-pointer rounded-md border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                      className="border-mc-beige-dark text-mc-black hover:bg-mc-beige-light cursor-pointer rounded-md border bg-transparent px-3 py-1.5 text-xs font-semibold transition"
                     >
                       {file ? 'Upload Different File' : 'Clear & Upload File'}
                     </button>
                     {file && (
-                      <div className="animate-in fade-in zoom-in absolute top-full right-0 z-50 mt-2 hidden w-max rounded-lg bg-indigo-600 px-3 py-2 text-[11px] font-bold text-white shadow-xl duration-200 group-hover:block">
+                      <div className="bg-mc-black animate-in fade-in zoom-in absolute top-full right-0 z-50 mt-2 hidden w-max rounded-lg px-3 py-2 text-[11px] font-bold text-white shadow-xl duration-200 group-hover:block">
                         If you selected the wrong file, upload a new file.
-                        <div className="absolute right-16 bottom-full border-4 border-transparent border-b-indigo-600"></div>
+                        <div className="border-b-mc-black absolute right-16 bottom-full border-4 border-transparent"></div>
                       </div>
                     )}
                   </div>
@@ -640,12 +640,12 @@ export default function ImportItemsModal({
 
               {loading ? (
                 <div className="flex items-center justify-center p-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                  <Loader2 className="text-mc-gold h-8 w-8 animate-spin" />
                 </div>
               ) : (
-                <div className="min-h-[300px] flex-1 overflow-x-auto overflow-y-auto rounded-lg border border-slate-200 shadow-sm">
+                <div className="border-mc-beige-dark min-h-[300px] flex-1 overflow-x-auto overflow-y-auto rounded-lg border shadow-sm">
                   <table className="w-full border-collapse text-left text-xs">
-                    <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 font-semibold text-slate-600 uppercase">
+                    <thead className="bg-mc-beige-light border-mc-beige-dark text-mc-black sticky top-0 border-b font-semibold uppercase">
                       <tr>
                         <th className="min-w-[150px] px-4 py-3">SKU</th>
                         <th className="min-w-[150px] px-4 py-3">PO Item ID</th>
@@ -654,7 +654,7 @@ export default function ImportItemsModal({
                         <th className="px-4 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-mc-beige-dark bg-mc-white divide-y">
                       {rows.map((row) => (
                         <tr
                           key={row._id}
@@ -669,7 +669,7 @@ export default function ImportItemsModal({
                               onChange={(e) =>
                                 handleRowChange(row._id, 'sku', e.target.value)
                               }
-                              className={`w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none ${!row.sku || row.sku === '-' || row._errors?.length > 0 ? 'border-rose-300 bg-rose-50 text-rose-800 focus:ring-rose-500' : row._success ? 'border-emerald-300 bg-emerald-50/30 text-emerald-900 focus:ring-emerald-500' : 'border-slate-200 hover:border-slate-300 focus:ring-indigo-500'}`}
+                              className={`w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none ${!row.sku || row.sku === '-' || row._errors?.length > 0 ? 'border-rose-300 bg-rose-50 text-rose-800 focus:ring-rose-500' : row._success ? 'border-emerald-300 bg-emerald-50/30 text-emerald-900 focus:ring-emerald-500' : 'border-mc-beige-dark hover:border-mc-black focus:border-mc-gold focus:ring-mc-gold'}`}
                               placeholder="SKU Required"
                             />
                             {row._errors && row._errors.length > 0 && (
@@ -701,7 +701,7 @@ export default function ImportItemsModal({
                                   e.target.value,
                                 )
                               }
-                              className="w-full cursor-not-allowed rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50"
+                              className="border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft hover:bg-mc-beige-light/50 w-full cursor-not-allowed rounded border px-2 py-1 text-xs"
                               placeholder="Item ID"
                             />
                           </td>
@@ -716,7 +716,7 @@ export default function ImportItemsModal({
                                   e.target.value,
                                 )
                               }
-                              className="w-full rounded border border-slate-200 px-2 py-1 text-xs hover:border-slate-300 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                              className="border-mc-beige-dark hover:border-mc-black focus:ring-mc-gold focus:border-mc-gold w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none"
                               placeholder="PO ID"
                             />
                           </td>
@@ -735,7 +735,7 @@ export default function ImportItemsModal({
                                 handleRowChange(row._id, 'qty', undefined);
                                 // clear old qty field if it exists to avoid confusion
                               }}
-                              className={`w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none ${(row.qty_in_container === undefined || row.qty_in_container === null || row.qty_in_container === '') && (row.qty === undefined || row.qty === null || row.qty === '') ? 'border-rose-300 bg-rose-50 focus:ring-rose-500' : 'border-slate-200 hover:border-slate-300 focus:ring-indigo-500'}`}
+                              className={`w-full rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none ${(row.qty_in_container === undefined || row.qty_in_container === null || row.qty_in_container === '') && (row.qty === undefined || row.qty === null || row.qty === '') ? 'border-rose-300 bg-rose-50 focus:ring-rose-500' : 'border-mc-beige-dark hover:border-mc-black focus:ring-mc-gold focus:border-mc-gold'}`}
                               placeholder="Required"
                             />
                             {row.qty_available_for_container !== undefined &&
@@ -793,7 +793,7 @@ export default function ImportItemsModal({
                     value={containerName}
                     onChange={(e) => setContainerName(e.target.value)}
                     placeholder="e.g. TCNU 1234567"
-                    className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="border-mc-beige-dark bg-mc-white focus:border-mc-gold focus:ring-mc-gold text-mc-black w-full rounded-md border px-3 py-1.5 font-mono text-sm font-bold focus:ring-1 focus:outline-none"
                   />
                 </div>
 
@@ -819,10 +819,10 @@ export default function ImportItemsModal({
                           // Ignore if unsupported (older browsers)
                         }
                       }}
-                      className={`w-full cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none ${
+                      className={`border-mc-beige-dark bg-mc-white focus:ring-mc-gold focus:border-mc-gold w-full cursor-pointer rounded-md border px-3 py-1.5 text-sm font-medium focus:ring-1 focus:outline-none ${
                         !estimatedArrivalDate
-                          ? 'font-normal text-slate-400'
-                          : 'text-slate-800'
+                          ? 'text-mc-gray-soft font-normal'
+                          : 'text-mc-black'
                       }`}
                     />
                   </div>
@@ -910,7 +910,7 @@ export default function ImportItemsModal({
                     !rows.some((r) => r._success) ||
                     rows.some((r) => r._errors?.length > 0)
                   }
-                  className="relative z-10 flex min-w-[120px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="bg-mc-black text-mc-white flex min-w-[120px] items-center justify-center gap-2 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Allocate to Container
                 </button>
@@ -937,7 +937,7 @@ export default function ImportItemsModal({
                       !estimatedArrivalDate ||
                       !selectedWarehouseId))
                 }
-                className="flex min-w-[120px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-mc-black text-mc-white flex min-w-[120px] items-center justify-center gap-2 rounded-lg px-5 py-2 text-sm font-bold shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {importing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
