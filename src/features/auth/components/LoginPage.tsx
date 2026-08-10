@@ -387,18 +387,38 @@ function LoginPageContent({
                 </span>
               </button>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setStep('login');
-                  setOtp(''); // Optionally clear OTP when going back
-                }}
-                className="hover:text-mc-gold relative z-20 mt-4 w-full cursor-pointer p-3 text-center text-sm font-semibold text-slate-500 transition-colors"
-              >
-                Back to login
-              </button>
+              <div className="mt-4 flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                      // Re-trigger login which dispatches a new OTP and triggers the success toast
+                      await onLogin(username, password);
+                    } catch (err) {
+                      // Error handled upstream
+                    }
+                  }}
+                  className="text-mc-gold hover:text-mc-orange text-sm font-bold underline-offset-2 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Didn't receive a code? Resend
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setStep('login');
+                    setOtp('');
+                  }}
+                  className="hover:text-mc-gold relative z-20 w-full cursor-pointer p-3 text-center text-sm font-semibold text-slate-500 transition-colors"
+                >
+                  Back to login
+                </button>
+              </div>
             </form>
           )}
         </div>
