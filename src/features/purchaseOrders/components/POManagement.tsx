@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
+import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import {
   PurchaseOrder,
   Vendor,
@@ -3994,22 +3995,31 @@ Supply Chain CRM Coordinator`;
                   <label className="mb-2 block text-sm font-bold text-slate-700">
                     Filter Data
                   </label>
-                  <select
+                  <InfiniteScrollDropdown
                     value={exportFilterStatus}
-                    onChange={(e) => setExportFilterStatus(e.target.value)}
-                    className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-700 transition focus:bg-white focus:outline-hidden"
-                  >
-                    <option value="all">No Filter (All Data)</option>
-                    <option value="invoice_delayed">
-                      Invoice Delayed (Missing &gt; 10 days)
-                    </option>
-                    <option value="delivery_delayed">
-                      Delivery Delayed (ETA Passed)
-                    </option>
-                    <option value="lefts_items">
-                      Incomplete Receiving (Lefts Items)
-                    </option>
-                  </select>
+                    onChange={(val) => setExportFilterStatus(val)}
+                    items={[
+                      { value: 'all', label: 'No Filter (All Data)' },
+                      {
+                        value: 'invoice_delayed',
+                        label: 'Invoice Delayed (Missing > 10 days)',
+                      },
+                      {
+                        value: 'delivery_delayed',
+                        label: 'Delivery Delayed (ETA Passed)',
+                      },
+                      {
+                        value: 'lefts_items',
+                        label: 'Incomplete Receiving (Lefts Items)',
+                      },
+                    ]}
+                    hasMore={false}
+                    isLoading={false}
+                    onSearch={() => {}}
+                    onLoadMore={() => {}}
+                    placeholder="Select Filter"
+                    searchPlaceholder="Search filters..."
+                  />
                 </div>
 
                 {/* Columns Selection */}
@@ -4024,14 +4034,14 @@ Supply Chain CRM Coordinator`;
 
                   <div className="space-y-5">
                     <div>
-                      <h4 className="text-mc-black mb-2.5 border-b border-slate-200 pb-1 text-xs font-bold tracking-wide uppercase">
+                      <h4 className="border-mc-beige-dark text-mc-black mb-2.5 border-b pb-1 text-xs font-bold tracking-wide uppercase">
                         PO-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {PO_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
+                            className="hover:bg-mc-beige-light text-mc-black flex cursor-pointer items-center gap-2 rounded p-1 text-xs transition select-none"
                           >
                             <input
                               type="checkbox"
@@ -4054,7 +4064,7 @@ Supply Chain CRM Coordinator`;
                                   );
                                 }
                               }}
-                              className="text-mc-black focus:ring-mc-black rounded border-slate-300"
+                              className="border-mc-beige-dark focus:ring-mc-gold text-mc-black rounded accent-black"
                             />
                             {col}
                           </label>
@@ -4063,14 +4073,14 @@ Supply Chain CRM Coordinator`;
                     </div>
 
                     <div>
-                      <h4 className="mb-2.5 border-b border-emerald-100 pb-1 text-xs font-bold tracking-wide text-emerald-700 uppercase">
+                      <h4 className="border-mc-beige-dark text-mc-black mb-2.5 border-b pb-1 text-xs font-bold tracking-wide uppercase">
                         Item-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {ITEM_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
+                            className="hover:bg-mc-beige-light text-mc-black flex cursor-pointer items-center gap-2 rounded p-1 text-xs transition select-none"
                           >
                             <input
                               type="checkbox"
@@ -4091,7 +4101,7 @@ Supply Chain CRM Coordinator`;
                                   );
                                 }
                               }}
-                              className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                              className="border-mc-beige-dark focus:ring-mc-gold text-mc-black rounded accent-black"
                             />
                             {col}
                           </label>
@@ -4100,14 +4110,14 @@ Supply Chain CRM Coordinator`;
                     </div>
 
                     <div>
-                      <h4 className="mb-2.5 border-b border-sky-100 pb-1 text-xs font-bold tracking-wide text-sky-700 uppercase">
+                      <h4 className="border-mc-beige-dark text-mc-black mb-2.5 border-b pb-1 text-xs font-bold tracking-wide uppercase">
                         Container-Level Columns
                       </h4>
                       <div className="grid grid-cols-2 gap-2.5">
                         {CONTAINER_LEVEL_COLUMNS.map((col) => (
                           <label
                             key={col}
-                            className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs text-slate-700 transition select-none hover:bg-slate-50"
+                            className="hover:bg-mc-beige-light text-mc-black flex cursor-pointer items-center gap-2 rounded p-1 text-xs transition select-none"
                           >
                             <input
                               type="checkbox"
@@ -4120,7 +4130,7 @@ Supply Chain CRM Coordinator`;
                                     C.filter((c) => c !== col),
                                   );
                               }}
-                              className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                              className="border-mc-beige-dark focus:ring-mc-gold text-mc-black rounded accent-black"
                             />
                             {col}
                           </label>
@@ -4131,11 +4141,11 @@ Supply Chain CRM Coordinator`;
                 </div>
               </div>
 
-              <div className="flex shrink-0 justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 p-5">
+              <div className="border-mc-beige-dark bg-mc-white flex shrink-0 justify-end gap-2 rounded-b-2xl border-t p-5">
                 <button
                   type="button"
                   onClick={() => setShowExportModal(false)}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+                  className="border-mc-beige-dark bg-mc-white text-mc-black hover:bg-mc-beige-light rounded-lg border px-4 py-2 text-xs font-medium transition"
                 >
                   Cancel
                 </button>

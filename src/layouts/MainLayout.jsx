@@ -262,7 +262,7 @@ export default function MainLayout() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="rounded-lg border border-slate-200 p-2 text-slate-600 shadow-2xs transition hover:bg-slate-50"
+                className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold rounded-lg border p-2 shadow-2xs transition"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -274,14 +274,14 @@ export default function MainLayout() {
 
               {/* FLOATING NOTIFICATION CENTER SLIDEOVER */}
               {showNotifications && (
-                <div className="animate-fadeIn absolute right-0 z-50 mt-2 w-80 space-y-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl">
-                  <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-                    <span className="text-xs font-bold text-slate-800">
+                <div className="animate-fadeIn border-mc-beige-dark bg-mc-white absolute right-0 z-50 mt-2 w-80 space-y-3 rounded-2xl border p-4 shadow-xl">
+                  <div className="border-mc-beige-dark flex items-center justify-between border-b pb-2">
+                    <span className="text-mc-black text-xs font-bold">
                       Sourcing Alerts Desk
                     </span>
                     <button
                       onClick={handleMarkAllNotificationsRead}
-                      className="text-[10px] font-semibold text-indigo-600 hover:underline"
+                      className="text-mc-gold text-[10px] font-semibold hover:underline"
                     >
                       Clear alerts
                     </button>
@@ -294,19 +294,19 @@ export default function MainLayout() {
                         onClick={() => handleNotificationSelect(ntf)}
                         className={`cursor-pointer rounded-xl border p-2.5 text-xs transition ${
                           ntf.read
-                            ? 'border-slate-100 bg-white text-slate-500'
-                            : 'border-indigo-100 bg-indigo-50/30 font-medium text-slate-800'
+                            ? 'border-mc-beige-dark bg-mc-white text-mc-gray-soft'
+                            : 'border-mc-gold bg-mc-beige-light/50 text-mc-black font-medium'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold">
                             {ntf.title}
                           </span>
-                          <span className="font-mono text-[8px] text-slate-400">
+                          <span className="text-mc-gray-soft font-mono text-[8px]">
                             {ntf.timestamp.split(' ')[1]}
                           </span>
                         </div>
-                        <p className="mt-1 text-[10px] leading-normal text-slate-500">
+                        <p className="text-mc-gray-soft mt-1 text-[10px] leading-normal">
                           {ntf.message}
                         </p>
                       </div>
@@ -334,16 +334,16 @@ export default function MainLayout() {
 
               {/* USER DROPDOWN MENU */}
               {showUserMenu && (
-                <div className="animate-fadeIn absolute right-0 z-50 mt-2 w-56 rounded-xl border border-slate-100 bg-white py-2 font-sans shadow-xl">
+                <div className="animate-fadeIn border-mc-beige-dark bg-mc-white absolute right-0 z-50 mt-2 w-56 rounded-xl border py-2 font-sans shadow-xl">
                   {user && (
-                    <div className="border-b border-slate-100 px-4 py-2">
-                      <p className="truncate text-xs font-bold text-slate-800">
+                    <div className="border-mc-beige-dark border-b px-4 py-2">
+                      <p className="text-mc-black truncate text-xs font-bold">
                         {user.full_name}
                       </p>
-                      <p className="truncate text-[10px] text-slate-400">
+                      <p className="text-mc-gray-soft truncate text-[10px]">
                         {user.email}
                       </p>
-                      <span className="mt-1 inline-block rounded-sm bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-indigo-700 uppercase">
+                      <span className="bg-mc-beige-light text-mc-gold mt-1 inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase">
                         {userRole}
                       </span>
                     </div>
@@ -353,7 +353,7 @@ export default function MainLayout() {
                       setShowUserMenu(false);
                       handleLogout();
                     }}
-                    className="flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                    className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="font-semibold">Log out</span>

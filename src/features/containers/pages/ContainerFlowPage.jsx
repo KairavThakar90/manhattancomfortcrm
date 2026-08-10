@@ -1279,19 +1279,19 @@ export default function ContainerFlowPage() {
         {/* Export CSV Modal */}
         {showExportModal && (
           <div className="animate-in fade-in fixed inset-0 z-50 flex h-full w-full items-center justify-center overflow-y-auto bg-slate-900/50 p-4 backdrop-blur-xs">
-            <div className="relative my-auto flex w-full max-w-xl flex-col rounded-2xl border border-slate-100 bg-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-100 p-5">
+            <div className="border-mc-beige-dark bg-mc-white relative my-auto flex w-full max-w-xl flex-col rounded-2xl border shadow-2xl">
+              <div className="border-mc-beige-dark flex items-center justify-between border-b p-5">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-mc-black text-sm font-bold">
                     Export Container Data (CSV)
                   </h3>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="text-mc-gray-soft mt-1 text-xs">
                     Select the filters and columns to include in your export.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowExportModal(false)}
-                  className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                  className="text-mc-gray-soft rounded-lg p-2 transition hover:bg-rose-50 hover:text-rose-500"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1300,7 +1300,7 @@ export default function ContainerFlowPage() {
               <div className="custom-scrollbar flex max-h-[60vh] flex-col gap-6 overflow-y-auto p-5">
                 {/* Filter Section */}
                 <div>
-                  <h4 className="mb-3 text-xs font-bold tracking-wider text-slate-700 uppercase">
+                  <h4 className="text-mc-black mb-3 text-xs font-bold tracking-wider uppercase">
                     Status Filter
                   </h4>
                   <div className="flex flex-col gap-2">
@@ -1310,9 +1310,9 @@ export default function ContainerFlowPage() {
                         name="container-export-filter"
                         checked={exportFilterStatus === 'all'}
                         onChange={() => setExportFilterStatus('all')}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-mc-black border-mc-beige-dark focus:ring-mc-gold accent-black"
                       />
-                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-indigo-600">
+                      <span className="text-mc-black group-hover:text-mc-gold text-mc-black text-sm font-medium transition-colors">
                         All Containers (Pending & Received)
                       </span>
                     </label>
@@ -1322,9 +1322,9 @@ export default function ContainerFlowPage() {
                         name="container-export-filter"
                         checked={exportFilterStatus === 'pending'}
                         onChange={() => setExportFilterStatus('pending')}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-mc-black border-mc-beige-dark focus:ring-mc-gold accent-black"
                       />
-                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-amber-600">
+                      <span className="text-mc-black group-hover:text-mc-gold text-sm font-medium transition-colors">
                         Pending/In-Transit Only
                       </span>
                     </label>
@@ -1334,9 +1334,9 @@ export default function ContainerFlowPage() {
                         name="container-export-filter"
                         checked={exportFilterStatus === 'received'}
                         onChange={() => setExportFilterStatus('received')}
-                        className="text-indigo-600 focus:ring-indigo-500"
+                        className="text-mc-black border-mc-beige-dark focus:ring-mc-gold accent-black"
                       />
-                      <span className="text-sm font-medium text-slate-700 transition-colors group-hover:text-emerald-600">
+                      <span className="text-mc-black group-hover:text-mc-gold text-sm font-medium transition-colors">
                         Received Containers Only
                       </span>
                     </label>
@@ -1346,17 +1346,17 @@ export default function ContainerFlowPage() {
                 {/* Columns Section */}
                 <div>
                   <div className="mb-3 flex items-center justify-between">
-                    <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">
+                    <h4 className="text-mc-black text-xs font-bold tracking-wider uppercase">
                       Columns to Include
                     </h4>
                     <button
                       onClick={() => setExportColumns(CONTAINER_EXPORT_COLUMNS)}
-                      className="rounded px-2 py-1 text-[10px] font-bold text-indigo-600 uppercase transition hover:bg-indigo-50"
+                      className="text-mc-black hover:bg-mc-beige-light hover:border-mc-beige-dark rounded border border-transparent px-2 py-1 text-[10px] font-bold uppercase transition"
                     >
                       Select All
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                  <div className="border-mc-beige-dark bg-mc-white grid grid-cols-2 gap-2 rounded-xl border p-4">
                     {CONTAINER_EXPORT_COLUMNS.map((col) => (
                       <label
                         key={col}
@@ -1373,9 +1373,9 @@ export default function ContainerFlowPage() {
                                 C.filter((c) => c !== col),
                               );
                           }}
-                          className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          className="border-mc-beige-dark text-mc-black focus:ring-mc-gold mt-0.5 rounded accent-black"
                         />
-                        <span className="text-xs leading-tight font-medium text-slate-600 transition-colors group-hover:text-indigo-600">
+                        <span className="text-mc-black group-hover:text-mc-gold text-xs leading-tight font-medium transition-colors">
                           {CONTAINER_EXPORT_COLUMNS_LABELS[col] || col}
                         </span>
                       </label>
@@ -1384,17 +1384,17 @@ export default function ContainerFlowPage() {
                 </div>
               </div>
 
-              <div className="flex shrink-0 justify-end gap-2 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 p-5">
+              <div className="border-mc-beige-dark bg-mc-white flex shrink-0 justify-end gap-2 rounded-b-2xl border-t p-5">
                 <button
                   type="button"
                   onClick={() => setShowExportModal(false)}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
+                  className="border-mc-beige-dark bg-mc-white text-mc-black hover:bg-mc-beige-light rounded-lg border px-4 py-2 text-xs font-bold transition"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeExportCSV}
-                  className="flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
+                  className="bg-mc-black text-mc-white flex items-center gap-2 rounded-lg px-5 py-2 text-xs font-bold shadow-xs transition hover:bg-black"
                 >
                   <Upload className="h-4 w-4" />
                   Generate CSV
