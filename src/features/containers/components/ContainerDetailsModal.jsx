@@ -178,24 +178,24 @@ export default function ContainerDetailsModal({
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="flex shrink-0 border-b border-slate-100 bg-slate-50/50">
+            <button
+              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'details' ? 'border-indigo-600 bg-white text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              onClick={() => setActiveTab('details')}
+            >
+              Details
+            </button>
+            <button
+              className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'comments' ? 'border-indigo-600 bg-white text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              onClick={() => setActiveTab('comments')}
+            >
+              Container Tracking & Financial Information
+            </button>
+          </div>
+
           {/* Modal Body */}
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-6">
-            {/* Tabs */}
-            <div className="mb-6 flex shrink-0 border-b border-slate-200">
-              <button
-                className={`w-1/2 border-b-2 py-3 text-center text-sm font-bold transition-colors ${activeTab === 'details' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                onClick={() => setActiveTab('details')}
-              >
-                Details
-              </button>
-              <button
-                className={`w-1/2 border-b-2 py-3 text-center text-sm font-bold transition-colors ${activeTab === 'comments' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                onClick={() => setActiveTab('comments')}
-              >
-                Container Tracking & Financial Information
-              </button>
-            </div>
-
             {activeTab === 'details' && (
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
