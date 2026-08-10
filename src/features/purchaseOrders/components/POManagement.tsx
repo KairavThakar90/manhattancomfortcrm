@@ -2472,14 +2472,14 @@ Supply Chain CRM Coordinator`;
         />
       </div>
       {/* Tab Header Controls */}
-      <div className="border-mc-beige-dark flex flex-shrink-0 flex-col gap-4 rounded-xl border bg-white p-4 shadow-xs md:flex-row md:items-center md:justify-between">
-        <div className="flex w-fit items-center gap-1 rounded-lg bg-slate-100 p-1">
+      <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-4 rounded-xl border p-4 shadow-none md:flex-row md:items-center md:justify-between">
+        <div className="bg-mc-beige-light text-mc-black flex w-fit items-center gap-1 rounded-lg p-1">
           <button
             onClick={() => setActiveSubTab('grid')}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition ${
               activeSubTab === 'grid'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-mc-white text-mc-black shadow-none'
+                : 'text-mc-gray-soft hover:text-mc-black'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -2488,10 +2488,10 @@ Supply Chain CRM Coordinator`;
 
           <button
             onClick={() => setActiveSubTab('kanban')}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition ${
               activeSubTab === 'kanban'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-mc-white text-mc-black shadow-none'
+                : 'text-mc-gray-soft hover:text-mc-black'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -2514,7 +2514,7 @@ Supply Chain CRM Coordinator`;
               <button
                 onClick={handleSyncSellerCloud}
                 disabled={isSyncing}
-                className="text-mc-black flex items-center gap-1 rounded-lg border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-bold transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -2527,7 +2527,7 @@ Supply Chain CRM Coordinator`;
                 <button
                   onClick={onRefreshData}
                   disabled={loading}
-                  className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="border-mc-beige-dark bg-mc-white text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
@@ -2537,7 +2537,7 @@ Supply Chain CRM Coordinator`;
               )}
               <button
                 onClick={handleExportCSVClick}
-                className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                className="border-mc-beige-dark bg-mc-white text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition"
               >
                 <Upload className="h-3.5 w-3.5" />
                 <span>Export CSV</span>
@@ -2558,30 +2558,30 @@ Supply Chain CRM Coordinator`;
       </div>
 
       {/* SEARCH AND FILTER BAR */}
-      <div className="border-mc-beige-dark flex flex-shrink-0 flex-col gap-3 rounded-xl border bg-white p-4 shadow-xs">
+      <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none">
         {/* Row 1: Search + Vendor filter */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           {activeSubTab === 'kanban' && (
             <div className="flex-1">
-              <h3 className="font-display text-sm font-bold text-slate-900">
+              <h3 className="font-display text-mc-black text-sm font-bold">
                 Purchase Order Overview
               </h3>
             </div>
           )}
           {activeSubTab !== 'kanban' && (
             <div className="relative flex-1">
-              <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+              <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
               <input
                 type="text"
                 placeholder="Smart Search: PO number, Order id, Vendor..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:bg-white focus:outline-hidden"
+                className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-8 pl-9 text-sm transition focus:outline-none"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute top-2.5 right-3 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+                  className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black absolute top-2.5 right-3 rounded-full p-0.5 transition"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -2593,8 +2593,8 @@ Supply Chain CRM Coordinator`;
             {userRole !== 'Vendor' && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
-                  <Filter className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold">
                     Vendor:
                   </span>
                 </div>
@@ -2604,7 +2604,7 @@ Supply Chain CRM Coordinator`;
                     onChange={setVendorFilter}
                     showAllOption={true}
                     placeholder="All Vendors"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
+                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                   />
                 </div>
               </div>
@@ -2612,8 +2612,8 @@ Supply Chain CRM Coordinator`;
             {userRole !== 'Vendor' && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
-                  <Filter className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold">
                     Company:
                   </span>
                 </div>
@@ -2627,7 +2627,7 @@ Supply Chain CRM Coordinator`;
                     }}
                     showAllOption={true}
                     placeholder="All Companies"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
+                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                   />
                 </div>
               </div>
@@ -2635,8 +2635,8 @@ Supply Chain CRM Coordinator`;
             {activeSubTab !== 'kanban' && (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
+                  <CalendarDays className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
                     Order Date:
                   </span>
                 </div>

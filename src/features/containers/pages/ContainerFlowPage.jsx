@@ -1086,18 +1086,18 @@ export default function ContainerFlowPage() {
 
   if (showList) {
     return (
-      <div className="relative flex h-full w-full flex-col overflow-hidden bg-slate-50">
+      <div className="bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
         {/* Header */}
-        <div className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
+        <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b px-5 py-3 shadow-none">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+            <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
               <Container className="h-4 w-4" />
             </div>
             <div>
-              <h1 className="font-display text-lg font-bold text-slate-800">
+              <h1 className="font-display text-mc-black text-lg font-bold">
                 Container Management
               </h1>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-mc-gray-soft text-xs font-medium">
                 Manage all shipping containers and PO allocations
               </p>
             </div>
@@ -1106,7 +1106,7 @@ export default function ContainerFlowPage() {
             <button
               onClick={handleSyncContainers}
               disabled={isSyncing}
-              className="flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-2 rounded-lg border px-4 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -1116,7 +1116,7 @@ export default function ContainerFlowPage() {
             <button
               onClick={() => fetchTablePage()}
               disabled={listLoading}
-              className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${listLoading ? 'animate-spin' : ''}`}
@@ -1125,7 +1125,7 @@ export default function ContainerFlowPage() {
             </button>
             <button
               onClick={() => setShowGlobalImport(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1.5 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Import CSV</span>
@@ -1136,7 +1136,7 @@ export default function ContainerFlowPage() {
                 setExportFilterStatus('all');
                 setShowExportModal(true);
               }}
-              className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1.5 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition"
             >
               <Upload className="h-3.5 w-3.5" />
               <span>Export CSV</span>
@@ -1153,11 +1153,11 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="relative flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
-          <div className="border-mc-beige-dark bg-mc-white flex-shrink-0 rounded-xl border p-4 shadow-xs">
-            <div className="flex items-center gap-3">
+          <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col justify-between gap-3 rounded-xl border p-4 shadow-none md:flex-row md:items-center">
+            <div className="flex w-full items-center gap-3">
               {/* Search bar */}
               <div className="relative flex-1">
-                <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Smart Search: Container Id,Container number..."
@@ -1166,7 +1166,7 @@ export default function ContainerFlowPage() {
                     setListSearchQuery(e.target.value);
                     setListPage(1);
                   }}
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-8 pl-9 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
+                  className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-8 pl-9 text-sm transition focus:outline-none"
                 />
                 {listSearchQuery && (
                   <button
@@ -1174,7 +1174,7 @@ export default function ContainerFlowPage() {
                       setListSearchQuery('');
                       setListPage(1);
                     }}
-                    className="absolute top-2.5 right-3 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+                    className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black absolute top-2.5 right-3 rounded-full p-0.5 transition"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -1183,8 +1183,8 @@ export default function ContainerFlowPage() {
               {/* Warehouse Filter */}
               <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
                     Warehouse:
                   </span>
                 </div>
@@ -1196,15 +1196,15 @@ export default function ContainerFlowPage() {
                       setListPage(1);
                     }}
                     showAllOption={true}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700 focus:outline-hidden"
+                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                   />
                 </div>
               </div>
               {/* Order Date Filter - inline */}
               <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-xs font-medium whitespace-nowrap text-slate-500">
+                  <Calendar className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
                     Received Date:
                   </span>
                 </div>
