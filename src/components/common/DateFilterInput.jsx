@@ -163,7 +163,7 @@ export default function DateFilterInput({
           type="button"
           title={title}
           onClick={handleToggleCalendar}
-          className="min-w-[8.5rem] rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-left text-xs text-slate-700 transition focus:border-indigo-500 focus:bg-white focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition focus:border-indigo-500 focus:bg-white focus:outline-none"
         >
           {selected ? (
             <span className="font-medium">{formatDateOnly(selected)}</span>

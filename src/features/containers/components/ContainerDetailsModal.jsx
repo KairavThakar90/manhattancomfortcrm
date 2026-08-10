@@ -18,6 +18,7 @@ import { updateContainer } from '../services/container.service';
 import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
+import DateFilterInput from '../../../components/common/DateFilterInput';
 
 export default function ContainerDetailsModal({
   container,
@@ -178,7 +179,7 @@ export default function ContainerDetailsModal({
           </div>
 
           {/* Modal Body */}
-          <div className="flex min-h-0 flex-1 flex-col p-6">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-6">
             {/* Tabs */}
             <div className="mb-6 flex shrink-0 border-b border-slate-200">
               <button
@@ -196,352 +197,355 @@ export default function ContainerDetailsModal({
             </div>
 
             {activeTab === 'details' && (
-              <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-indigo-200 hover:shadow-indigo-50">
-                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                    <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                    Arrival Date
-                  </p>
-                  <p className="text-base font-bold text-slate-800">
-                    {container.arrivalDate || 'Pending'}
-                  </p>
-                </div>
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-indigo-200 hover:shadow-indigo-50">
+                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                      <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                      Arrival Date
+                    </p>
+                    <p className="text-base font-bold text-slate-800">
+                      {container.arrivalDate || 'Pending'}
+                    </p>
+                  </div>
 
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-emerald-200 hover:shadow-emerald-50">
-                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                    <Package className="h-3.5 w-3.5 text-emerald-500" />
-                    Total Item
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-bold text-slate-800">
-                      {totalItems}
-                    </span>
-                    <span className="text-sm font-medium text-slate-500">
-                      units
-                    </span>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-emerald-200 hover:shadow-emerald-50">
+                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                      <Package className="h-3.5 w-3.5 text-emerald-500" />
+                      Total Item
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-slate-800">
+                        {totalItems}
+                      </span>
+                      <span className="text-sm font-medium text-slate-500">
+                        units
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-amber-200 hover:shadow-amber-50">
+                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                      <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                      Status
+                    </p>
+                    <div className="mt-1 inline-flex">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
+                      >
+                        {container.is_received ? 'Received' : 'In Transit'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-100/50 transition-all duration-200 hover:border-amber-200 hover:shadow-amber-50">
-                  <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                    <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                    Status
-                  </p>
-                  <div className="mt-1 inline-flex">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
-                    >
-                      {container.is_received ? 'Received' : 'In Transit'}
-                    </span>
+                <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)]">
+                  <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
+                    <h4 className="shrink-0 text-sm font-bold text-slate-900">
+                      Allocated Items
+                    </h4>
                   </div>
+
+                  {allItems.length > 0 || isLoading ? (
+                    <>
+                      <DataTable
+                        isLoading={isLoading}
+                        columns={[
+                          {
+                            header: 'VENDOR NAME',
+                            accessor: 'vendor_name',
+                            headerClassName: 'px-3 py-2 w-1/3 bg-white',
+                            className: 'px-3 py-2 max-w-[120px]',
+                            render: (item) => (
+                              <span className="block truncate font-mono font-bold text-slate-500">
+                                {item.vendor_name || 'N/A'}
+                              </span>
+                            ),
+                          },
+                          {
+                            header: 'SKU',
+                            accessor: 'sku',
+                            headerClassName: 'px-3 py-2 bg-white w-24',
+                            className: 'px-3 py-2 max-w-[100px]',
+                            render: (item) => (
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="cursor-help font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+                                  data-tooltip-id="sku-tooltip"
+                                  data-tooltip-content={item.sku || 'N/A'}
+                                >
+                                  {item.sku || '-'}
+                                </span>
+                              </div>
+                            ),
+                          },
+                          {
+                            header: 'PRODUCT NAME',
+                            accessor: 'product_name',
+                            headerClassName: 'px-3 py-2 bg-white',
+                            className: 'px-3 py-2 max-w-[150px]',
+                            render: (item) => (
+                              <span className="line-clamp-1 font-medium text-slate-800">
+                                {item.product_name || item.name || '-'}
+                              </span>
+                            ),
+                          },
+                          {
+                            header: 'QTY ASSIGNED',
+                            accessor: 'qty',
+                            headerClassName:
+                              'px-3 py-2 text-right w-32 bg-white',
+                            className:
+                              'px-3 py-2 text-right font-mono font-medium',
+                            render: (item) =>
+                              item.qty_in_container || item.qty || 0,
+                          },
+                        ]}
+                        data={paginatedItems}
+                        keyField="product_name"
+                        theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
+                        tableClassName="w-full text-left text-xs border-collapse"
+                        tbodyClassName="divide-y divide-slate-100 text-slate-700"
+                        trClassName="hover:bg-slate-50/50 transition-colors"
+                        containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
+                        tableWrapperClassName=""
+                      />
+                      <Pagination
+                        currentPage={itemsPage}
+                        totalCount={totalItems}
+                        pageSize={itemsPageSize}
+                        onPageChange={(pg) => setItemsPage(pg)}
+                        onPageSizeChange={(size) => {
+                          setItemsPageSize(size);
+                          setItemsPage(1);
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
+                        <Package className="h-8 w-8 text-slate-300" />
+                      </div>
+                      <p className="mb-1 font-medium text-slate-500">
+                        No items allocated
+                      </p>
+                      <p className="max-w-sm text-sm text-slate-400">
+                        This container currently does not have any purchase
+                        order items assigned to it.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {activeTab === 'comments' && (
-              <div className="mt-8 mb-4 px-2">
-                <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Container Name
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.container_name || ''}
-                      placeholder="e.g. CAAU1234567"
-                      onChange={(e) =>
-                        handleTrackingChange('container_name', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Door
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.door || ''}
-                      placeholder="e.g. Door 4"
-                      onChange={(e) =>
-                        handleTrackingChange('door', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Date Dropped Off
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.date_dropped_off || ''}
-                      onChange={(e) =>
-                        handleTrackingChange('date_dropped_off', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Date Emptied
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.date_emptied || ''}
-                      onChange={(e) =>
-                        handleTrackingChange('date_emptied', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Unloaded By
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.unloaded_by || ''}
-                      placeholder="e.g. John Doe"
-                      onChange={(e) =>
-                        handleTrackingChange('unloaded_by', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Country Of Origin
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.country_of_origin || ''}
-                      placeholder="e.g. China"
-                      onChange={(e) =>
-                        handleTrackingChange(
-                          'country_of_origin',
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Unload Cost
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                        $
-                      </span>
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                <div className="mt-8 mb-4 px-2">
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Container Name
+                      </label>
                       <input
-                        type="number"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        value={trackingData.unload_cost || ''}
-                        placeholder="0.00"
+                        type="text"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.container_name || ''}
+                        placeholder="e.g. CAAU1234567"
                         onChange={(e) =>
-                          handleTrackingChange('unload_cost', e.target.value)
+                          handleTrackingChange('container_name', e.target.value)
                         }
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Container Cost Drayage
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                        $
-                      </span>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Door
+                      </label>
                       <input
-                        type="number"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        value={trackingData.container_cost_drayage || ''}
-                        placeholder="0.00"
+                        type="text"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.door || ''}
+                        placeholder="e.g. Door 4"
+                        onChange={(e) =>
+                          handleTrackingChange('door', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Date Dropped Off
+                      </label>
+                      <DateFilterInput
+                        value={trackingData.date_dropped_off || ''}
+                        onChange={(val) =>
+                          handleTrackingChange('date_dropped_off', val)
+                        }
+                        title="Date Dropped Off"
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Date Emptied
+                      </label>
+                      <DateFilterInput
+                        value={trackingData.date_emptied || ''}
+                        onChange={(val) =>
+                          handleTrackingChange('date_emptied', val)
+                        }
+                        title="Date Emptied"
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Unloaded By
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.unloaded_by || ''}
+                        placeholder="e.g. John Doe"
+                        onChange={(e) =>
+                          handleTrackingChange('unloaded_by', e.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Country Of Origin
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.country_of_origin || ''}
+                        placeholder="e.g. China"
                         onChange={(e) =>
                           handleTrackingChange(
-                            'container_cost_drayage',
+                            'country_of_origin',
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Unload Cost
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          value={trackingData.unload_cost || ''}
+                          placeholder="0.00"
+                          onChange={(e) =>
+                            handleTrackingChange('unload_cost', e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Container Cost Drayage
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          value={trackingData.container_cost_drayage || ''}
+                          placeholder="0.00"
+                          onChange={(e) =>
+                            handleTrackingChange(
+                              'container_cost_drayage',
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Customs Duty Misc
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          value={trackingData.customs_duty_misc || ''}
+                          placeholder="0.00"
+                          onChange={(e) =>
+                            handleTrackingChange(
+                              'customs_duty_misc',
+                              e.target.value,
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Per Diem
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                          value={trackingData.per_diem || ''}
+                          placeholder="0.00"
+                          onChange={(e) =>
+                            handleTrackingChange('per_diem', e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Vendor Credit Needed
+                      </label>
+                      <textarea
+                        rows={3}
+                        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.factory_credit_needed || ''}
+                        placeholder="e.g. Damaged panels"
+                        onChange={(e) =>
+                          handleTrackingChange(
+                            'factory_credit_needed',
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Receiving Closure Notes
+                      </label>
+                      <textarea
+                        rows={3}
+                        className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        value={trackingData.receiving_closure_notes || ''}
+                        placeholder="e.g. Fully closed and processed"
+                        onChange={(e) =>
+                          handleTrackingChange(
+                            'receiving_closure_notes',
                             e.target.value,
                           )
                         }
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Customs Duty Misc
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                        $
-                      </span>
-                      <input
-                        type="number"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        value={trackingData.customs_duty_misc || ''}
-                        placeholder="0.00"
-                        onChange={(e) =>
-                          handleTrackingChange(
-                            'customs_duty_misc',
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Per Diem
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                        $
-                      </span>
-                      <input
-                        type="number"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                        value={trackingData.per_diem || ''}
-                        placeholder="0.00"
-                        onChange={(e) =>
-                          handleTrackingChange('per_diem', e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Factory Credit Needed
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.factory_credit_needed || ''}
-                      placeholder="e.g. Damaged panels"
-                      onChange={(e) =>
-                        handleTrackingChange(
-                          'factory_credit_needed',
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
-                      Receiving Closure Notes
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      value={trackingData.receiving_closure_notes || ''}
-                      placeholder="e.g. Fully closed and processed"
-                      onChange={(e) =>
-                        handleTrackingChange(
-                          'receiving_closure_notes',
-                          e.target.value,
-                        )
-                      }
-                    />
-                  </div>
                 </div>
-              </div>
-            )}
-
-            {activeTab === 'details' && (
-              <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_15px_-4px_rgba(0,0,0,0.03)]">
-                <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
-                  <h4 className="shrink-0 text-sm font-bold text-slate-900">
-                    Allocated Items
-                  </h4>
-                </div>
-
-                {allItems.length > 0 || isLoading ? (
-                  <>
-                    <DataTable
-                      isLoading={isLoading}
-                      columns={[
-                        {
-                          header: 'VENDOR NAME',
-                          accessor: 'vendor_name',
-                          headerClassName: 'px-3 py-2 w-1/3 bg-white',
-                          className: 'px-3 py-2 max-w-[120px]',
-                          render: (item) => (
-                            <span className="block truncate font-mono font-bold text-slate-500">
-                              {item.vendor_name || 'N/A'}
-                            </span>
-                          ),
-                        },
-                        {
-                          header: 'SKU',
-                          accessor: 'sku',
-                          headerClassName: 'px-3 py-2 bg-white w-24',
-                          className: 'px-3 py-2 max-w-[100px]',
-                          render: (item) => (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="cursor-help font-medium text-indigo-600 transition-colors hover:text-indigo-800"
-                                data-tooltip-id="sku-tooltip"
-                                data-tooltip-content={item.sku || 'N/A'}
-                              >
-                                {item.sku || '-'}
-                              </span>
-                            </div>
-                          ),
-                        },
-                        {
-                          header: 'PRODUCT NAME',
-                          accessor: 'product_name',
-                          headerClassName: 'px-3 py-2 bg-white',
-                          className: 'px-3 py-2 max-w-[150px]',
-                          render: (item) => (
-                            <span className="line-clamp-1 font-medium text-slate-800">
-                              {item.product_name || item.name || '-'}
-                            </span>
-                          ),
-                        },
-                        {
-                          header: 'QTY ASSIGNED',
-                          accessor: 'qty',
-                          headerClassName: 'px-3 py-2 text-right w-32 bg-white',
-                          className:
-                            'px-3 py-2 text-right font-mono font-medium',
-                          render: (item) =>
-                            item.qty_in_container || item.qty || 0,
-                        },
-                      ]}
-                      data={paginatedItems}
-                      keyField="product_name"
-                      theadClassName="border-b border-slate-100 text-black uppercase font-bold text-[9px] sticky top-0 bg-white z-10"
-                      tableClassName="w-full text-left text-xs border-collapse"
-                      tbodyClassName="divide-y divide-slate-100 text-slate-700"
-                      trClassName="hover:bg-slate-50/50 transition-colors"
-                      containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg bg-white"
-                      tableWrapperClassName=""
-                    />
-                    <Pagination
-                      currentPage={itemsPage}
-                      totalCount={totalItems}
-                      pageSize={itemsPageSize}
-                      onPageChange={(pg) => setItemsPage(pg)}
-                      onPageSizeChange={(size) => {
-                        setItemsPageSize(size);
-                        setItemsPage(1);
-                      }}
-                    />
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
-                      <Package className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <p className="mb-1 font-medium text-slate-500">
-                      No items allocated
-                    </p>
-                    <p className="max-w-sm text-sm text-slate-400">
-                      This container currently does not have any purchase order
-                      items assigned to it.
-                    </p>
-                  </div>
-                )}
               </div>
             )}
           </div>
