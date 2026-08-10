@@ -1646,7 +1646,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'id',
         headerClassName:
-          'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) => (
           <div className="flex flex-col items-start gap-1">
@@ -1752,7 +1752,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'creationDate',
         headerClassName:
-          'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) =>
           po.creationDate && po.creationDate !== 'N/A' ? (
@@ -1857,7 +1857,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'invoiceDetails',
         headerClassName:
-          'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4',
         render: (po: any) =>
           po.invoiceDetails?.date ? (
@@ -1972,7 +1972,7 @@ Supply Chain CRM Coordinator`;
         ),
         accessor: 'expected_delivery_date',
         headerClassName:
-          'px-6 py-4 bg-slate-50 cursor-pointer select-none group hover:text-indigo-600 transition-colors',
+          'px-6 py-4 bg-mc-white cursor-pointer select-none group hover:text-indigo-600 transition-colors',
         className: 'px-6 py-4 text-slate-600 font-mono',
         render: (po: any) => (
           <span
@@ -1990,7 +1990,7 @@ Supply Chain CRM Coordinator`;
         header: 'Containers',
         accessor: 'containerIds',
         headerClassName:
-          'px-6 py-4 bg-slate-50 w-[200px] min-w-[200px] max-w-[200px]',
+          'px-6 py-4 bg-mc-beige-light w-[200px] min-w-[200px] max-w-[200px]',
         className:
           'px-6 py-4 text-slate-600 font-mono text-xs w-[200px] max-w-[200px]',
         render: (po: any) => {
