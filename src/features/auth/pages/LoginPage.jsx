@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LoginPageComponent from '../components/LoginPage';
 import { useCRM } from '../../../hooks/useCRM';
-import { login, verify2FA } from '../services/auth.service';
+import { login, verify2FA, loginWithGoogle } from '../services/auth.service';
 
 export default function LoginPage() {
   const { isAuthenticated, setIsAuthenticated } = useCRM();
@@ -61,6 +61,27 @@ export default function LoginPage() {
   const fromSearch = location.state?.from?.search || '';
   const from = `${fromPath}${fromSearch}`;
 
+  const handleGoogleSuccess = async (googleToken) => {
+    setLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle(googleToken);
+      setIsAuthenticated(true);
+      toast.success('Successfully logged in with Google!');
+    } catch (err) {
+      const backendMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.response?.data?.detail;
+      setError(
+        backendMessage || err.message || 'Google Login failed securely.',
+      );
+      // throw err; // Remove throw to prevent unhandled promise rejection crashing things
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return isAuthenticated ? (
     <Navigate to={from} replace />
   ) : (
@@ -71,6 +92,7 @@ export default function LoginPage() {
       error={error}
       initialUsername={initialUsername}
       initialRememberMe={initialRememberMe}
+      onGoogleLogin={handleGoogleSuccess}
     />
   );
 }

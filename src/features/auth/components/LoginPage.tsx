@@ -14,6 +14,7 @@ interface LoginPageProps {
   error?: string;
   initialUsername?: string;
   initialRememberMe?: boolean;
+  onGoogleLogin?: (token: string) => Promise<void>;
 }
 
 function LoginPageContent({
@@ -23,6 +24,7 @@ function LoginPageContent({
   error,
   initialUsername = '',
   initialRememberMe = false,
+  onGoogleLogin,
 }: LoginPageProps) {
   const [step, setStep] = useState<'login' | 'otp'>('login');
 
@@ -91,10 +93,10 @@ function LoginPageContent({
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: (codeResponse) => {
-      console.log('Google login success:', codeResponse);
-      // Here you would send codeResponse.access_token to your backend.
-      // After validation from backend, transition to OTP if 2FA applies.
-      setStep('otp');
+      // console.log('Google login success:', codeResponse);
+      if (onGoogleLogin) {
+        onGoogleLogin(codeResponse.access_token);
+      }
     },
     onError: (error) => {
       console.log('Google Login Failed:', error);

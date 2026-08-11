@@ -5,6 +5,7 @@ import {
   AUTH_ME,
   AUTH_REFRESH,
   AUTH_VERIFY_2FA,
+  AUTH_GOOGLE_LOGIN,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -179,4 +180,40 @@ export async function getMe(): Promise<Record<string, unknown>> {
  */
 export function isTokenPresent(): boolean {
   return !!localStorage.getItem('token');
+}
+
+/**
+ * Handle Google Login by sending the access token to the backend.
+ * The backend MUST verify the token via Google's API, check if the email
+ * exists in the employee database, and return a real CRM session.
+ */
+export async function loginWithGoogle(
+  googleToken: string,
+): Promise<LoginResponse> {
+  const reqData = { token: googleToken };
+
+  const { data } = await apiClient.post<LoginResponse>(
+    AUTH_GOOGLE_LOGIN,
+    reqData,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+
+  const token = data.access_token || data.token;
+  if (token) {
+    localStorage.setItem('token', token);
+  }
+
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+
+  if (data.user) {
+    localStorage.setItem('user', JSON.stringify(data.user));
+    const mappedRole = mapBackendRole(data.user.role);
+    localStorage.setItem('userRole', mappedRole);
+  }
+
+  return data;
 }

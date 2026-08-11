@@ -118,8 +118,6 @@ export default function POManagementPage() {
       setLoading(true);
       setError('');
       try {
-        console.log('API FETCH getPurchaseOrders: starting fetch...');
-
         const params = {
           page: currentPage,
           page_size: pageSize,
@@ -160,7 +158,6 @@ export default function POManagementPage() {
         let results = [];
         if (activeSubTab !== 'kanban') {
           const poData = await getPurchaseOrders(params);
-          console.log('API FETCH getPurchaseOrders: success! Result:', poData);
 
           if (poData) {
             if (Array.isArray(poData)) {

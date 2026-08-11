@@ -9,6 +9,7 @@
 // Auth Endpoints
 // ------------------------------------------
 export const AUTH_LOGIN = '/auth/login';
+export const AUTH_GOOGLE_LOGIN = '/auth/google';
 export const AUTH_LOGOUT = '/auth/logout';
 export const AUTH_REFRESH = '/auth/refresh';
 export const AUTH_VERIFY_2FA = '/auth/verify-2fa';

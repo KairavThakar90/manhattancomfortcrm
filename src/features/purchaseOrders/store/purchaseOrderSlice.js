@@ -14,10 +14,6 @@ const purchaseOrderSlice = createSlice({
   },
   reducers: {
     setPurchaseOrdersList: (state, action) => {
-      console.log(
-        'REDUCER setPurchaseOrdersList: payload size =',
-        action.payload?.length,
-      );
       state.list = action.payload;
     },
     setAllPurchaseOrders: (state, action) => {

@@ -896,11 +896,6 @@ export default function ContainerFlowPage() {
       return;
     }
 
-    console.log(
-      'Action: Opening View Container Details Modal for',
-      container.id,
-    );
-
     // Instantly pop open the modal using the basic data we already have from the table
     const initialMappedContainer = {
       ...container,
