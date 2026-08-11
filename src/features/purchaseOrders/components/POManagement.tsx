@@ -1021,6 +1021,19 @@ export default function POManagement({
     if (activeSortConfig.key === 'invoiceDate') {
       aValue = a.invoiceDetails?.date || (a as any).invoice_date || '';
       bValue = b.invoiceDetails?.date || (b as any).invoice_date || '';
+    } else if (activeSortConfig.key === 'invoiceDelayStatus') {
+      const getPriority = (po: any) => {
+        const invD = po.invoice_date || po.invoiceDetails?.date;
+        const crD = po.created_on || po.creationDate;
+        if (invD) return 1; // On Time
+        if (!crD || crD === 'N/A') return 0; // N/A
+        const diff = Math.floor(
+          (new Date().getTime() - new Date(crD).getTime()) / 86400000,
+        );
+        return diff > 10 ? 3 : 2; // Delay (3) > Pending (2)
+      };
+      aValue = getPriority(a);
+      bValue = getPriority(b);
     } else {
       aValue = a[activeSortConfig.key as keyof PurchaseOrder] || '';
       bValue = b[activeSortConfig.key as keyof PurchaseOrder] || '';
@@ -1997,7 +2010,10 @@ Supply Chain CRM Coordinator`;
       },
       {
         header: (
-          <div className="flex items-center gap-1">
+          <div
+            className="group flex cursor-pointer items-center gap-1 select-none"
+            onClick={() => handleSort('invoiceDelayStatus' as any)}
+          >
             <span>Invoice Delay Status</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
@@ -2006,6 +2022,17 @@ Supply Chain CRM Coordinator`;
             >
               <Info className="h-3 w-3" />
             </div>
+            <span className="group-hover:text-mc-black text-slate-400">
+              {activeSortConfig.key === 'invoiceDelayStatus' ? (
+                activeSortConfig.direction === 'asc' ? (
+                  <ArrowUp className="h-3 w-3" />
+                ) : (
+                  <ArrowDown className="h-3 w-3" />
+                )
+              ) : (
+                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+              )}
+            </span>
           </div>
         ),
         accessor: 'invoiceDelayStatus',
@@ -2045,7 +2072,7 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
-      ...(userRole === 'Vendor'
+      ...(['Vendor', 'Administrator'].includes(userRole)
         ? [
             {
               header: 'Status',

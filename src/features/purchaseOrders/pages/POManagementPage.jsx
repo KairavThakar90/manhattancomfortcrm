@@ -158,11 +158,11 @@ export default function POManagementPage() {
             invoiceDate: 'invoice_date',
             eta: 'expected_delivery_date',
             creationDate: 'date_ordered',
+            invoiceDelayStatus: 'is_invoice_delayed',
           };
-          params.ordering =
-            sortConfig.direction === 'desc'
-              ? `-${sortMap[sortConfig.key] || sortConfig.key}`
-              : sortMap[sortConfig.key] || sortConfig.key;
+
+          params.sort_by = sortMap[sortConfig.key] || sortConfig.key;
+          params.sort_order = sortConfig.direction === 'desc' ? 'desc' : 'asc';
         }
 
         if (vendorFilter !== 'all') {
