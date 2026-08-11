@@ -360,17 +360,30 @@ export default function ContainerDetailsModal({
                           {
                             header: 'SKU',
                             accessor: 'sku',
-                            headerClassName: 'px-3 py-2 bg-white w-24',
-                            className: 'px-3 py-2 max-w-[100px]',
+                            headerClassName: 'px-3 py-2 bg-white w-40',
+                            className:
+                              'px-3 py-2 min-w-[140px] whitespace-nowrap',
                             render: (item) => (
-                              <div className="flex items-center gap-2">
+                              <div
+                                className="group flex cursor-pointer items-center gap-1.5"
+                                onClick={() => {
+                                  if (item.sku) {
+                                    navigator.clipboard.writeText(item.sku);
+                                    toast.success('SKU copied to clipboard!');
+                                  }
+                                }}
+                                title="Click to copy SKU"
+                              >
                                 <span
-                                  className="text-mc-black decoration-mc-beige-dark hover:text-mc-gold cursor-help font-bold underline decoration-2 transition-colors"
+                                  className="text-mc-black group-hover:text-mc-gold font-bold whitespace-nowrap transition-colors"
                                   data-tooltip-id="sku-tooltip"
                                   data-tooltip-content={item.sku || 'N/A'}
                                 >
                                   {item.sku || '-'}
                                 </span>
+                                {item.sku && (
+                                  <Copy className="group-hover:text-mc-gold h-3.5 w-3.5 text-slate-400 transition-colors" />
+                                )}
                               </div>
                             ),
                           },

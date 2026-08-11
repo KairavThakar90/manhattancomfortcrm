@@ -2238,28 +2238,30 @@ Supply Chain CRM Coordinator`;
       {
         header: 'SKU',
         accessor: 'sku',
-        headerClassName: 'px-3 py-2 ',
-        className: 'px-3 py-2 max-w-[120px]',
+        headerClassName: 'px-3 py-2 w-40',
+        className: 'px-3 py-2 min-w-[140px] whitespace-nowrap',
         render: (item: any) => (
-          <div className="group flex items-center gap-1">
+          <div
+            className="group flex cursor-pointer items-center gap-1.5"
+            onClick={(e: any) => {
+              e.stopPropagation();
+              if (item.sku) {
+                navigator.clipboard.writeText(item.sku);
+                toast.success('SKU copied to clipboard!');
+              }
+            }}
+            title="Click to copy SKU"
+          >
             <span
-              className="cursor-pointer truncate font-mono font-bold text-slate-500"
+              className="group-hover:text-mc-gold truncate font-mono font-bold text-slate-500 transition-colors"
               data-tooltip-id="po-item-tooltip"
               data-tooltip-content={item.sku}
             >
               {item.sku}
             </span>
-            <button
-              title="Copy SKU"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(item.sku);
-                toast.success('SKU copied!');
-              }}
-              className="hover:text-mc-black shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100"
-            >
-              <Copy className="h-3 w-3" />
-            </button>
+            {item.sku && (
+              <Copy className="group-hover:text-mc-gold h-3.5 w-3.5 text-slate-400 transition-colors" />
+            )}
           </div>
         ),
       },
