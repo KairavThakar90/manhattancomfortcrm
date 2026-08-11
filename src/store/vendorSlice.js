@@ -74,6 +74,7 @@ const vendorSlice = createSlice({
               id: v.id,
               name: v.name,
               country: v.country,
+              po_count: v.po_count,
             }))
             .filter((v) => v.name?.toLowerCase().includes(searchVal));
         } else if (data && typeof data === 'object') {
@@ -82,6 +83,7 @@ const vendorSlice = createSlice({
             id: v.id,
             name: v.name,
             country: v.country,
+            po_count: v.po_count,
           }));
         }
 

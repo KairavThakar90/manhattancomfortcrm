@@ -26,6 +26,7 @@ interface VendorItem {
   id: string;
   name: string;
   country?: string;
+  po_count?: number;
 }
 
 interface VendorInfiniteDropdownProps {
@@ -179,9 +180,17 @@ export default function VendorInfiniteDropdown({
                       : 'text-mc-black hover:bg-mc-beige-light/50'
                   }`}
                 >
-                  <span className="truncate">
-                    {vendor.name} {vendor.country ? `(${vendor.country})` : ''}
-                  </span>
+                  <div className="flex flex-1 items-center justify-between truncate pr-2">
+                    <span className="truncate">
+                      {vendor.name}{' '}
+                      {vendor.country ? `(${vendor.country})` : ''}
+                    </span>
+                    {vendor.po_count !== undefined && (
+                      <span className="ml-2 shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-500">
+                        {vendor.po_count} POs
+                      </span>
+                    )}
+                  </div>
                   {isSelected && (
                     <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
                   )}
