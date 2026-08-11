@@ -110,11 +110,33 @@ export default function POManagementPage() {
     setCurrentPage(1);
   };
 
+  const lastFetchRef = React.useRef(null);
+
   // Fetch purchase orders from API when page, search, or filters change
   useEffect(() => {
     let cancelled = false;
 
     async function fetchData() {
+      const currentParamsStr = JSON.stringify({
+        currentPage,
+        pageSize,
+        searchQuery,
+        statusFilter,
+        vendorFilter,
+        customerFilter,
+        dateFrom,
+        userRole,
+        sortConfig,
+        activeSubTab,
+        refreshTrigger,
+      });
+
+      if (lastFetchRef.current === currentParamsStr) {
+        // Prevent exact duplicate network calls in strict mode / rapid successive re-renders
+        return;
+      }
+      lastFetchRef.current = currentParamsStr;
+
       setLoading(true);
       setError('');
       try {
@@ -327,81 +349,105 @@ export default function POManagementPage() {
           // Fetch Kanban specific statuses concurrently only in Kanban view
           if (activeSubTab === 'kanban') {
             try {
-              const allFiltersRes = await getPurchaseOrdersAllFilters(params);
+              // Kanban API should not receive page/page_size pagination
+              const kanbanParams = { ...params };
+              delete kanbanParams.page;
+              delete kanbanParams.page_size;
+
+              const allFiltersRes =
+                await getPurchaseOrdersAllFilters(kanbanParams);
 
               const safeMap = (arr) => {
                 if (!Array.isArray(arr)) return [];
-                const mappedArr = mapPOData(arr);
-                const vendorFiltered =
-                  userRole !== 'Vendor' && vendorFilter !== 'all'
-                    ? mappedArr.filter(
-                        (po) =>
-                          po.vendorId === vendorFilter ||
-                          po.vendor_id === vendorFilter,
-                      )
-                    : mappedArr;
-
-                const customerFiltered =
-                  customerFilter !== 'all'
-                    ? vendorFiltered.filter(
-                        (po) =>
-                          String(po.customer) === String(customerFilter) ||
-                          String(po.customerId) === String(customerFilter) ||
-                          String(po.sellercloud_customer_id) ===
-                            String(customerFilter),
-                      )
-                    : vendorFiltered;
-
-                return customerFiltered;
+                return mapPOData(arr);
               };
 
+              let dataObj = allFiltersRes || {};
               if (
-                allFiltersRes &&
-                !Array.isArray(allFiltersRes) &&
-                (allFiltersRes.new_arrivals || allFiltersRes.invoice_delayed)
+                dataObj.data &&
+                !Array.isArray(dataObj.data) &&
+                (dataObj.data.new_without_invoice ||
+                  dataObj.data.new_arrivals ||
+                  dataObj.data.invoice_delayed)
               ) {
+                dataObj = dataObj.data;
+              }
+
+              const getArr = (k1, k2) => {
+                let v = dataObj[k1] || dataObj[k2] || [];
+                return Array.isArray(v) ? v : v?.data || [];
+              };
+
+              const newWithoutInvoice = getArr(
+                'new_without_invoice',
+                'new_arrivals',
+              );
+              const invoiceDelayed = getArr(
+                'invoice_delayed',
+                'invoice_delayed',
+              );
+              const deliveryOverdue = getArr(
+                'delivery_overdue',
+                'delivery_delayed',
+              );
+              const remainingItems = getArr(
+                'remaining_items',
+                'remaining_items',
+              );
+
+              const hasBuckets =
+                newWithoutInvoice.length > 0 ||
+                invoiceDelayed.length > 0 ||
+                deliveryOverdue.length > 0 ||
+                remainingItems.length > 0 ||
+                dataObj.new_without_invoice ||
+                dataObj.new_arrivals ||
+                dataObj.invoice_delayed;
+
+              if (hasBuckets) {
                 dispatch(
                   setKanbanList({
-                    new_without_invoice: safeMap(
-                      allFiltersRes.new_arrivals?.data || [],
-                    ),
-                    invoice_delayed: safeMap(
-                      allFiltersRes.invoice_delayed?.data || [],
-                    ),
-                    delivery_overdue: safeMap(
-                      allFiltersRes.delivery_overdue?.data || [],
-                    ),
-                    remaining_items: safeMap(
-                      allFiltersRes.remaining_items?.data || [],
-                    ),
+                    new_without_invoice: safeMap(newWithoutInvoice),
+                    invoice_delayed: safeMap(invoiceDelayed),
+                    delivery_overdue: safeMap(deliveryOverdue),
+                    remaining_items: safeMap(remainingItems),
                   }),
                 );
               } else {
-                // Fallback if the backend returned a flat array or something else
+                // Fallback if the backend returned a flat array unconditionally
                 let rawArr = [];
                 if (Array.isArray(allFiltersRes)) rawArr = allFiltersRes;
                 else if (allFiltersRes?.results) rawArr = allFiltersRes.results;
+                else if (
+                  allFiltersRes?.data &&
+                  Array.isArray(allFiltersRes.data)
+                )
+                  rawArr = allFiltersRes.data;
 
                 const mapped = safeMap(rawArr);
                 dispatch(
                   setKanbanList({
                     new_without_invoice: mapped.filter(
-                      (po) => po.status === 'New' || po.status === '1. New',
+                      (po) =>
+                        String(po.status).toLowerCase().includes('new') ||
+                        String(po.status).includes('1'),
                     ),
                     invoice_delayed: mapped.filter(
                       (po) =>
-                        po.status === 'Invoice Delayed' ||
-                        po.status === '2. Invoice Delayed',
+                        String(po.status)
+                          .toLowerCase()
+                          .includes('invoice delayed') ||
+                        String(po.status).includes('2'),
                     ),
                     delivery_overdue: mapped.filter(
                       (po) =>
-                        po.status === 'Delivery Delayed' ||
-                        po.status === '3. Delivery Delayed',
+                        String(po.status).toLowerCase().includes('delivery') ||
+                        String(po.status).includes('3'),
                     ),
                     remaining_items: mapped.filter(
                       (po) =>
-                        po.status === 'Remaining Order Items' ||
-                        po.status === '4. Remaining Order Items',
+                        String(po.status).toLowerCase().includes('remaining') ||
+                        String(po.status).includes('4'),
                     ),
                   }),
                 );
