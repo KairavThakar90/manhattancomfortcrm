@@ -406,18 +406,20 @@ export default function ContainerDetailsModal({
                         containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg"
                         tableWrapperClassName=""
                       />
-                      <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
-                        <Pagination
-                          currentPage={itemsPage}
-                          totalCount={totalItems}
-                          pageSize={itemsPageSize}
-                          onPageChange={(pg) => setItemsPage(pg)}
-                          onPageSizeChange={(size) => {
-                            setItemsPageSize(size);
-                            setItemsPage(1);
-                          }}
-                        />
-                      </div>
+                      {totalItems > 5 && (
+                        <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
+                          <Pagination
+                            currentPage={itemsPage}
+                            totalCount={totalItems}
+                            pageSize={itemsPageSize}
+                            onPageChange={(pg) => setItemsPage(pg)}
+                            onPageSizeChange={(size) => {
+                              setItemsPageSize(size);
+                              setItemsPage(1);
+                            }}
+                          />
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -468,7 +470,7 @@ export default function ContainerDetailsModal({
                           ).toLowerCase() !== 'warehouse' &&
                           String(
                             localStorage.getItem('userRole'),
-                          ).toLowerCase() !== 'admin'
+                          ).toLowerCase() !== 'administrator'
                         }
                         className={`w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition-colors focus:outline-none ${
                           String(
@@ -476,7 +478,7 @@ export default function ContainerDetailsModal({
                           ).toLowerCase() !== 'warehouse' &&
                           String(
                             localStorage.getItem('userRole'),
-                          ).toLowerCase() !== 'admin'
+                          ).toLowerCase() !== 'administrator'
                             ? 'cursor-not-allowed bg-slate-100 text-slate-500 opacity-60'
                             : 'focus:border-mc-black focus:ring-mc-black bg-slate-50 focus:ring-1'
                         }`}
@@ -503,7 +505,7 @@ export default function ContainerDetailsModal({
                           ).toLowerCase() !== 'warehouse' &&
                           String(
                             localStorage.getItem('userRole'),
-                          ).toLowerCase() !== 'admin'
+                          ).toLowerCase() !== 'administrator'
                         }
                         className="w-full"
                       />
@@ -524,7 +526,7 @@ export default function ContainerDetailsModal({
                           ).toLowerCase() !== 'warehouse' &&
                           String(
                             localStorage.getItem('userRole'),
-                          ).toLowerCase() !== 'admin'
+                          ).toLowerCase() !== 'administrator'
                         }
                         className="w-full"
                       />

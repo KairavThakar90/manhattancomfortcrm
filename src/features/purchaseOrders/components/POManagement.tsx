@@ -2745,7 +2745,7 @@ Supply Chain CRM Coordinator`;
             }
             emptyMessage="No Purchase Orders found matching search or filter parameters."
             pagination={
-              filteredPOs.length > 0 ? (
+              filteredPOs.length > 5 ? (
                 <Pagination
                   currentPage={normalizedCurrentPage}
                   totalCount={validTotalCount}
@@ -3171,7 +3171,7 @@ Supply Chain CRM Coordinator`;
                             emptyMessage="No items specified for this purchase order."
                           />
 
-                          {totalItemsCount > 0 && (
+                          {totalItemsCount > 5 && (
                             <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
                               <Pagination
                                 currentPage={itemsCurrentPage}

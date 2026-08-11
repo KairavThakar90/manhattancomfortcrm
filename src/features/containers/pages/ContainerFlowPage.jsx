@@ -1355,7 +1355,7 @@ export default function ContainerFlowPage() {
                   : 'No containers assigned yet. Click "Add Container" to start.'
               }
               pagination={
-                totalListCount > 0 ? (
+                totalListCount > 5 ? (
                   <Pagination
                     currentPage={listPage}
                     totalCount={totalListCount}
