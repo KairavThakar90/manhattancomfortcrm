@@ -299,17 +299,14 @@ function LoginPageContent({
                 <div className="flex-grow border-t border-slate-200"></div>
               </div>
 
-              <div
-                data-tooltip-id="google-login-tooltip"
-                data-tooltip-content="Coming soon"
-                className="w-full"
-              >
+              <div className="w-full">
                 <button
                   type="button"
-                  className="group flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 font-bold text-slate-400 opacity-60 shadow-sm transition-all duration-300"
+                  onClick={() => handleGoogleLogin()}
+                  className="group flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 font-bold text-slate-700 shadow-sm transition-all duration-300 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md active:scale-[0.98]"
                 >
                   <svg
-                    className="h-5 w-5 opacity-70 grayscale"
+                    className="h-5 w-5 transition-transform group-hover:scale-110"
                     viewBox="0 0 24 24"
                   >
                     <path
@@ -428,11 +425,13 @@ function LoginPageContent({
 }
 
 export default function LoginPage(props: LoginPageProps) {
-  // Prefer environment variable, otherwise fallback to placeholder
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clientId =
-    ((import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as string) ||
-    'YOUR_GOOGLE_CLIENT_ID_GOES_HERE';
+  const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as string;
+
+  if (!clientId) {
+    console.error('Missing VITE_GOOGLE_CLIENT_ID in environment variables.');
+  }
+
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <LoginPageContent {...props} />
