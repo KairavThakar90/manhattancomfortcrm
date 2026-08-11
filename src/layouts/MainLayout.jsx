@@ -108,14 +108,22 @@ export default function MainLayout() {
         <div className="space-y-6">
           {/* Top bar: Brand + Hamburger always in top corner */}
           <div
-            className={`flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'}`}
+            className={`flex ${sidebarOpen ? 'items-center justify-between' : 'flex-col items-center gap-4'}`}
           >
-            {sidebarOpen && (
+            {sidebarOpen ? (
               <div className="flex min-w-0 items-center pr-2">
                 <img
                   src="https://www.manhattancomfort.com/media/wysiwyg/Manhattan_Comfort_Logo_Black.png"
                   alt="Manhattan Comfort Logo"
                   className="h-9 w-auto object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex min-w-0 items-center">
+                <img
+                  src="/favicon.png"
+                  alt="MC Logo Small"
+                  className="h-7 w-7 object-contain"
                 />
               </div>
             )}
