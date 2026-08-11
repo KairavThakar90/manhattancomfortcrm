@@ -2648,7 +2648,7 @@ Supply Chain CRM Coordinator`;
               <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Smart Search: PO number, Order id, Vendor..."
+                placeholder="Smart Search: PO number, Order id, Vendor, Customer name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-8 pl-9 text-sm transition focus:outline-none"
