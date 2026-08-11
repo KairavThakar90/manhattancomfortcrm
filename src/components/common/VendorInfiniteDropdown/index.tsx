@@ -47,6 +47,7 @@ export default function VendorInfiniteDropdown({
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const dispatch = useDispatch<any>();
   const vendors = useSelector((state: any) => state.vendors.list) || [];
@@ -89,16 +90,24 @@ export default function VendorInfiniteDropdown({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
+        setSearchTerm('');
       }
     };
     document.addEventListener('mousedown', clickOutside);
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
   const handleSelect = (vendorId: string) => {
     const mapped = DB_VENDOR_ID_MAP[vendorId] || vendorId;
     onChange(mapped);
     setIsOpen(false);
+    setSearchTerm('');
   };
 
   const selectedName =
@@ -119,17 +128,20 @@ export default function VendorInfiniteDropdown({
       </button>
 
       {isOpen && (
-        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-80 min-w-[200px] flex-col rounded-xl border p-2 shadow-lg">
-          {/* <div className="relative mb-2 shrink-0">
-            <Search className="absolute left-2 top-2.5 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search vendor..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-7 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-hidden focus:bg-white focus:border-indigo-500 transition text-slate-800"
-            />
-          </div> */}
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-80 w-[260px] flex-col rounded-xl border p-2 shadow-lg">
+          <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
+            <div className="relative">
+              <Search className="absolute top-2 left-2.5 h-3.5 w-3.5 text-slate-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search vendors..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="focus:border-mc-black focus:ring-mc-black w-full rounded-md border border-slate-200 py-1.5 pr-2 pl-8 text-xs outline-hidden transition focus:ring-1"
+              />
+            </div>
+          </div>
 
           <div
             ref={listRef}
@@ -142,6 +154,7 @@ export default function VendorInfiniteDropdown({
                 onClick={() => {
                   onChange('all');
                   setIsOpen(false);
+                  setSearchTerm('');
                 }}
                 className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                   value === 'all'
@@ -154,7 +167,12 @@ export default function VendorInfiniteDropdown({
               </button>
             )}
 
-            {vendors.map((vendor) => {
+            {(!searchTerm
+              ? vendors
+              : vendors.filter((v) =>
+                  v.name.toLowerCase().includes(searchTerm.toLowerCase()),
+                )
+            ).map((vendor) => {
               const mappedId = DB_VENDOR_ID_MAP[vendor.id] || vendor.id;
               const isSelected = value === mappedId;
               return (

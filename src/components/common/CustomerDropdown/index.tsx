@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check, Loader2 } from 'lucide-react';
+import { ChevronDown, Check, Loader2, Search } from 'lucide-react';
 import api from '../../../services/api';
 
 interface CustomerDropdownProps {
@@ -114,14 +114,17 @@ export default function CustomerDropdown({
       {isOpen && (
         <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-72 w-[260px] flex-col rounded-xl border p-2 shadow-lg">
           <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search customers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="focus:border-mc-black focus:ring-mc-black w-full rounded-md border border-slate-200 p-1.5 text-xs outline-hidden transition focus:ring-1"
-            />
+            <div className="relative">
+              <Search className="absolute top-2 left-2.5 h-3.5 w-3.5 text-slate-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search customers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="focus:border-mc-black focus:ring-mc-black w-full rounded-md border border-slate-200 py-1.5 pr-2 pl-8 text-xs outline-hidden transition focus:ring-1"
+              />
+            </div>
           </div>
           <div className="max-h-56 flex-1 space-y-0.5 overflow-y-auto scroll-smooth">
             {showAllOption && !search && (
