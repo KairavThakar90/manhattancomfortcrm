@@ -350,6 +350,20 @@ export default function ContainerFlowPage() {
       if (warehouseFilter && warehouseFilter !== 'all') {
         params.sellercloud_warehouse_id = warehouseFilter;
       }
+
+      if (listSortConfig.key) {
+        let sort_by = '';
+        if (listSortConfig.key === 'arrivalDate') sort_by = 'eta_delivery';
+        else if (listSortConfig.key === 'received_date')
+          sort_by = 'receive_date';
+        else if (listSortConfig.key === 'is_received') sort_by = 'status';
+
+        if (sort_by) {
+          params.sort_by = sort_by;
+          params.sort_order = listSortConfig.direction || 'desc';
+        }
+      }
+
       const data = await getContainers(params);
       const results = Array.isArray(data)
         ? data
@@ -378,6 +392,7 @@ export default function ContainerFlowPage() {
     listSearchQuery,
     dateFrom,
     warehouseFilter,
+    listSortConfig,
   ]);
 
   const handleContainerPageChange = (newPage) => {
