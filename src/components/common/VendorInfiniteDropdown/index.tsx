@@ -3,25 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Search, ChevronDown, Check, Loader2, X } from 'lucide-react';
 import { fetchVendorsPage, setVendorSearch } from '../../../store/vendorSlice';
 
-const DB_VENDOR_ID_MAP: Record<string, string> = {
-  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'VEND-001',
-  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'VEND-002',
-  'e38f467c-f483-46a4-8172-bce5bb862247': 'VEND-003',
-  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'VEND-004',
-};
-
-const STATIC_VENDOR_MAP: Record<string, string> = {
-  all: 'All Vendors',
-  'VEND-001': 'ABC Manufacturing',
-  'VEND-002': 'XYZ Logistics & Textiles',
-  'VEND-003': 'Global Tech Sourcing',
-  'VEND-004': 'Shenzhen Electronics Corp',
-  '3f5551f4-186e-467d-9340-5b74d8e7b766': 'ABC Manufacturing',
-  '4ce542cd-5b23-4653-a884-53391edd9f0f': 'XYZ Logistics & Textiles',
-  'e38f467c-f483-46a4-8172-bce5bb862247': 'Global Tech Sourcing',
-  'c17e8a34-eaf3-4a0b-89ac-7b4e640b61e3': 'Shenzhen Electronics Corp',
-};
-
 interface VendorItem {
   id: string;
   name: string;
@@ -88,17 +69,15 @@ export default function VendorInfiniteDropdown({
   }, [isOpen]);
 
   const handleSelect = (vendorId: string) => {
-    const mapped = DB_VENDOR_ID_MAP[vendorId] || vendorId;
-    onChange(mapped);
+    onChange(vendorId);
     setIsOpen(false);
     setSearchTerm('');
   };
 
   const selectedName =
-    STATIC_VENDOR_MAP[value] ||
-    vendors.find((v) => (DB_VENDOR_ID_MAP[v.id] || v.id) === value)?.name ||
-    value ||
-    placeholder;
+    value === 'all'
+      ? 'All Vendors'
+      : vendors.find((v) => v.id === value)?.name || value || placeholder;
 
   return (
     <div className="relative inline-block w-full" ref={containerRef}>
@@ -167,8 +146,7 @@ export default function VendorInfiniteDropdown({
                   v.name.toLowerCase().includes(searchTerm.toLowerCase()),
                 )
             ).map((vendor) => {
-              const mappedId = DB_VENDOR_ID_MAP[vendor.id] || vendor.id;
-              const isSelected = value === mappedId;
+              const isSelected = value === vendor.id;
               return (
                 <button
                   type="button"

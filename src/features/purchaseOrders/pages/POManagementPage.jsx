@@ -332,14 +332,27 @@ export default function POManagementPage() {
               const safeMap = (arr) => {
                 if (!Array.isArray(arr)) return [];
                 const mappedArr = mapPOData(arr);
-                if (userRole === 'Vendor') return mappedArr;
-                if (vendorFilter === 'all') return mappedArr;
+                const vendorFiltered =
+                  userRole !== 'Vendor' && vendorFilter !== 'all'
+                    ? mappedArr.filter(
+                        (po) =>
+                          po.vendorId === vendorFilter ||
+                          po.vendor_id === vendorFilter,
+                      )
+                    : mappedArr;
 
-                return mappedArr.filter(
-                  (po) =>
-                    po.vendorId === vendorFilter ||
-                    po.vendor_id === vendorFilter,
-                );
+                const customerFiltered =
+                  customerFilter !== 'all'
+                    ? vendorFiltered.filter(
+                        (po) =>
+                          String(po.customer) === String(customerFilter) ||
+                          String(po.customerId) === String(customerFilter) ||
+                          String(po.sellercloud_customer_id) ===
+                            String(customerFilter),
+                      )
+                    : vendorFiltered;
+
+                return customerFiltered;
               };
 
               if (
