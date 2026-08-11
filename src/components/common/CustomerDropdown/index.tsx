@@ -175,9 +175,18 @@ export default function CustomerDropdown({
                       : 'text-mc-black hover:bg-mc-beige-light/50'
                   }`}
                 >
-                  <span className="truncate">{formatName(c)}</span>
+                  <div className="flex min-w-0 flex-1 items-center justify-between pr-2">
+                    <span className="truncate pr-2">{formatName(c)}</span>
+                    {((c.po_count !== undefined && c.po_count > 0) ||
+                      (c.customer?.po_count !== undefined &&
+                        c.customer?.po_count > 0)) && (
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-slate-500">
+                        {c.po_count ?? c.customer?.po_count} POs
+                      </span>
+                    )}
+                  </div>
                   {String(value) === compValue && (
-                    <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
+                    <Check className="text-mc-gold ml-1.5 h-3.5 w-3.5 shrink-0" />
                   )}
                 </button>
               );

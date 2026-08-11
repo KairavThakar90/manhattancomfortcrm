@@ -163,8 +163,8 @@ export default function VendorInfiniteDropdown({
                       {vendor.name}{' '}
                       {vendor.country ? `(${vendor.country})` : ''}
                     </span>
-                    {vendor.po_count !== undefined && (
-                      <span className="ml-2 shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-500">
+                    {vendor.po_count !== undefined && vendor.po_count > 0 && (
+                      <span className="ml-2 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-slate-500">
                         {vendor.po_count} POs
                       </span>
                     )}
