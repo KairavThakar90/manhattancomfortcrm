@@ -84,6 +84,7 @@ export default function DateFilterInput({
   onChange,
   title = 'Date filter',
   className = '',
+  disabled = false,
 }) {
   const selected = parseDateOnly(value);
   const [open, setOpen] = useState(false);
@@ -96,6 +97,7 @@ export default function DateFilterInput({
   const yearGridRef = useRef(null);
 
   const handleToggleCalendar = () => {
+    if (disabled) return;
     if (!open) {
       // Opening: reset view to selected date or today
       const parsed = parseDateOnly(value);
@@ -163,7 +165,12 @@ export default function DateFilterInput({
           type="button"
           title={title}
           onClick={handleToggleCalendar}
-          className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border px-3 py-2 text-left text-sm transition focus:ring-1 focus:outline-none"
+          disabled={disabled}
+          className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition focus:outline-none ${
+            disabled
+              ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-500 opacity-60'
+              : 'border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold focus:ring-1'
+          }`}
         >
           {selected ? (
             <span className="font-bold">{formatDateOnly(selected)}</span>
@@ -171,7 +178,7 @@ export default function DateFilterInput({
             <span className="text-mc-gray-soft font-medium">yyyy-mm-dd</span>
           )}
         </button>
-        {selected && (
+        {selected && !disabled && (
           <button
             type="button"
             onClick={() => {

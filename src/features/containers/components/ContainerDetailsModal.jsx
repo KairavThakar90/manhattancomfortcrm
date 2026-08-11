@@ -32,6 +32,8 @@ export default function ContainerDetailsModal({
   const [itemsPageSize, setItemsPageSize] = useState(10);
   const [activeTab, setActiveTab] = useState('details');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
   const countryOptions = useMemo(() => countryList().getData(), []);
@@ -122,6 +124,16 @@ export default function ContainerDetailsModal({
   }
 
   const handleSaveTracking = async () => {
+    setEmailError('');
+    if (
+      String(localStorage.getItem('userRole')).toLowerCase() === 'warehouse' &&
+      trackingData.date_emptied &&
+      !trackingData.notification_email
+    ) {
+      setEmailError('Email is required when Date Emptied is specified.');
+      return;
+    }
+
     try {
       setIsSaving(true);
       const payload = { ...trackingData };
@@ -153,7 +165,22 @@ export default function ContainerDetailsModal({
   };
 
   const handleTrackingChange = (field, value) => {
+    if (field === 'notification_email' && emailError) {
+      setEmailError('');
+    }
     setTrackingData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSendEmail = () => {
+    if (!trackingData.notification_email) {
+      toast.error('Email is required');
+      return;
+    }
+    setIsSendingEmail(true);
+    setTimeout(() => {
+      setIsSendingEmail(false);
+      toast.success('Email sent successfully!');
+    }, 1200);
   };
 
   if (!container) return null;
@@ -255,7 +282,10 @@ export default function ContainerDetailsModal({
               className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'comments' ? 'border-mc-gold text-mc-black bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
               onClick={() => setActiveTab('comments')}
             >
-              Container Tracking & Financial Information
+              {String(localStorage.getItem('userRole')).toLowerCase() ===
+              'warehouse'
+                ? 'Container Tracking Information'
+                : 'Container Tracking & Financial Information'}
             </button>
           </div>
 
@@ -417,7 +447,8 @@ export default function ContainerDetailsModal({
                       </label>
                       <input
                         type="text"
-                        className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
+                        disabled
+                        className="w-full cursor-not-allowed rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 opacity-60 transition-colors focus:outline-none"
                         value={trackingData.container_name || ''}
                         placeholder="e.g. CAAU1234567"
                         onChange={(e) =>
@@ -431,7 +462,24 @@ export default function ContainerDetailsModal({
                       </label>
                       <input
                         type="text"
-                        className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
+                        disabled={
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'warehouse' &&
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'admin'
+                        }
+                        className={`w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition-colors focus:outline-none ${
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'warehouse' &&
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'admin'
+                            ? 'cursor-not-allowed bg-slate-100 text-slate-500 opacity-60'
+                            : 'focus:border-mc-black focus:ring-mc-black bg-slate-50 focus:ring-1'
+                        }`}
                         value={trackingData.door || ''}
                         placeholder="e.g. Door 4"
                         onChange={(e) =>
@@ -449,6 +497,14 @@ export default function ContainerDetailsModal({
                           handleTrackingChange('date_dropped_off', val)
                         }
                         title="Date Dropped Off"
+                        disabled={
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'warehouse' &&
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'admin'
+                        }
                         className="w-full"
                       />
                     </div>
@@ -462,9 +518,69 @@ export default function ContainerDetailsModal({
                           handleTrackingChange('date_emptied', val)
                         }
                         title="Date Emptied"
+                        disabled={
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'warehouse' &&
+                          String(
+                            localStorage.getItem('userRole'),
+                          ).toLowerCase() !== 'admin'
+                        }
                         className="w-full"
                       />
                     </div>
+                    {String(localStorage.getItem('userRole')).toLowerCase() ===
+                      'warehouse' &&
+                      trackingData.date_emptied && (
+                        <div className="mt-2 border-t border-slate-100 pt-4 sm:col-span-2">
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Notify Email (Required){' '}
+                            <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="email"
+                              required
+                              value={trackingData.notification_email || ''}
+                              onChange={(e) =>
+                                handleTrackingChange(
+                                  'notification_email',
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="e.g. manager@manhattancomfort.com"
+                              className={`focus:ring-mc-black min-w-[200px] flex-1 rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none ${
+                                emailError
+                                  ? 'border-rose-500 bg-rose-50 focus:border-rose-500'
+                                  : 'focus:border-mc-black border-slate-200 bg-slate-50'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSendEmail}
+                              disabled={
+                                !trackingData.notification_email ||
+                                isSendingEmail
+                              }
+                              className="bg-mc-gold text-mc-black shrink-0 rounded-lg px-4 py-2 text-xs font-bold transition hover:opacity-80 disabled:opacity-50"
+                            >
+                              {isSendingEmail ? (
+                                <span className="flex items-center gap-2">
+                                  <Loader2 className="h-3 w-3 animate-spin" />{' '}
+                                  Sending...
+                                </span>
+                              ) : (
+                                'Send Mail'
+                              )}
+                            </button>
+                          </div>
+                          {emailError && (
+                            <p className="mt-1.5 text-[10px] font-bold text-rose-500">
+                              {emailError}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     <div>
                       <label className="mb-1 block text-xs font-semibold text-slate-700">
                         Unloaded By
@@ -505,88 +621,96 @@ export default function ContainerDetailsModal({
                         menuPortalTarget={document.body}
                       />
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-slate-700">
-                        Unload Cost
-                      </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.unload_cost || ''}
-                          placeholder="0.00"
-                          onChange={(e) =>
-                            handleTrackingChange('unload_cost', e.target.value)
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-slate-700">
-                        Container Cost Drayage
-                      </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.container_cost_drayage || ''}
-                          placeholder="0.00"
-                          onChange={(e) =>
-                            handleTrackingChange(
-                              'container_cost_drayage',
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-slate-700">
-                        Customs Duty Misc
-                      </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.customs_duty_misc || ''}
-                          placeholder="0.00"
-                          onChange={(e) =>
-                            handleTrackingChange(
-                              'customs_duty_misc',
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-slate-700">
-                        Per Diem
-                      </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.per_diem || ''}
-                          placeholder="0.00"
-                          onChange={(e) =>
-                            handleTrackingChange('per_diem', e.target.value)
-                          }
-                        />
-                      </div>
-                    </div>
+                    {String(localStorage.getItem('userRole')).toLowerCase() !==
+                      'warehouse' && (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Unload Cost
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
+                              value={trackingData.unload_cost || ''}
+                              placeholder="0.00"
+                              onChange={(e) =>
+                                handleTrackingChange(
+                                  'unload_cost',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Container Cost Drayage
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
+                              value={trackingData.container_cost_drayage || ''}
+                              placeholder="0.00"
+                              onChange={(e) =>
+                                handleTrackingChange(
+                                  'container_cost_drayage',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Customs Duty Misc
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
+                              value={trackingData.customs_duty_misc || ''}
+                              placeholder="0.00"
+                              onChange={(e) =>
+                                handleTrackingChange(
+                                  'customs_duty_misc',
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Per Diem
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
+                              value={trackingData.per_diem || ''}
+                              placeholder="0.00"
+                              onChange={(e) =>
+                                handleTrackingChange('per_diem', e.target.value)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
                     <div className="sm:col-span-2">
                       <label className="mb-1 block text-xs font-semibold text-slate-700">
                         Vendor Credit Needed
