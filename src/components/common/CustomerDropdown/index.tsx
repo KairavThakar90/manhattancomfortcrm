@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check, Loader2, Search } from 'lucide-react';
+import { ChevronDown, Check, Loader2, Search, X } from 'lucide-react';
 import api from '../../../services/api';
 
 interface CustomerDropdownProps {
@@ -108,7 +108,18 @@ export default function CustomerDropdown({
         className={`${className} flex items-center justify-between text-left`}
       >
         <span className="truncate">{selectedName}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        {value && value !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(showAllOption ? 'all' : '');
+              setIsOpen(false);
+            }}
+          />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        )}
       </button>
 
       {isOpen && (

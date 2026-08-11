@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Check, Loader2, X } from 'lucide-react';
 import { fetchVendorsPage, setVendorSearch } from '../../../store/vendorSlice';
 
 const DB_VENDOR_ID_MAP: Record<string, string> = {
@@ -107,7 +107,18 @@ export default function VendorInfiniteDropdown({
         className={`${className} flex items-center justify-between text-left`}
       >
         <span className="truncate">{selectedName}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        {value && value !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(showAllOption ? 'all' : '');
+              setIsOpen(false);
+            }}
+          />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        )}
       </button>
 
       {isOpen && (
