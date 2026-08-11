@@ -1886,8 +1886,22 @@ Supply Chain CRM Coordinator`;
         header: 'Vendor',
         accessor: 'vendorName',
         headerClassName: 'px-6 py-4 ',
-        className: 'px-6 py-4 text-slate-700 font-medium',
-        render: (po: any) => highlightText(po.vendorName, searchQuery),
+        className:
+          'px-6 py-4 text-slate-700 font-medium max-w-[150px] truncate',
+        render: (po: any) => {
+          const rawName = po.vendorName || 'N/A';
+          const truncated =
+            rawName.length > 40 ? rawName.slice(0, 40) + '...' : rawName;
+          return (
+            <span
+              className="inline-block w-full cursor-pointer truncate"
+              data-tooltip-id="po-item-tooltip"
+              data-tooltip-content={rawName}
+            >
+              {highlightText(truncated, searchQuery)}
+            </span>
+          );
+        },
       },
       {
         header: 'Customer Name',
