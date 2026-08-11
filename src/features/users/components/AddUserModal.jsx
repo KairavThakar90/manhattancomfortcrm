@@ -349,6 +349,8 @@ export default function AddUserModal({ onClose, onSuccess }) {
               options={[
                 { value: 'admin', label: 'Admin' },
                 { value: 'vendor', label: 'Vendor' },
+                { value: 'office', label: 'Office' },
+                { value: 'warehouse', label: 'Warehouse' },
               ]}
               placeholder="Select role"
             />
