@@ -30,6 +30,7 @@ import {
   FileSpreadsheet,
   Download,
   Upload,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -171,14 +172,31 @@ export default function ContainerFlowPage() {
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const syncMenuRef = useRef(null);
 
-  const handleSyncContainers = async () => {
+  useEffect(() => {
+    const clickOutside = (e) => {
+      if (syncMenuRef.current && !syncMenuRef.current.contains(e.target)) {
+        setShowSyncMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', clickOutside);
+    return () => document.removeEventListener('mousedown', clickOutside);
+  }, []);
+
+  const handleSyncContainers = async (days = '25') => {
+    setShowSyncMenu(false);
     try {
       setIsSyncing(true);
-      await syncContainers();
-      toast.success('Successfully synced containers from SellerCloud!');
-      // Optionally refresh the containers list here
-      // fetchContainers();
+      await syncContainers(days);
+      if (days === 'all') {
+        toast.success('Successfully synced all containers from SellerCloud!');
+      } else {
+        toast.success(
+          `Successfully synced containers for the past ${days} days from SellerCloud!`,
+        );
+      }
     } catch (error) {
       console.error('Error syncing containers:', error);
       toast.error('Failed to sync containers from SellerCloud.');
@@ -1232,16 +1250,57 @@ export default function ContainerFlowPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleSyncContainers}
-              disabled={isSyncing}
-              className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-2 rounded-lg border px-4 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
-              />
-              {isSyncing ? 'Syncing...' : 'Sync Container SellerCloud'}
-            </button>
+            <div className="relative" ref={syncMenuRef}>
+              <button
+                onClick={() => setShowSyncMenu(!showSyncMenu)}
+                disabled={isSyncing}
+                className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
+                />
+                <span>
+                  {isSyncing ? 'Syncing...' : 'Sync Container SellerCloud'}
+                </span>
+                <ChevronDown className="ml-0.5 h-3.5 w-3.5 text-slate-500" />
+              </button>
+
+              {showSyncMenu && (
+                <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border bg-white shadow-lg">
+                  <div className="border-mc-beige-dark border-b bg-slate-50 px-3 py-2">
+                    <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                      Select timeframe
+                    </span>
+                  </div>
+                  <div className="flex flex-col py-1">
+                    <button
+                      onClick={() => handleSyncContainers('1')}
+                      className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                    >
+                      Past 1 Day
+                    </button>
+                    <button
+                      onClick={() => handleSyncContainers('3')}
+                      className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                    >
+                      Past 3 Days
+                    </button>
+                    <button
+                      onClick={() => handleSyncContainers('7')}
+                      className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                    >
+                      Past 7 Days
+                    </button>
+                    <button
+                      onClick={() => handleSyncContainers('all')}
+                      className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                    >
+                      Fetch All
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => fetchTablePage()}
               disabled={listLoading}
