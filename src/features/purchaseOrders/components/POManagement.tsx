@@ -205,6 +205,38 @@ const VendorStatusDropdown = ({
   );
 };
 
+const highlightText = (
+  text: string | number | undefined | null,
+  query: string | undefined | null,
+) => {
+  if (!query || !query.trim() || text === undefined || text === null) {
+    return <>{text}</>;
+  }
+  const safeText = String(text);
+  const activeQuery = query.trim();
+  const regex = new RegExp(
+    `(${activeQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+    'gi',
+  );
+  const parts = safeText.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === activeQuery.toLowerCase() ? (
+          <mark
+            key={i}
+            className="rounded-sm bg-yellow-200 px-0.5 font-bold text-slate-800"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+};
+
 interface POManagementProps {
   loading?: boolean;
   purchaseOrders: PurchaseOrder[];
@@ -1659,7 +1691,7 @@ Supply Chain CRM Coordinator`;
                 className="truncate font-mono text-[10px] font-bold text-slate-900"
                 title={String(po.id).replace(/^PO-/i, '')}
               >
-                {String(po.id).replace(/^PO-/i, '')}
+                {highlightText(String(po.id).replace(/^PO-/i, ''), searchQuery)}
               </span>
               {po.delta_sellercloud_link && !isVendor && (
                 <a
@@ -1712,7 +1744,9 @@ Supply Chain CRM Coordinator`;
                   : 'text-[11px] font-bold text-slate-700'
               }
             >
-              {!po.orderId || po.orderId === 'N/A' ? 'Stock' : po.orderId}
+              {!po.orderId || po.orderId === 'N/A'
+                ? 'Stock'
+                : highlightText(po.orderId, searchQuery)}
             </span>
             {po.sellercloud_link && !isVendor && (
               <a
@@ -1728,6 +1762,42 @@ Supply Chain CRM Coordinator`;
             )}
           </div>
         ),
+      },
+      {
+        header: 'Comments',
+        accessor: 'commentsCount',
+        headerClassName: 'px-4 py-4  text-center flex-shrink-0 w-20',
+        className: 'px-4 py-4 text-center',
+        render: (po: any) => {
+          const count =
+            parseInt(po.total_comments_count ?? po.commentsCount, 10) || 0;
+          const hasComments = count > 0;
+          return (
+            <button
+              onClick={(e: any) => {
+                e.stopPropagation();
+                setIsCommentOnlyView(true);
+                onSelectPO(po.id);
+                setTimeout(() => {
+                  setActiveDrawerSection('comments');
+                }, 10);
+              }}
+              className={`relative rounded-xl border p-2 transition ${
+                hasComments
+                  ? 'border-mc-gold/50 bg-mc-gold/10 text-mc-black hover:bg-mc-gold/20 hover:border-mc-gold'
+                  : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light/50 hover:text-mc-black text-slate-400'
+              }`}
+              title="View Comments"
+            >
+              <MessageSquare className="h-5 w-5" />
+              {hasComments && (
+                <span className="absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
+                  {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
+                </span>
+              )}
+            </button>
+          );
+        },
       },
       {
         header: (
@@ -1774,6 +1844,7 @@ Supply Chain CRM Coordinator`;
         accessor: 'vendorName',
         headerClassName: 'px-6 py-4 ',
         className: 'px-6 py-4 text-slate-700 font-medium',
+        render: (po: any) => highlightText(po.vendorName, searchQuery),
       },
       {
         header: 'Customer Name',
@@ -1805,7 +1876,7 @@ Supply Chain CRM Coordinator`;
               data-tooltip-id="po-item-tooltip"
               data-tooltip-content={customerName}
             >
-              {customerName}
+              {highlightText(customerName, searchQuery)}
             </span>
           );
         },
@@ -2121,42 +2192,7 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
-      {
-        header: 'Comments',
-        accessor: 'commentsCount',
-        headerClassName: 'px-4 py-4  text-center flex-shrink-0 w-20',
-        className: 'px-4 py-4 text-center',
-        render: (po: any) => {
-          const count =
-            parseInt(po.total_comments_count ?? po.commentsCount, 10) || 0;
-          const hasComments = count > 0;
-          return (
-            <button
-              onClick={(e: any) => {
-                e.stopPropagation();
-                setIsCommentOnlyView(true);
-                onSelectPO(po.id);
-                setTimeout(() => {
-                  setActiveDrawerSection('comments');
-                }, 10);
-              }}
-              className={`relative rounded-xl border p-2 transition ${
-                hasComments
-                  ? 'border-mc-gold/50 bg-mc-gold/10 text-mc-black hover:bg-mc-gold/20 hover:border-mc-gold'
-                  : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light/50 hover:text-mc-black text-slate-400'
-              }`}
-              title="View Comments"
-            >
-              <MessageSquare className="h-5 w-5" />
-              {hasComments && (
-                <span className="absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
-                  {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
-                </span>
-              )}
-            </button>
-          );
-        },
-      },
+
       {
         header: 'Actions',
         accessor: 'actions',
@@ -2184,6 +2220,7 @@ Supply Chain CRM Coordinator`;
       onSelectPO,
       userRole,
       purchaseOrders,
+      searchQuery,
     ],
   );
 

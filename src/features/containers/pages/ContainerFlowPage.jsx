@@ -85,6 +85,35 @@ const CONTAINER_EXPORT_COLUMNS_LABELS = {
   qty_in_container: 'Qty In Container',
 };
 
+const highlightText = (text, query) => {
+  if (!query || !query.trim() || text === undefined || text === null) {
+    return <>{text}</>;
+  }
+  const safeText = String(text);
+  const activeQuery = query.trim();
+  const regex = new RegExp(
+    `(${activeQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+    'gi',
+  );
+  const parts = safeText.split(regex);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === activeQuery.toLowerCase() ? (
+          <mark
+            key={i}
+            className="rounded-sm bg-yellow-200 px-0.5 font-bold text-slate-800"
+          >
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+};
+
 export default function ContainerFlowPage() {
   const dispatch = useDispatch();
   const rawPurchaseOrders = useSelector((state) => state.purchaseOrders?.list);
@@ -1010,7 +1039,10 @@ export default function ContainerFlowPage() {
         render: (c) => (
           <div className="flex items-center gap-1.5">
             <span className="rounded border border-slate-200 bg-slate-100 px-2 py-0.5">
-              {c.sellercloud_container_id || c.id}
+              {highlightText(
+                c.sellercloud_container_id || c.id,
+                listSearchQuery,
+              )}
             </span>
             {c.sellercloud_link && (
               <a
@@ -1041,12 +1073,14 @@ export default function ContainerFlowPage() {
         header: 'Container Name',
         accessor: 'name',
         className: 'px-6 py-4 font-semibold text-slate-800',
+        render: (c) => highlightText(c.name, listSearchQuery),
       },
       {
         header: 'Warehouse',
         accessor: 'warehouse_name',
         className: 'px-6 py-4 font-medium text-slate-600',
-        render: (c) => c.warehouse_name || 'N/A',
+        render: (c) =>
+          highlightText(c.warehouse_name || 'N/A', listSearchQuery),
       },
       {
         header: 'Total Items',
@@ -1166,7 +1200,7 @@ export default function ContainerFlowPage() {
         ),
       },
     ],
-    [listSortConfig, handleListSort],
+    [listSortConfig, handleListSort, listSearchQuery],
   );
 
   if (showList) {
