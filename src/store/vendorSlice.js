@@ -1,21 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../services/api';
+import { VENDORS_LIST } from '../utils/endpoints';
 
-// Async Thunk to fetch a page of vendors from the API
+// Async Thunk to fetch all vendors from the API
 export const fetchVendorsPage = createAsyncThunk(
   'vendors/fetchPage',
-  async ({ page, pageSize, search }, { rejectWithValue }) => {
+  async ({ search }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/vendors', {
+      const response = await apiClient.get(VENDORS_LIST, {
         params: {
-          page,
-          page_size: pageSize,
           search: search || undefined,
         },
       });
       return {
         data: response.data,
-        page,
         search,
       };
     } catch (error) {
@@ -65,27 +63,19 @@ const vendorSlice = createSlice({
       })
       .addCase(fetchVendorsPage.fulfilled, (state, action) => {
         state.loading = false;
-        const { data, page } = action.payload;
+        const { data, search } = action.payload;
 
         let fetchedList = [];
-        let more = false;
 
         if (Array.isArray(data)) {
-          // If it's a flat array, we filter it local-search style
-          const searchVal = action.payload.search.toLowerCase();
-          const filtered = data
+          const searchVal = search ? search.toLowerCase() : '';
+          fetchedList = data
             .map((v) => ({
               id: v.id,
               name: v.name,
               country: v.country,
             }))
             .filter((v) => v.name?.toLowerCase().includes(searchVal));
-
-          const limit = 15;
-          const start = (page - 1) * limit;
-          const end = start + limit;
-          fetchedList = filtered.slice(start, end);
-          more = end < filtered.length;
         } else if (data && typeof data === 'object') {
           const results = data.results || data.vendors || [];
           fetchedList = results.map((v) => ({
@@ -93,21 +83,11 @@ const vendorSlice = createSlice({
             name: v.name,
             country: v.country,
           }));
-          const total = data.total || results.length;
-          more = page * 15 < total;
         }
 
-        if (page === 1) {
-          state.list = fetchedList;
-        } else {
-          // Deduplicate items on append
-          const existingIds = new Set(state.list.map((v) => v.id));
-          const newItems = fetchedList.filter((v) => !existingIds.has(v.id));
-          state.list = [...state.list, ...newItems];
-        }
-
-        state.page = page;
-        state.hasMore = more;
+        // Just blindly overwrite the list since we fetch all at once
+        state.list = fetchedList;
+        state.hasMore = false;
       })
       .addCase(fetchVendorsPage.rejected, (state, action) => {
         state.loading = false;

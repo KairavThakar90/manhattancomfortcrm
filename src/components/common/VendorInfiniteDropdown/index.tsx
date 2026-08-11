@@ -57,31 +57,14 @@ export default function VendorInfiniteDropdown({
 
   useEffect(() => {
     if (isOpen) {
-      dispatch(setVendorSearch(searchTerm));
+      // Only fetch the full list when opened, rely on local filtering for search
       dispatch(
         (fetchVendorsPage as any)({
-          page: 1,
-          pageSize: 15,
-          search: searchTerm,
+          search: '',
         }),
       );
     }
-  }, [isOpen, searchTerm, dispatch]);
-
-  const handleScroll = () => {
-    if (!listRef.current || loading || !hasMore) return;
-    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
-    if (scrollHeight - scrollTop <= clientHeight + 30) {
-      const nextPage = page + 1;
-      dispatch(
-        (fetchVendorsPage as any)({
-          page: nextPage,
-          pageSize: 15,
-          search: searchTerm,
-        }),
-      );
-    }
-  };
+  }, [isOpen, dispatch]);
 
   useEffect(() => {
     const clickOutside = (e: MouseEvent) => {
@@ -145,7 +128,6 @@ export default function VendorInfiniteDropdown({
 
           <div
             ref={listRef}
-            onScroll={handleScroll}
             className="max-h-48 flex-1 space-y-0.5 overflow-y-auto scroll-smooth"
           >
             {showAllOption && (
