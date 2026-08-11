@@ -2250,7 +2250,6 @@ Supply Chain CRM Coordinator`;
                 toast.success('SKU copied to clipboard!');
               }
             }}
-            title="Click to copy SKU"
           >
             <span
               className="group-hover:text-mc-gold truncate font-mono font-bold text-slate-500 transition-colors"
@@ -2280,11 +2279,13 @@ Supply Chain CRM Coordinator`;
           return (
             <div className="group flex items-start gap-1">
               <span
-                className="line-clamp-1 cursor-pointer font-medium text-slate-800"
+                className="cursor-pointer font-medium text-slate-800"
                 data-tooltip-id="po-item-tooltip"
                 data-tooltip-content={productName}
               >
-                {productName}
+                {productName.length > 25
+                  ? productName.substring(0, 25) + '...'
+                  : productName}
               </span>
               <button
                 title="Copy Product Name"

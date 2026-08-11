@@ -372,7 +372,6 @@ export default function ContainerDetailsModal({
                                     toast.success('SKU copied to clipboard!');
                                   }
                                 }}
-                                title="Click to copy SKU"
                               >
                                 <span
                                   className="text-mc-black group-hover:text-mc-gold font-bold whitespace-nowrap transition-colors"
@@ -392,11 +391,23 @@ export default function ContainerDetailsModal({
                             accessor: 'product_name',
                             headerClassName: 'px-3 py-2 bg-white',
                             className: 'px-3 py-2 max-w-[150px]',
-                            render: (item) => (
-                              <span className="line-clamp-1 font-medium text-slate-800">
-                                {item.product_name || item.name || '-'}
-                              </span>
-                            ),
+                            render: (item) => {
+                              const name =
+                                item.product_name || item.name || '-';
+                              const displayName =
+                                name.length > 25
+                                  ? name.substring(0, 25) + '...'
+                                  : name;
+                              return (
+                                <span
+                                  className="cursor-pointer font-medium text-slate-800"
+                                  data-tooltip-id="sku-tooltip"
+                                  data-tooltip-content={name}
+                                >
+                                  {displayName}
+                                </span>
+                              );
+                            },
                           },
                           {
                             header: 'QTY ASSIGNED',
