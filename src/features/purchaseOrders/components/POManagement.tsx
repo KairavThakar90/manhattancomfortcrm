@@ -41,6 +41,7 @@ import {
   ChevronUp,
   ChevronDown,
   Pencil,
+  Paperclip,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
@@ -924,6 +925,7 @@ export default function POManagement({
 
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
+  const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
   const [isPostingComment, setIsPostingComment] = useState(false);
 
   // AI Email Generator state
@@ -1494,9 +1496,14 @@ Supply Chain CRM Coordinator`;
   // Add a discussion comment — WhatsApp style 'fire and forget'
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO || !newCommentText.trim()) return;
+    if (!selectedPO || (!newCommentText.trim() && !newCommentFile)) return;
 
-    const messageText = newCommentText.trim();
+    let messageText = newCommentText.trim();
+    if (newCommentFile) {
+      messageText += messageText
+        ? `\n\n(Attached: ${newCommentFile.name})`
+        : `(Attached: ${newCommentFile.name})`;
+    }
 
     // Extract tagged users
     const words = messageText.split(/\s+/);
@@ -1524,7 +1531,8 @@ Supply Chain CRM Coordinator`;
 
     if (commentScope === 'sku' && selectedSkuId) {
       setFetchedSkuComments((prev) => [...prev, optimisticComment]);
-      setNewCommentText('');
+      setTimeout(() => setNewCommentText(''), 0);
+      setNewCommentFile(null);
       setShowMentionDropdown(false);
 
       postItemComment(selectedSkuId, messageText, taggedUserIds, replyId)
@@ -1560,7 +1568,8 @@ Supply Chain CRM Coordinator`;
 
     onAddComment(optimisticComment);
     setFetchedComments((prev) => [...prev, optimisticComment]);
-    setNewCommentText('');
+    setTimeout(() => setNewCommentText(''), 0);
+    setNewCommentFile(null);
     setShowMentionDropdown(false);
 
     // Fire-and-forget background sync (No UI locks!)
@@ -3671,13 +3680,56 @@ Supply Chain CRM Coordinator`;
                               </div>
                             </div>
                           )}
-                          <input
-                            type="text"
-                            placeholder="Type a message... (Use @ to tag)"
-                            value={newCommentText}
-                            onChange={handleCommentTextChange}
-                            className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition focus:bg-white focus:outline-hidden"
-                          />
+                          <div className="relative">
+                            {newCommentFile && (
+                              <div className="bg-mc-beige-light/50 border-mc-gold/20 mb-2 flex items-center justify-between rounded border px-3 py-2 text-xs">
+                                <span className="font-medium break-all text-slate-700">
+                                  {newCommentFile.name} (
+                                  {(newCommentFile.size / 1024).toFixed(1)} KB)
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setNewCommentFile(null)}
+                                  className="ml-2 rounded text-slate-500 transition-colors hover:text-rose-500"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            )}
+                            <input
+                              type="text"
+                              placeholder="Type a message... (Use @ to tag)"
+                              value={newCommentText}
+                              onChange={handleCommentTextChange}
+                              className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-xs transition focus:bg-white focus:outline-hidden"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                document
+                                  .getElementById('comment-attachment-input')
+                                  ?.click()
+                              }
+                              className="absolute top-1.5 right-2 hidden p-1 text-slate-400 transition hover:text-slate-700"
+                              title="Attach file or image"
+                            >
+                              <Paperclip className="h-4 w-4" />
+                            </button>
+                            <input
+                              type="file"
+                              id="comment-attachment-input"
+                              className="hidden"
+                              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                              onChange={(e) => {
+                                if (
+                                  e.target.files &&
+                                  e.target.files.length > 0
+                                ) {
+                                  setNewCommentFile(e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
                         <button
                           type="submit"
