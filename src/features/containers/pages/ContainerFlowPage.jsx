@@ -14,6 +14,9 @@ import {
   AlertCircle,
   CheckCircle2,
   ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
   Edit,
   Trash2,
   Calendar,
@@ -645,7 +648,35 @@ export default function ContainerFlowPage() {
   }, [reduxContainers]);
 
   // Server already applies received_date filtering via date_from/date_to
-  const paginatedContainers = allContainers;
+  const handleListSort = useCallback((key) => {
+    setListSortConfig((prev) => {
+      let direction = 'asc';
+      if (prev.key === key && prev.direction === 'asc') {
+        direction = 'desc';
+      }
+      return { key, direction };
+    });
+  }, []);
+
+  const paginatedContainers = useMemo(() => {
+    let sorted = [...allContainers];
+    if (listSortConfig.key) {
+      sorted.sort((a, b) => {
+        let aVal = a[listSortConfig.key];
+        let bVal = b[listSortConfig.key];
+
+        if (listSortConfig.key === 'is_received') {
+          aVal = aVal ? 1 : 0;
+          bVal = bVal ? 1 : 0;
+        }
+
+        if (aVal < bVal) return listSortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return listSortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sorted;
+  }, [allContainers, listSortConfig]);
 
   const handlePOChange = (val) => {
     setSelectedPOId(val);
@@ -1036,15 +1067,51 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 font-bold text-slate-700',
       },
       {
-        header: 'ETA (Delivery)',
+        header: (
+          <div
+            className="flex cursor-pointer items-center gap-1"
+            onClick={() => handleListSort('arrivalDate')}
+          >
+            <span>ETA (Delivery)</span>
+            <span className="group-hover:text-mc-black text-slate-400">
+              {listSortConfig.key === 'arrivalDate' ? (
+                listSortConfig.direction === 'asc' ? (
+                  <ArrowUp className="h-3 w-3" />
+                ) : (
+                  <ArrowDown className="h-3 w-3" />
+                )
+              ) : (
+                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+              )}
+            </span>
+          </div>
+        ),
         accessor: 'arrivalDate',
-        headerClassName: 'px-4 py-3',
+        headerClassName: 'px-4 py-3 select-none group',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
-        header: 'Shipping Status',
+        header: (
+          <div
+            className="flex cursor-pointer items-center justify-center gap-1"
+            onClick={() => handleListSort('is_received')}
+          >
+            <span>Shipping Status</span>
+            <span className="group-hover:text-mc-black text-slate-400">
+              {listSortConfig.key === 'is_received' ? (
+                listSortConfig.direction === 'asc' ? (
+                  <ArrowUp className="h-3 w-3" />
+                ) : (
+                  <ArrowDown className="h-3 w-3" />
+                )
+              ) : (
+                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+              )}
+            </span>
+          </div>
+        ),
         accessor: 'is_received',
-        headerClassName: 'px-4 py-3 text-center',
+        headerClassName: 'px-4 py-3 text-center select-none group',
         className: 'px-4 py-4 text-center',
         render: (c) =>
           c.is_received ? (
@@ -1058,9 +1125,27 @@ export default function ContainerFlowPage() {
           ),
       },
       {
-        header: 'Received Date',
+        header: (
+          <div
+            className="flex cursor-pointer items-center gap-1"
+            onClick={() => handleListSort('received_date')}
+          >
+            <span>Received Date</span>
+            <span className="group-hover:text-mc-black text-slate-400">
+              {listSortConfig.key === 'received_date' ? (
+                listSortConfig.direction === 'asc' ? (
+                  <ArrowUp className="h-3 w-3" />
+                ) : (
+                  <ArrowDown className="h-3 w-3" />
+                )
+              ) : (
+                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+              )}
+            </span>
+          </div>
+        ),
         accessor: 'received_date',
-        headerClassName: 'px-4 py-3',
+        headerClassName: 'px-4 py-3 select-none group',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
@@ -1081,7 +1166,7 @@ export default function ContainerFlowPage() {
         ),
       },
     ],
-    [],
+    [listSortConfig, handleListSort],
   );
 
   if (showList) {

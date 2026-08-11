@@ -18,9 +18,11 @@ export default function CustomerDropdown({
   className = '',
 }: CustomerDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const needsFetch = isOpen || (value && value !== 'all');
@@ -53,6 +55,7 @@ export default function CustomerDropdown({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
+        setSearch('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -87,6 +90,16 @@ export default function CustomerDropdown({
           ? 'Loading...'
           : value;
 
+  const filteredCustomers = customers.filter((c) =>
+    formatName(c).toLowerCase().includes(search.toLowerCase()),
+  );
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
   return (
     <div className="relative inline-block w-full" ref={containerRef}>
       <button
@@ -99,9 +112,19 @@ export default function CustomerDropdown({
       </button>
 
       {isOpen && (
-        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-72 min-w-[200px] flex-col rounded-xl border p-2 shadow-lg">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute right-0 z-50 mt-1 flex max-h-72 w-[260px] flex-col rounded-xl border p-2 shadow-lg">
+          <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search customers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="focus:border-mc-black focus:ring-mc-black w-full rounded-md border border-slate-200 p-1.5 text-xs outline-hidden transition focus:ring-1"
+            />
+          </div>
           <div className="max-h-56 flex-1 space-y-0.5 overflow-y-auto scroll-smooth">
-            {showAllOption && (
+            {showAllOption && !search && (
               <button
                 type="button"
                 onClick={() => {
@@ -121,7 +144,7 @@ export default function CustomerDropdown({
               </button>
             )}
 
-            {customers.map((c) => {
+            {filteredCustomers.map((c) => {
               const compValue = getCustId(c);
               return (
                 <button
@@ -130,6 +153,7 @@ export default function CustomerDropdown({
                   onClick={() => {
                     onChange(compValue);
                     setIsOpen(false);
+                    setSearch('');
                   }}
                   className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                     String(value) === compValue
@@ -145,7 +169,7 @@ export default function CustomerDropdown({
               );
             })}
 
-            {!loading && customers.length === 0 && (
+            {!loading && filteredCustomers.length === 0 && (
               <div className="py-4 text-center text-xs text-slate-400 italic">
                 No customers found
               </div>
