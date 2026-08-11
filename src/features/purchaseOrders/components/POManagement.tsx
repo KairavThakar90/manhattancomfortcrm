@@ -2796,19 +2796,6 @@ Supply Chain CRM Coordinator`;
                           <span className="font-mono text-xs font-bold text-slate-800">
                             {po.id}
                           </span>
-                          <span
-                            className={`rounded-xs px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase ${
-                              po.vendor_status === 'DELAYED' ||
-                              po.status === 'Delayed'
-                                ? 'bg-rose-50 text-rose-700'
-                                : po.vendor_status === 'SHIPPED' ||
-                                    po.status === 'In Transit'
-                                  ? 'text-mc-black bg-slate-100'
-                                  : 'bg-emerald-50 text-emerald-700'
-                            }`}
-                          >
-                            {po.vendor_status || po.status || 'N/A'}
-                          </span>
                         </div>
 
                         <div>
