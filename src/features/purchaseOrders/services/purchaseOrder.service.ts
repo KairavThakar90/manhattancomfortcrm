@@ -203,14 +203,11 @@ export async function updatePOComment(
   return data;
 }
 
-export async function syncPurchaseOrders(viewId: string = '25'): Promise<any> {
-  const { data } = await apiClient.post(
-    `${PO_SYNC}?view_id=${viewId}`,
-    undefined,
-    {
-      timeout: 0,
-    },
-  );
+export async function syncPurchaseOrders(days: string = '25'): Promise<any> {
+  const url = days === 'all' ? PO_SYNC : `${PO_SYNC}?days=${days}`;
+  const { data } = await apiClient.post(url, undefined, {
+    timeout: 0,
+  });
   return data;
 }
 

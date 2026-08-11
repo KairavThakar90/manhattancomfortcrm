@@ -508,11 +508,32 @@ export default function POManagement({
     }
   }, [dispatch, reduxUsers.length]);
 
-  const handleSyncSellerCloud = async () => {
+  const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const syncMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const clickOutside = (e: MouseEvent) => {
+      if (
+        syncMenuRef.current &&
+        !syncMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowSyncMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', clickOutside);
+    return () => document.removeEventListener('mousedown', clickOutside);
+  }, []);
+
+  const handleSyncSellerCloud = async (days: string = '25') => {
+    setShowSyncMenu(false);
     try {
       setIsSyncing(true);
-      await syncPurchaseOrders('25');
-      toast.success('Successfully synced POs from SellerCloud!');
+      await syncPurchaseOrders(days);
+      toast.success(
+        days === 'all'
+          ? 'Successfully synced all POs from SellerCloud!'
+          : `Successfully synced POs for the past ${days} days from SellerCloud!`,
+      );
     } catch (error) {
       console.error('Error syncing POs:', error);
       toast.error('Failed to sync POs from SellerCloud.');
@@ -2585,18 +2606,57 @@ Supply Chain CRM Coordinator`;
           {activeSubTab !== 'kanban' && (
             <>
               {!isVendor && (
-                <button
-                  onClick={handleSyncSellerCloud}
-                  disabled={isSyncing}
-                  className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
-                  />
-                  <span>
-                    {isSyncing ? 'Syncing...' : 'Sync Order SellerCloud'}
-                  </span>
-                </button>
+                <div className="relative" ref={syncMenuRef}>
+                  <button
+                    onClick={() => setShowSyncMenu(!showSyncMenu)}
+                    disabled={isSyncing}
+                    className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`}
+                    />
+                    <span>
+                      {isSyncing ? 'Syncing...' : 'Sync Order SellerCloud'}
+                    </span>
+                    <ChevronDown className="ml-0.5 h-3.5 w-3.5 text-slate-500" />
+                  </button>
+
+                  {showSyncMenu && (
+                    <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border bg-white shadow-lg">
+                      <div className="border-mc-beige-dark border-b bg-slate-50 px-3 py-2">
+                        <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                          Select timeframe
+                        </span>
+                      </div>
+                      <div className="flex flex-col py-1">
+                        <button
+                          onClick={() => handleSyncSellerCloud('1')}
+                          className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                        >
+                          Past 1 Day
+                        </button>
+                        <button
+                          onClick={() => handleSyncSellerCloud('3')}
+                          className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                        >
+                          Past 3 Days
+                        </button>
+                        <button
+                          onClick={() => handleSyncSellerCloud('7')}
+                          className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                        >
+                          Past 7 Days
+                        </button>
+                        <button
+                          onClick={() => handleSyncSellerCloud('all')}
+                          className="text-mc-black hover:bg-mc-beige-light px-4 py-2 text-left text-xs font-medium transition"
+                        >
+                          Fetch All
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
               {onRefreshData && (
                 <button
