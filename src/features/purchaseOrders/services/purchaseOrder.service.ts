@@ -181,7 +181,25 @@ export async function postPOComment(
   message: string,
   tagged_user_ids?: string[],
   parent_id?: string | null,
+  files?: File[],
 ): Promise<any> {
+  if (files && files.length > 0) {
+    const formData = new FormData();
+    formData.append('comment', message);
+    if (parent_id) formData.append('parent_id', String(parent_id));
+    if (tagged_user_ids && tagged_user_ids.length > 0) {
+      tagged_user_ids.forEach((id) => formData.append('tagged_user_ids', id));
+    }
+    files.forEach((f) => formData.append('files', f));
+
+    const { data } = await apiClient.post(PO_COMMENTS(poId), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data;
+  }
+
   const { data } = await apiClient.post(PO_COMMENTS(poId), {
     comment: message,
     parent_id: parent_id || null,
