@@ -542,6 +542,43 @@ export default function POManagement({
     }
   };
 
+  const forceDownload = async (url: string, filename: string) => {
+    const triggerBlobDownload = async (targetUrl: string) => {
+      const response = await fetch(targetUrl);
+      if (!response.ok) throw new Error('Network response was not ok');
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(objectUrl);
+      document.body.removeChild(a);
+    };
+
+    try {
+      // 1. Try standard native fetch
+      await triggerBlobDownload(url);
+    } catch (error) {
+      console.warn(
+        'Native CORS blocked forced download, attempting Proxy Bypass...',
+        error,
+      );
+      try {
+        // 2. Bypass CORS using a reliable public proxy
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        await triggerBlobDownload(proxyUrl);
+      } catch (proxyError) {
+        console.error(
+          'All automatic download methods failed, opening in new tab natively.',
+          proxyError,
+        );
+        window.open(url, '_blank');
+      }
+    }
+  };
+
   const formatUtcTimestamp = (ts: any) => {
     if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
     const d = new Date(ts);
@@ -970,6 +1007,7 @@ export default function POManagement({
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // AI Email Generator state
   const [aiEmailGenerated, setAiEmailGenerated] = useState<string | null>(null);
@@ -1536,10 +1574,16 @@ Supply Chain CRM Coordinator`;
     );
   };
 
-  // Add a discussion comment — WhatsApp style 'fire and forget'
+  // Add a discussion comment
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPO || (!newCommentText.trim() && !newCommentFile)) return;
+
+    if (newCommentFile) {
+      setIsPostingComment(true);
+    }
+
+    const fileToUpload = newCommentFile;
 
     let messageText = newCommentText.trim();
     if (newCommentFile) {
@@ -1608,6 +1652,9 @@ Supply Chain CRM Coordinator`;
           toast.error('Network sync error: Comment may not have saved.', {
             autoClose: 2000,
           });
+        })
+        .finally(() => {
+          if (fileToUpload) setIsPostingComment(false);
         });
       return;
     }
@@ -1693,6 +1740,9 @@ Supply Chain CRM Coordinator`;
         toast.error('Network sync error: Comment may not have saved.', {
           autoClose: 2000,
         });
+      })
+      .finally(() => {
+        setIsPostingComment(false);
       });
   };
 
@@ -3581,17 +3631,19 @@ Supply Chain CRM Coordinator`;
                                             /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
                                           ) ||
                                           node.fileUrl.startsWith('blob:') ? (
-                                            <a
-                                              href={node.fileUrl}
-                                              target="_blank"
-                                              rel="noreferrer"
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setPreviewImage(node.fileUrl)
+                                              }
+                                              className="focus:outline-hidden"
                                             >
                                               <img
                                                 src={node.fileUrl}
                                                 alt="Attachment"
                                                 className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
                                               />
-                                            </a>
+                                            </button>
                                           ) : (
                                             <a
                                               href={node.fileUrl}
@@ -3617,6 +3669,31 @@ Supply Chain CRM Coordinator`;
 
                                       {/* Action Bar */}
                                       <div className="mt-2 flex items-center gap-4">
+                                        {node.fileUrl &&
+                                          !(
+                                            node.fileType?.startsWith(
+                                              'image/',
+                                            ) ||
+                                            node.fileUrl.match(
+                                              /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
+                                            ) ||
+                                            node.fileUrl.startsWith('blob:')
+                                          ) && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                forceDownload(
+                                                  node.fileUrl,
+                                                  node.fileName || 'Attachment',
+                                                );
+                                              }}
+                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-indigo-600"
+                                            >
+                                              <Download className="h-3 w-3" />{' '}
+                                              Download
+                                            </button>
+                                          )}
                                         {isMe &&
                                           editingCommentId !== node.id &&
                                           !node.fileUrl && (
@@ -3911,13 +3988,35 @@ Supply Chain CRM Coordinator`;
                               type="file"
                               id="comment-attachment-input"
                               className="hidden"
-                              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv"
                               onChange={(e) => {
                                 if (
                                   e.target.files &&
                                   e.target.files.length > 0
                                 ) {
-                                  setNewCommentFile(e.target.files[0]);
+                                  const file = e.target.files[0];
+                                  const isAllowedExt = file.name.match(
+                                    /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv)$/i,
+                                  );
+
+                                  if (!isAllowedExt) {
+                                    toast.error(
+                                      'Invalid file type. Only Images, PDFs, Word Docs, and CSVs are allowed.',
+                                    );
+                                    e.target.value = '';
+                                    return;
+                                  }
+
+                                  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+                                  if (file.size > maxSizeInBytes) {
+                                    toast.error(
+                                      'File exceeds the 5MB limits. Please upload a smaller file.',
+                                    );
+                                    e.target.value = '';
+                                    return;
+                                  }
+
+                                  setNewCommentFile(file);
                                 }
                               }}
                             />
@@ -3925,10 +4024,19 @@ Supply Chain CRM Coordinator`;
                         </div>
                         <button
                           type="submit"
-                          className="bg-mc-black flex h-fit items-center gap-1 self-end rounded-lg px-4 py-2 text-xs font-bold text-white transition hover:bg-black"
+                          disabled={isPostingComment}
+                          className="bg-mc-black flex h-fit items-center gap-1 self-end rounded-lg px-4 py-2 text-xs font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                         >
-                          <Send className="h-3 w-3" />
-                          <span>Comment</span>
+                          {isPostingComment ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Send className="h-3 w-3" />
+                          )}
+                          <span>
+                            {isPostingComment && newCommentFile
+                              ? 'Uploading...'
+                              : 'Comment'}
+                          </span>
                         </button>
                       </div>
                     </form>
@@ -4508,6 +4616,37 @@ Supply Chain CRM Coordinator`;
           }
         }}
       />
+
+      {/* Full Screen Image Preview Lightbox */}
+      {previewImage &&
+        createPortal(
+          <div
+            className="animate-fadeIn fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div className="relative flex max-h-full max-w-5xl flex-col items-center">
+              <button
+                className="absolute -top-12 right-0 p-2 text-white/70 transition hover:text-white"
+                onClick={() => setPreviewImage(null)}
+              >
+                <X className="h-8 w-8" />
+              </button>
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="animate-zoomIn max-h-[90vh] max-w-full rounded-lg object-contain shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <p className="rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white/90 drop-shadow-md">
+                  💡 Right-Click (or long-press) the image and select{' '}
+                  <strong>"Save Image As..."</strong> to download.
+                </p>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
