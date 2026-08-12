@@ -681,7 +681,8 @@ export default function POManagement({
               ...po,
               orderedQty: calculatedOrderedQty || po.orderedQty || 0,
               receivedQty: calculatedReceivedQty || po.receivedQty || 0,
-              commentsCount: mappedComments.length,
+              commentsCount:
+                detailData.total_comments_count ?? po.commentsCount,
               items: detailData.items
                 ? detailData.items.map((item: any) => ({
                     ...item,
@@ -1863,7 +1864,12 @@ Supply Chain CRM Coordinator`;
         if (selectedPO) {
           const updatedPOs = purchaseOrders.map((p: any) =>
             p.id === selectedPO.id
-              ? { ...p, commentsCount: mappedComments.length }
+              ? {
+                  ...p,
+                  commentsCount:
+                    detailData.total_comments_count ??
+                    (p.commentsCount || 0) + 1,
+                }
               : p,
           );
           dispatch(setPurchaseOrdersList(updatedPOs));
