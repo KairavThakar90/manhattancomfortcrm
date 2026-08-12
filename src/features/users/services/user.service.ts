@@ -16,6 +16,9 @@ export interface User {
   username: string;
   email: string;
   role: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
   [key: string]: unknown;
 }
 

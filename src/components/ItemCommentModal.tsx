@@ -9,6 +9,9 @@ import {
   MessageSquare,
   Pencil,
   Loader2,
+  Paperclip,
+  Download,
+  Eye,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { User } from '../features/users/services/user.service';
@@ -21,6 +24,35 @@ const formatUtcTimestamp = (ts: any) => {
     ? ts
     : d.toISOString().slice(0, 16).replace('T', ' ');
 };
+
+const parseApiCommentObject = (c: any, defaultTargetId: string) => {
+  let fileUrl = null;
+  let fileName = '';
+  let fileType = '';
+
+  const possibleFiles = c.files || c.attachments || c.documents || [];
+  if (possibleFiles && possibleFiles.length > 0) {
+    const f = possibleFiles[0];
+    fileUrl = f.url || f.file_url || f.file;
+    fileName = f.name || f.filename || f.file_name || '';
+    fileType = f.content_type || f.type || f.file_type || '';
+  }
+
+  return {
+    id: String(c.id || `ITEMCOM-${Math.random()}`),
+    itemId: defaultTargetId,
+    user: c.user_name || c.user || c.author || 'User',
+    userId: c.user_id || c.author_id || null,
+    role: c.role || 'Administrator',
+    message: c.comment || c.message || c.text || '',
+    timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+    parentId: c.parent_id ? String(c.parent_id) : null,
+    fileUrl,
+    fileName,
+    fileType,
+  };
+};
+
 import {
   getItemComments,
   postItemComment,
@@ -51,6 +83,9 @@ export default function ItemCommentModal({
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [fetchedComments, setFetchedComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState('');
+  const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
+  const [isPostingComment, setIsPostingComment] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [activeItem, setActiveItem] = useState<any>(null);
 
@@ -84,16 +119,9 @@ export default function ItemCommentModal({
     getItemComments(activeItem.id)
       .then((data) => {
         const rawComments = data?.comments || data || [];
-        const mappedComments = rawComments.map((c: any) => ({
-          id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: activeItem.id,
-          user: c.user_name || c.user || c.author || 'User',
-          userId: c.user_id || c.author_id || null,
-          role: c.role || 'Administrator',
-          message: c.comment || c.message || c.text || '',
-          timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-          parentId: c.parent_id ? String(c.parent_id) : null,
-        }));
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, activeItem.id),
+        );
         setFetchedComments(mappedComments);
       })
       .catch((err) => {
@@ -140,31 +168,45 @@ export default function ItemCommentModal({
 
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeItem?.id || !newCommentText.trim()) return;
+    if (!activeItem?.id) return;
+    if (!newCommentText.trim() && !newCommentFile) return;
 
-    const messageText = newCommentText.trim();
+    let messageText = newCommentText.trim();
+    if (newCommentFile) {
+      messageText += messageText
+        ? `\n\n(Attached: ${newCommentFile.name})`
+        : `(Attached: ${newCommentFile.name})`;
+    }
+
     const words = messageText.split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
       .map((w) => taggedUserMap[w])
       .filter(Boolean);
 
-    // Removed optimistic update to match exactly the POManagement flow and preserve strict tree integrity
-    setNewCommentText('');
-    setShowMentionDropdown(false);
-    const replyId = replyToCommentId;
-    setReplyToCommentId(null);
-    setReplyToUser(null);
-    setReplyToText(null);
+    setIsPostingComment(true);
 
-    postItemComment(activeItem.id, messageText, taggedUserIds, replyId)
+    const replyId = replyToCommentId;
+    postItemComment(
+      activeItem.id,
+      messageText,
+      taggedUserIds,
+      replyId,
+      newCommentFile ? [newCommentFile] : undefined,
+    )
       .then(() => {
+        setNewCommentText('');
+        setNewCommentFile(null);
+        setShowMentionDropdown(false);
+        setReplyToCommentId(null);
+        setReplyToUser(null);
+        setReplyToText(null);
+
         toast.success('Comment posted successfully');
         onAddActivity(
           `Added an item comment for ${activeItem.sku}`,
           'Vendor Comment',
         );
-        // Notify the main PO grid to update its comment count for this item!
         window.dispatchEvent(
           new CustomEvent('item-comment-added', {
             detail: { itemId: activeItem.id },
@@ -174,22 +216,16 @@ export default function ItemCommentModal({
       })
       .then((data) => {
         const rawComments = data?.comments || data || [];
-        const mappedComments = rawComments.map((c: any) => ({
-          id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: activeItem.id,
-          user: c.user_name || c.user || c.author || 'User',
-          userId: c.user_id || c.author_id || null,
-          role: c.role || 'Administrator',
-          message: c.comment || c.message || c.text || '',
-          timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-          parentId: c.parent_id ? String(c.parent_id) : null,
-        }));
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, activeItem.id),
+        );
         setFetchedComments(mappedComments);
       })
       .catch((err) => {
         console.error(err);
         toast.error('Failed to post comment.');
-      });
+      })
+      .finally(() => setIsPostingComment(false));
   };
 
   const handleUpdateSubmit = (commentId: string) => {
@@ -219,16 +255,9 @@ export default function ItemCommentModal({
       })
       .then((data) => {
         const rawComments = data?.comments || data || [];
-        const mappedComments = rawComments.map((c: any) => ({
-          id: String(c.id || `ITEMCOM-${Math.random()}`),
-          itemId: activeItem.id,
-          user: c.user_name || c.user || c.author || 'User',
-          userId: c.user_id || c.author_id || null,
-          role: c.role || 'Administrator',
-          message: c.comment || c.message || c.text || '',
-          timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-          parentId: c.parent_id ? String(c.parent_id) : null,
-        }));
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, activeItem.id),
+        );
         setFetchedComments(mappedComments);
       })
       .catch((err) => {
@@ -278,41 +307,41 @@ export default function ItemCommentModal({
       <div
         key={node.id}
         id={node.id}
-        className={`flex flex-col relative mb-4 scroll-mt-20 ${
+        className={`relative mb-4 flex scroll-mt-20 flex-col ${
           highlightedCommentId === node.id
-            ? 'ring-2 ring-inset ring-red-500 rounded-xl transition-all duration-1000 p-1'
+            ? 'rounded-xl p-1 ring-2 ring-red-500 transition-all duration-1000 ring-inset'
             : ''
         }`}
       >
-        <div className="flex gap-3 group relative transition-colors items-start">
+        <div className="group relative flex items-start gap-3 transition-colors">
           <div
-            className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 shadow-sm border border-slate-100 ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700'}`}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-xs font-bold shadow-sm ${isMe ? 'bg-mc-black text-mc-white' : 'bg-slate-50 text-slate-700'}`}
           >
             {(node.user[0] || 'U').toUpperCase()}
           </div>
           <div
-            className={`flex-1 min-w-0 flex flex-col p-3 rounded-2xl border ${isMe ? 'bg-indigo-50/30 border-indigo-100 shadow-sm' : 'bg-white border-slate-100/80 shadow-xs'}`}
+            className={`flex min-w-0 flex-1 flex-col rounded-2xl border p-3 ${isMe ? 'border-mc-beige-dark bg-mc-beige-light/30 shadow-sm' : 'border-slate-100/80 bg-white shadow-xs'}`}
           >
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="font-bold text-[13px] text-slate-800">
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-bold text-slate-800">
                 {node.user}
               </span>
-              <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+              <span className="text-[10px] font-medium whitespace-nowrap text-slate-400">
                 {node.timestamp}
               </span>
               {!isMe && node.role && (
-                <span className="text-[8px] uppercase font-bold text-slate-500 bg-slate-50 border border-slate-100 px-1 py-0.5 rounded-sm">
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-1 py-0.5 text-[8px] font-bold text-slate-500 uppercase">
                   {node.role}
                 </span>
               )}
             </div>
 
             {editingCommentId === node.id ? (
-              <div className="flex flex-col gap-2 w-full mt-1">
+              <div className="mt-1 flex w-full flex-col gap-2">
                 <textarea
                   value={editingCommentText}
                   onChange={(e) => setEditingCommentText(e.target.value)}
-                  className="w-full text-[13px] text-slate-800 p-2 rounded border border-indigo-200 bg-white focus:outline-hidden focus:border-indigo-400"
+                  className="border-mc-beige-dark focus:border-mc-black focus:ring-mc-black w-full rounded border bg-white p-2 text-[13px] text-slate-800 focus:ring-1 focus:outline-hidden"
                   rows={2}
                 />
                 <div className="flex justify-end gap-2">
@@ -322,26 +351,26 @@ export default function ItemCommentModal({
                       setEditingCommentId(null);
                       setEditingCommentText('');
                     }}
-                    className="text-[11px] text-slate-500 hover:text-slate-700 px-2 py-1"
+                    className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-700"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => handleUpdateSubmit(node.id)}
-                    className="text-[11px] bg-indigo-600 text-white font-semibold rounded px-3 py-1 hover:bg-indigo-700"
+                    className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
                   >
                     Save
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="text-[13px] text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
+              <p className="text-[13px] leading-relaxed break-words whitespace-pre-wrap text-slate-600">
                 {node.message
                   .split(/(@[\w.-]+)/g)
                   .map((part: string, i: number) =>
                     part.startsWith('@') ? (
-                      <span key={i} className="font-bold text-indigo-600">
+                      <span key={i} className="text-mc-gold font-bold">
                         {part}
                       </span>
                     ) : (
@@ -351,15 +380,70 @@ export default function ItemCommentModal({
               </p>
             )}
 
-            <div className="flex items-center gap-4 mt-2">
-              {isMe && editingCommentId !== node.id && (
+            {node.fileUrl && (
+              <div className="mt-2.5">
+                {node.fileType?.startsWith('image/') ||
+                node.fileUrl.match(/\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i) ||
+                node.fileUrl.startsWith('blob:') ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImage(node.fileUrl)}
+                    className="focus:outline-hidden"
+                  >
+                    <img
+                      src={node.fileUrl}
+                      alt="Attachment"
+                      className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
+                    />
+                  </button>
+                ) : (
+                  <a
+                    href={node.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100"
+                  >
+                    <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
+                      <Paperclip className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold">Attachment</span>
+                      <span className="text-[10px] text-slate-400">
+                        {node.fileName || 'Document'}
+                      </span>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
+
+            <div className="mt-2 flex items-center gap-4">
+              {node.fileUrl &&
+                !(
+                  node.fileType?.startsWith('image/') ||
+                  node.fileUrl.match(
+                    /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
+                  ) ||
+                  node.fileUrl.startsWith('blob:')
+                ) && (
+                  <a
+                    href={node.fileUrl}
+                    download={node.fileName || 'Attachment'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
+                  >
+                    <Download className="h-3 w-3" /> Download
+                  </a>
+                )}
+              {isMe && editingCommentId !== node.id && !node.fileUrl && (
                 <button
                   type="button"
                   onClick={() => {
                     setEditingCommentId(node.id);
                     setEditingCommentText(node.message);
                   }}
-                  className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
@@ -372,7 +456,7 @@ export default function ItemCommentModal({
                     setReplyToUser(node.user);
                     setReplyToText(node.message);
                   }}
-                  className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-indigo-600 transition opacity-100"
+                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
                   <Reply className="h-3 w-3" /> Reply
                 </button>
@@ -386,7 +470,7 @@ export default function ItemCommentModal({
                       [node.id]: !prev[node.id],
                     }))
                   }
-                  className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 transition"
+                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 transition"
                 >
                   {isCollapsed ? (
                     <>
@@ -405,7 +489,7 @@ export default function ItemCommentModal({
         </div>
 
         {!isCollapsed && node.children.length > 0 && (
-          <div className="mt-3 ml-4 sm:ml-6 pl-4 sm:pl-6 border-l-[1.5px] border-slate-200/80 flex flex-col relative">
+          <div className="relative mt-3 ml-4 flex flex-col border-l-[1.5px] border-slate-200/80 pl-4 sm:ml-6 sm:pl-6">
             {sortNodes(node.children).map((child: any) =>
               renderCommentTree(child, depth + 1),
             )}
@@ -419,73 +503,75 @@ export default function ItemCommentModal({
   const rootNodes = buildTree(fetchedComments);
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 overflow-hidden"
-      onClick={onClose}
-    >
+    <>
       <div
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col h-full animate-fadeInUpBig"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-50 flex justify-center overflow-hidden bg-slate-900/60 p-4 backdrop-blur-xs sm:p-6"
+        onClick={onClose}
       >
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between shrink-0 bg-slate-50/50 rounded-t-2xl">
-          <div className="flex-1 w-full relative">
-            <h2 className="text-lg font-bold text-slate-800 mb-2">
-              SKU Comments
-            </h2>
-            <div className="text-sm font-medium text-slate-600 truncate max-w-md">
-              {activeItem?.sku} - {activeItem?.name || activeItem?.product_name}{' '}
-              (Qty:{' '}
-              {activeItem?.qty ||
-                activeItem?.orderedQty ||
-                activeItem?.quantity}
-              )
+        <div
+          className="animate-fadeInUpBig flex h-full w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex shrink-0 items-start justify-between rounded-t-2xl border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <div className="relative w-full flex-1">
+              <h2 className="mb-2 text-lg font-bold text-slate-800">
+                SKU Comments
+              </h2>
+              <div className="max-w-md truncate text-sm font-medium text-slate-600">
+                {activeItem?.sku} -{' '}
+                {activeItem?.name || activeItem?.product_name} (Qty:{' '}
+                {activeItem?.qty ||
+                  activeItem?.orderedQty ||
+                  activeItem?.quantity}
+                )
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="ml-4 flex-shrink-0 rounded-full p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="custom-scrollbar flex-1 overflow-y-auto bg-slate-50 p-6">
+            <div className="flex flex-col gap-1">
+              {isLoadingComments ? (
+                <div className="flex items-center justify-center py-10">
+                  <span className="text-sm font-medium text-slate-400">
+                    Loading comments...
+                  </span>
+                </div>
+              ) : rootNodes.length > 0 ? (
+                rootNodes.map((node) => renderCommentTree(node, 0))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                  <MessageSquare className="mb-2 h-8 w-8 opacity-20" />
+                  <p className="text-sm">No comments on this item yet.</p>
+                </div>
+              )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 ml-4 flex-shrink-0 hover:bg-slate-200 text-slate-400 hover:text-slate-600 rounded-full transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-2">
-          {isLoadingComments ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-              <Loader2 className="h-8 w-8 animate-spin mb-4 text-indigo-500" />
-              <p className="text-sm">Loading discussion...</p>
-            </div>
-          ) : rootNodes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-              <MessageSquare className="h-10 w-10 mb-4 opacity-20" />
-              <p className="text-sm font-medium">
-                No comments available for this SKU.
-              </p>
-              <p className="text-xs mt-1">
-                Be the first to start the discussion for this item.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {sortNodes(rootNodes).map((root) => renderCommentTree(root, 0))}
-            </div>
-          )}
-        </div>
-
-        {/* Input */}
-        <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-          <form
-            onSubmit={handlePostComment}
-            className="flex flex-col gap-2 relative"
-          >
-            {replyToUser && (
-              <div className="flex flex-col bg-slate-100 rounded-lg p-2.5 border-l-4 border-l-indigo-500 mb-1 animate-fadeIn relative group overflow-hidden">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs font-extrabold text-indigo-700">
-                    {replyToUser}
-                  </span>
+          {/* Footer Form */}
+          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
+            <form
+              onSubmit={handlePostComment}
+              className="relative flex flex-col gap-2"
+            >
+              {replyToCommentId && (
+                <div className="relative mb-2 flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Reply className="text-mc-black h-3.5 w-3.5" />
+                    <span className="text-xs font-semibold text-slate-600">
+                      Replying to {replyToUser}:
+                    </span>
+                    <span className="max-w-[200px] truncate text-xs text-slate-400">
+                      "{replyToText}"
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -493,136 +579,214 @@ export default function ItemCommentModal({
                       setReplyToUser(null);
                       setReplyToText(null);
                     }}
-                    className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded p-1 transition"
+                    className="p-1 text-slate-400 hover:text-red-500"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 line-clamp-1 italic pr-6 group-hover:line-clamp-2 transition-all">
-                  {replyToText
-                    ?.split(/(@[\w.-]+)/g)
-                    .map((part: string, i: number) =>
-                      part.startsWith('@') ? (
-                        <span
-                          key={i}
-                          className="font-bold text-indigo-500 not-italic"
-                        >
-                          {part}
-                        </span>
-                      ) : (
-                        part
-                      ),
-                    )}
-                </p>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                {showMentionDropdown && (
-                  <div className="absolute bottom-full left-0 mb-1 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 flex flex-col animate-fadeIn">
-                    <div className="max-h-48 overflow-y-auto py-1">
-                      {(() => {
-                        let taggableUsers = [...(reduxUsers || [])];
-                        if (selectedPO?.vendorName) {
-                          taggableUsers.unshift({
-                            id: selectedPO.vendorId || 'vendor',
-                            full_name: selectedPO.vendorName,
-                            username: selectedPO.vendorName.replace(/\s+/g, ''),
-                            email: 'Vendor (Owner)',
+              )}
+              <div className="flex items-start gap-3">
+                <div className="relative w-full flex-1">
+                  {showMentionDropdown && (
+                    <div className="absolute bottom-full left-0 mb-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                      <div className="max-h-48 overflow-y-auto py-1">
+                        {(() => {
+                          const filtered = reduxUsers.filter((u: User) => {
+                            const searchTargets = [
+                              (u.full_name || '').toLowerCase(),
+                              (u.username || '').toLowerCase(),
+                              (u.first_name || '').toLowerCase(),
+                              (u.last_name || '').toLowerCase(),
+                              (u.email || '').toLowerCase(),
+                            ];
+                            return (
+                              !mentionFilter ||
+                              searchTargets.some((t) =>
+                                t.includes(mentionFilter),
+                              )
+                            );
                           });
-                        }
-                        if (currentUser) {
-                          taggableUsers = taggableUsers.filter((u) => {
-                            if (currentUser.id && u.id === currentUser.id)
-                              return false;
-                            if (
-                              currentUser.email &&
-                              u.email === currentUser.email
-                            )
-                              return false;
-                            if (
-                              currentUser.username &&
-                              u.username === currentUser.username
-                            )
-                              return false;
-                            return true;
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="px-3 py-2 text-xs text-slate-400">
+                                No users found
+                              </div>
+                            );
+                          }
+
+                          return filtered.map((u: User) => {
+                            const displayName =
+                              u.full_name ||
+                              u.username ||
+                              `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                              u.email;
+                            const initial = (
+                              displayName[0] || 'U'
+                            ).toUpperCase();
+                            return (
+                              <button
+                                key={u.id}
+                                type="button"
+                                onClick={() => handleSelectMention(u)}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
+                              >
+                                <div className="text-mc-black flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold">
+                                  {initial}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate font-semibold text-slate-700">
+                                    {displayName}
+                                  </div>
+                                  <div className="truncate text-[10px] text-slate-400">
+                                    {u.email}
+                                  </div>
+                                </div>
+                              </button>
+                            );
                           });
-                        }
-
-                        const filtered = taggableUsers.filter((u) => {
-                          const searchTargets = [
-                            (u.full_name || '').toLowerCase(),
-                            (u.username || '').toLowerCase(),
-                            (u.first_name || '').toLowerCase(),
-                            (u.last_name || '').toLowerCase(),
-                            (u.email || '').toLowerCase(),
-                          ];
-                          return (
-                            !mentionFilter ||
-                            searchTargets.some((t) => t.includes(mentionFilter))
-                          );
-                        });
-
-                        if (filtered.length === 0) {
-                          return (
-                            <div className="px-3 py-2 text-xs text-slate-400">
-                              No users found
-                            </div>
-                          );
-                        }
-
-                        return filtered.map((u) => {
-                          const displayName =
-                            u.full_name ||
-                            u.username ||
-                            `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                            u.email;
-                          const initial = (displayName[0] || 'U').toUpperCase();
-                          return (
-                            <button
-                              key={u.id}
-                              type="button"
-                              onClick={() => handleSelectMention(u)}
-                              className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center gap-2 transition"
-                            >
-                              <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                                {initial}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-slate-700 truncate">
-                                  {displayName}
-                                </div>
-                                <div className="text-[10px] text-slate-400 truncate">
-                                  {u.email}
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        });
-                      })()}
+                        })()}
+                      </div>
                     </div>
+                  )}
+                  {newCommentFile && (
+                    <div className="relative mb-3 flex w-full max-w-sm flex-col rounded-2xl bg-[#0f172a] p-3 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={() => setNewCommentFile(null)}
+                        className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/40"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      {newCommentFile.type.startsWith('image/') ? (
+                        <div className="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-black/30">
+                          <img
+                            src={URL.createObjectURL(newCommentFile)}
+                            alt="Preview"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-48 w-full flex-col items-center justify-center rounded-xl bg-black/20">
+                          <Paperclip className="mb-2 h-10 w-10 text-white/50" />
+                          <span className="rounded-md bg-white/10 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white uppercase">
+                            {newCommentFile.name.split('.').pop()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="mt-3 w-full truncate rounded-lg bg-white/5 px-3 py-2 text-center text-[13px] font-semibold text-white/90">
+                        {newCommentFile.name}{' '}
+                        <span className="font-normal text-white/40">
+                          ({(newCommentFile.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Type a message... (Use @ to tag)"
+                      value={newCommentText}
+                      onChange={handleCommentTextChange}
+                      className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        document
+                          .getElementById('item-comment-attachment-input')
+                          ?.click()
+                      }
+                      className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700"
+                      title="Attach file or image"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </button>
                   </div>
-                )}
-                <input
-                  type="text"
-                  placeholder="Type a message... (Use @ to tag)"
-                  value={newCommentText}
-                  onChange={handleCommentTextChange}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition"
-                />
+                  <input
+                    type="file"
+                    id="item-comment-attachment-input"
+                    className="hidden"
+                    accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        const isAllowedExt = file.name.match(
+                          /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv)$/i,
+                        );
+                        if (!isAllowedExt) {
+                          toast.error(
+                            'Invalid file type. Only Images, PDFs, Word Docs, and CSVs are allowed.',
+                          );
+                          e.target.value = '';
+                          return;
+                        }
+                        const maxSizeInBytes = 5 * 1024 * 1024;
+                        if (file.size > maxSizeInBytes) {
+                          toast.error(
+                            'File exceeds the 5MB limits. Please upload a smaller file.',
+                          );
+                          e.target.value = '';
+                          return;
+                        }
+                        setNewCommentFile(file);
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={
+                    isPostingComment ||
+                    (!newCommentText.trim() && !newCommentFile)
+                  }
+                  className="bg-mc-black flex h-[42px] items-center gap-2 self-end rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isPostingComment ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Comment</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={!newCommentText.trim()}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
-              >
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>,
+
+      {/* Full Screen Image Preview Lightbox */}
+      {previewImage && (
+        <div
+          className="animate-fadeIn fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative flex max-h-full max-w-5xl flex-col items-center">
+            <button
+              type="button"
+              className="absolute -top-12 right-0 p-2 text-white/70 transition hover:text-white"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X className="h-8 w-8" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="animate-zoomIn max-h-[90vh] max-w-full rounded-lg object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <p className="rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white/90 drop-shadow-md">
+                💡 Right-Click (or long-press) the image and select{' '}
+                <strong>"Save Image As..."</strong> to download.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>,
     document.body,
   );
 }
