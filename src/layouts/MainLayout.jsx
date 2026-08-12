@@ -34,10 +34,11 @@ export default function MainLayout() {
   const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Filter nav items by role — Vendors only see Purchase Orders
+  // Filter nav items by role
   const visibleNavItems = navItems.filter((tab) => {
     if (!tab.roles) return true; // no restriction = visible to all
-    return tab.roles.includes(userRole);
+    const normalizedRole = (userRole || '').toLowerCase();
+    return tab.roles.some((r) => r.toLowerCase() === normalizedRole);
   });
 
   // Auto-redirect vendor users to purchase orders
@@ -47,6 +48,16 @@ export default function MainLayout() {
       !location.pathname.startsWith('/purchase-orders')
     ) {
       navigate('/purchase-orders', { replace: true });
+    }
+  }, [userRole, location.pathname, navigate]);
+
+  // Auto-redirect warehouse users to container flow
+  useEffect(() => {
+    if (
+      (userRole || '').toLowerCase() === 'warehouse' &&
+      !location.pathname.startsWith('/container-flow')
+    ) {
+      navigate('/container-flow', { replace: true });
     }
   }, [userRole, location.pathname, navigate]);
 

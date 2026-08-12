@@ -18,14 +18,14 @@ export const navItems = [
     label: 'Executive Dashboard',
     icon: BarChart3,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'purchase-orders',
     path: '/purchase-orders',
     label: 'Purchase Orders',
     icon: FileSpreadsheet,
-    // visible to all roles including Vendor
+    roles: ['Administrator', 'Purchasing', 'Finance', 'Vendor'],
   },
   {
     id: 'container-flow',
@@ -40,7 +40,7 @@ export const navItems = [
     label: 'Sourcing Vendors',
     icon: Users,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'email-center',
@@ -48,7 +48,7 @@ export const navItems = [
     label: 'Sourcing Email Hub',
     icon: Mail,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'chat',
@@ -56,7 +56,7 @@ export const navItems = [
     label: 'Workspace Team Chat',
     icon: MessageSquare,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'ai-assistant',
@@ -64,7 +64,7 @@ export const navItems = [
     label: 'S&OP AI Assistant',
     icon: Sparkles,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'reports',
@@ -72,7 +72,7 @@ export const navItems = [
     label: 'Reports & BI Analytics',
     icon: TrendingUp,
     comingSoon: true,
-    roles: ['Administrator', 'Purchasing', 'Warehouse', 'Finance'],
+    roles: ['Administrator', 'Purchasing', 'Finance'],
   },
   {
     id: 'system-admin',
