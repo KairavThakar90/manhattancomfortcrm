@@ -89,12 +89,6 @@ export default function ItemCommentModal({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [fetchedComments, isPostingComment, isLoadingComments]);
-
   const [activeItem, setActiveItem] = useState<any>(null);
 
   useEffect(() => {
@@ -121,6 +115,18 @@ export default function ItemCommentModal({
   >({});
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>('');
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [
+    fetchedComments,
+    isPostingComment,
+    isLoadingComments,
+    newCommentFile,
+    replyToCommentId,
+  ]);
 
   useEffect(() => {
     if (!isOpen || !activeItem?.id) return;
@@ -273,7 +279,10 @@ export default function ItemCommentModal({
     const words = messageText.split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
-      .map((w) => taggedUserMap[w])
+      .map((w) => {
+        const cleanW = w.replace(/[.,!?;:]+$/, '');
+        return taggedUserMap[cleanW];
+      })
       .filter(Boolean);
 
     if (taggedUserIds.length === 0) {
@@ -364,7 +373,10 @@ export default function ItemCommentModal({
     const words = editingCommentText.trim().split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
-      .map((w) => taggedUserMap[w])
+      .map((w) => {
+        const cleanW = w.replace(/[.,!?;:]+$/, '');
+        return taggedUserMap[cleanW];
+      })
       .filter(Boolean);
 
     setFetchedComments((prev) =>
@@ -536,6 +548,11 @@ export default function ItemCommentModal({
                           src={node.fileUrl}
                           alt="Attachment"
                           className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
+                          onLoad={() => {
+                            messagesEndRef.current?.scrollIntoView({
+                              behavior: 'smooth',
+                            });
+                          }}
                         />
                         {isOptimistic && (
                           <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
