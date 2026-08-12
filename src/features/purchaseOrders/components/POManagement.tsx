@@ -4126,17 +4126,17 @@ Supply Chain CRM Coordinator`;
                             type="file"
                             id="comment-attachment-input"
                             className="hidden"
-                            accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv"
+                            accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
                             onChange={(e) => {
                               if (e.target.files && e.target.files.length > 0) {
                                 const file = e.target.files[0];
                                 const isAllowedExt = file.name.match(
-                                  /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv)$/i,
+                                  /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
                                 );
 
                                 if (!isAllowedExt) {
                                   toast.error(
-                                    'Invalid file type. Only Images, PDFs, Word Docs, and CSVs are allowed.',
+                                    'Invalid file type. Only Images, PDFs, Word, Excel, and CSVs are allowed.',
                                   );
                                   e.target.value = '';
                                   return;
