@@ -3618,7 +3618,8 @@ Supply Chain CRM Coordinator`;
                                       {/* Action Bar */}
                                       <div className="mt-2 flex items-center gap-4">
                                         {isMe &&
-                                          editingCommentId !== node.id && (
+                                          editingCommentId !== node.id &&
+                                          !node.fileUrl && (
                                             <button
                                               type="button"
                                               onClick={() => {
