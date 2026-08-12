@@ -1162,7 +1162,14 @@ export default function POManagement({
   const selectedPOComments = fetchedComments;
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (highlightedCommentId) {
+      setTimeout(() => {
+        const el = document.getElementById(highlightedCommentId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    } else if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [
@@ -1174,6 +1181,7 @@ export default function POManagement({
     selectedSkuId,
     newCommentFile,
     replyToCommentId,
+    highlightedCommentId,
   ]);
 
   // Email Logs for selected PO

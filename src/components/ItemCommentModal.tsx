@@ -117,7 +117,14 @@ export default function ItemCommentModal({
   const [editingCommentText, setEditingCommentText] = useState<string>('');
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (highlightedCommentId) {
+      setTimeout(() => {
+        const el = document.getElementById(highlightedCommentId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    } else if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [
@@ -126,6 +133,7 @@ export default function ItemCommentModal({
     isLoadingComments,
     newCommentFile,
     replyToCommentId,
+    highlightedCommentId,
   ]);
 
   useEffect(() => {
