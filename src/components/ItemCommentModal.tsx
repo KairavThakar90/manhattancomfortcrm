@@ -163,9 +163,21 @@ export default function ItemCommentModal({
     if (atPos !== -1) {
       const charBefore = atPos > 0 ? textBeforeCursor[atPos - 1] : ' ';
       if (charBefore === ' ' || charBefore === '\n' || atPos === 0) {
-        const mentionText = textBeforeCursor.slice(atPos + 1);
+        const mentionTextOrig = textBeforeCursor.slice(atPos + 1);
+        const wordsAfterAt = mentionTextOrig.split(/\s+/);
+
+        // Auto-close if following a known tag, or if phrase gets suspiciously long (abandoned)
+        const isCompletedTag =
+          wordsAfterAt.length > 1 && taggedUserMap[`@${wordsAfterAt[0]}`];
+        const isAbandonedSearch = wordsAfterAt.length > 3;
+
+        if (isCompletedTag || isAbandonedSearch) {
+          setShowMentionDropdown(false);
+          return;
+        }
+
         setShowMentionDropdown(true);
-        setMentionFilter(mentionText.toLowerCase());
+        setMentionFilter(mentionTextOrig.toLowerCase());
         setMentionHighlightIndex(0);
         setMentionIndex(atPos);
         return;
@@ -202,7 +214,19 @@ export default function ItemCommentModal({
     const f = mentionFilter.toLowerCase();
     const fSpaced = f.replace(/_/g, ' ');
     const fUnderscored = f.replace(/\s+/g, '_');
-    return reduxUsers.filter((u: User) => {
+
+    let taggableUsers = [...(reduxUsers || [])];
+    if (currentUser) {
+      taggableUsers = taggableUsers.filter((u: any) => {
+        if (currentUser.id && u.id === currentUser.id) return false;
+        if (currentUser.email && u.email === currentUser.email) return false;
+        if (currentUser.username && u.username === currentUser.username)
+          return false;
+        return true;
+      });
+    }
+
+    return taggableUsers.filter((u: User) => {
       if (!f) return true;
       const searchTargets = [
         (u.full_name || '').toLowerCase(),
@@ -212,6 +236,7 @@ export default function ItemCommentModal({
         (u.email || '').toLowerCase(),
         // also check the combined first_last with underscore
         `${u.first_name || ''}_${u.last_name || ''}`.toLowerCase(),
+        `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase(),
       ];
       return searchTargets.some(
         (t) => t.includes(f) || t.includes(fSpaced) || t.includes(fUnderscored),
@@ -220,13 +245,21 @@ export default function ItemCommentModal({
   };
 
   const handleCommentKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && showMentionDropdown) {
-      const filtered = getFilteredMentions();
-      if (filtered.length === 1) {
-        e.preventDefault();
-        handleSelectMention(filtered[0]);
-        return;
-      }
+    if (!showMentionDropdown) return;
+    const filtered = getFilteredMentions();
+    if (filtered.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setMentionHighlightIndex((i) => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setMentionHighlightIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSelectMention(filtered[mentionHighlightIndex] ?? filtered[0]);
+    } else if (e.key === 'Escape') {
+      setShowMentionDropdown(false);
     }
   };
 
@@ -236,11 +269,6 @@ export default function ItemCommentModal({
     if (!newCommentText.trim() && !newCommentFile) return;
 
     let messageText = newCommentText.trim();
-    if (newCommentFile) {
-      messageText += messageText
-        ? `\n\n(Attached: ${newCommentFile.name})`
-        : `(Attached: ${newCommentFile.name})`;
-    }
 
     const words = messageText.split(/\s+/);
     const taggedUserIds = words
@@ -724,58 +752,7 @@ export default function ItemCommentModal({
                 </div>
               )}
               <div className="flex w-full items-end gap-3">
-                <div className="relative min-w-0 flex-1 flex-col">
-                  {showMentionDropdown && (
-                    <div className="absolute bottom-full left-0 mb-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                      <div className="max-h-48 overflow-y-auto py-1">
-                        {(() => {
-                          const filtered = getFilteredMentions();
-
-                          if (filtered.length === 0) {
-                            return (
-                              <div className="px-3 py-2 text-xs text-slate-400">
-                                No users found
-                              </div>
-                            );
-                          }
-
-                          return filtered.map((u: User, idx: number) => {
-                            const displayName =
-                              u.full_name ||
-                              u.username ||
-                              `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                              u.email;
-                            const initial = (
-                              displayName[0] || 'U'
-                            ).toUpperCase();
-                            const isHighlighted = idx === mentionHighlightIndex;
-                            return (
-                              <button
-                                key={u.id}
-                                type="button"
-                                onClick={() => handleSelectMention(u)}
-                                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
-                              >
-                                <div
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
-                                >
-                                  {initial}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="truncate font-semibold text-slate-700">
-                                    {displayName}
-                                  </div>
-                                  <div className="truncate text-[10px] text-slate-400">
-                                    {u.email}
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-                  )}
+                <div className="min-w-0 flex-1 flex-col">
                   {newCommentFile && (
                     <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
                       <button
@@ -809,7 +786,60 @@ export default function ItemCommentModal({
                       </div>
                     </div>
                   )}
+                  {/* Dropdown anchored to the input row only */}
                   <div className="relative w-full">
+                    {showMentionDropdown && (
+                      <div className="absolute bottom-full left-0 z-50 mb-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                        <div className="max-h-48 overflow-y-auto py-1">
+                          {(() => {
+                            const filtered = getFilteredMentions();
+
+                            if (filtered.length === 0) {
+                              return (
+                                <div className="px-3 py-2 text-xs text-slate-400">
+                                  No users found
+                                </div>
+                              );
+                            }
+
+                            return filtered.map((u: User, idx: number) => {
+                              const displayName =
+                                u.full_name ||
+                                u.username ||
+                                `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                u.email;
+                              const initial = (
+                                displayName[0] || 'U'
+                              ).toUpperCase();
+                              const isHighlighted =
+                                idx === mentionHighlightIndex;
+                              return (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  onClick={() => handleSelectMention(u)}
+                                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
+                                >
+                                  <div
+                                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
+                                  >
+                                    {initial}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="truncate font-semibold text-slate-700">
+                                      {displayName}
+                                    </div>
+                                    <div className="truncate text-[10px] text-slate-400">
+                                      {u.email}
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    )}
                     <input
                       type="text"
                       placeholder="Type a message... (Use @ to tag)"

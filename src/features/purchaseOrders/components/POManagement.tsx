@@ -1494,9 +1494,21 @@ Supply Chain CRM Coordinator`;
     if (atPos !== -1) {
       const charBefore = atPos > 0 ? textBeforeCursor[atPos - 1] : ' ';
       if (charBefore === ' ' || charBefore === '\n' || atPos === 0) {
-        const mentionText = textBeforeCursor.slice(atPos + 1);
+        const mentionTextOrig = textBeforeCursor.slice(atPos + 1);
+        const wordsAfterAt = mentionTextOrig.split(/\s+/);
+
+        // Auto-close if following a known tag, or if phrase gets suspiciously long (abandoned)
+        const isCompletedTag =
+          wordsAfterAt.length > 1 && taggedUserMap[`@${wordsAfterAt[0]}`];
+        const isAbandonedSearch = wordsAfterAt.length > 3;
+
+        if (isCompletedTag || isAbandonedSearch) {
+          setShowMentionDropdown(false);
+          return;
+        }
+
         setShowMentionDropdown(true);
-        setMentionFilter(mentionText.toLowerCase());
+        setMentionFilter(mentionTextOrig.toLowerCase());
         setMentionHighlightIndex(0);
         setMentionIndex(atPos);
         return;
@@ -1535,11 +1547,31 @@ Supply Chain CRM Coordinator`;
   };
 
   const getFilteredMentions = () => {
+    let taggableUsers = [...(reduxUsers || [])];
+    if (selectedPO?.vendorName) {
+      taggableUsers.unshift({
+        id: selectedPO.vendorId || 'vendor',
+        full_name: selectedPO.vendorName,
+        username: selectedPO.vendorName.replace(/\s+/g, ''),
+        email: 'Vendor (Owner)',
+      });
+    }
+    // Remove current user safely by matching actual IDs
+    if (currentUser) {
+      taggableUsers = taggableUsers.filter((u) => {
+        if (currentUser.id && u.id === currentUser.id) return false;
+        if (currentUser.email && u.email === currentUser.email) return false;
+        if (currentUser.username && u.username === currentUser.username)
+          return false;
+        return true;
+      });
+    }
+
     // Normalize filter: treat underscores and spaces as equivalent for matching
     const f = mentionFilter.toLowerCase();
     const fSpaced = f.replace(/_/g, ' ');
     const fUnderscored = f.replace(/\s+/g, '_');
-    return reduxUsers.filter((u: User | any) => {
+    return taggableUsers.filter((u: User | any) => {
       if (!f) return true;
       const searchTargets = [
         (u.full_name || '').toLowerCase(),
@@ -1548,6 +1580,7 @@ Supply Chain CRM Coordinator`;
         (u.last_name || '').toLowerCase(),
         (u.email || '').toLowerCase(),
         `${u.first_name || ''}_${u.last_name || ''}`.toLowerCase(),
+        `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase(),
       ];
       return searchTargets.some(
         (t) => t.includes(f) || t.includes(fSpaced) || t.includes(fUnderscored),
@@ -1655,11 +1688,6 @@ Supply Chain CRM Coordinator`;
     const fileToUpload = newCommentFile;
 
     let messageText = newCommentText.trim();
-    if (newCommentFile) {
-      messageText += messageText
-        ? `\n\n(Attached: ${newCommentFile.name})`
-        : `(Attached: ${newCommentFile.name})`;
-    }
 
     // Extract tagged users — validation must happen BEFORE any state changes
     const words = newCommentText.trim().split(/\s+/);
@@ -3961,109 +3989,7 @@ Supply Chain CRM Coordinator`;
                         </div>
                       )}
                       <div className="flex w-full items-end gap-3">
-                        <div className="relative min-w-0 flex-1 flex-col">
-                          {showMentionDropdown && (
-                            <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
-                              <div className="max-h-48 overflow-y-auto py-1">
-                                {(() => {
-                                  let taggableUsers = [...(reduxUsers || [])];
-                                  if (selectedPO?.vendorName) {
-                                    taggableUsers.unshift({
-                                      id: selectedPO.vendorId || 'vendor',
-                                      full_name: selectedPO.vendorName,
-                                      username: selectedPO.vendorName.replace(
-                                        /\s+/g,
-                                        '',
-                                      ),
-                                      email: 'Vendor (Owner)',
-                                    });
-                                  }
-                                  // Remove current user safely by matching actual IDs
-                                  if (currentUser) {
-                                    taggableUsers = taggableUsers.filter(
-                                      (u) => {
-                                        if (
-                                          currentUser.id &&
-                                          u.id === currentUser.id
-                                        )
-                                          return false;
-                                        if (
-                                          currentUser.email &&
-                                          u.email === currentUser.email
-                                        )
-                                          return false;
-                                        if (
-                                          currentUser.username &&
-                                          u.username === currentUser.username
-                                        )
-                                          return false;
-                                        return true;
-                                      },
-                                    );
-                                  }
-
-                                  const filtered = taggableUsers.filter((u) => {
-                                    const searchTargets = [
-                                      (u.full_name || '').toLowerCase(),
-                                      (u.username || '').toLowerCase(),
-                                      (u.first_name || '').toLowerCase(),
-                                      (u.last_name || '').toLowerCase(),
-                                      (u.email || '').toLowerCase(),
-                                    ];
-                                    return (
-                                      !mentionFilter ||
-                                      searchTargets.some((t) =>
-                                        t.includes(mentionFilter),
-                                      )
-                                    );
-                                  });
-
-                                  if (filtered.length === 0) {
-                                    return (
-                                      <div className="px-3 py-2 text-xs text-slate-400">
-                                        No users found
-                                      </div>
-                                    );
-                                  }
-
-                                  return filtered.map((u, idx) => {
-                                    const displayName =
-                                      u.full_name ||
-                                      u.username ||
-                                      `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                      u.email;
-                                    const initial = (
-                                      displayName[0] || 'U'
-                                    ).toUpperCase();
-                                    const isHighlighted =
-                                      idx === mentionHighlightIndex;
-                                    return (
-                                      <button
-                                        key={u.id}
-                                        type="button"
-                                        onClick={() => handleSelectMention(u)}
-                                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
-                                      >
-                                        <div
-                                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
-                                        >
-                                          {initial}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="truncate font-semibold text-slate-700">
-                                            {displayName}
-                                          </div>
-                                          <div className="truncate text-[10px] text-slate-400">
-                                            {u.email}
-                                          </div>
-                                        </div>
-                                      </button>
-                                    );
-                                  });
-                                })()}
-                              </div>
-                            </div>
-                          )}
+                        <div className="min-w-0 flex-1 flex-col">
                           {newCommentFile && (
                             <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
                               <button
@@ -4097,7 +4023,61 @@ Supply Chain CRM Coordinator`;
                               </div>
                             </div>
                           )}
+                          {/* Dropdown anchored to input row only */}
                           <div className="relative w-full">
+                            {showMentionDropdown && (
+                              <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
+                                <div className="max-h-48 overflow-y-auto py-1">
+                                  {(() => {
+                                    const filtered = getFilteredMentions();
+
+                                    if (filtered.length === 0) {
+                                      return (
+                                        <div className="px-3 py-2 text-xs text-slate-400">
+                                          No users found
+                                        </div>
+                                      );
+                                    }
+
+                                    return filtered.map((u, idx) => {
+                                      const displayName =
+                                        u.full_name ||
+                                        u.username ||
+                                        `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+                                        u.email;
+                                      const initial = (
+                                        displayName[0] || 'U'
+                                      ).toUpperCase();
+                                      const isHighlighted =
+                                        idx === mentionHighlightIndex;
+                                      return (
+                                        <button
+                                          key={u.id}
+                                          type="button"
+                                          onClick={() => handleSelectMention(u)}
+                                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
+                                        >
+                                          <div
+                                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
+                                          >
+                                            {initial}
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <div className="truncate font-semibold text-slate-700">
+                                              {displayName}
+                                            </div>
+                                            <div className="truncate text-[10px] text-slate-400">
+                                              {u.email}
+                                            </div>
+                                          </div>
+                                        </button>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+
                             <input
                               type="text"
                               placeholder="Type a message... (Use @ to tag)"
