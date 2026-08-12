@@ -44,6 +44,18 @@ export default function POManagementPage() {
   const { poId } = useParams();
   const [searchParams] = useSearchParams();
 
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (poId) return poId.replace(/^PO-/i, '');
+    return '';
+  });
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [vendorFilter, setVendorFilter] = useState('all');
+  const [customerFilter, setCustomerFilter] = useState('all');
+  const [totalCount, setTotalCount] = useState(0);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [activeSubTab, setActiveSubTab] = useState('grid');
+
   useEffect(() => {
     // Prevent react-router deferred prop updates from resurrecting a deeply-linked PO
     // after we have already navigated away synchronously.
@@ -59,6 +71,10 @@ export default function POManagementPage() {
         setSelectedPOId(fullPoId);
       }
 
+      setTimeout(() => {
+        setSearchQuery((prev) => (prev !== cleanId ? cleanId : prev));
+      }, 0);
+
       const commentId = searchParams.get('comment_id');
       const itemId = searchParams.get('item_id');
       if (commentId || itemId) {
@@ -73,15 +89,6 @@ export default function POManagementPage() {
       }
     }
   }, [poId, searchParams, selectedPOId, setSelectedPOId]);
-
-  const [pageSize, setPageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [vendorFilter, setVendorFilter] = useState('all');
-  const [customerFilter, setCustomerFilter] = useState('all');
-  const [totalCount, setTotalCount] = useState(0);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [activeSubTab, setActiveSubTab] = useState('grid');
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
