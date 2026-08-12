@@ -85,6 +85,7 @@ export default function ItemCommentModal({
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +107,7 @@ export default function ItemCommentModal({
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
   const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0);
   const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>(
     {},
   );
@@ -122,6 +124,16 @@ export default function ItemCommentModal({
 
   useEffect(() => {
     if (!isOpen || !activeItem?.id) return;
+
+    // Reset typing state when opening or switching items
+    setNewCommentText('');
+    setNewCommentFile(null);
+    setCommentError(null);
+    setReplyToCommentId(null);
+    setReplyToUser(null);
+    setReplyToText(null);
+    setEditingCommentId(null);
+
     setIsLoadingComments(true);
     getItemComments(activeItem.id)
       .then((data) => {
@@ -141,36 +153,81 @@ export default function ItemCommentModal({
   const handleCommentTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setNewCommentText(val);
+    setCommentError(null);
 
     const cursorPosition = e.target.selectionStart || val.length;
     const textBeforeCursor = val.slice(0, cursorPosition);
-    const words = textBeforeCursor.split(/\s+/);
-    const lastWord = words[words.length - 1];
 
-    if (lastWord.startsWith('@')) {
-      setShowMentionDropdown(true);
-      setMentionFilter(lastWord.slice(1).toLowerCase());
-      const wordStartIndex = textBeforeCursor.lastIndexOf(lastWord);
-      setMentionIndex(wordStartIndex);
-    } else {
-      setShowMentionDropdown(false);
+    // Find nearest @ that could start a mention (preceded by space or start of string)
+    const atPos = textBeforeCursor.lastIndexOf('@');
+    if (atPos !== -1) {
+      const charBefore = atPos > 0 ? textBeforeCursor[atPos - 1] : ' ';
+      if (charBefore === ' ' || charBefore === '\n' || atPos === 0) {
+        const mentionText = textBeforeCursor.slice(atPos + 1);
+        setShowMentionDropdown(true);
+        setMentionFilter(mentionText.toLowerCase());
+        setMentionHighlightIndex(0);
+        setMentionIndex(atPos);
+        return;
+      }
     }
+    setShowMentionDropdown(false);
+    setMentionHighlightIndex(0);
   };
 
   const handleSelectMention = (user: User | any) => {
-    const username =
-      user.full_name ||
+    // Prefer username (no spaces) for the tag; fall back to full_name with spaces→underscores
+    const tagBase =
       user.username ||
-      `${user.first_name || ''}_${user.last_name || ''}`.trim() ||
+      `${user.first_name || ''} ${user.last_name || ''}`
+        .trim()
+        .replace(/\s+/g, '_') ||
+      (user.full_name || '').replace(/\s+/g, '_') ||
       user.email;
-    const tag = `@${username.replace(/\s+/g, '_')}`;
+    const tag = `@${tagBase}`;
 
     const textBefore = newCommentText.slice(0, mentionIndex);
-    const textAfter = newCommentText.slice(mentionIndex).replace(/^\S+/, '');
-
-    setNewCommentText(`${textBefore}${tag} ${textAfter}`);
+    // Remove @ + the full typed mention text (may include spaces for multi-word names)
+    const textAfter = newCommentText.slice(
+      mentionIndex + 1 + mentionFilter.length,
+    );
+    setNewCommentText(`${textBefore}${tag} ${textAfter.trimStart()}`);
     setTaggedUserMap((prev) => ({ ...prev, [tag]: user.id }));
     setShowMentionDropdown(false);
+    setMentionHighlightIndex(0);
+  };
+
+  const getFilteredMentions = () => {
+    // Normalize filter: treat underscores and spaces as equivalent for matching
+    const f = mentionFilter.toLowerCase();
+    const fSpaced = f.replace(/_/g, ' ');
+    const fUnderscored = f.replace(/\s+/g, '_');
+    return reduxUsers.filter((u: User) => {
+      if (!f) return true;
+      const searchTargets = [
+        (u.full_name || '').toLowerCase(),
+        (u.username || '').toLowerCase(),
+        (u.first_name || '').toLowerCase(),
+        (u.last_name || '').toLowerCase(),
+        (u.email || '').toLowerCase(),
+        // also check the combined first_last with underscore
+        `${u.first_name || ''}_${u.last_name || ''}`.toLowerCase(),
+      ];
+      return searchTargets.some(
+        (t) => t.includes(f) || t.includes(fSpaced) || t.includes(fUnderscored),
+      );
+    });
+  };
+
+  const handleCommentKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && showMentionDropdown) {
+      const filtered = getFilteredMentions();
+      if (filtered.length === 1) {
+        e.preventDefault();
+        handleSelectMention(filtered[0]);
+        return;
+      }
+    }
   };
 
   const handlePostComment = (e: React.FormEvent) => {
@@ -191,14 +248,49 @@ export default function ItemCommentModal({
       .map((w) => taggedUserMap[w])
       .filter(Boolean);
 
+    if (taggedUserIds.length === 0) {
+      setCommentError('You must @ tag at least one user to post a comment.');
+      return;
+    }
+
     setIsPostingComment(true);
 
+    // Capture reply context before clearing
     const replyId = replyToCommentId;
+    setReplyToCommentId(null);
+    setReplyToUser(null);
+    setReplyToText(null);
+
+    // Build optimistic comment immediately
+    const currentUserName = currentUser
+      ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ||
+        currentUser.username ||
+        currentUser.email
+      : 'You';
+    const optimisticComment: any = {
+      id: `ITEMCOM-OPT-${Date.now()}`,
+      itemId: activeItem.id,
+      user: currentUserName,
+      userId: currentUser?.id,
+      message: messageText,
+      timestamp: 'Just now',
+      parentId: replyId,
+      fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
+      fileName: newCommentFile ? newCommentFile.name : null,
+      fileType: newCommentFile ? newCommentFile.type : null,
+      children: [],
+    };
+    setFetchedComments((prev) => [...prev, optimisticComment]);
+    setNewCommentText('');
+    setNewCommentFile(null);
+    setShowMentionDropdown(false);
+
+    const replyIdToSend = replyId;
     postItemComment(
       activeItem.id,
       messageText,
       taggedUserIds,
-      replyId,
+      replyIdToSend,
       newCommentFile ? [newCommentFile] : undefined,
     )
       .then(() => {
@@ -298,16 +390,17 @@ export default function ItemCommentModal({
   const renderCommentTree = (node: any, depth = 0): React.ReactNode => {
     const isMeStr = (node.user || '').toLowerCase();
     const isMe =
-      isMeStr === 'sourcing lead (you)' ||
+      (currentUser && String(node.userId) === String(currentUser.id)) ||
       (currentUser &&
-        (isMeStr ===
+        isMeStr ===
           `${currentUser.first_name || ''} ${currentUser.last_name || ''}`
             .trim()
-            .toLowerCase() ||
-          isMeStr === String(currentUser.username || '').toLowerCase() ||
-          isMeStr === String(currentUser.email || '').toLowerCase() ||
-          isMeStr === String(currentUser.first_name || '').toLowerCase() ||
-          (currentUser.id && String(node.userId) === String(currentUser.id))));
+            .toLowerCase()) ||
+      (currentUser &&
+        isMeStr === String(currentUser.username || '').toLowerCase()) ||
+      (currentUser &&
+        isMeStr === String(currentUser.email || '').toLowerCase()) ||
+      isMeStr === 'sourcing lead (you)';
     const isCollapsed = collapsedComments[node.id] || false;
 
     return (
@@ -632,21 +725,7 @@ export default function ItemCommentModal({
                     <div className="absolute bottom-full left-0 mb-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
                       <div className="max-h-48 overflow-y-auto py-1">
                         {(() => {
-                          const filtered = reduxUsers.filter((u: User) => {
-                            const searchTargets = [
-                              (u.full_name || '').toLowerCase(),
-                              (u.username || '').toLowerCase(),
-                              (u.first_name || '').toLowerCase(),
-                              (u.last_name || '').toLowerCase(),
-                              (u.email || '').toLowerCase(),
-                            ];
-                            return (
-                              !mentionFilter ||
-                              searchTargets.some((t) =>
-                                t.includes(mentionFilter),
-                              )
-                            );
-                          });
+                          const filtered = getFilteredMentions();
 
                           if (filtered.length === 0) {
                             return (
@@ -656,7 +735,7 @@ export default function ItemCommentModal({
                             );
                           }
 
-                          return filtered.map((u: User) => {
+                          return filtered.map((u: User, idx: number) => {
                             const displayName =
                               u.full_name ||
                               u.username ||
@@ -665,14 +744,17 @@ export default function ItemCommentModal({
                             const initial = (
                               displayName[0] || 'U'
                             ).toUpperCase();
+                            const isHighlighted = idx === mentionHighlightIndex;
                             return (
                               <button
                                 key={u.id}
                                 type="button"
                                 onClick={() => handleSelectMention(u)}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
                               >
-                                <div className="text-mc-black flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold">
+                                <div
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
+                                >
                                   {initial}
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -729,7 +811,8 @@ export default function ItemCommentModal({
                       placeholder="Type a message... (Use @ to tag)"
                       value={newCommentText}
                       onChange={handleCommentTextChange}
-                      className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden"
+                      onKeyDown={handleCommentKeyDown}
+                      className={`focus:border-mc-black w-full rounded-lg border ${commentError ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-slate-50'} px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden`}
                     />
                     <button
                       type="button"
@@ -744,6 +827,11 @@ export default function ItemCommentModal({
                       <Paperclip className="h-4 w-4" />
                     </button>
                   </div>
+                  {commentError && (
+                    <p className="animate-fadeIn mt-1 text-[11px] font-bold text-rose-500">
+                      {commentError}
+                    </p>
+                  )}
                   <input
                     type="file"
                     id="item-comment-attachment-input"
