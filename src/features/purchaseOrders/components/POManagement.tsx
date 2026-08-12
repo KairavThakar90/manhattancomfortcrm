@@ -550,6 +550,35 @@ export default function POManagement({
       : d.toISOString().slice(0, 16).replace('T', ' ');
   };
 
+  const parseApiCommentObject = (
+    c: any,
+    defaultTargetId: string,
+    isItemMode: boolean = false,
+  ): any => {
+    const fileArr = c.files || c.attachments || c.documents || [];
+    const firstFile =
+      Array.isArray(fileArr) && fileArr.length > 0 ? fileArr[0] : null;
+    return {
+      id: String(c.id || `COM-${Math.random()}`),
+      ...(isItemMode ? { itemId: defaultTargetId } : { poId: defaultTargetId }),
+      user: c.user_name || c.user || c.author || 'User',
+      userId: c.user_id || c.author_id || null,
+      role: c.role || 'Administrator',
+      message: c.comment || c.message || c.text || '',
+      fileUrl:
+        firstFile?.file_url || firstFile?.url || c.file_url || c.file || null,
+      fileName:
+        firstFile?.file_name ||
+        firstFile?.name ||
+        c.file_name ||
+        c.filename ||
+        'Attachment',
+      fileType: firstFile?.content_type || firstFile?.mimetype || '',
+      timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+      parentId: c.parent_id ? String(c.parent_id) : null,
+    };
+  };
+
   const isPoMatch = (po: any, targetId: string | number | null | undefined) => {
     if (!targetId || !po) return false;
     const cleanTarget = String(targetId).replace(/^PO-/i, '').trim();
@@ -587,16 +616,9 @@ export default function POManagement({
         .then((detailData: any) => {
           if (!detailData) return;
           const rawComments = detailData?.comments || [];
-          const mappedComments = rawComments.map((c: any) => ({
-            id: String(c.id || `COM-${Math.random()}`),
-            poId: selectedPOId,
-            user: c.user_name || c.user || c.author || 'User',
-            userId: c.user_id || c.author_id || null,
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          }));
+          const mappedComments = rawComments.map((c: any) =>
+            parseApiCommentObject(c, String(selectedPOId)),
+          );
           setFetchedComments(mappedComments);
           setDetailedPOItems(detailData?.items || []);
 
@@ -1479,16 +1501,9 @@ Supply Chain CRM Coordinator`;
         })
         .then((data: any) => {
           const rawComments = data?.comments || data || [];
-          const mappedComments = rawComments.map((c: any) => ({
-            id: String(c.id || `ITEMCOM-${Math.random()}`),
-            itemId: selectedSkuId,
-            user: c.user_name || c.user || c.author || 'User',
-            userId: c.user_id || c.author_id || null,
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          }));
+          const mappedComments = rawComments.map((c: any) =>
+            parseApiCommentObject(c, String(selectedSkuId), true),
+          );
           setFetchedSkuComments(mappedComments);
         })
         .catch((err) => {
@@ -1507,15 +1522,9 @@ Supply Chain CRM Coordinator`;
         getPurchaseOrderById(targetId).then((detailData: any) => {
           if (!detailData) return;
           const rawComments = detailData.comments || [];
-          const mappedComments = rawComments.map((c: any) => ({
-            id: String(c.id || `COM-${Math.random()}`),
-            poId: selectedPO.id,
-            user: c.user_name || c.user || c.author || 'User',
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          }));
+          const mappedComments = rawComments.map((c: any) =>
+            parseApiCommentObject(c, String(selectedPO.id)),
+          );
           // Only update if we didn't just switch away to another PO
           setFetchedComments((current) => {
             if (current.length > 0 && current[0].poId !== selectedPO.id)
@@ -1558,6 +1567,7 @@ Supply Chain CRM Coordinator`;
       parentId: replyToCommentId,
       fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
       fileName: newCommentFile ? newCommentFile.name : null,
+      fileType: newCommentFile ? newCommentFile.type : null,
     };
 
     const replyId = replyToCommentId;
@@ -1630,32 +1640,35 @@ Supply Chain CRM Coordinator`;
       .then((detailData: any) => {
         if (!detailData) return;
         const rawComments = detailData.comments || [];
-        const mappedComments = rawComments.map((c: any) => ({
-          id: String(c.id || `COM-${Math.random()}`),
-          poId: selectedPO.id,
-          user: c.user_name || c.user || c.author || 'User',
-          userId: c.user_id || c.author_id || null,
-          role: c.role || 'Administrator',
-          message: c.comment || c.message || c.text || '',
-          fileUrl:
-            c.file ||
-            c.file_url ||
-            c.attachment ||
-            c.document ||
-            (c.files && c.files.length > 0
-              ? c.files[0].url || c.files[0].file || c.files[0].file_url
-              : null) ||
-            null,
-          fileName:
-            c.file_name ||
-            c.filename ||
-            (c.files && c.files.length > 0
-              ? c.files[0].name || c.files[0].file_name
-              : null) ||
-            'Attachment',
-          timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-          parentId: c.parent_id ? String(c.parent_id) : null,
-        }));
+        const mappedComments = rawComments.map((c: any) => {
+          const fileArr = c.files || c.attachments || c.documents || [];
+          const firstFile =
+            Array.isArray(fileArr) && fileArr.length > 0 ? fileArr[0] : null;
+
+          return {
+            id: String(c.id || `COM-${Math.random()}`),
+            poId: selectedPO.id,
+            user: c.user_name || c.user || c.author || 'User',
+            userId: c.user_id || c.author_id || null,
+            role: c.role || 'Administrator',
+            message: c.comment || c.message || c.text || '',
+            fileUrl:
+              firstFile?.file_url ||
+              firstFile?.url ||
+              c.file_url ||
+              c.file ||
+              null,
+            fileName:
+              firstFile?.file_name ||
+              firstFile?.name ||
+              c.file_name ||
+              c.filename ||
+              'Attachment',
+            fileType: firstFile?.content_type || firstFile?.mimetype || '',
+            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+            parentId: c.parent_id ? String(c.parent_id) : null,
+          };
+        });
 
         // Only update if we didn't just switch away to another PO
         setFetchedComments((current) => {
@@ -3561,8 +3574,11 @@ Supply Chain CRM Coordinator`;
                                       {/* WhatsApp Style Attachment Render */}
                                       {node.fileUrl && (
                                         <div className="mt-2.5">
-                                          {node.fileUrl.match(
-                                            /\.(jpeg|jpg|gif|png|webp|bmp)$/i,
+                                          {node.fileType?.startsWith(
+                                            'image/',
+                                          ) ||
+                                          node.fileUrl.match(
+                                            /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
                                           ) ||
                                           node.fileUrl.startsWith('blob:') ? (
                                             <a
