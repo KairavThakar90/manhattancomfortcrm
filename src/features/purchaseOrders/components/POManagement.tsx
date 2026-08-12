@@ -1492,7 +1492,9 @@ Supply Chain CRM Coordinator`;
     }, 1800);
   };
   // User Mention logic
-  const handleCommentTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCommentTextChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const val = e.target.value;
     setNewCommentText(val);
     setCommentError(null);
@@ -1599,7 +1601,9 @@ Supply Chain CRM Coordinator`;
     });
   };
 
-  const handleCommentKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleCommentKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     if (!showMentionDropdown) return;
     const filtered = getFilteredMentions();
     if (filtered.length === 0) return;
@@ -4129,13 +4133,13 @@ Supply Chain CRM Coordinator`;
                               </div>
                             )}
 
-                            <input
-                              type="text"
+                            <textarea
+                              rows={2}
                               placeholder="Type a message... (Use @ to tag)"
                               value={newCommentText}
                               onChange={handleCommentTextChange}
                               onKeyDown={handleCommentKeyDown}
-                              className={`focus:border-mc-black w-full rounded-lg border ${commentError ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-slate-50'} px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden`}
+                              className={`focus:border-mc-black w-full resize-none rounded-lg border ${commentError ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-slate-50'} px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden`}
                             />
                             <button
                               type="button"
