@@ -2260,7 +2260,7 @@ Supply Chain CRM Coordinator`;
             className="group flex cursor-pointer items-center gap-1 select-none"
             onClick={() => handleSort('invoiceDelayStatus' as any)}
           >
-            <span>Invoice Delay Status</span>
+            <span>Invoice Status</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
@@ -2308,7 +2308,7 @@ Supply Chain CRM Coordinator`;
           if (diffDays > 10)
             return (
               <span className="animate-pulse rounded-sm border border-rose-100 bg-rose-50 px-2 py-0.5 font-mono text-[10px] text-rose-700">
-                Delay
+                Delayed
               </span>
             );
           return (
