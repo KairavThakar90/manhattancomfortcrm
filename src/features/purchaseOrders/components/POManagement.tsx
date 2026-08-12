@@ -2928,7 +2928,7 @@ Supply Chain CRM Coordinator`;
             }
             emptyMessage="No Purchase Orders found matching search or filter parameters."
             pagination={
-              filteredPOs.length > 5 ? (
+              validTotalCount > 5 ? (
                 <Pagination
                   currentPage={normalizedCurrentPage}
                   totalCount={validTotalCount}
