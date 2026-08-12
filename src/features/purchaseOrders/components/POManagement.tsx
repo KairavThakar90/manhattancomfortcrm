@@ -1762,6 +1762,7 @@ Supply Chain CRM Coordinator`;
             `Added discussion comment on SKU (${selectedSkuId})`,
             'Vendor Comment',
           );
+          toast.success('Comment posted successfully');
           return getItemComments(selectedSkuId);
         })
         .then((data: any) => {
@@ -1804,6 +1805,8 @@ Supply Chain CRM Coordinator`;
           `Added discussion comment on ${selectedPO.id}`,
           'Vendor Comment',
         );
+
+        toast.success('Comment posted successfully');
 
         // Re-fetch invisibly to sync real DB record
         return getPurchaseOrderById(targetId);

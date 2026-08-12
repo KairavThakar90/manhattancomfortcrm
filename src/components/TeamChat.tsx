@@ -13,6 +13,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { ChatMessage, PurchaseOrder, UserRole } from '../types';
+import { toast } from 'react-toastify';
 
 interface TeamChatProps {
   chats: ChatMessage[];
@@ -63,6 +64,7 @@ export default function TeamChat({
 
     onAddChatMessage(newMsg);
     setInputText('');
+    toast.success('Message sent successfully');
   };
 
   // Quick PO mention helper
@@ -71,15 +73,15 @@ export default function TeamChat({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex h-[580px]">
+    <div className="flex h-[580px] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
       {/* Sidebar: Channels & PO Fast Reference */}
-      <div className="w-64 border-r border-slate-100 bg-slate-50/50 flex flex-col justify-between">
-        <div className="p-4 space-y-4">
+      <div className="flex w-64 flex-col justify-between border-r border-slate-100 bg-slate-50/50">
+        <div className="space-y-4 p-4">
           <div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">
               Workspace Channels
             </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">
+            <p className="mt-0.5 text-[10px] text-slate-400">
               Direct inter-department discussions
             </p>
           </div>
@@ -95,7 +97,7 @@ export default function TeamChat({
                 <button
                   key={channel}
                   onClick={() => setActiveChannel(channel)}
-                  className={`w-full flex items-center justify-between p-2 rounded-lg text-xs font-semibold capitalize transition ${
+                  className={`flex w-full items-center justify-between rounded-lg p-2 text-xs font-semibold capitalize transition ${
                     activeChannel === channel
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -106,7 +108,7 @@ export default function TeamChat({
                     <span>{channel}</span>
                   </span>
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                       activeChannel === channel
                         ? 'bg-indigo-700 text-indigo-50'
                         : 'bg-slate-200 text-slate-600'
@@ -121,9 +123,9 @@ export default function TeamChat({
         </div>
 
         {/* PO Quick Link Reference Drawer */}
-        <div className="p-4 border-t border-slate-100 bg-white/70">
+        <div className="border-t border-slate-100 bg-white/70 p-4">
           <div className="mb-2">
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <h4 className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
               <Bookmark className="h-3.5 w-3.5 text-indigo-600" />
               <span>Link PO to chat</span>
             </h4>
@@ -132,15 +134,15 @@ export default function TeamChat({
             </p>
           </div>
 
-          <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+          <div className="max-h-[180px] space-y-1.5 overflow-y-auto pr-1">
             {purchaseOrders.slice(0, 5).map((po) => (
               <button
                 key={po.id}
                 onClick={() => handleMentionPO(po.id)}
-                className="w-full text-left p-1.5 hover:bg-slate-50 rounded-md text-[10px] font-mono font-bold text-indigo-950 border border-slate-100 flex items-center justify-between group"
+                className="group flex w-full items-center justify-between rounded-md border border-slate-100 p-1.5 text-left font-mono text-[10px] font-bold text-indigo-950 hover:bg-slate-50"
               >
                 <span>{po.id}</span>
-                <span className="text-[8px] font-sans font-normal text-slate-400 opacity-0 group-hover:opacity-100 transition">
+                <span className="font-sans text-[8px] font-normal text-slate-400 opacity-0 transition group-hover:opacity-100">
                   Mention +
                 </span>
               </button>
@@ -150,32 +152,32 @@ export default function TeamChat({
       </div>
 
       {/* Central Chat Interface */}
-      <div className="flex-1 flex flex-col justify-between">
+      <div className="flex flex-1 flex-col justify-between">
         {/* Channel Header Info */}
-        <div className="bg-slate-50/30 p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/30 p-4">
           <div className="flex items-center gap-2">
             <Hash className="h-4.5 w-4.5 text-indigo-600" />
-            <h3 className="font-display font-bold text-slate-900 text-sm capitalize">
+            <h3 className="font-display text-sm font-bold text-slate-900 capitalize">
               {activeChannel} Channel
             </h3>
           </div>
-          <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">
+          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
             {currentChannelChats.length} messages active
           </span>
         </div>
 
         {/* Messaging Logs Feed */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {currentChannelChats.map((chat) => {
             const isUser = chat.user.includes('You');
             return (
               <div
                 key={chat.id}
-                className={`flex gap-3 items-start max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : ''}`}
+                className={`flex max-w-[85%] items-start gap-3 ${isUser ? 'ml-auto flex-row-reverse' : ''}`}
               >
                 {/* Simulated Avatar */}
                 <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
                     isUser
                       ? 'bg-indigo-600 text-white'
                       : 'bg-slate-200 text-slate-700'
@@ -192,7 +194,7 @@ export default function TeamChat({
                       {chat.user}
                     </span>
                     <span
-                      className={`px-1.5 py-0.2 rounded-sm uppercase text-[8px] font-bold ${
+                      className={`py-0.2 rounded-sm px-1.5 text-[8px] font-bold uppercase ${
                         isUser
                           ? 'bg-indigo-50 text-indigo-600'
                           : 'bg-slate-100 text-slate-500'
@@ -200,17 +202,17 @@ export default function TeamChat({
                     >
                       {chat.role}
                     </span>
-                    <span className="text-slate-400 font-mono">
+                    <span className="font-mono text-slate-400">
                       {chat.timestamp.split(' ')[1]}
                     </span>
                   </div>
 
                   {/* Message bubble */}
                   <div
-                    className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                    className={`rounded-2xl p-3 text-xs leading-relaxed ${
                       isUser
-                        ? 'bg-indigo-600 text-white rounded-tr-none shadow-xs'
-                        : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'
+                        ? 'rounded-tr-none bg-indigo-600 text-white shadow-xs'
+                        : 'rounded-tl-none border border-slate-100 bg-slate-50 text-slate-800'
                     }`}
                   >
                     {/* Parse PO hashtags to provide clickable highlights in UI */}
@@ -219,7 +221,7 @@ export default function TeamChat({
                         return (
                           <span
                             key={idx}
-                            className="font-bold font-mono underline cursor-pointer bg-white/20 px-1 rounded-sm"
+                            className="cursor-pointer rounded-sm bg-white/20 px-1 font-mono font-bold underline"
                           >
                             {word}{' '}
                           </span>
@@ -238,18 +240,18 @@ export default function TeamChat({
         {/* Chat Input form panel */}
         <form
           onSubmit={handleSendMessage}
-          className="p-4 border-t border-slate-100 flex gap-2"
+          className="flex gap-2 border-t border-slate-100 p-4"
         >
           <input
             type="text"
             placeholder={`Message #${activeChannel}... Mention a Purchase Order code like PO-10025 to link discussion.`}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            className="flex-1 px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition text-slate-800"
+            className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-800 transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
           />
           <button
             type="submit"
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
+            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
           >
             <Send className="h-3.5 w-3.5" />
             <span>Send</span>
