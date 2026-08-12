@@ -954,16 +954,9 @@ export default function POManagement({
       getItemComments(selectedSkuId)
         .then((data: any) => {
           const rawComments = data?.comments || data || [];
-          const mappedComments = rawComments.map((c: any) => ({
-            id: String(c.id || `ITEMCOM-${Math.random()}`),
-            itemId: selectedSkuId,
-            user: c.user_name || c.user || c.author || 'User',
-            userId: c.user_id || c.author_id || null,
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          }));
+          const mappedComments = rawComments.map((c: any) =>
+            parseApiCommentObject(c, selectedSkuId, true),
+          );
           setFetchedSkuComments(mappedComments);
         })
         .catch((err: any) => {
@@ -1625,7 +1618,13 @@ Supply Chain CRM Coordinator`;
       setNewCommentFile(null);
       setShowMentionDropdown(false);
 
-      postItemComment(selectedSkuId, messageText, taggedUserIds, replyId)
+      postItemComment(
+        selectedSkuId,
+        messageText,
+        taggedUserIds,
+        replyId,
+        fileToUpload ? [fileToUpload] : undefined,
+      )
         .then(() => {
           onAddActivity(
             `Added discussion comment on SKU (${selectedSkuId})`,
@@ -1635,16 +1634,9 @@ Supply Chain CRM Coordinator`;
         })
         .then((data: any) => {
           const rawComments = data?.comments || data || [];
-          const mappedComments = rawComments.map((c: any) => ({
-            id: String(c.id || `ITEMCOM-${Math.random()}`),
-            itemId: selectedSkuId,
-            user: c.user_name || c.user || c.author || 'User',
-            userId: c.user_id || c.author_id || null,
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          }));
+          const mappedComments = rawComments.map((c: any) =>
+            parseApiCommentObject(c, selectedSkuId, true),
+          );
           setFetchedSkuComments(mappedComments);
         })
         .catch((err) => {
@@ -1673,7 +1665,7 @@ Supply Chain CRM Coordinator`;
       messageText,
       taggedUserIds,
       replyId,
-      newCommentFile ? [newCommentFile] : [],
+      fileToUpload ? [fileToUpload] : undefined,
     )
       .then(() => {
         onAddActivity(
@@ -3830,8 +3822,8 @@ Supply Chain CRM Coordinator`;
                           </p>
                         </div>
                       )}
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
+                      <div className="flex w-full items-end gap-3">
+                        <div className="relative min-w-0 flex-1 flex-col">
                           {showMentionDropdown && (
                             <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
                               <div className="max-h-48 overflow-y-auto py-1">
@@ -3930,47 +3922,46 @@ Supply Chain CRM Coordinator`;
                               </div>
                             </div>
                           )}
-                          <div className="relative">
-                            {newCommentFile && (
-                              <div className="animate-fadeIn relative mb-3 flex flex-col items-center justify-center rounded-2xl bg-[#0f172a] p-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-                                <button
-                                  type="button"
-                                  onClick={() => setNewCommentFile(null)}
-                                  className="absolute top-2 right-2 z-20 rounded-full bg-white/20 p-1.5 text-white backdrop-blur-md transition-colors hover:bg-white/40"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                                {newCommentFile.type.startsWith('image/') ? (
-                                  <div className="relative mb-2 flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-black/40">
-                                    <img
-                                      src={URL.createObjectURL(newCommentFile)}
-                                      alt="Preview"
-                                      className="max-h-full max-w-full object-contain"
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="mb-2 flex h-36 w-full flex-col items-center justify-center rounded-xl bg-slate-800">
-                                    <Paperclip className="mb-2 h-10 w-10 text-white/50" />
-                                    <span className="rounded-md bg-slate-700/80 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white uppercase">
-                                      {newCommentFile.name.split('.').pop()}
-                                    </span>
-                                  </div>
-                                )}
-                                <div className="w-full truncate rounded-lg bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
-                                  {newCommentFile.name}{' '}
-                                  <span className="font-normal text-slate-500">
-                                    ({(newCommentFile.size / 1024).toFixed(1)}{' '}
-                                    KB)
+                          {newCommentFile && (
+                            <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
+                              <button
+                                type="button"
+                                onClick={() => setNewCommentFile(null)}
+                                className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                              {newCommentFile.type.startsWith('image/') ? (
+                                <div className="bg-mc-gray-dark relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl">
+                                  <img
+                                    src={URL.createObjectURL(newCommentFile)}
+                                    alt="Preview"
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="bg-mc-gray-dark flex h-48 w-full flex-col items-center justify-center rounded-xl">
+                                  <Paperclip className="text-mc-gray-soft mb-2 h-10 w-10" />
+                                  <span className="bg-mc-gray-soft text-mc-white rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase shadow-xs">
+                                    {newCommentFile.name.split('.').pop()}
                                   </span>
                                 </div>
+                              )}
+                              <div className="bg-mc-gray-dark text-mc-white mt-3 w-full truncate rounded-lg px-3 py-2 text-center text-[13px] font-semibold">
+                                {newCommentFile.name}{' '}
+                                <span className="font-normal text-white/50">
+                                  ({(newCommentFile.size / 1024).toFixed(1)} KB)
+                                </span>
                               </div>
-                            )}
+                            </div>
+                          )}
+                          <div className="relative w-full">
                             <input
                               type="text"
                               placeholder="Type a message... (Use @ to tag)"
                               value={newCommentText}
                               onChange={handleCommentTextChange}
-                              className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-xs transition focus:bg-white focus:outline-hidden"
+                              className="focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden"
                             />
                             <button
                               type="button"
@@ -3979,64 +3970,64 @@ Supply Chain CRM Coordinator`;
                                   .getElementById('comment-attachment-input')
                                   ?.click()
                               }
-                              className="absolute top-1.5 right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700"
+                              className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700"
                               title="Attach file or image"
                             >
                               <Paperclip className="h-4 w-4" />
                             </button>
-                            <input
-                              type="file"
-                              id="comment-attachment-input"
-                              className="hidden"
-                              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv"
-                              onChange={(e) => {
-                                if (
-                                  e.target.files &&
-                                  e.target.files.length > 0
-                                ) {
-                                  const file = e.target.files[0];
-                                  const isAllowedExt = file.name.match(
-                                    /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv)$/i,
-                                  );
-
-                                  if (!isAllowedExt) {
-                                    toast.error(
-                                      'Invalid file type. Only Images, PDFs, Word Docs, and CSVs are allowed.',
-                                    );
-                                    e.target.value = '';
-                                    return;
-                                  }
-
-                                  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-                                  if (file.size > maxSizeInBytes) {
-                                    toast.error(
-                                      'File exceeds the 5MB limits. Please upload a smaller file.',
-                                    );
-                                    e.target.value = '';
-                                    return;
-                                  }
-
-                                  setNewCommentFile(file);
-                                }
-                              }}
-                            />
                           </div>
+                          <input
+                            type="file"
+                            id="comment-attachment-input"
+                            className="hidden"
+                            accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                const file = e.target.files[0];
+                                const isAllowedExt = file.name.match(
+                                  /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv)$/i,
+                                );
+
+                                if (!isAllowedExt) {
+                                  toast.error(
+                                    'Invalid file type. Only Images, PDFs, Word Docs, and CSVs are allowed.',
+                                  );
+                                  e.target.value = '';
+                                  return;
+                                }
+
+                                const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+                                if (file.size > maxSizeInBytes) {
+                                  toast.error(
+                                    'File exceeds the 5MB limits. Please upload a smaller file.',
+                                  );
+                                  e.target.value = '';
+                                  return;
+                                }
+
+                                setNewCommentFile(file);
+                              }
+                            }}
+                          />
                         </div>
                         <button
                           type="submit"
-                          disabled={isPostingComment}
-                          className="bg-mc-black flex h-fit items-center gap-1 self-end rounded-lg px-4 py-2 text-xs font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                          disabled={
+                            isPostingComment ||
+                            (!newCommentText.trim() && !newCommentFile)
+                          }
+                          className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {isPostingComment ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Send className="h-3 w-3" />
+                            <>
+                              <Send className="h-3.5 w-3.5" />
+                              <span>
+                                {newCommentFile ? 'Upload' : 'Comment'}
+                              </span>
+                            </>
                           )}
-                          <span>
-                            {isPostingComment && newCommentFile
-                              ? 'Uploading...'
-                              : 'Comment'}
-                          </span>
                         </button>
                       </div>
                     </form>

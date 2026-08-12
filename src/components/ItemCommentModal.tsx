@@ -585,8 +585,8 @@ export default function ItemCommentModal({
                   </button>
                 </div>
               )}
-              <div className="flex items-start gap-3">
-                <div className="relative w-full flex-1">
+              <div className="flex w-full items-end gap-3">
+                <div className="relative min-w-0 flex-1 flex-col">
                   {showMentionDropdown && (
                     <div className="absolute bottom-full left-0 mb-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
                       <div className="max-h-48 overflow-y-auto py-1">
@@ -650,16 +650,16 @@ export default function ItemCommentModal({
                     </div>
                   )}
                   {newCommentFile && (
-                    <div className="relative mb-3 flex w-full max-w-sm flex-col rounded-2xl bg-[#0f172a] p-3 shadow-lg">
+                    <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
                       <button
                         type="button"
                         onClick={() => setNewCommentFile(null)}
-                        className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/40"
+                        className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                       >
                         <X className="h-4 w-4" />
                       </button>
                       {newCommentFile.type.startsWith('image/') ? (
-                        <div className="relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-black/30">
+                        <div className="bg-mc-gray-dark relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl">
                           <img
                             src={URL.createObjectURL(newCommentFile)}
                             alt="Preview"
@@ -667,16 +667,16 @@ export default function ItemCommentModal({
                           />
                         </div>
                       ) : (
-                        <div className="flex h-48 w-full flex-col items-center justify-center rounded-xl bg-black/20">
-                          <Paperclip className="mb-2 h-10 w-10 text-white/50" />
-                          <span className="rounded-md bg-white/10 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white uppercase">
+                        <div className="bg-mc-gray-dark flex h-48 w-full flex-col items-center justify-center rounded-xl">
+                          <Paperclip className="text-mc-gray-soft mb-2 h-10 w-10" />
+                          <span className="bg-mc-gray-soft text-mc-white rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase shadow-xs">
                             {newCommentFile.name.split('.').pop()}
                           </span>
                         </div>
                       )}
-                      <div className="mt-3 w-full truncate rounded-lg bg-white/5 px-3 py-2 text-center text-[13px] font-semibold text-white/90">
+                      <div className="bg-mc-gray-dark text-mc-white mt-3 w-full truncate rounded-lg px-3 py-2 text-center text-[13px] font-semibold">
                         {newCommentFile.name}{' '}
-                        <span className="font-normal text-white/40">
+                        <span className="font-normal text-white/50">
                           ({(newCommentFile.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
@@ -740,7 +740,7 @@ export default function ItemCommentModal({
                     isPostingComment ||
                     (!newCommentText.trim() && !newCommentFile)
                   }
-                  className="bg-mc-black flex h-[42px] items-center gap-2 self-end rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                  className="bg-mc-black flex h-[42px] shrink-0 items-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isPostingComment ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
