@@ -3580,7 +3580,26 @@ Supply Chain CRM Coordinator`;
                                       setIsScopeDropdownOpen(false);
                                     }}
                                   >
-                                    SKU: {item.sku}
+                                    <div className="flex w-full items-center justify-between">
+                                      <span className="truncate">
+                                        SKU: {item.sku}
+                                      </span>
+                                      {(() => {
+                                        const count =
+                                          item.total_comments_count ??
+                                          item.comments_count ??
+                                          item.commentsCount ??
+                                          item.comment_count ??
+                                          (Array.isArray(item.comments)
+                                            ? item.comments.length
+                                            : 0);
+                                        return count > 0 ? (
+                                          <span className="ml-2 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-200 px-1 text-[9px] font-bold text-slate-600">
+                                            {count}
+                                          </span>
+                                        ) : null;
+                                      })()}
+                                    </div>
                                   </button>
                                 );
                               })}
