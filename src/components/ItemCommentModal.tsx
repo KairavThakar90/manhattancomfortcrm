@@ -547,7 +547,7 @@ export default function ItemCommentModal({
                         <img
                           src={node.fileUrl}
                           alt="Attachment"
-                          className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
+                          className="h-48 w-64 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
                           onLoad={() => {
                             messagesEndRef.current?.scrollIntoView({
                               behavior: 'smooth',
@@ -940,25 +940,25 @@ export default function ItemCommentModal({
       {/* Full Screen Image Preview Lightbox */}
       {previewImage && (
         <div
-          className="animate-fadeIn fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+          className="animate-fadeIn fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8"
           onClick={() => setPreviewImage(null)}
         >
+          <button
+            type="button"
+            className="fixed top-4 right-4 z-[10000] rounded-full bg-black/50 p-2 text-white/70 backdrop-blur-md transition hover:bg-black/80 hover:text-white md:top-6 md:right-6"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X className="h-6 w-6 md:h-8 md:w-8" />
+          </button>
           <div className="relative flex max-h-full max-w-5xl flex-col items-center">
-            <button
-              type="button"
-              className="absolute -top-12 right-0 p-2 text-white/70 transition hover:text-white"
-              onClick={() => setPreviewImage(null)}
-            >
-              <X className="h-8 w-8" />
-            </button>
             <img
               src={previewImage}
               alt="Preview"
-              className="animate-zoomIn max-h-[90vh] max-w-full rounded-lg object-contain shadow-2xl"
+              className="animate-zoomIn max-h-[80vh] max-w-full rounded-lg object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="mt-4 flex flex-col items-center gap-2">
-              <p className="rounded-full bg-black/40 px-4 py-2 text-sm font-medium text-white/90 drop-shadow-md">
+            <div className="mt-4 flex flex-col items-center gap-2 px-2 text-center">
+              <p className="rounded-full bg-black/40 px-3 py-1.5 text-[11px] font-medium text-white/90 drop-shadow-md md:px-4 md:py-2 md:text-sm">
                 💡 Right-Click (or long-press) the image and select{' '}
                 <strong>"Save Image As..."</strong> to download.
               </p>
