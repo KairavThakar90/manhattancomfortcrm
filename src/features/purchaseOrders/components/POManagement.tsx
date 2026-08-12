@@ -1652,10 +1652,6 @@ Supply Chain CRM Coordinator`;
     e.preventDefault();
     if (!selectedPO || (!newCommentText.trim() && !newCommentFile)) return;
 
-    if (newCommentFile) {
-      setIsPostingComment(true);
-    }
-
     const fileToUpload = newCommentFile;
 
     let messageText = newCommentText.trim();
@@ -1665,16 +1661,25 @@ Supply Chain CRM Coordinator`;
         : `(Attached: ${newCommentFile.name})`;
     }
 
-    // Extract tagged users
-    const words = messageText.split(/\s+/);
+    // Extract tagged users — validation must happen BEFORE any state changes
+    const words = newCommentText.trim().split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
       .map((w) => taggedUserMap[w])
       .filter(Boolean);
 
     if (taggedUserIds.length === 0) {
-      setCommentError('You must @ tag at least one user to post a comment.');
+      setCommentError(
+        newCommentFile && !newCommentText.trim()
+          ? 'Please type a message with an @tag to send this attachment.'
+          : 'You must @ tag at least one user to post a comment.',
+      );
       return;
+    }
+
+    // All validation passed — now commit state changes
+    if (newCommentFile) {
+      setIsPostingComment(true);
     }
 
     // Optimistic UI update immediately

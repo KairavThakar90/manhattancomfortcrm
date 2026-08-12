@@ -249,7 +249,11 @@ export default function ItemCommentModal({
       .filter(Boolean);
 
     if (taggedUserIds.length === 0) {
-      setCommentError('You must @ tag at least one user to post a comment.');
+      setCommentError(
+        newCommentFile && !newCommentText.trim()
+          ? 'Please type a message with an @tag to send this attachment.'
+          : 'You must @ tag at least one user to post a comment.',
+      );
       return;
     }
 
