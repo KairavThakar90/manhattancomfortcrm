@@ -871,6 +871,7 @@ export default function POManagement({
     useState(false);
   const itemsTableRef = useRef<HTMLDivElement>(null);
   const poTableRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll items table back to top after pagination changes (runs post-render)
   useEffect(() => {
@@ -1146,6 +1147,19 @@ export default function POManagement({
 
   // Comments for selected PO (Dynamically loaded from detail API)
   const selectedPOComments = fetchedComments;
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [
+    selectedPOComments,
+    fetchedSkuComments,
+    isPostingComment,
+    activeDrawerSection,
+    commentScope,
+    selectedSkuId,
+  ]);
 
   // Email Logs for selected PO
   const selectedPOEmails = emails.filter((e) => e.poId === selectedPOId);
@@ -3616,46 +3630,87 @@ Supply Chain CRM Coordinator`;
                                       {/* WhatsApp Style Attachment Render */}
                                       {node.fileUrl && (
                                         <div className="mt-2.5">
-                                          {node.fileType?.startsWith(
-                                            'image/',
-                                          ) ||
-                                          node.fileUrl.match(
-                                            /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
-                                          ) ||
-                                          node.fileUrl.startsWith('blob:') ? (
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                setPreviewImage(node.fileUrl)
-                                              }
-                                              className="focus:outline-hidden"
-                                            >
-                                              <img
-                                                src={node.fileUrl}
-                                                alt="Attachment"
-                                                className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
-                                              />
-                                            </button>
-                                          ) : (
-                                            <a
-                                              href={node.fileUrl}
-                                              target="_blank"
-                                              rel="noreferrer"
-                                              className="flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100"
-                                            >
-                                              <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
-                                                <Paperclip className="h-4 w-4" />
-                                              </div>
-                                              <div className="flex flex-col">
-                                                <span className="text-[11px] font-bold">
-                                                  Attachment
-                                                </span>
-                                                <span className="text-[10px] text-slate-400">
-                                                  {node.fileName || 'Document'}
-                                                </span>
-                                              </div>
-                                            </a>
-                                          )}
+                                          {(() => {
+                                            const isOptimistic = String(
+                                              node.id,
+                                            ).includes('OPT-');
+                                            const isImage =
+                                              node.fileType?.startsWith(
+                                                'image/',
+                                              ) ||
+                                              node.fileUrl.match(
+                                                /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
+                                              ) ||
+                                              node.fileUrl.startsWith('blob:');
+
+                                            if (isImage) {
+                                              return (
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    !isOptimistic &&
+                                                    setPreviewImage(
+                                                      node.fileUrl,
+                                                    )
+                                                  }
+                                                  className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                >
+                                                  <img
+                                                    src={node.fileUrl}
+                                                    alt="Attachment"
+                                                    className="max-h-60 max-w-xs rounded-xl object-contain drop-shadow-sm transition-transform hover:scale-[1.02]"
+                                                  />
+                                                  {isOptimistic && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
+                                                      <div className="flex flex-col items-center gap-2">
+                                                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                                        <span className="text-[10px] font-bold tracking-wider text-white uppercase shadow-sm">
+                                                          Uploading...
+                                                        </span>
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                </button>
+                                              );
+                                            } else {
+                                              return (
+                                                <div className="relative w-max">
+                                                  <a
+                                                    href={
+                                                      isOptimistic
+                                                        ? '#'
+                                                        : node.fileUrl
+                                                    }
+                                                    target={
+                                                      isOptimistic
+                                                        ? undefined
+                                                        : '_blank'
+                                                    }
+                                                    rel="noreferrer"
+                                                    className={`flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors ${isOptimistic ? 'pointer-events-none opacity-70' : 'hover:bg-slate-100'}`}
+                                                  >
+                                                    <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
+                                                      <Paperclip className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                      <span className="text-[11px] font-bold">
+                                                        Attachment
+                                                      </span>
+                                                      <span className="text-[10px] text-slate-400">
+                                                        {node.fileName ||
+                                                          'Document'}
+                                                      </span>
+                                                    </div>
+                                                  </a>
+                                                  {isOptimistic && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
+                                                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            }
+                                          })()}
                                         </div>
                                       )}
 
@@ -3780,6 +3835,7 @@ Supply Chain CRM Coordinator`;
                           )}
                         </>
                       )}
+                      <div ref={messagesEndRef} className="h-1 shrink-0" />
                     </div>
 
                     <form
