@@ -12,6 +12,8 @@ import {
   Edit2,
   Save,
   Loader2,
+  FileUp,
+  FileText,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { updateContainer } from '../services/container.service';
@@ -119,6 +121,7 @@ export default function ContainerDetailsModal({
         per_diem: container.per_diem || '',
         factory_credit_needed: container.factory_credit_needed || '',
         receiving_closure_notes: container.receiving_closure_notes || '',
+        attachment: null,
       });
     }
   }
@@ -153,7 +156,23 @@ export default function ContainerDetailsModal({
         if (!payload[k]) payload[k] = null;
       });
 
-      await updateContainer(container.id, payload);
+      let finalPayload = payload;
+      let options = {};
+      if (payload.attachment instanceof File) {
+        finalPayload = new FormData();
+        Object.keys(payload).forEach((k) => {
+          if (payload[k] !== null && payload[k] !== undefined) {
+            finalPayload.append(k, payload[k]);
+          }
+        });
+        options = {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        };
+      }
+
+      await updateContainer(container.id, finalPayload, options);
       toast.success('Tracking details updated successfully');
       if (onRefresh) onRefresh();
     } catch (e) {
@@ -739,6 +758,86 @@ export default function ContainerDetailsModal({
                     )}
                     <div className="sm:col-span-2">
                       <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Attachment
+                      </label>
+                      <div className="flex flex-col gap-3">
+                        {!trackingData.attachment ||
+                        !(trackingData.attachment instanceof File) ? (
+                          <label className="hover:border-mc-gold hover:bg-mc-beige-light flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm font-medium text-slate-600 transition-colors">
+                            <FileUp className="h-5 w-5 text-slate-400" />
+                            <span className="flex flex-col items-center">
+                              <span>Click to upload attachment</span>
+                              <span className="mt-1 text-[10px] text-slate-400">
+                                .jpeg, .jpg, .png, .gif, .webp, .pdf, .doc,
+                                .docx, .csv, .xls, .xlsx (Max 5MB)
+                              </span>
+                            </span>
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast.error('File size exceeds 5MB limit');
+                                    e.target.value = '';
+                                    return;
+                                  }
+                                  handleTrackingChange('attachment', file);
+                                }
+                              }}
+                            />
+                          </label>
+                        ) : null}
+
+                        {trackingData.attachment &&
+                          trackingData.attachment instanceof File && (
+                            <div className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300">
+                              {trackingData.attachment.type.startsWith(
+                                'image/',
+                              ) ? (
+                                <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                                  <img
+                                    src={URL.createObjectURL(
+                                      trackingData.attachment,
+                                    )}
+                                    alt="Preview"
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                              ) : null}
+                              <div className="flex items-center justify-between px-2 pb-1">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
+                                  <span className="truncate font-medium text-slate-700">
+                                    {trackingData.attachment.name}
+                                  </span>
+                                  <span className="text-xs text-slate-400">
+                                    (
+                                    {(
+                                      trackingData.attachment.size /
+                                      (1024 * 1024)
+                                    ).toFixed(2)}{' '}
+                                    MB)
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleTrackingChange('attachment', null)
+                                  }
+                                  className="cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
                         Vendor Credit Needed
                       </label>
                       <textarea
@@ -804,7 +903,8 @@ export default function ContainerDetailsModal({
                 container.customs_duty_misc ||
                 container.per_diem ||
                 container.factory_credit_needed ||
-                container.receiving_closure_notes
+                container.receiving_closure_notes ||
+                trackingData.attachment
                   ? 'Update'
                   : 'Save Changes'}
               </button>

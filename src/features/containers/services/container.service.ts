@@ -34,10 +34,15 @@ export async function createContainer(payload: any, options: any = {}) {
   return data;
 }
 
-export async function updateContainer(id: string | number, payload: any) {
+export async function updateContainer(
+  id: string | number,
+  payload: any,
+  options: any = {},
+) {
   const { data } = await apiClient.put(
     CONTAINERS_UPDATE(id.toString()),
     payload,
+    options,
   );
   return data;
 }
