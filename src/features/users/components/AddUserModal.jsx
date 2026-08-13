@@ -5,6 +5,7 @@ import { X, UserPlus, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createUser } from '../services/user.service';
 import { fetchVendorsPage } from '../../../store/vendorSlice';
+import { getWarehouses } from '../../../services/warehouse.service';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import Select from 'react-select';
@@ -185,6 +186,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
     password: '',
     role: 'admin',
     vendorId: '',
+    warehouseId: '',
     country: 'USA',
     phone: '',
     payment_terms: 'Net 30',
@@ -192,12 +194,8 @@ export default function AddUserModal({ onClose, onSuccess }) {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (formData.role === 'vendor') {
-      dispatch(fetchVendorsPage({ page: 1, pageSize: 50, search: '' }));
-    }
-  }, [formData.role, dispatch]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [warehousesLoading, setWarehousesLoading] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -214,6 +212,8 @@ export default function AddUserModal({ onClose, onSuccess }) {
       newErrors.password = 'Password must be at least 8 characters';
     if (formData.role === 'vendor' && !formData.vendorId)
       newErrors.vendorId = 'Vendor is required';
+    if (formData.role === 'warehouse' && !formData.warehouseId)
+      newErrors.warehouseId = 'Warehouse is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -242,6 +242,9 @@ export default function AddUserModal({ onClose, onSuccess }) {
         payload.phone = formData.phone;
         payload.payment_terms = formData.payment_terms;
         payload.container_lead_time_days = formData.container_lead_time_days;
+      }
+      if (formData.role === 'warehouse') {
+        payload.warehouse_id = formData.warehouseId;
       }
 
       await createUser(payload);
@@ -344,7 +347,27 @@ export default function AddUserModal({ onClose, onSuccess }) {
                   ...p,
                   role: val,
                   vendorId: val === 'vendor' ? p.vendorId : '',
+                  warehouseId: val === 'warehouse' ? p.warehouseId : '',
                 }));
+
+                if (val === 'vendor') {
+                  dispatch(
+                    fetchVendorsPage({ page: 1, pageSize: 50, search: '' }),
+                  );
+                } else if (val === 'warehouse') {
+                  setWarehousesLoading(true);
+                  getWarehouses()
+                    .then((data) => {
+                      setWarehouses(data?.results || data || []);
+                    })
+                    .catch((err) => {
+                      console.error('Failed to fetch warehouses:', err);
+                      toast.error('Failed to fetch warehouses');
+                    })
+                    .finally(() => {
+                      setWarehousesLoading(false);
+                    });
+                }
               }}
               options={[
                 { value: 'admin', label: 'Admin' },
@@ -355,6 +378,35 @@ export default function AddUserModal({ onClose, onSuccess }) {
               placeholder="Select role"
             />
           </div>
+
+          {formData.role === 'warehouse' && (
+            <div>
+              <label className="text-mc-black mb-1 block text-xs font-semibold">
+                Warehouse <span className="text-rose-500">*</span>
+              </label>
+              <CustomSelect
+                value={formData.warehouseId}
+                onChange={(val) => {
+                  setFormData((p) => ({ ...p, warehouseId: val }));
+                  if (errors.warehouseId)
+                    setErrors((p) => ({ ...p, warehouseId: undefined }));
+                }}
+                options={warehouses.map((w) => ({
+                  value: w.id,
+                  label: w.name || w.warehouse_name || String(w.id),
+                }))}
+                placeholder={
+                  warehousesLoading ? 'Loading...' : 'Select a warehouse'
+                }
+                error={errors.warehouseId}
+              />
+              {errors.warehouseId && (
+                <p className="mt-1 text-[10px] font-medium text-rose-500">
+                  {errors.warehouseId}
+                </p>
+              )}
+            </div>
+          )}
 
           {formData.role === 'vendor' && (
             <>
