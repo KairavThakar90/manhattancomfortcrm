@@ -5,6 +5,7 @@ import {
   AUTH_REGISTER,
   USERS_UPDATE,
   USERS_DELETE,
+  ACTIVITIES_LIST,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -82,4 +83,13 @@ export async function patchUser(
 /** Delete a user by ID */
 export async function deleteUser(id: string): Promise<void> {
   await apiClient.delete(USERS_DELETE(id));
+}
+
+export async function getUserActivities(params?: {
+  page?: number;
+  size?: number;
+  page_size?: number;
+}): Promise<any> {
+  const { data } = await apiClient.get(ACTIVITIES_LIST, { params });
+  return data;
 }

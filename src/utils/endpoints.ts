@@ -26,6 +26,7 @@ export const USERS_BY_ID = (id: string) => `/users/${id}`;
 export const USERS_CREATE = '/users';
 export const USERS_UPDATE = (id: string) => `/users/${id}`;
 export const USERS_DELETE = (id: string) => `/users/${id}`;
+export const ACTIVITIES_LIST = '/activities';
 
 // ------------------------------------------
 // Dashboard Endpoints

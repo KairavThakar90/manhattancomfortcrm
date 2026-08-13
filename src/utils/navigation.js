@@ -9,6 +9,7 @@ import {
   Shield,
   Package,
   UserCog,
+  Activity,
 } from 'lucide-react';
 
 export const navItems = [
@@ -87,6 +88,13 @@ export const navItems = [
     path: '/user-management',
     label: 'User Management',
     icon: UserCog,
+    roles: ['Administrator'],
+  },
+  {
+    id: 'user-activities',
+    path: '/user-activities',
+    label: 'Activity Tracking',
+    icon: Activity,
     roles: ['Administrator'],
   },
 ];

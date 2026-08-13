@@ -19,6 +19,9 @@ const AdminPanelPage = lazy(() => import('../pages/AdminPanelPage'));
 const UserManagementPage = lazy(
   () => import('../features/users/pages/UserManagementPage'),
 );
+const UserActivityTrackingPage = lazy(
+  () => import('../features/users/pages/UserActivityTrackingPage'),
+);
 
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },
@@ -43,5 +46,9 @@ export const appRoutes = [
   {
     path: '/user-management',
     element: React.createElement(UserManagementPage),
+  },
+  {
+    path: '/user-activities',
+    element: React.createElement(UserActivityTrackingPage),
   },
 ];
