@@ -46,6 +46,7 @@ import DateFilterInput from '../../../components/common/DateFilterInput';
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
 import { getWarehouses } from '../../../services/warehouse.service';
 import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
+import { useCRM } from '../../../hooks/useCRM';
 import {
   getContainers,
   getContainerPOItems,
@@ -117,6 +118,8 @@ const highlightText = (text, query) => {
 
 export default function ContainerFlowPage() {
   const dispatch = useDispatch();
+  const { user: currentUser } = useCRM();
+  const isWarehouse = currentUser?.role?.toLowerCase() === 'warehouse';
   const rawPurchaseOrders = useSelector((state) => state.purchaseOrders?.list);
   const purchaseOrders = useMemo(
     () => rawPurchaseOrders || [],
@@ -1311,13 +1314,15 @@ export default function ContainerFlowPage() {
               />
               <span>{listLoading ? 'Refreshing...' : 'Refresh Data'}</span>
             </button>
-            <button
-              onClick={() => setShowGlobalImport(true)}
-              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1.5 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Import CSV</span>
-            </button>
+            {!isWarehouse && (
+              <button
+                onClick={() => setShowGlobalImport(true)}
+                className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1.5 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Import CSV</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setExportColumns([]);
@@ -1329,13 +1334,15 @@ export default function ContainerFlowPage() {
               <Upload className="h-3.5 w-3.5" />
               <span>Export CSV</span>
             </button>
-            <button
-              onClick={handleCreateContainer}
-              className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold shadow-none transition-colors hover:opacity-80"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Container
-            </button>
+            {!isWarehouse && (
+              <button
+                onClick={handleCreateContainer}
+                className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold shadow-none transition-colors hover:opacity-80"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add Container
+              </button>
+            )}
           </div>
         </div>
 
@@ -1368,26 +1375,28 @@ export default function ContainerFlowPage() {
                   </button>
                 )}
               </div>
-              {/* Warehouse Filter */}
-              <div className="flex flex-shrink-0 items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
-                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
-                    Warehouse:
-                  </span>
+              {/* Warehouse Filter - hidden for warehouse role */}
+              {!isWarehouse && (
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                    <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
+                      Warehouse:
+                    </span>
+                  </div>
+                  <div className="w-48">
+                    <WarehouseInfiniteDropdown
+                      value={warehouseFilter}
+                      onChange={(val) => {
+                        setWarehouseFilter(val);
+                        setListPage(1);
+                      }}
+                      showAllOption={true}
+                      className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
+                    />
+                  </div>
                 </div>
-                <div className="w-48">
-                  <WarehouseInfiniteDropdown
-                    value={warehouseFilter}
-                    onChange={(val) => {
-                      setWarehouseFilter(val);
-                      setListPage(1);
-                    }}
-                    showAllOption={true}
-                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
-                  />
-                </div>
-              </div>
+              )}
               {/* Order Date Filter - inline */}
               <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
