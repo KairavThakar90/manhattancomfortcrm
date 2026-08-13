@@ -2632,12 +2632,42 @@ Supply Chain CRM Coordinator`;
           const diffDays = Math.floor(
             (today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24),
           );
-          if (diffDays > 10)
+
+          let hasContainer = false;
+          let cArray = po.containers || [];
+          if (!cArray || cArray.length === 0) {
+            let fallbackIds = po.containerIds || po.containerNames || [];
+            if (!fallbackIds || fallbackIds.length === 0) {
+              if (po.container && po.container !== 'N/A') {
+                fallbackIds = String(po.container)
+                  .split(',')
+                  .map((c) => c.trim())
+                  .filter(Boolean);
+              }
+            }
+            cArray = fallbackIds;
+          }
+          if (cArray && cArray.length > 0) hasContainer = true;
+
+          if (diffDays > 10) {
+            if (hasContainer) {
+              return (
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="rounded-sm border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
+                    On Time
+                  </span>
+                  <span className="font-mono text-[9px] whitespace-nowrap text-slate-500">
+                    Container On Time, Invoice Delayed
+                  </span>
+                </div>
+              );
+            }
             return (
               <span className="animate-pulse rounded-sm border border-rose-100 bg-rose-50 px-2 py-0.5 font-mono text-[10px] text-rose-700">
                 Delayed
               </span>
             );
+          }
           return (
             <span className="rounded-sm border border-amber-100 bg-amber-50 px-2 py-0.5 font-mono text-[10px] text-amber-700">
               Pending
