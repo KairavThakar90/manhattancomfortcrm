@@ -927,6 +927,8 @@ export default function POManagement({
     }
   }, [selectedPOId]);
 
+  const deepLinkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const handleDeepLink = (e: any) => {
       const { commentId, itemId } = e.detail;
@@ -949,17 +951,23 @@ export default function POManagement({
         const maxAttempts = 60; // 15 seconds total to wait for item modal and comments to load
         let attempts = 0;
 
-        const checkInterval = setInterval(() => {
+        if (deepLinkIntervalRef.current) {
+          clearInterval(deepLinkIntervalRef.current);
+        }
+
+        deepLinkIntervalRef.current = setInterval(() => {
           attempts++;
           const el = document.getElementById(commentId);
           if (el) {
-            clearInterval(checkInterval);
+            if (deepLinkIntervalRef.current)
+              clearInterval(deepLinkIntervalRef.current);
             setIsLocatingComment(false);
             setTimeout(() => {
               el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
           } else if (attempts >= maxAttempts) {
-            clearInterval(checkInterval);
+            if (deepLinkIntervalRef.current)
+              clearInterval(deepLinkIntervalRef.current);
             setIsLocatingComment(false);
             toast.error('Could not locate the specific comment.');
           }
@@ -967,7 +975,11 @@ export default function POManagement({
       }
     };
     window.addEventListener('po-deep-link', handleDeepLink);
-    return () => window.removeEventListener('po-deep-link', handleDeepLink);
+    return () => {
+      window.removeEventListener('po-deep-link', handleDeepLink);
+      if (deepLinkIntervalRef.current)
+        clearInterval(deepLinkIntervalRef.current);
+    };
   }, []);
 
   useEffect(() => {

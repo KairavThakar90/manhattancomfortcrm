@@ -56,6 +56,8 @@ export default function POManagementPage() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [activeSubTab, setActiveSubTab] = useState('grid');
 
+  const deepLinkDispatchedRef = React.useRef(null);
+
   useEffect(() => {
     // Prevent react-router deferred prop updates from resurrecting a deeply-linked PO
     // after we have already navigated away synchronously.
@@ -77,7 +79,14 @@ export default function POManagementPage() {
 
       const commentId = searchParams.get('comment_id');
       const itemId = searchParams.get('item_id');
-      if (commentId || itemId) {
+
+      const deepLinkKey = `${fullPoId}-${commentId}-${itemId}`;
+
+      if (
+        (commentId || itemId) &&
+        deepLinkDispatchedRef.current !== deepLinkKey
+      ) {
+        deepLinkDispatchedRef.current = deepLinkKey;
         // give the PO data some time to load / or just try dispatching event
         setTimeout(() => {
           window.dispatchEvent(

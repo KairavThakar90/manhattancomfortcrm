@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LoginPageComponent from '../components/LoginPage';
@@ -57,9 +57,16 @@ export default function LoginPage() {
     }
   };
 
-  const fromPath = location.state?.from?.pathname || '/purchase-orders';
-  const fromSearch = location.state?.from?.search || '';
-  const from = `${fromPath}${fromSearch}`;
+  const [intendedRoute] = useState(() => localStorage.getItem('intendedRoute'));
+  const fallbackPath = location.state?.from?.pathname || '/purchase-orders';
+  const fallbackSearch = location.state?.from?.search || '';
+  const from = intendedRoute || `${fallbackPath}${fallbackSearch}`;
+
+  useEffect(() => {
+    if (isAuthenticated && intendedRoute) {
+      localStorage.removeItem('intendedRoute');
+    }
+  }, [isAuthenticated, intendedRoute]);
 
   const handleGoogleSuccess = async (googleToken) => {
     setLoading(true);

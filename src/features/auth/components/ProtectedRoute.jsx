@@ -7,7 +7,12 @@ export default function ProtectedRoute() {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Store intended route robustly to survive page reloads during login
+    localStorage.setItem(
+      'intendedRoute',
+      `${location.pathname}${location.search}${location.hash}`,
+    );
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
