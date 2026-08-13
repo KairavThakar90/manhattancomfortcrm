@@ -112,58 +112,79 @@ export default function UserActivityTrackingPage() {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="mb-4 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-mc-black font-display text-2xl font-extrabold tracking-tight">
-            Activity Tracking
-          </h1>
-          <p className="text-mc-gray-soft mt-1 text-sm">
-            Monitor user actions and system events.
-          </p>
+    <div className="bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
+      {/* Header */}
+      <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b px-5 py-3 shadow-none">
+        <div className="flex items-center gap-3">
+          <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
+            <Activity className="h-4 w-4" />
+          </div>
+          <div>
+            <h1 className="font-display text-mc-black text-lg font-bold">
+              Activity Tracking
+            </h1>
+            <p className="text-mc-gray-soft text-xs font-medium">
+              Monitor user actions and system events
+            </p>
+          </div>
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="bg-mc-gold text-mc-white hover:bg-mc-black flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
+            />
+            <span>{loading ? 'Refreshing...' : 'Refresh Data'}</span>
+          </button>
+        </div>
       </div>
 
-      <div className="border-mc-beige-dark bg-mc-white flex flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
-        {error ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center text-red-500">
-            <AlertCircle className="mb-4 h-12 w-12 opacity-50" />
-            <h3 className="mb-2 text-lg font-bold">Error Loading Activities</h3>
-            <p className="text-sm opacity-80">{error}</p>
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-auto">
-              <DataTable
-                columns={columns}
-                data={activities}
-                isLoading={loading && !hasLoadedInitial}
-              />
+      {/* Main Content Area */}
+      <div className="flex min-h-0 flex-1 flex-col p-4 md:p-5">
+        <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
+          {error ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center text-red-500">
+              <AlertCircle className="mb-4 h-12 w-12 opacity-50" />
+              <h3 className="mb-2 text-lg font-bold">
+                Error Loading Activities
+              </h3>
+              <p className="text-sm opacity-80">{error}</p>
             </div>
-
-            {/* Pagination Controls */}
-            {!loading && totalCount > 0 && (
-              <div className="border-mc-beige-dark border-t p-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(totalCount / pageSize)}
-                  onPageChange={handlePageChange}
-                  totalCount={totalCount}
-                  pageSize={pageSize}
-                  isKanban={false}
+          ) : (
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex-1 overflow-auto">
+                <DataTable
+                  columns={columns}
+                  data={activities}
+                  isLoading={loading && !hasLoadedInitial}
+                  containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
+                  tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                  theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest text-[10px] font-extrabold sticky top-0 z-10"
+                  tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+                  tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
+                  trClassName="transition bg-mc-white hover:bg-mc-beige-light/30"
                 />
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Pagination Controls */}
+              {!loading && totalCount > 0 && (
+                <div className="border-mc-beige-dark border-t p-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalCount / pageSize)}
+                    onPageChange={handlePageChange}
+                    totalCount={totalCount}
+                    pageSize={pageSize}
+                    isKanban={false}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
