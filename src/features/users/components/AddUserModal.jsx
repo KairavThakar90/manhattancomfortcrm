@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, UserPlus, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { createUser } from '../services/user.service';
+import { createUser, updateUser } from '../services/user.service';
 import { fetchVendorsPage } from '../../../store/vendorSlice';
 import { getWarehouses } from '../../../services/warehouse.service';
 import PhoneInput from 'react-phone-input-2';
@@ -113,7 +113,7 @@ function CustomSelect({
   );
 }
 
-export default function AddUserModal({ onClose, onSuccess }) {
+export default function AddUserModal({ user = null, onClose, onSuccess }) {
   const dispatch = useDispatch();
   const vendors = useSelector((state) => state.vendors.list) || [];
   const vendorsLoading = useSelector((state) => state.vendors.loading);
@@ -180,22 +180,41 @@ export default function AddUserModal({ onClose, onSuccess }) {
   };
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    email: user?.email || '',
     password: '',
-    role: 'admin',
-    vendorId: '',
-    warehouseId: '',
-    country: 'USA',
-    phone: '',
-    payment_terms: 'Net 30',
-    container_lead_time_days: 14,
+    role: user?.role || 'admin',
+    vendorId: user?.vendor_id || '',
+    warehouseId: user?.warehouse_id || '',
+    country: user?.country || 'USA',
+    phone: user?.phone || '',
+    payment_terms: user?.payment_terms || 'Net 30',
+    container_lead_time_days: user?.container_lead_time_days || 14,
+    notify_new_user: user?.notify_new_user || false,
+    notify_trucker_email: user?.notify_trucker_email || false,
+    notify_invoice_delayed: user?.notify_invoice_delayed || false,
+    notify_shipment_delayed: user?.notify_shipment_delayed || false,
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
-  const [warehousesLoading, setWarehousesLoading] = useState(false);
+  const [warehousesLoading, setWarehousesLoading] = useState(
+    user?.role === 'warehouse',
+  );
+
+  // Fetch necessary data on mount for the initial role (important for Edit mode)
+  useEffect(() => {
+    if (formData.role === 'vendor') {
+      dispatch(fetchVendorsPage({ page: 1, pageSize: 50, search: '' }));
+    } else if (formData.role === 'warehouse') {
+      getWarehouses()
+        .then((data) => setWarehouses(data?.results || data || []))
+        .catch(console.error)
+        .finally(() => setWarehousesLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validate = () => {
     const newErrors = {};
@@ -207,9 +226,13 @@ export default function AddUserModal({ onClose, onSuccess }) {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8)
+    if (!user) {
+      if (!formData.password) newErrors.password = 'Password is required';
+      else if (formData.password.length < 8)
+        newErrors.password = 'Password must be at least 8 characters';
+    } else if (formData.password && formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
+    }
     if (formData.role === 'vendor' && !formData.vendorId)
       newErrors.vendorId = 'Vendor is required';
     if (formData.role === 'warehouse' && !formData.warehouseId)
@@ -228,9 +251,16 @@ export default function AddUserModal({ onClose, onSuccess }) {
         first_name: formData.firstName,
         last_name: formData.lastName,
         email: formData.email,
-        password: formData.password,
         role: formData.role,
+        notify_new_user: formData.notify_new_user,
+        notify_trucker_email: formData.notify_trucker_email,
+        notify_invoice_delayed: formData.notify_invoice_delayed,
+        notify_shipment_delayed: formData.notify_shipment_delayed,
       };
+
+      if (formData.password) {
+        payload.password = formData.password;
+      }
 
       // Ensure full_name or username if API expects it
       payload.full_name = `${payload.first_name} ${payload.last_name}`;
@@ -247,8 +277,13 @@ export default function AddUserModal({ onClose, onSuccess }) {
         payload.warehouse_id = formData.warehouseId;
       }
 
-      await createUser(payload);
-      toast.success('User created successfully');
+      if (user) {
+        await updateUser(user.id, payload);
+        toast.success('User updated successfully');
+      } else {
+        await createUser(payload);
+        toast.success('User created successfully');
+      }
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
@@ -274,10 +309,12 @@ export default function AddUserModal({ onClose, onSuccess }) {
             </div>
             <div>
               <h3 className="text-mc-black text-lg leading-tight font-bold">
-                Add New User
+                {user ? 'Edit User' : 'Add New User'}
               </h3>
               <p className="text-mc-gray-soft text-xs font-medium">
-                Create a new system user profile
+                {user
+                  ? 'Update system user profile'
+                  : 'Create a new system user profile'}
               </p>
             </div>
           </div>
@@ -556,7 +593,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
 
           <div>
             <label className="text-mc-black mb-1 block text-xs font-semibold">
-              Password <span className="text-rose-500">*</span>
+              Password {!user && <span className="text-rose-500">*</span>}
             </label>
             <input
               type="password"
@@ -567,7 +604,11 @@ export default function AddUserModal({ onClose, onSuccess }) {
                 if (errors.password)
                   setErrors((p) => ({ ...p, password: undefined }));
               }}
-              placeholder="Create a strong password"
+              placeholder={
+                user
+                  ? 'Leave blank to keep unchanged'
+                  : 'Create a strong password'
+              }
               className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.password ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:border-mc-gold focus:ring-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
             />
             {errors.password && (
@@ -575,6 +616,47 @@ export default function AddUserModal({ onClose, onSuccess }) {
                 {errors.password}
               </p>
             )}
+          </div>
+
+          {/* Notification Preferences */}
+          <div className="border-mc-beige-dark col-span-1 mt-2 border-t pt-4 sm:col-span-2">
+            <h4 className="text-mc-black mb-3 text-xs font-semibold tracking-wider uppercase">
+              Notification Preferences
+            </h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {[
+                { key: 'notify_new_user', label: 'Notify New User' },
+                { key: 'notify_trucker_email', label: 'Notify Trucker Email' },
+                {
+                  key: 'notify_invoice_delayed',
+                  label: 'Notify Invoice Delayed',
+                },
+                {
+                  key: 'notify_shipment_delayed',
+                  label: 'Notify Shipment Delayed',
+                },
+              ].map((pref) => (
+                <label
+                  key={pref.key}
+                  className="group flex cursor-pointer items-center gap-3 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!formData[pref.key]}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        [pref.key]: e.target.checked,
+                      }))
+                    }
+                    className="border-mc-beige-dark h-4 w-4 cursor-pointer rounded text-black accent-black transition-colors focus:ring-black"
+                  />
+                  <span className="text-mc-gray-dark group-hover:text-mc-black font-medium transition-colors">
+                    {pref.label}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -594,7 +676,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
             className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold shadow-none transition hover:opacity-80 disabled:opacity-60"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save User
+            {user ? 'Save Changes' : 'Save User'}
           </button>
         </div>
       </div>

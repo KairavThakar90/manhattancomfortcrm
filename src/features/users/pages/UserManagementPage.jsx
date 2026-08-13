@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Users, Search, RefreshCw, Plus, KeyRound } from 'lucide-react';
+import { Users, Search, RefreshCw, Plus, KeyRound, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
 import { useCRM } from '../../../hooks/useCRM';
@@ -21,6 +21,7 @@ export default function UserManagementPage() {
   const [pageSize, setPageSize] = useState(25);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   // Load users on mount
   useEffect(() => {
@@ -98,7 +99,14 @@ export default function UserManagementPage() {
         className: 'px-6 py-3 w-[90px] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
-            {currentUser?.id && String(currentUser.id) === String(u.id) ? (
+            <button
+              onClick={() => setEditingUser(u)}
+              className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
+              title="Edit User"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            {currentUser?.id && String(currentUser.id) === String(u.id) && (
               <button
                 onClick={() => setShowChangePasswordModal(true)}
                 className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
@@ -106,8 +114,6 @@ export default function UserManagementPage() {
               >
                 <KeyRound className="h-4 w-4" />
               </button>
-            ) : (
-              <span className="text-xs text-slate-300">—</span>
             )}
           </div>
         ),
@@ -206,9 +212,13 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {showAddModal && (
+      {(showAddModal || editingUser) && (
         <AddUserModal
-          onClose={() => setShowAddModal(false)}
+          user={editingUser}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingUser(null);
+          }}
           onSuccess={() => dispatch(fetchUsers())}
         />
       )}
