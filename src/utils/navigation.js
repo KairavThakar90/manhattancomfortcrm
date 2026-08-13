@@ -90,13 +90,13 @@ export const navItems = [
     icon: UserCog,
     roles: ['Administrator'],
   },
-  {
-    id: 'user-activities',
-    path: '/user-activities',
-    label: 'Activity Tracking',
-    icon: Activity,
-    roles: ['Administrator'],
-  },
+  // {
+  //   id: 'user-activities',
+  //   path: '/user-activities',
+  //   label: 'Activity Tracking',
+  //   icon: Activity,
+  //   roles: ['Administrator'],
+  // },
 ];
 
 // Key-value pair map of navigation paths by ID
