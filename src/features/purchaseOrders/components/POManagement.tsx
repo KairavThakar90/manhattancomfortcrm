@@ -112,16 +112,38 @@ const VendorStatusDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number;
+    width: number;
+    bottom: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    bottom: 'auto',
+  });
 
   const toggleDropdown = (e: any) => {
     e.stopPropagation();
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 250; // Approximating max height of dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
       setCoords({
-        top: rect.bottom + 4,
+        top,
         left: rect.left,
         width: rect.width,
+        bottom,
       });
     }
     setIsOpen(!isOpen);
@@ -177,6 +199,7 @@ const VendorStatusDropdown = ({
             style={{
               position: 'fixed',
               top: coords.top,
+              bottom: coords.bottom,
               left: coords.left,
               width: coords.width,
             }}
