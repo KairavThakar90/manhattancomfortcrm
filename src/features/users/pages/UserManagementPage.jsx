@@ -1,8 +1,25 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Users, Search, RefreshCw, Plus, KeyRound, Pencil } from 'lucide-react';
+import {
+  Users,
+  Search,
+  RefreshCw,
+  Plus,
+  KeyRound,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  X,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
+import { deleteUser } from '../services/user.service';
 import { useCRM } from '../../../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
@@ -22,6 +39,8 @@ export default function UserManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load users on mount
   useEffect(() => {
@@ -43,6 +62,29 @@ export default function UserManagementPage() {
       .then(() => toast.success('Users refreshed successfully'))
       .catch(() => toast.error('Failed to update user list'));
   };
+
+  const handleDeleteUser = useCallback(async (user) => {
+    setDeletingUser(user);
+  }, []);
+
+  const confirmDeleteUser = useCallback(async () => {
+    if (!deletingUser) return;
+    setIsDeleting(true);
+    const userName =
+      [deletingUser.first_name, deletingUser.last_name]
+        .filter(Boolean)
+        .join(' ') || deletingUser.email;
+    try {
+      await deleteUser(deletingUser.id);
+      toast.success(`User "${userName}" deleted successfully`);
+      dispatch(fetchUsers());
+      setDeletingUser(null);
+    } catch (err) {
+      toast.error('Failed to delete user. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingUser, dispatch]);
 
   // Client-side filtering & pagination
   const filteredUsers = useMemo(() => {
@@ -106,6 +148,13 @@ export default function UserManagementPage() {
             >
               <Pencil className="h-4 w-4" />
             </button>
+            <button
+              onClick={() => handleDeleteUser(u)}
+              className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+              title="Delete User"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
             {currentUser?.id && String(currentUser.id) === String(u.id) && (
               <button
                 onClick={() => setShowChangePasswordModal(true)}
@@ -119,7 +168,7 @@ export default function UserManagementPage() {
         ),
       },
     ],
-    [currentUser],
+    [currentUser, handleDeleteUser],
   );
 
   return (
@@ -227,6 +276,100 @@ export default function UserManagementPage() {
         <ChangePasswordModal
           onClose={() => setShowChangePasswordModal(false)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="animate-in fade-in zoom-in-95 border-mc-beige-dark bg-mc-white relative w-full max-w-sm rounded-2xl border shadow-2xl duration-200">
+            {/* Header */}
+            <div className="border-mc-beige-dark flex items-center justify-between border-b px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-mc-beige-light border-mc-beige-dark flex h-9 w-9 items-center justify-center rounded-xl border">
+                  <AlertTriangle className="text-mc-gold h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-mc-black text-sm font-bold">
+                    Delete User
+                  </h3>
+                  <p className="text-mc-gray-soft text-[10px]">
+                    This cannot be undone
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeletingUser(null)}
+                disabled={isDeleting}
+                className="text-mc-gray-soft hover:bg-mc-beige-light rounded-lg p-1.5 transition disabled:opacity-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="bg-mc-beige-light/40 px-5 py-5">
+              <p className="text-mc-black text-sm leading-relaxed">
+                Are you sure you want to permanently delete{' '}
+                <span className="font-bold">
+                  {[deletingUser.first_name, deletingUser.last_name]
+                    .filter(Boolean)
+                    .join(' ') || deletingUser.email}
+                </span>
+                ?
+              </p>
+              <p className="text-mc-gray-soft mt-2 text-xs leading-relaxed">
+                The user will immediately lose all access to the system. This
+                action is permanent and cannot be reversed.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="border-mc-beige-dark flex items-center justify-end gap-2 border-t px-5 py-4">
+              <button
+                onClick={() => setDeletingUser(null)}
+                disabled={isDeleting}
+                className="border-mc-beige-dark bg-mc-white text-mc-black hover:bg-mc-beige-light rounded-lg border px-4 py-2 text-xs font-bold transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={isDeleting}
+                className="bg-mc-black text-mc-beige-light hover:bg-mc-black/80 flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold transition disabled:opacity-60"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg
+                      className="h-3.5 w-3.5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete User
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

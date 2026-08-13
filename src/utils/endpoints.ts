@@ -22,10 +22,10 @@ export const APP_HEALTH = '/health';
 // ------------------------------------------
 export const AUTH_REGISTER = '/auth/register';
 export const USERS_LIST = '/auth/users';
-export const USERS_BY_ID = (id: string) => `/users/${id}`;
-export const USERS_CREATE = '/users';
-export const USERS_UPDATE = (id: string) => `/users/${id}`;
-export const USERS_DELETE = (id: string) => `/users/${id}`;
+export const USERS_BY_ID = (id: string) => `/auth/users/${id}`;
+export const USERS_CREATE = '/auth/users';
+export const USERS_UPDATE = (id: string) => `/auth/users/${id}`;
+export const USERS_DELETE = (id: string) => `/auth/users/${id}`;
 export const ACTIVITIES_LIST = '/activities';
 
 // ------------------------------------------

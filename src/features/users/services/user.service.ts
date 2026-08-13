@@ -62,12 +62,12 @@ export async function createUser(payload: CreateUserPayload): Promise<User> {
   return data;
 }
 
-/** Update an existing user */
+/** Update an existing user (partial patch) */
 export async function updateUser(
   id: string,
   payload: UpdateUserPayload,
 ): Promise<User> {
-  const { data } = await apiClient.put<User>(USERS_UPDATE(id), payload);
+  const { data } = await apiClient.patch<User>(USERS_UPDATE(id), payload);
   return data;
 }
 
