@@ -123,7 +123,7 @@ export default function DataTable({
         </table>
       </div>
       {pagination && (
-        <div className="border-mc-beige-dark bg-mc-beige-light rounded-b-xl border-t">
+        <div className="border-mc-beige-dark/40 bg-mc-beige-light rounded-b-xl border-t">
           {pagination}
         </div>
       )}

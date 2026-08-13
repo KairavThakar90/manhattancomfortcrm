@@ -3,6 +3,7 @@ import { RefreshCw, Activity, AlertCircle } from 'lucide-react';
 import { getUserActivities } from '../services/user.service';
 import Pagination from '../../../components/common/Pagination';
 import DataTable from '../../../components/common/DataTable';
+import TableLoader from '../../../components/common/TableLoader';
 import { useCRM } from '../../../hooks/useCRM';
 
 export default function UserActivityTrackingPage() {
@@ -12,7 +13,7 @@ export default function UserActivityTrackingPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState(25);
 
   const fetchData = async () => {
     setLoading(true);
@@ -47,10 +48,15 @@ export default function UserActivityTrackingPage() {
     }, 0);
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  }, [currentPage, pageSize]);
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
   };
 
   // Define table columns
@@ -155,33 +161,30 @@ export default function UserActivityTrackingPage() {
             </div>
           ) : (
             <div className="flex flex-1 flex-col overflow-hidden">
-              <div className="flex-1 overflow-auto">
-                <DataTable
-                  columns={columns}
-                  data={activities}
-                  isLoading={loading && !hasLoadedInitial}
-                  containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
-                  tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
-                  theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest text-[10px] font-extrabold sticky top-0 z-10"
-                  tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
-                  tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
-                  trClassName="transition bg-mc-white hover:bg-mc-beige-light/30"
-                />
-              </div>
-
-              {/* Pagination Controls */}
-              {!loading && totalCount > 0 && (
-                <div className="border-mc-beige-dark border-t p-4">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={Math.ceil(totalCount / pageSize)}
-                    onPageChange={handlePageChange}
-                    totalCount={totalCount}
-                    pageSize={pageSize}
-                    isKanban={false}
-                  />
-                </div>
-              )}
+              <DataTable
+                columns={columns}
+                data={activities}
+                containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
+                tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                defaultThClassName="px-6 py-3 bg-transparent"
+                theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest text-[10px] font-extrabold sticky top-0 z-10"
+                tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+                tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
+                trClassName="transition bg-mc-white hover:bg-mc-beige-light/30"
+                pagination={
+                  (!loading || hasLoadedInitial) && totalCount > 0 ? (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(totalCount / pageSize)}
+                      totalCount={totalCount}
+                      pageSize={pageSize}
+                      onPageChange={handlePageChange}
+                      onPageSizeChange={handlePageSizeChange}
+                      isKanban={false}
+                    />
+                  ) : null
+                }
+              />
             </div>
           )}
         </div>

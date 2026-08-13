@@ -6,7 +6,7 @@ import React from 'react';
  */
 export default function TableLoader() {
   return (
-    <div className="bg-mc-beige-dark/40 relative h-1 w-full overflow-hidden shadow-xs">
+    <div className="bg-mc-gold/20 relative h-1 w-full overflow-hidden">
       <style>{`
         @keyframes muiLinearProgress1 {
           0% {
