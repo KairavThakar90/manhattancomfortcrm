@@ -35,7 +35,6 @@ export default function ContainerDetailsModal({
   const [itemsPageSize, setItemsPageSize] = useState(10);
   const [activeTab, setActiveTab] = useState('details');
   const [isSaving, setIsSaving] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
@@ -129,6 +128,7 @@ export default function ContainerDetailsModal({
         per_diem: container.per_diem || '',
         factory_credit_needed: container.factory_credit_needed || '',
         receiving_closure_notes: container.receiving_closure_notes || '',
+        trucker_email: container.trucker_email || '',
         attachmentsToUpload: [],
       });
     }
@@ -143,7 +143,7 @@ export default function ContainerDetailsModal({
       (currentUserRole === 'warehouse' ||
         currentUserRole === 'administrator') &&
       trackingData.date_emptied &&
-      !trackingData.notification_email
+      !trackingData.trucker_email
     ) {
       setEmailError('Email is required when Date Emptied is specified.');
       return;
@@ -215,22 +215,10 @@ export default function ContainerDetailsModal({
   };
 
   const handleTrackingChange = (field, value) => {
-    if (field === 'notification_email' && emailError) {
+    if (field === 'trucker_email' && emailError) {
       setEmailError('');
     }
     setTrackingData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSendEmail = () => {
-    if (!trackingData.notification_email) {
-      toast.error('Email is required');
-      return;
-    }
-    setIsSendingEmail(true);
-    setTimeout(() => {
-      setIsSendingEmail(false);
-      toast.success('Email sent successfully!');
-    }, 1200);
   };
 
   if (!container) return null;
@@ -622,17 +610,17 @@ export default function ContainerDetailsModal({
                       trackingData.date_emptied && (
                         <div className="mt-2 border-t border-slate-100 pt-4 sm:col-span-2">
                           <label className="mb-1 block text-xs font-semibold text-slate-700">
-                            Notify Email (Required){' '}
+                            Trucker Email (Required){' '}
                             <span className="text-rose-500">*</span>
                           </label>
                           <div className="flex flex-wrap items-center gap-2">
                             <input
                               type="email"
                               required
-                              value={trackingData.notification_email || ''}
+                              value={trackingData.trucker_email || ''}
                               onChange={(e) =>
                                 handleTrackingChange(
-                                  'notification_email',
+                                  'trucker_email',
                                   e.target.value,
                                 )
                               }
@@ -643,24 +631,6 @@ export default function ContainerDetailsModal({
                                   : 'focus:border-mc-black border-slate-200 bg-slate-50'
                               }`}
                             />
-                            <button
-                              type="button"
-                              onClick={handleSendEmail}
-                              disabled={
-                                !trackingData.notification_email ||
-                                isSendingEmail
-                              }
-                              className="bg-mc-gold text-mc-black shrink-0 rounded-lg px-4 py-2 text-xs font-bold transition hover:opacity-80 disabled:opacity-50"
-                            >
-                              {isSendingEmail ? (
-                                <span className="flex items-center gap-2">
-                                  <Loader2 className="h-3 w-3 animate-spin" />{' '}
-                                  Sending...
-                                </span>
-                              ) : (
-                                'Send Mail'
-                              )}
-                            </button>
                           </div>
                           {emailError && (
                             <p className="mt-1.5 text-[10px] font-bold text-rose-500">
