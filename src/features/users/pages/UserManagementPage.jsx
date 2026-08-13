@@ -141,6 +141,7 @@ export default function UserManagementPage() {
         className: 'px-6 py-3 w-[90px] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
+            {/* TODO: Edit flow — temporarily hidden
             <button
               onClick={() => setEditingUser(u)}
               className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
@@ -148,6 +149,7 @@ export default function UserManagementPage() {
             >
               <Pencil className="h-4 w-4" />
             </button>
+            */}
             <button
               onClick={() => handleDeleteUser(u)}
               className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
