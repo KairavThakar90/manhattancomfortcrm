@@ -128,8 +128,12 @@ export default function ContainerDetailsModal({
 
   const handleSaveTracking = async () => {
     setEmailError('');
+    const currentUserRole = String(
+      localStorage.getItem('userRole'),
+    ).toLowerCase();
     if (
-      String(localStorage.getItem('userRole')).toLowerCase() === 'warehouse' &&
+      (currentUserRole === 'warehouse' ||
+        currentUserRole === 'administrator') &&
       trackingData.date_emptied &&
       !trackingData.notification_email
     ) {
@@ -139,7 +143,10 @@ export default function ContainerDetailsModal({
 
     try {
       setIsSaving(true);
-      const payload = { ...trackingData };
+      const payload = {
+        ...trackingData,
+        name: trackingData.container_name,
+      };
       [
         'unload_cost',
         'container_cost_drayage',
@@ -574,8 +581,10 @@ export default function ContainerDetailsModal({
                         className="w-full"
                       />
                     </div>
-                    {String(localStorage.getItem('userRole')).toLowerCase() ===
-                      'warehouse' &&
+                    {(String(localStorage.getItem('userRole')).toLowerCase() ===
+                      'warehouse' ||
+                      String(localStorage.getItem('userRole')).toLowerCase() ===
+                        'administrator') &&
                       trackingData.date_emptied && (
                         <div className="mt-2 border-t border-slate-100 pt-4 sm:col-span-2">
                           <label className="mb-1 block text-xs font-semibold text-slate-700">
