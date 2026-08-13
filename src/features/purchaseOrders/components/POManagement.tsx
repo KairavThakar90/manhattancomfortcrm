@@ -3330,7 +3330,7 @@ Supply Chain CRM Coordinator`;
             <div className="flex items-center gap-1">
               <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
               <span className="text-mc-gray-soft text-xs font-bold">
-                Po Completion:
+                PO Completion:
               </span>
             </div>
             <div className="w-32">

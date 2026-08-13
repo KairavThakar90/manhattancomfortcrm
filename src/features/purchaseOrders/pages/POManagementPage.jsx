@@ -168,8 +168,8 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
-        if (completionFilter === 'open') params.is_completed = true;
-        if (completionFilter === 'closed') params.is_completed = false;
+        if (completionFilter === 'open') params.is_completed = false;
+        if (completionFilter === 'closed') params.is_completed = true;
         if (dateFrom) {
           params.date_from = dateFrom;
         }
