@@ -39,7 +39,7 @@ export async function updateContainer(
   payload: any,
   options: any = {},
 ) {
-  const { data } = await apiClient.put(
+  const { data } = await apiClient.patch(
     CONTAINERS_UPDATE(id.toString()),
     payload,
     options,

@@ -14,6 +14,7 @@ import {
   Loader2,
   FileUp,
   FileText,
+  Download,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { updateContainer } from '../services/container.service';
@@ -121,7 +122,7 @@ export default function ContainerDetailsModal({
         per_diem: container.per_diem || '',
         factory_credit_needed: container.factory_credit_needed || '',
         receiving_closure_notes: container.receiving_closure_notes || '',
-        attachment: null,
+        attachmentsToUpload: [],
       });
     }
   }
@@ -145,7 +146,6 @@ export default function ContainerDetailsModal({
       setIsSaving(true);
       const payload = {
         ...trackingData,
-        name: trackingData.container_name,
       };
       [
         'unload_cost',
@@ -163,21 +163,24 @@ export default function ContainerDetailsModal({
         if (!payload[k]) payload[k] = null;
       });
 
-      let finalPayload = payload;
-      let options = {};
-      if (payload.attachment instanceof File) {
-        finalPayload = new FormData();
-        Object.keys(payload).forEach((k) => {
-          if (payload[k] !== null && payload[k] !== undefined) {
-            finalPayload.append(k, payload[k]);
-          }
+      const finalPayload = new FormData();
+      const { attachmentsToUpload, attachment, ...restPayload } = payload;
+
+      // The API expects the JSON data as a stringified object under 'container_data'
+      finalPayload.append('container_data', JSON.stringify(restPayload));
+
+      // The API expects the files under the 'files' key if available
+      if (attachmentsToUpload && attachmentsToUpload.length > 0) {
+        attachmentsToUpload.forEach((file) => {
+          finalPayload.append('files', file);
         });
-        options = {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        };
       }
+
+      const options = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      };
 
       await updateContainer(container.id, finalPayload, options);
       toast.success('Tracking details updated successfully');
@@ -770,79 +773,161 @@ export default function ContainerDetailsModal({
                         Attachment
                       </label>
                       <div className="flex flex-col gap-3">
-                        {!trackingData.attachment ||
-                        !(trackingData.attachment instanceof File) ? (
-                          <label className="hover:border-mc-gold hover:bg-mc-beige-light flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm font-medium text-slate-600 transition-colors">
-                            <FileUp className="h-5 w-5 text-slate-400" />
-                            <span className="flex flex-col items-center">
-                              <span>Click to upload attachment</span>
-                              <span className="mt-1 text-[10px] text-slate-400">
-                                .jpeg, .jpg, .png, .gif, .webp, .pdf, .doc,
-                                .docx, .csv, .xls, .xlsx (Max 5MB)
-                              </span>
+                        <label className="hover:border-mc-gold hover:bg-mc-beige-light flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm font-medium text-slate-600 transition-colors">
+                          <FileUp className="h-5 w-5 text-slate-400" />
+                          <span className="flex flex-col items-center">
+                            <span>Click to upload attachment(s)</span>
+                            <span className="mt-1 text-[10px] text-slate-400">
+                              .jpeg, .jpg, .png, .gif, .webp, .pdf, .doc, .docx,
+                              .csv, .xls, .xlsx (Max 5MB each)
                             </span>
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  if (file.size > 5 * 1024 * 1024) {
-                                    toast.error('File size exceeds 5MB limit');
-                                    e.target.value = '';
-                                    return;
+                          </span>
+                          <input
+                            type="file"
+                            multiple
+                            className="hidden"
+                            accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (files.length > 0) {
+                                const validFiles = files.filter((f) => {
+                                  if (f.size > 5 * 1024 * 1024) {
+                                    toast.error(
+                                      `File ${f.name} exceeds 5MB limit`,
+                                    );
+                                    return false;
                                   }
-                                  handleTrackingChange('attachment', file);
-                                }
-                              }}
-                            />
-                          </label>
-                        ) : null}
+                                  return true;
+                                });
+                                handleTrackingChange('attachmentsToUpload', [
+                                  ...(trackingData.attachmentsToUpload || []),
+                                  ...validFiles,
+                                ]);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
 
-                        {trackingData.attachment &&
-                          trackingData.attachment instanceof File && (
-                            <div className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300">
-                              {trackingData.attachment.type.startsWith(
-                                'image/',
-                              ) ? (
-                                <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                                  <img
-                                    src={URL.createObjectURL(
-                                      trackingData.attachment,
-                                    )}
-                                    alt="Preview"
-                                    className="h-full w-full object-contain"
-                                  />
-                                </div>
-                              ) : null}
-                              <div className="flex items-center justify-between px-2 pb-1">
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                  <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
-                                  <span className="truncate font-medium text-slate-700">
-                                    {trackingData.attachment.name}
-                                  </span>
-                                  <span className="text-xs text-slate-400">
-                                    (
-                                    {(
-                                      trackingData.attachment.size /
-                                      (1024 * 1024)
-                                    ).toFixed(2)}{' '}
-                                    MB)
-                                  </span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleTrackingChange('attachment', null)
-                                  }
-                                  className="cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </div>
+                        {trackingData.attachmentsToUpload &&
+                          trackingData.attachmentsToUpload.length > 0 && (
+                            <div className="mt-2 flex flex-col gap-2">
+                              {trackingData.attachmentsToUpload.map(
+                                (file, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300"
+                                  >
+                                    {file.type.startsWith('image/') ? (
+                                      <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                                        <img
+                                          src={URL.createObjectURL(file)}
+                                          alt="Preview"
+                                          className="h-full w-full object-contain"
+                                        />
+                                      </div>
+                                    ) : null}
+                                    <div className="flex items-center justify-between px-2 pb-1">
+                                      <div className="flex items-center gap-2 overflow-hidden">
+                                        <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
+                                        <span className="truncate font-medium text-slate-700">
+                                          {file.name}
+                                        </span>
+                                        <span className="text-xs text-slate-400">
+                                          (
+                                          {(file.size / (1024 * 1024)).toFixed(
+                                            2,
+                                          )}{' '}
+                                          MB)
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newFiles = [
+                                            ...trackingData.attachmentsToUpload,
+                                          ];
+                                          newFiles.splice(idx, 1);
+                                          handleTrackingChange(
+                                            'attachmentsToUpload',
+                                            newFiles,
+                                          );
+                                        }}
+                                        className="cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ),
+                              )}
                             </div>
                           )}
+
+                        {/* Existing attachments from backend */}
+                        {(!trackingData.attachmentsToUpload ||
+                          trackingData.attachmentsToUpload.length === 0) &&
+                          (Array.isArray(container.attachments)
+                            ? container.attachments
+                            : Array.isArray(container.files)
+                              ? container.files
+                              : container.attachments
+                                ? [container.attachments]
+                                : container.files
+                                  ? [container.files]
+                                  : container.attachment
+                                    ? Array.isArray(container.attachment)
+                                      ? container.attachment
+                                      : [container.attachment]
+                                    : []
+                          ).map((att) => {
+                            // Allow array of attachments or a single attachment wrapped in an array if backend returns singular
+                            if (!att || !att.id) return null;
+                            return (
+                              <div
+                                key={att.id}
+                                className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300"
+                              >
+                                {att.content_type?.startsWith('image/') ||
+                                att.file_name?.match(
+                                  /\.(jpeg|jpg|gif|png|webp)$/i,
+                                ) ? (
+                                  <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                                    <img
+                                      src={att.file_url}
+                                      alt="Preview"
+                                      className="h-full w-full cursor-pointer object-contain"
+                                      onClick={() =>
+                                        window.open(att.file_url, '_blank')
+                                      }
+                                    />
+                                  </div>
+                                ) : null}
+                                <div className="flex items-center justify-between px-2 pb-1">
+                                  <div className="flex items-center gap-2 overflow-hidden">
+                                    <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate font-medium text-slate-700">
+                                      {att.file_name}
+                                    </span>
+                                    {att.size && (
+                                      <span className="text-xs text-slate-400">
+                                        ({(att.size / (1024 * 1024)).toFixed(2)}{' '}
+                                        MB)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <a
+                                    href={att.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="cursor-pointer rounded-md p-1.5 text-indigo-500 transition-colors hover:bg-indigo-50"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </a>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                     <div className="sm:col-span-2">
