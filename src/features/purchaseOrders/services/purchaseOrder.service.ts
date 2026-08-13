@@ -97,6 +97,7 @@ export async function getPurchaseOrders(params?: {
   status?: string;
   ordering?: string;
   date_from?: string;
+  is_completed?: boolean;
 
   page?: number;
   page_size?: number;

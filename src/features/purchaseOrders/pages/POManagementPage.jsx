@@ -50,6 +50,7 @@ export default function POManagementPage() {
     return '';
   });
   const [statusFilter, setStatusFilter] = useState('all');
+  const [completionFilter, setCompletionFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [customerFilter, setCustomerFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
@@ -112,6 +113,10 @@ export default function POManagementPage() {
     setStatusFilter(val);
     setCurrentPage(1);
   };
+  const handleCompletionFilterChange = (val) => {
+    setCompletionFilter(val);
+    setCurrentPage(1);
+  };
   const handleVendorFilterChange = (val) => {
     setVendorFilter(val);
     setCurrentPage(1);
@@ -138,6 +143,7 @@ export default function POManagementPage() {
         pageSize,
         searchQuery,
         statusFilter,
+        completionFilter,
         vendorFilter,
         customerFilter,
         dateFrom,
@@ -162,6 +168,8 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
+        if (completionFilter === 'open') params.is_completed = true;
+        if (completionFilter === 'closed') params.is_completed = false;
         if (dateFrom) {
           params.date_from = dateFrom;
         }
@@ -500,6 +508,7 @@ export default function POManagementPage() {
     pageSize,
     searchQuery,
     statusFilter,
+    completionFilter,
     vendorFilter,
     customerFilter,
     dateFrom,
@@ -636,6 +645,8 @@ export default function POManagementPage() {
         onSearchChange={handleQueryChange}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
+        completionFilter={completionFilter}
+        onCompletionFilterChange={handleCompletionFilterChange}
         vendorFilter={vendorFilter}
         onVendorFilterChange={handleVendorFilterChange}
         customerFilter={customerFilter}

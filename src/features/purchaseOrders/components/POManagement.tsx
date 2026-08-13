@@ -229,6 +229,284 @@ const VendorStatusDropdown = ({
   );
 };
 
+const StatusFilterDropdown = ({
+  currentStatus,
+  onChange,
+}: {
+  currentStatus: string;
+  onChange: (status: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number;
+    width: number;
+    bottom: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    bottom: 'auto',
+  });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 280; // Approximating max height of dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
+      setCoords({
+        top,
+        left: rect.left,
+        width: rect.width,
+        bottom,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const statuses = [
+    'all',
+    'NOT_STARTED',
+    'IN_PRODUCTION',
+    'DELAYED',
+    'COMPLETED',
+    'NOT_PLANNED',
+    'PLANNED',
+    'PARTIALLY_SHIPPED',
+    'SHIPPED',
+  ];
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-full cursor-pointer items-center justify-between rounded-lg border p-2 text-xs transition-colors focus:ring-1 focus:outline-none"
+      >
+        <span className="truncate">
+          {currentStatus === 'all'
+            ? 'All Statuses'
+            : currentStatus.replace(/_/g, ' ')}
+        </span>
+        {currentStatus !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange('all');
+              setIsOpen(false);
+            }}
+          />
+        ) : (
+          <ChevronDown
+            className={`text-mc-gray-soft h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg"
+          >
+            {statuses.map((s) => (
+              <button
+                key={s}
+                className={`w-full px-3 py-2 text-left transition-colors ${
+                  currentStatus === s
+                    ? 'text-mc-black bg-slate-100/50 font-bold'
+                    : 'font-medium text-slate-700 hover:bg-slate-50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onChange(s);
+                  setIsOpen(false);
+                }}
+              >
+                {s === 'all' ? 'All Statuses' : s.replace(/_/g, ' ')}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
+
+const CompletionFilterDropdown = ({
+  currentStatus,
+  onChange,
+}: {
+  currentStatus: string;
+  onChange: (status: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number;
+    width: number;
+    bottom: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    bottom: 'auto',
+  });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 120; // Approximating max height of dropdown
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
+      setCoords({
+        top,
+        left: rect.left,
+        width: rect.width,
+        bottom,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const statuses = [
+    { value: 'all', label: 'All' },
+    { value: 'open', label: 'Open PO' },
+    { value: 'closed', label: 'Closed PO' },
+  ];
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-full cursor-pointer items-center justify-between rounded-lg border p-2 text-xs transition-colors focus:ring-1 focus:outline-none"
+      >
+        <span className="truncate">
+          {statuses.find((s) => s.value === currentStatus)?.label || 'All'}
+        </span>
+        {currentStatus !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange('all');
+              setIsOpen(false);
+            }}
+          />
+        ) : (
+          <ChevronDown
+            className={`text-mc-gray-soft h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg"
+          >
+            {statuses.map((s) => (
+              <button
+                key={s.value}
+                className={`w-full px-3 py-2 text-left transition-colors ${
+                  currentStatus === s.value
+                    ? 'text-mc-black bg-slate-100/50 font-bold'
+                    : 'font-medium text-slate-700 hover:bg-slate-50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onChange(s.value);
+                  setIsOpen(false);
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
+
 const highlightText = (
   text: string | number | undefined | null,
   query: string | undefined | null,
@@ -293,6 +571,8 @@ interface POManagementProps {
   onSearchChange?: (val: string) => void;
   statusFilter?: string;
   onStatusFilterChange?: (val: string) => void;
+  completionFilter?: string;
+  onCompletionFilterChange?: (val: string) => void;
   vendorFilter?: string;
   onVendorFilterChange?: (val: string) => void;
   customerFilter?: string;
@@ -329,6 +609,8 @@ export default function POManagement({
   onSearchChange: propOnSearchChange,
   statusFilter: propStatusFilter,
   onStatusFilterChange: propOnStatusFilterChange,
+  completionFilter: propCompletionFilter,
+  onCompletionFilterChange: propOnCompletionFilterChange,
   vendorFilter: propVendorFilter,
   onVendorFilterChange: propOnVendorFilterChange,
   customerFilter: propCustomerFilter,
@@ -365,6 +647,8 @@ export default function POManagement({
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
+  const [localCompletionFilter, setLocalCompletionFilter] =
+    useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
   const [localCustomerFilter, setLocalCustomerFilter] = useState<string>('all');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
@@ -778,6 +1062,14 @@ export default function POManagement({
   const setStatusFilter = propOnStatusFilterChange
     ? propOnStatusFilterChange
     : setLocalStatusFilter;
+
+  const completionFilter =
+    propCompletionFilter !== undefined
+      ? propCompletionFilter
+      : localCompletionFilter;
+  const setCompletionFilter = propOnCompletionFilterChange
+    ? propOnCompletionFilterChange
+    : setLocalCompletionFilter;
 
   const vendorFilter =
     propVendorFilter !== undefined ? propVendorFilter : localVendorFilter;
@@ -3000,10 +3292,9 @@ Supply Chain CRM Coordinator`;
         </div>
       </div>
 
-      {/* SEARCH AND FILTER BAR */}
       <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none">
-        {/* Row 1: Search + Vendor filter */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        {/* Row 1: Search */}
+        <div className="flex w-full">
           {activeSubTab === 'kanban' && (
             <div className="flex-1">
               <h3 className="font-display text-mc-black text-sm font-bold">
@@ -3012,7 +3303,7 @@ Supply Chain CRM Coordinator`;
             </div>
           )}
           {activeSubTab !== 'kanban' && (
-            <div className="relative flex-1">
+            <div className="relative w-full">
               <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
               <input
                 type="text"
@@ -3031,69 +3322,98 @@ Supply Chain CRM Coordinator`;
               )}
             </div>
           )}
+        </div>
 
-          <div className="flex items-center gap-2.5">
-            {userRole !== 'Vendor' && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
-                  <span className="text-mc-gray-soft text-xs font-bold">
-                    Vendor:
-                  </span>
-                </div>
-                <div className="w-40">
-                  <VendorInfiniteDropdown
-                    value={vendorFilter}
-                    onChange={setVendorFilter}
-                    showAllOption={true}
-                    placeholder="All Vendors"
-                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
-                  />
-                </div>
+        {/* Row 2: Filters */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+              <span className="text-mc-gray-soft text-xs font-bold">
+                Po Completion:
+              </span>
+            </div>
+            <div className="w-32">
+              <CompletionFilterDropdown
+                currentStatus={completionFilter}
+                onChange={setCompletionFilter}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+              <span className="text-mc-gray-soft text-xs font-bold">
+                Status:
+              </span>
+            </div>
+            <div className="w-40">
+              <StatusFilterDropdown
+                currentStatus={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </div>
+          </div>
+          {userRole !== 'Vendor' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold">
+                  Vendor:
+                </span>
               </div>
-            )}
-            {userRole !== 'Vendor' && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
-                  <span className="text-mc-gray-soft text-xs font-bold">
-                    Customer:
-                  </span>
-                </div>
-                <div className="w-40">
-                  <CustomerDropdown
-                    value={propCustomerFilter ?? localCustomerFilter}
-                    onChange={(val) => {
-                      if (propOnCustomerFilterChange)
-                        propOnCustomerFilterChange(val);
-                      else setLocalCustomerFilter(val);
-                    }}
-                    showAllOption={true}
-                    placeholder="All Customers"
-                    className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
-                  />
-                </div>
-              </div>
-            )}
-            {activeSubTab !== 'kanban' && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <CalendarDays className="text-mc-gray-soft h-3.5 w-3.5" />
-                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
-                    Order Date:
-                  </span>
-                </div>
-                <DateFilterInput
-                  value={dateFrom || ''}
-                  onChange={(val) => {
-                    setDateFrom(val);
-                    handlePageChange(1);
-                  }}
-                  title="Order Date Filter"
+              <div className="w-40">
+                <VendorInfiniteDropdown
+                  value={vendorFilter}
+                  onChange={setVendorFilter}
+                  showAllOption={true}
+                  placeholder="All Vendors"
+                  className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          {userRole !== 'Vendor' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold">
+                  Customer:
+                </span>
+              </div>
+              <div className="w-40">
+                <CustomerDropdown
+                  value={propCustomerFilter ?? localCustomerFilter}
+                  onChange={(val) => {
+                    if (propOnCustomerFilterChange)
+                      propOnCustomerFilterChange(val);
+                    else setLocalCustomerFilter(val);
+                  }}
+                  showAllOption={true}
+                  placeholder="All Customers"
+                  className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+          {activeSubTab !== 'kanban' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <CalendarDays className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
+                  Order Date:
+                </span>
+              </div>
+              <DateFilterInput
+                value={dateFrom || ''}
+                onChange={(val) => {
+                  setDateFrom(val);
+                  handlePageChange(1);
+                }}
+                title="Order Date Filter"
+              />
+            </div>
+          )}
         </div>
       </div>
 
