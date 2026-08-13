@@ -2774,6 +2774,14 @@ Supply Chain CRM Coordinator`;
               </span>
             );
           }
+
+          cArray = [...cArray].sort((a: any, b: any) => {
+            const aHasDate =
+              typeof a === 'object' && a !== null && !!a.received_date ? 1 : 0;
+            const bHasDate =
+              typeof b === 'object' && b !== null && !!b.received_date ? 1 : 0;
+            return bHasDate - aHasDate;
+          });
           const poKey = String(po.id || po.uuid || po.containerIds);
           const isExpanded = expandedContainerRows.has(poKey);
           const maxShow = 4;
@@ -2795,6 +2803,12 @@ Supply Chain CRM Coordinator`;
                     cObj.name ||
                     cId
                   : cId;
+
+                const hasReceivedDate = isObj && !!cObj.received_date;
+                const highlightClass = hasReceivedDate
+                  ? 'text-emerald-800 bg-emerald-100'
+                  : 'text-rose-800 bg-rose-100';
+
                 return (
                   <React.Fragment key={String(cId) + idx}>
                     <button
@@ -2805,7 +2819,7 @@ Supply Chain CRM Coordinator`;
                           : undefined;
                         handleOpenContainerDetails(String(cId), cNameToPass);
                       }}
-                      className="text-mc-black max-w-[80px] cursor-pointer truncate hover:text-indigo-800 hover:underline"
+                      className={`max-w-[80px] cursor-pointer truncate rounded-[3px] px-[3px] text-[10px] font-medium transition-opacity hover:underline hover:opacity-80 ${highlightClass}`}
                       title={String(displayName)}
                     >
                       {String(displayName)}
