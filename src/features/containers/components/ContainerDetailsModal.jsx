@@ -105,8 +105,15 @@ export default function ContainerDetailsModal({
   if (container !== prevContainer) {
     setPrevContainer(container);
     if (container) {
+      let cName =
+        container.container_name ||
+        container.name ||
+        container.container_number ||
+        '';
+      if (cName === 'undefined') cName = '';
+
       setTrackingData({
-        container_name: container.container_name || container.name || '',
+        container_name: cName,
         door: container.door || '',
         date_dropped_off: container.date_dropped_off
           ? container.date_dropped_off.split('T')[0]
@@ -147,6 +154,13 @@ export default function ContainerDetailsModal({
       const payload = {
         ...trackingData,
       };
+      let pName =
+        trackingData.container_name ||
+        container.name ||
+        container.container_number ||
+        '';
+      if (pName === 'undefined') pName = '';
+      payload.name = pName;
       [
         'unload_cost',
         'container_cost_drayage',
@@ -168,6 +182,13 @@ export default function ContainerDetailsModal({
 
       // The API expects the JSON data as a stringified object under 'container_data'
       finalPayload.append('container_data', JSON.stringify(restPayload));
+
+      // Re-add root level property appends for standard DRF MultiPartParsers
+      Object.keys(restPayload).forEach((key) => {
+        if (restPayload[key] !== null && restPayload[key] !== undefined) {
+          finalPayload.append(key, restPayload[key]);
+        }
+      });
 
       // The API expects the files under the 'files' key if available
       if (attachmentsToUpload && attachmentsToUpload.length > 0) {
@@ -221,6 +242,8 @@ export default function ContainerDetailsModal({
     itemsPage * itemsPageSize,
   );
 
+  console.log('container.name', container.name);
+
   return createPortal(
     <>
       <div
@@ -245,8 +268,16 @@ export default function ContainerDetailsModal({
                   <span className="flex items-center gap-2 text-sm font-medium text-slate-500">
                     <span>
                       {container.sellercloud_container_id || 'Unnamed'}
-                      {container.name && container.name !== container.id
-                        ? ` (${container.name})`
+                      {(container.name ||
+                        container.container_name ||
+                        container.container_number) &&
+                      (container.name ||
+                        container.container_name ||
+                        container.container_number) !== container.id &&
+                      (container.name ||
+                        container.container_name ||
+                        container.container_number) !== 'undefined'
+                        ? ` (${container.name || container.container_name || container.container_number})`
                         : ''}
                     </span>
                     <span className="text-slate-300">•</span>
