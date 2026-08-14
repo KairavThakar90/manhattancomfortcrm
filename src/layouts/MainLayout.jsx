@@ -9,10 +9,12 @@ import {
   ChevronsRight,
   X,
   Rocket,
+  User,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { logout } from '../features/auth/services/auth.service';
 import { navItems } from '../utils/navigation';
+import UpdateProfileModal from '../features/users/components/UpdateProfileModal';
 
 export default function MainLayout() {
   const {
@@ -33,6 +35,7 @@ export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
   const [modalVisible, setModalVisible] = useState(false);
+  const [showUpdateProfileModal, setShowUpdateProfileModal] = useState(false);
 
   // Filter nav items by role
   const visibleNavItems = navItems.filter((tab) => {
@@ -370,6 +373,16 @@ export default function MainLayout() {
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
+                      setShowUpdateProfileModal(true);
+                    }}
+                    className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span className="font-semibold">Update Profile</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
                       handleLogout();
                     }}
                     className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors"
@@ -488,6 +501,11 @@ export default function MainLayout() {
             </div>
           );
         })()}
+
+      <UpdateProfileModal
+        isOpen={showUpdateProfileModal}
+        onClose={() => setShowUpdateProfileModal(false)}
+      />
     </div>
   );
 }
