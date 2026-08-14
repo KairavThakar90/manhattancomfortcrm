@@ -3566,34 +3566,38 @@ Supply Chain CRM Coordinator`;
 
         {/* Row 2: Filters */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
-              <span className="text-mc-gray-soft text-xs font-bold">
-                PO Completion:
-              </span>
-            </div>
-            <div className="w-32">
-              <CompletionFilterDropdown
-                currentStatus={completionFilter}
-                onChange={setCompletionFilter}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
-              <span className="text-mc-gray-soft text-xs font-bold">
-                Status:
-              </span>
-            </div>
-            <div className="w-40">
-              <StatusFilterDropdown
-                currentStatus={statusFilter}
-                onChange={setStatusFilter}
-              />
-            </div>
-          </div>
+          {activeSubTab !== 'kanban' && (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold">
+                    PO Completion:
+                  </span>
+                </div>
+                <div className="w-32">
+                  <CompletionFilterDropdown
+                    currentStatus={completionFilter}
+                    onChange={setCompletionFilter}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold">
+                    Status:
+                  </span>
+                </div>
+                <div className="w-40">
+                  <StatusFilterDropdown
+                    currentStatus={statusFilter}
+                    onChange={setStatusFilter}
+                  />
+                </div>
+              </div>
+            </>
+          )}
           {userRole !== 'Vendor' && (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
