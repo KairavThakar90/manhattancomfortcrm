@@ -124,24 +124,36 @@ export default function UserManagementPage() {
       {
         header: 'Name',
         accessor: 'name',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
-        className: 'px-6 py-3 w-1/4 font-semibold text-mc-black text-sm',
-        render: (u) =>
-          u.full_name ||
-          `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-          'N/A',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[25%]',
+        className: 'px-6 py-3 w-[25%] font-semibold text-mc-black text-sm',
+        render: (u) => {
+          const val =
+            u.full_name ||
+            `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
+            'N/A';
+          return (
+            <div className="w-full max-w-[200px] truncate" title={val}>
+              {val}
+            </div>
+          );
+        },
       },
       {
         header: 'Email',
         accessor: 'email',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
-        className: 'px-6 py-3 w-1/4 text-mc-gray-soft text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[30%]',
+        className: 'px-6 py-3 w-[30%] text-mc-gray-soft text-sm',
+        render: (u) => (
+          <div className="w-full max-w-[240px] truncate" title={u.email || ''}>
+            {u.email || 'N/A'}
+          </div>
+        ),
       },
       {
         header: 'Role',
         accessor: 'role',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
-        className: 'px-6 py-3 w-1/4',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[15%]',
+        className: 'px-6 py-3 w-[15%]',
         render: (u) => (
           <span className="border-mc-beige-dark bg-mc-beige-light text-mc-black inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase">
             {u.role || 'User'}
@@ -149,10 +161,25 @@ export default function UserManagementPage() {
         ),
       },
       {
+        header: 'Created At',
+        accessor: 'created_at',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[15%]',
+        className: 'px-6 py-3 w-[15%] text-mc-gray-soft text-sm font-mono',
+        render: (u) => {
+          const dateStr = u.created_at || u.date_joined || u.createdAt;
+          if (!dateStr) return 'N/A';
+          try {
+            return new Date(dateStr).toISOString().split('T')[0];
+          } catch (e) {
+            return 'N/A';
+          }
+        },
+      },
+      {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-3 bg-transparent text-center w-1/4',
-        className: 'px-6 py-3 w-1/4 text-center',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[15%]',
+        className: 'px-6 py-3 w-[15%] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
             <button
@@ -211,10 +238,10 @@ export default function UserManagementPage() {
   return (
     <div className="animate-in fade-in bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex flex-shrink-0 items-center justify-between border-b px-5 py-3 shadow-none">
+      <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex w-full flex-shrink-0 flex-col items-start justify-between gap-4 border-b px-5 py-3 shadow-none sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
-            <Users className="h-4 w-4" />
+          <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 min-w-[2rem] items-center justify-center rounded-lg">
+            <Users className="h-4 w-4 shrink-0" />
           </div>
           <div>
             <h1 className="font-display text-mc-black text-lg font-bold">
@@ -225,23 +252,25 @@ export default function UserManagementPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center gap-3 sm:w-auto">
           <button
             onClick={() => fetchUsers(true)}
             disabled={loading}
-            className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50"
+            className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light flex flex-1 items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 sm:flex-none"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
+              className={`h-3.5 w-3.5 shrink-0 ${loading ? 'animate-spin' : ''}`}
             />
-            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+            <span className="whitespace-nowrap">
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-mc-gold text-mc-black flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition-colors hover:opacity-80"
+            className="bg-mc-gold text-mc-black flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition-colors hover:opacity-80 sm:flex-none"
           >
-            <Plus className="h-3.5 w-3.5" />
-            Add User
+            <Plus className="h-3.5 w-3.5 shrink-0" />
+            <span className="whitespace-nowrap">Add User</span>
           </button>
         </div>
       </div>
@@ -274,7 +303,7 @@ export default function UserManagementPage() {
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
             tableWrapperRef={userTableRef}
             theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
-            tableClassName="w-full table-fixed text-left text-xs border-collapse"
+            tableClassName="w-full min-w-[800px] table-fixed text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
             trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
             emptyMessage={
