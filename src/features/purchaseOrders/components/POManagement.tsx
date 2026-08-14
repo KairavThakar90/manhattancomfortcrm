@@ -235,7 +235,7 @@ const ReasonCell = ({
         ) : isDelayed ? (
           <button
             onClick={toggleEdit}
-            className="hover:text-mc-black ml-1 px-1 text-slate-400 opacity-0 transition-opacity group-hover/reason:opacity-100"
+            className="hover:text-mc-black ml-1 px-1 text-slate-400 transition-colors"
             title="Edit Reason"
           >
             <Pencil className="h-3 w-3" />
