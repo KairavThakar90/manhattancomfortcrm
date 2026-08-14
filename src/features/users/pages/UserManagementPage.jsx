@@ -16,6 +16,9 @@ import {
   Trash2,
   AlertTriangle,
   X,
+  ChevronDown,
+  Check,
+  Filter,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
@@ -34,6 +37,7 @@ export default function UserManagementPage() {
   const { list: users, loading } = useSelector((state) => state.users);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -43,10 +47,33 @@ export default function UserManagementPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [editLoadingId, setEditLoadingId] = useState(null);
 
-  // Load users on mount
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const roleDropdownRef = useRef(null);
+
   useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
+    const handleClickOutside = (e) => {
+      if (
+        roleDropdownRef.current &&
+        !roleDropdownRef.current.contains(e.target)
+      ) {
+        setRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced server-side fetch logic for Search and Role filters
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const params = {};
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (roleFilter) params.role = roleFilter;
+      dispatch(fetchUsers(params));
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [dispatch, searchQuery, roleFilter]);
 
   const userTableRef = useRef(null);
 
@@ -58,7 +85,11 @@ export default function UserManagementPage() {
   }, [page, pageSize]);
 
   const handleRefresh = () => {
-    dispatch(fetchUsers())
+    const params = {};
+    if (searchQuery.trim()) params.search = searchQuery.trim();
+    if (roleFilter) params.role = roleFilter;
+
+    dispatch(fetchUsers(params))
       .unwrap()
       .then(() => toast.success('Users refreshed successfully'))
       .catch(() => toast.error('Failed to update user list'));
@@ -91,33 +122,47 @@ export default function UserManagementPage() {
     try {
       await deleteUser(deletingUser.id);
       toast.success(`User "${userName}" deleted successfully`);
-      dispatch(fetchUsers());
+      const params = {};
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (roleFilter) params.role = roleFilter;
+      dispatch(fetchUsers(params));
       setDeletingUser(null);
     } catch (err) {
       toast.error('Failed to delete user. Please try again.');
     } finally {
       setIsDeleting(false);
     }
-  }, [deletingUser, dispatch]);
+  }, [deletingUser, dispatch, searchQuery, roleFilter]);
 
-  // Client-side filtering & pagination
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
-    const lowerQuery = searchQuery.toLowerCase();
-    return users.filter(
-      (u) =>
-        (u.first_name || '').toLowerCase().includes(lowerQuery) ||
-        (u.last_name || '').toLowerCase().includes(lowerQuery) ||
-        (u.email || '').toLowerCase().includes(lowerQuery) ||
-        (u.username || '').toLowerCase().includes(lowerQuery) ||
-        (u.role || '').toLowerCase().includes(lowerQuery),
-    );
-  }, [users, searchQuery]);
+  // Filter applied directly on backend now; bypass block.
+  const filteredUsers = useMemo(() => users || [], [users]);
 
   const paginatedUsers = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredUsers.slice(start, start + pageSize);
   }, [filteredUsers, page, pageSize]);
+
+  const renderHighlightedText = useCallback((text, highlight) => {
+    if (!highlight || !highlight.trim() || !text) return text;
+    const regex = new RegExp(`(${highlight})`, 'gi');
+    const parts = String(text).split(regex);
+    return (
+      <>
+        {parts.map((part, index) =>
+          part.toLowerCase() === highlight.toLowerCase() ? (
+            <mark
+              key={index}
+              className="text-mc-black rounded-sm bg-yellow-200 px-0.5"
+            >
+              {part}
+            </mark>
+          ) : (
+            part
+          ),
+        )}
+      </>
+    );
+  }, []);
 
   const userColumns = useMemo(
     () => [
@@ -133,7 +178,7 @@ export default function UserManagementPage() {
             'N/A';
           return (
             <div className="w-full max-w-[200px] truncate" title={val}>
-              {val}
+              {renderHighlightedText(val, searchQuery)}
             </div>
           );
         },
@@ -143,11 +188,14 @@ export default function UserManagementPage() {
         accessor: 'email',
         headerClassName: 'px-6 py-3 bg-transparent text-left w-[30%]',
         className: 'px-6 py-3 w-[30%] text-mc-gray-soft text-sm',
-        render: (u) => (
-          <div className="w-full max-w-[240px] truncate" title={u.email || ''}>
-            {u.email || 'N/A'}
-          </div>
-        ),
+        render: (u) => {
+          const val = u.email || 'N/A';
+          return (
+            <div className="w-full max-w-[240px] truncate" title={val}>
+              {renderHighlightedText(val, searchQuery)}
+            </div>
+          );
+        },
       },
       {
         header: 'Role',
@@ -161,7 +209,14 @@ export default function UserManagementPage() {
         ),
       },
       {
-        header: 'Created At',
+        header: (
+          <div className="flex max-w-max flex-col gap-0.5">
+            <span>Created At</span>
+            <span className="text-[9px] font-medium tracking-wide text-slate-400 opacity-80">
+              (YYYY-MM-DD)
+            </span>
+          </div>
+        ),
         accessor: 'created_at',
         headerClassName: 'px-6 py-3 bg-transparent text-left w-[15%]',
         className: 'px-6 py-3 w-[15%] text-mc-gray-soft text-sm font-mono',
@@ -232,7 +287,14 @@ export default function UserManagementPage() {
         ),
       },
     ],
-    [currentUser, handleDeleteUser, handleEditUser, editLoadingId],
+    [
+      currentUser,
+      handleDeleteUser,
+      handleEditUser,
+      editLoadingId,
+      searchQuery,
+      renderHighlightedText,
+    ],
   );
 
   return (
@@ -254,7 +316,7 @@ export default function UserManagementPage() {
         </div>
         <div className="flex w-full items-center gap-3 sm:w-auto">
           <button
-            onClick={() => fetchUsers(true)}
+            onClick={handleRefresh}
             disabled={loading}
             className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light flex flex-1 items-center justify-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 sm:flex-none"
           >
@@ -282,7 +344,7 @@ export default function UserManagementPage() {
             <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
             <input
               type="text"
-              placeholder="Search by name, email, or role..."
+              placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -290,6 +352,68 @@ export default function UserManagementPage() {
               }}
               className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-4 pl-9 text-sm transition focus:outline-none"
             />
+          </div>
+          <div className="flex w-full items-center gap-2 md:w-auto">
+            <Filter className="text-mc-gray-soft h-4 w-4 shrink-0" />
+            <span className="text-mc-black text-sm font-semibold">Role:</span>
+            <div className="relative w-full md:w-56" ref={roleDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                className={`bg-mc-white flex w-full items-center justify-between rounded-lg border-2 px-3 py-2 text-sm transition-colors ${
+                  roleDropdownOpen
+                    ? 'border-mc-gold outline-none'
+                    : 'border-mc-beige-dark hover:border-mc-gold'
+                }`}
+              >
+                <span className="truncate">
+                  {roleFilter === '' && 'All Roles'}
+                  {roleFilter === 'admin' && 'Admin'}
+                  {roleFilter === 'office' && 'Office'}
+                  {roleFilter === 'vendor' && 'Vendor'}
+                  {roleFilter === 'warehouse' && 'Warehouse'}
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
+                    roleDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {roleDropdownOpen && (
+                <div className="border-mc-beige-dark bg-mc-white animate-scaleUp absolute left-0 z-50 mt-1 w-full rounded-xl border p-2 shadow-lg">
+                  <div className="custom-scrollbar max-h-56 space-y-0.5 overflow-y-auto">
+                    {[
+                      { value: '', label: 'All Roles' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'office', label: 'Office' },
+                      { value: 'vendor', label: 'Vendor' },
+                      { value: 'warehouse', label: 'Warehouse' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setRoleFilter(opt.value);
+                          setPage(1);
+                          setRoleDropdownOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                          roleFilter === opt.value
+                            ? 'bg-mc-beige-light text-mc-black font-bold'
+                            : 'text-mc-black hover:bg-mc-beige-light/50'
+                        }`}
+                      >
+                        <span className="truncate">{opt.label}</span>
+                        {roleFilter === opt.value && (
+                          <Check className="h-4 w-4 shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -335,7 +459,7 @@ export default function UserManagementPage() {
             setShowAddModal(false);
             setEditingUser(null);
           }}
-          onSuccess={() => dispatch(fetchUsers())}
+          onSuccess={handleRefresh}
         />
       )}
 

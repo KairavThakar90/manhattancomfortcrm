@@ -41,8 +41,11 @@ export interface UpdateUserPayload {
 }
 
 /** Fetch all users */
-export async function getUsers(): Promise<User[]> {
-  const { data } = await apiClient.get<User[]>(USERS_LIST);
+export async function getUsers(params?: {
+  search?: string;
+  role?: string;
+}): Promise<User[]> {
+  const { data } = await apiClient.get<User[]>(USERS_LIST, { params });
   return data;
 }
 
