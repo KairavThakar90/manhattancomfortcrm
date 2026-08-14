@@ -1344,6 +1344,14 @@ export default function POManagement({
     setReplyToUser(null);
     setReplyToText(null);
     setEditingCommentId(null);
+    // Reset ALL mention state fresh on each PO / scope change
+    setTagUsers([]);
+    setIsFetchingTagUsers(false);
+    setShowMentionDropdown(false);
+    setMentionFilter('');
+    setMentionIndex(0);
+    setMentionHighlightIndex(0);
+    setTaggedUserMap({});
   }, [selectedPOId, activeDrawerSection, commentScope, selectedSkuId]);
 
   // AI Email Generator state

@@ -93,8 +93,14 @@ export default function ItemCommentModal({
   useEffect(() => {
     if (isOpen) {
       setActiveItem(targetItem);
-      // Reset tag users so they're re-fetched fresh on each open
+      // Reset ALL mention state fresh on each open / item switch
       setTagUsers([]);
+      setIsFetchingTagUsers(false);
+      setShowMentionDropdown(false);
+      setMentionFilter('');
+      setMentionIndex(0);
+      setMentionHighlightIndex(0);
+      setTaggedUserMap({});
     }
   }, [isOpen, targetItem]);
 
