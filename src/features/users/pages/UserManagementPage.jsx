@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
-import { deleteUser } from '../services/user.service';
+import { deleteUser, getUserById } from '../services/user.service';
 import { useCRM } from '../../../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
@@ -41,6 +41,7 @@ export default function UserManagementPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editLoadingId, setEditLoadingId] = useState(null);
 
   // Load users on mount
   useEffect(() => {
@@ -65,6 +66,19 @@ export default function UserManagementPage() {
 
   const handleDeleteUser = useCallback(async (user) => {
     setDeletingUser(user);
+  }, []);
+
+  const handleEditUser = useCallback(async (user) => {
+    try {
+      setEditLoadingId(user.id);
+      const freshUser = await getUserById(user.id);
+      setEditingUser(freshUser);
+      setShowAddModal(true);
+    } catch (err) {
+      toast.error('Failed to load user details. Please try again.');
+    } finally {
+      setEditLoadingId(null);
+    }
   }, []);
 
   const confirmDeleteUser = useCallback(async () => {
@@ -137,19 +151,40 @@ export default function UserManagementPage() {
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-3 bg-transparent text-center w-[90px]',
-        className: 'px-6 py-3 w-[90px] text-center',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[110px]',
+        className: 'px-6 py-3 w-[110px] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
-            {/* TODO: Edit flow — temporarily hidden
             <button
-              onClick={() => setEditingUser(u)}
-              className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
+              onClick={() => handleEditUser(u)}
+              disabled={editLoadingId === u.id}
+              className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition disabled:opacity-50"
               title="Edit User"
             >
-              <Pencil className="h-4 w-4" />
+              {editLoadingId === u.id ? (
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+              ) : (
+                <Pencil className="h-4 w-4" />
+              )}
             </button>
-            */}
             <button
               onClick={() => handleDeleteUser(u)}
               className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
@@ -170,7 +205,7 @@ export default function UserManagementPage() {
         ),
       },
     ],
-    [currentUser, handleDeleteUser],
+    [currentUser, handleDeleteUser, handleEditUser, editLoadingId],
   );
 
   return (
@@ -265,6 +300,7 @@ export default function UserManagementPage() {
 
       {(showAddModal || editingUser) && (
         <AddUserModal
+          key={editingUser?.id ?? 'new'}
           user={editingUser}
           onClose={() => {
             setShowAddModal(false);

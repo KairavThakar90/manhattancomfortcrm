@@ -203,18 +203,26 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
     user?.role === 'warehouse',
   );
 
-  // Fetch necessary data on mount for the initial role (important for Edit mode)
+  // Fetch role-dependent data when user prop changes (edit mode: role-specific dropdowns)
   useEffect(() => {
-    if (formData.role === 'vendor') {
+    if (!user) return;
+    if (user.role === 'vendor') {
       dispatch(fetchVendorsPage({ page: 1, pageSize: 50, search: '' }));
-    } else if (formData.role === 'warehouse') {
-      getWarehouses()
-        .then((data) => setWarehouses(data?.results || data || []))
-        .catch(console.error)
-        .finally(() => setWarehousesLoading(false));
+    } else if (user.role === 'warehouse') {
+      (async () => {
+        setWarehousesLoading(true);
+        try {
+          const data = await getWarehouses();
+          setWarehouses(data?.results || data || []);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setWarehousesLoading(false);
+        }
+      })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const validate = () => {
     const newErrors = {};
