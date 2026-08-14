@@ -5,6 +5,7 @@ import {
   AUTH_REGISTER,
   USERS_UPDATE,
   USERS_DELETE,
+  USERS_TAG,
   ACTIVITIES_LIST,
 } from '../../../utils/endpoints';
 
@@ -83,6 +84,25 @@ export async function patchUser(
 /** Delete a user by ID */
 export async function deleteUser(id: string): Promise<void> {
   await apiClient.delete(USERS_DELETE(id));
+}
+
+/** Fetch taggable users (names only) for @mention in comments */
+export async function getTagUsers(): Promise<string[]> {
+  const { data } = await apiClient.get<any[]>(USERS_TAG);
+  if (!Array.isArray(data)) return [];
+  return data
+    .map((item) => {
+      // API may return plain strings or User objects — normalize to display name
+      if (typeof item === 'string') return item;
+      return (
+        item.full_name ||
+        `${item.first_name || ''} ${item.last_name || ''}`.trim() ||
+        item.username ||
+        item.email ||
+        ''
+      );
+    })
+    .filter(Boolean);
 }
 
 export async function getUserActivities(params?: {

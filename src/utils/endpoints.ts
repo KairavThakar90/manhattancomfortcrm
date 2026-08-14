@@ -26,6 +26,7 @@ export const USERS_BY_ID = (id: string) => `/auth/users/${id}`;
 export const USERS_CREATE = '/auth/users';
 export const USERS_UPDATE = (id: string) => `/auth/users/${id}`;
 export const USERS_DELETE = (id: string) => `/auth/users/${id}`;
+export const USERS_TAG = '/auth/users/tag';
 export const ACTIVITIES_LIST = '/activities';
 
 // ------------------------------------------

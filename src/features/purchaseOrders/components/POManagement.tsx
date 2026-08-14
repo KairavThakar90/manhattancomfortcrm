@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
-import { fetchUsers } from '../../../features/users/store/userSlice';
+
 import {
   Search,
   Filter,
@@ -68,7 +68,10 @@ import {
   updatePurchaseOrder,
   updatePOStatus,
 } from '../services/purchaseOrder.service';
-import { getUsers, User } from '../../../features/users/services/user.service';
+import {
+  getTagUsers,
+  User,
+} from '../../../features/users/services/user.service';
 import Pagination from '../../../components/common/Pagination';
 import TableLoader from '../../../components/common/TableLoader';
 import FullPageLoader from '../../../components/common/FullPageLoader';
@@ -687,7 +690,8 @@ export default function POManagement({
   );
 
   // Mention Tagging State
-  const reduxUsers = useSelector((state: any) => state.users?.list || []);
+  const [tagUsers, setTagUsers] = useState<string[]>([]);
+  const [isFetchingTagUsers, setIsFetchingTagUsers] = useState(false);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionFilter, setMentionFilter] = useState('');
@@ -811,10 +815,8 @@ export default function POManagement({
   }, []);
 
   useEffect(() => {
-    if (!reduxUsers || reduxUsers.length === 0) {
-      dispatch(fetchUsers() as any);
-    }
-  }, [dispatch, reduxUsers.length]);
+    // Tag users are fetched lazily when @ is typed — no pre-fetch needed
+  }, []);
 
   const [showSyncMenu, setShowSyncMenu] = useState(false);
   const syncMenuRef = useRef<HTMLDivElement>(null);
@@ -1851,6 +1853,15 @@ Supply Chain CRM Coordinator`;
         setMentionFilter(mentionTextOrig.toLowerCase());
         setMentionHighlightIndex(0);
         setMentionIndex(atPos);
+
+        // Lazy-fetch tag users the first time @ is detected
+        if (tagUsers.length === 0 && !isFetchingTagUsers) {
+          setIsFetchingTagUsers(true);
+          getTagUsers()
+            .then((users) => setTagUsers(Array.isArray(users) ? users : []))
+            .catch((err) => console.error('Failed to fetch tag users', err))
+            .finally(() => setIsFetchingTagUsers(false));
+        }
         return;
       }
     }
@@ -1858,74 +1869,30 @@ Supply Chain CRM Coordinator`;
     setMentionHighlightIndex(0);
   };
 
-  const handleSelectMention = (user: User | any) => {
-    // Prefer username (no spaces) for the tag; fall back to full_name with spaces→underscores
-    const tagBase =
-      user.username ||
-      `${user.first_name || ''} ${user.last_name || ''}`
-        .trim()
-        .replace(/\s+/g, '_') ||
-      (user.full_name || '').replace(/\s+/g, '_') ||
-      user.email;
+  const handleSelectMention = (name: string) => {
+    // Use name directly as the tag (spaces → underscores for clean tags)
+    const tagBase = name.trim().replace(/\s+/g, '_');
     const tag = `@${tagBase}`;
 
     const textBefore = newCommentText.slice(0, mentionIndex);
-    // Remove @ + the full typed mention text (may include spaces for multi-word names)
     const textAfter = newCommentText.slice(
       mentionIndex + 1 + mentionFilter.length,
     );
 
     setNewCommentText(`${textBefore}${tag} ${textAfter.trimStart()}`);
-
-    setTaggedUserMap((prev) => ({
-      ...prev,
-      [tag]: user.id,
-    }));
-
+    setTaggedUserMap((prev) => ({ ...prev, [tag]: tag }));
     setShowMentionDropdown(false);
     setMentionHighlightIndex(0);
   };
 
-  const getFilteredMentions = () => {
-    let taggableUsers = [...(reduxUsers || [])];
-    if (selectedPO?.vendorName) {
-      taggableUsers.unshift({
-        id: selectedPO.vendorId || 'vendor',
-        full_name: selectedPO.vendorName,
-        username: selectedPO.vendorName.replace(/\s+/g, ''),
-        email: 'Vendor (Owner)',
-      });
-    }
-    // Remove current user safely by matching actual IDs
-    if (currentUser) {
-      taggableUsers = taggableUsers.filter((u) => {
-        if (currentUser.id && u.id === currentUser.id) return false;
-        if (currentUser.email && u.email === currentUser.email) return false;
-        if (currentUser.username && u.username === currentUser.username)
-          return false;
-        return true;
-      });
-    }
-
-    // Normalize filter: treat underscores and spaces as equivalent for matching
+  const getFilteredMentions = (): string[] => {
     const f = mentionFilter.toLowerCase();
-    const fSpaced = f.replace(/_/g, ' ');
-    const fUnderscored = f.replace(/\s+/g, '_');
-    return taggableUsers.filter((u: User | any) => {
-      if (!f) return true;
-      const searchTargets = [
-        (u.full_name || '').toLowerCase(),
-        (u.username || '').toLowerCase(),
-        (u.first_name || '').toLowerCase(),
-        (u.last_name || '').toLowerCase(),
-        (u.email || '').toLowerCase(),
-        `${u.first_name || ''}_${u.last_name || ''}`.toLowerCase(),
-        `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase(),
-      ];
-      return searchTargets.some(
-        (t) => t.includes(f) || t.includes(fSpaced) || t.includes(fUnderscored),
-      );
-    });
+    if (!f) return tagUsers;
+    return tagUsers.filter(
+      (name) =>
+        name.toLowerCase().includes(f) ||
+        name.toLowerCase().replace(/\s+/g, '_').includes(f),
+    );
   };
 
   const handleCommentKeyDown = (
@@ -4493,40 +4460,36 @@ Supply Chain CRM Coordinator`;
                                       );
                                     }
 
-                                    return filtered.map((u, idx) => {
-                                      const displayName =
-                                        u.full_name ||
-                                        u.username ||
-                                        `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                        u.email;
-                                      const initial = (
-                                        displayName[0] || 'U'
-                                      ).toUpperCase();
-                                      const isHighlighted =
-                                        idx === mentionHighlightIndex;
-                                      return (
-                                        <button
-                                          key={u.id}
-                                          type="button"
-                                          onClick={() => handleSelectMention(u)}
-                                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
-                                        >
-                                          <div
-                                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
+                                    return filtered.map(
+                                      (name: string, idx: number) => {
+                                        const initial = (
+                                          name[0] || 'U'
+                                        ).toUpperCase();
+                                        const isHighlighted =
+                                          idx === mentionHighlightIndex;
+                                        return (
+                                          <button
+                                            key={name}
+                                            type="button"
+                                            onClick={() =>
+                                              handleSelectMention(name)
+                                            }
+                                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
                                           >
-                                            {initial}
-                                          </div>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="truncate font-semibold text-slate-700">
-                                              {displayName}
+                                            <div
+                                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${isHighlighted ? 'bg-mc-gold text-white' : 'text-mc-black bg-slate-200'}`}
+                                            >
+                                              {initial}
                                             </div>
-                                            <div className="truncate text-[10px] text-slate-400">
-                                              {u.email}
+                                            <div className="min-w-0 flex-1">
+                                              <div className="truncate font-semibold text-slate-700">
+                                                {name}
+                                              </div>
                                             </div>
-                                          </div>
-                                        </button>
-                                      );
-                                    });
+                                          </button>
+                                        );
+                                      },
+                                    );
                                   })()}
                                 </div>
                               </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useSelector } from 'react-redux';
 import {
   X,
   Send,
@@ -14,7 +13,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
-import { User } from '../features/users/services/user.service';
+import { User, getTagUsers } from '../features/users/services/user.service';
 import { toast } from 'react-toastify';
 
 const formatUtcTimestamp = (ts: any) => {
@@ -78,7 +77,7 @@ export default function ItemCommentModal({
   highlightedCommentId,
 }: ItemCommentModalProps) {
   const { user: currentUser } = useCRM();
-  const reduxUsers = useSelector((state: any) => state.users?.list || []);
+  const [tagUsers, setTagUsers] = useState<string[]>([]);
 
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [fetchedComments, setFetchedComments] = useState<any[]>([]);
@@ -94,6 +93,8 @@ export default function ItemCommentModal({
   useEffect(() => {
     if (isOpen) {
       setActiveItem(targetItem);
+      // Reset tag users so they're re-fetched fresh on each open
+      setTagUsers([]);
     }
   }, [isOpen, targetItem]);
 
@@ -105,6 +106,7 @@ export default function ItemCommentModal({
   const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>(
     {},
   );
+  const [isFetchingTagUsers, setIsFetchingTagUsers] = useState(false);
 
   // Threading / Editing
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
@@ -196,6 +198,15 @@ export default function ItemCommentModal({
         setMentionFilter(mentionTextOrig.toLowerCase());
         setMentionHighlightIndex(0);
         setMentionIndex(atPos);
+
+        // Lazy-fetch tag users the first time @ is detected
+        if (tagUsers.length === 0 && !isFetchingTagUsers) {
+          setIsFetchingTagUsers(true);
+          getTagUsers()
+            .then((users) => setTagUsers(Array.isArray(users) ? users : []))
+            .catch((err) => console.error('Failed to fetch tag users', err))
+            .finally(() => setIsFetchingTagUsers(false));
+        }
         return;
       }
     }
@@ -203,61 +214,29 @@ export default function ItemCommentModal({
     setMentionHighlightIndex(0);
   };
 
-  const handleSelectMention = (user: User | any) => {
-    // Prefer username (no spaces) for the tag; fall back to full_name with spaces→underscores
-    const tagBase =
-      user.username ||
-      `${user.first_name || ''} ${user.last_name || ''}`
-        .trim()
-        .replace(/\s+/g, '_') ||
-      (user.full_name || '').replace(/\s+/g, '_') ||
-      user.email;
+  const handleSelectMention = (name: string) => {
+    // Use name directly as the tag (spaces → underscores for clean tags)
+    const tagBase = name.trim().replace(/\s+/g, '_');
     const tag = `@${tagBase}`;
 
     const textBefore = newCommentText.slice(0, mentionIndex);
-    // Remove @ + the full typed mention text (may include spaces for multi-word names)
     const textAfter = newCommentText.slice(
       mentionIndex + 1 + mentionFilter.length,
     );
     setNewCommentText(`${textBefore}${tag} ${textAfter.trimStart()}`);
-    setTaggedUserMap((prev) => ({ ...prev, [tag]: user.id }));
+    setTaggedUserMap((prev) => ({ ...prev, [tag]: tag }));
     setShowMentionDropdown(false);
     setMentionHighlightIndex(0);
   };
 
-  const getFilteredMentions = () => {
-    // Normalize filter: treat underscores and spaces as equivalent for matching
+  const getFilteredMentions = (): string[] => {
     const f = mentionFilter.toLowerCase();
-    const fSpaced = f.replace(/_/g, ' ');
-    const fUnderscored = f.replace(/\s+/g, '_');
-
-    let taggableUsers = [...(reduxUsers || [])];
-    if (currentUser) {
-      taggableUsers = taggableUsers.filter((u: any) => {
-        if (currentUser.id && u.id === currentUser.id) return false;
-        if (currentUser.email && u.email === currentUser.email) return false;
-        if (currentUser.username && u.username === currentUser.username)
-          return false;
-        return true;
-      });
-    }
-
-    return taggableUsers.filter((u: User) => {
-      if (!f) return true;
-      const searchTargets = [
-        (u.full_name || '').toLowerCase(),
-        (u.username || '').toLowerCase(),
-        (u.first_name || '').toLowerCase(),
-        (u.last_name || '').toLowerCase(),
-        (u.email || '').toLowerCase(),
-        // also check the combined first_last with underscore
-        `${u.first_name || ''}_${u.last_name || ''}`.toLowerCase(),
-        `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase(),
-      ];
-      return searchTargets.some(
-        (t) => t.includes(f) || t.includes(fSpaced) || t.includes(fUnderscored),
-      );
-    });
+    if (!f) return tagUsers;
+    return tagUsers.filter(
+      (name) =>
+        name.toLowerCase().includes(f) ||
+        name.toLowerCase().replace(/\s+/g, '_').includes(f),
+    );
   };
 
   const handleCommentKeyDown = (
@@ -831,22 +810,15 @@ export default function ItemCommentModal({
                               );
                             }
 
-                            return filtered.map((u: User, idx: number) => {
-                              const displayName =
-                                u.full_name ||
-                                u.username ||
-                                `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
-                                u.email;
-                              const initial = (
-                                displayName[0] || 'U'
-                              ).toUpperCase();
+                            return filtered.map((name: string, idx: number) => {
+                              const initial = (name[0] || 'U').toUpperCase();
                               const isHighlighted =
                                 idx === mentionHighlightIndex;
                               return (
                                 <button
-                                  key={u.id}
+                                  key={name}
                                   type="button"
-                                  onClick={() => handleSelectMention(u)}
+                                  onClick={() => handleSelectMention(name)}
                                   className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
                                 >
                                   <div
@@ -856,10 +828,7 @@ export default function ItemCommentModal({
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <div className="truncate font-semibold text-slate-700">
-                                      {displayName}
-                                    </div>
-                                    <div className="truncate text-[10px] text-slate-400">
-                                      {u.email}
+                                      {name}
                                     </div>
                                   </div>
                                 </button>
