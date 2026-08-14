@@ -373,7 +373,7 @@ const VendorStatusDropdown = ({
       <button
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="focus:border-mc-black focus:ring-mc-black flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 outline-hidden transition-colors hover:border-indigo-400 focus:ring-1"
+        className="hover:border-mc-gold focus:border-mc-gold flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition-colors outline-none focus:outline-none"
       >
         <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
         <ChevronDown
@@ -393,23 +393,34 @@ const VendorStatusDropdown = ({
             }}
             className="z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg"
           >
-            {statuses.map((s) => (
-              <button
-                key={s}
-                className={`w-full px-3 py-2 text-left transition-colors ${
-                  currentStatus === s
-                    ? 'text-mc-black bg-slate-100/50 font-bold'
-                    : 'font-medium text-slate-700 hover:bg-slate-50'
-                }`}
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  onUpdate(poId, s);
-                  setIsOpen(false);
-                }}
-              >
-                {s.replace(/_/g, ' ')}
-              </button>
-            ))}
+            {statuses.map((s) => {
+              const isDisabled = s === 'PARTIALLY_SHIPPED' || s === 'SHIPPED';
+              return (
+                <button
+                  key={s}
+                  disabled={isDisabled}
+                  className={`w-full px-3 py-2 text-left transition-colors ${
+                    isDisabled
+                      ? 'cursor-not-allowed text-slate-400 opacity-50'
+                      : ''
+                  } ${
+                    !isDisabled && currentStatus === s
+                      ? 'text-mc-black bg-slate-100/50 font-bold'
+                      : !isDisabled
+                        ? 'font-medium text-slate-700 hover:bg-slate-50'
+                        : ''
+                  }`}
+                  onClick={(e: any) => {
+                    if (isDisabled) return;
+                    e.stopPropagation();
+                    onUpdate(poId, s);
+                    setIsOpen(false);
+                  }}
+                >
+                  {s.replace(/_/g, ' ')}
+                </button>
+              );
+            })}
           </div>,
           document.body,
         )}
