@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, UserPlus, Loader2, ChevronDown } from 'lucide-react';
+import { X, UserPlus, Loader2, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createUser, updateUser } from '../services/user.service';
 import { fetchVendorsPage } from '../../../store/vendorSlice';
@@ -198,6 +198,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
   const [warehousesLoading, setWarehousesLoading] = useState(
     user?.role === 'warehouse',
@@ -603,22 +604,41 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
             <label className="text-mc-black mb-1 block text-xs font-semibold">
               Password {!user && <span className="text-rose-500">*</span>}
             </label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              value={formData.password}
-              onChange={(e) => {
-                setFormData((p) => ({ ...p, password: e.target.value }));
-                if (errors.password)
-                  setErrors((p) => ({ ...p, password: undefined }));
-              }}
-              placeholder={
-                user
-                  ? 'Leave blank to keep unchanged'
-                  : 'Create a strong password'
-              }
-              className={`bg-mc-white w-full border px-3 py-2 text-sm ${errors.password ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark focus:border-mc-gold focus:ring-mc-gold'} rounded-lg transition-colors focus:ring-1 focus:outline-none`}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                value={formData.password}
+                onChange={(e) => {
+                  setFormData((p) => ({ ...p, password: e.target.value }));
+                  if (errors.password)
+                    setErrors((p) => ({ ...p, password: undefined }));
+                }}
+                placeholder={
+                  user
+                    ? 'Leave blank to keep unchanged'
+                    : 'Create a strong password'
+                }
+                className={`bg-mc-white w-full border py-2 pr-10 pl-3 text-sm ${
+                  errors.password
+                    ? 'border-rose-300 focus:ring-rose-500'
+                    : 'border-mc-beige-dark focus:border-mc-gold focus:ring-mc-gold'
+                } rounded-lg transition-colors focus:ring-1 focus:outline-none`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="text-mc-gray-soft hover:text-mc-black absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p className="mt-1 text-[10px] font-medium text-rose-500">
                 {errors.password}
