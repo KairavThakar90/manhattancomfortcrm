@@ -160,6 +160,18 @@ export async function updatePOStatus(id: string, status: string): Promise<any> {
   return data;
 }
 
+/** Update purchase order delay reason */
+export async function updatePODelayReason(
+  id: string,
+  delayReason: string,
+): Promise<any> {
+  const cleanId = id.replace(/^PO-/i, '');
+  const { data } = await apiClient.patch(PO_STATUS_UPDATE(cleanId), {
+    delay_reason: delayReason,
+  });
+  return data;
+}
+
 /** Delete a purchase order by ID */
 export async function deletePurchaseOrder(id: string): Promise<void> {
   await apiClient.delete(PO_DELETE(id));

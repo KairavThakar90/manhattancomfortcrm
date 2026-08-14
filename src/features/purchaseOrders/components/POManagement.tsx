@@ -68,6 +68,7 @@ import {
   updatePurchaseOrder,
   patchPurchaseOrder,
   updatePOStatus,
+  updatePODelayReason,
 } from '../services/purchaseOrder.service';
 import {
   getTagUsers,
@@ -112,7 +113,23 @@ const ReasonCell = ({
   onSave: (poId: string, value: string) => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [text, setText] = useState(po.reason || '');
+  const currentReason = po.delay_reason || po.reason || '';
+
+  const checkIsInvoiceDelayed = () => {
+    if (po.is_invoice_delayed) return true;
+    const invoiceDate = po.invoice_date || po.invoiceDetails?.date;
+    const createdOn = po.created_on || po.creationDate;
+    if (invoiceDate) return false;
+    if (!createdOn || createdOn === 'N/A') return false;
+    const diffDays = Math.floor(
+      (new Date().getTime() - new Date(createdOn).getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+    return diffDays > 10;
+  };
+
+  const isDelayed = checkIsInvoiceDelayed();
+  const [text, setText] = useState(currentReason);
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{
@@ -129,9 +146,9 @@ const ReasonCell = ({
 
   useEffect(() => {
     if (!isEditing) {
-      setText(po.reason || '');
+      setText(currentReason);
     }
-  }, [po.reason, isEditing]);
+  }, [currentReason, isEditing]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -142,12 +159,12 @@ const ReasonCell = ({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsEditing(false);
-        setText(po.reason || '');
+        setText(currentReason);
       }
     };
     if (isEditing) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isEditing, po.reason]);
+  }, [isEditing, currentReason]);
 
   const toggleEdit = (e: any) => {
     e.stopPropagation();
@@ -187,7 +204,7 @@ const ReasonCell = ({
   const handleCancel = (e?: any) => {
     e?.stopPropagation();
     setIsEditing(false);
-    setText(po.reason || '');
+    setText(currentReason);
   };
 
   return (
@@ -199,19 +216,23 @@ const ReasonCell = ({
       >
         <span
           className="truncate text-[11px] text-slate-600"
-          title={po.reason || ''}
+          title={currentReason}
         >
-          {po.reason || ''}
+          {currentReason}
         </span>
-        {!po.reason ? (
-          <button
-            onClick={toggleEdit}
-            className="hover:text-mc-black ml-1 px-1 text-slate-300 transition-colors"
-            title="Add Reason"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        ) : (
+        {!currentReason ? (
+          isDelayed ? (
+            <button
+              onClick={toggleEdit}
+              className="hover:text-mc-black ml-1 px-1 text-slate-300 transition-colors"
+              title="Add Reason"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <span className="ml-1 px-1 text-slate-300">-</span>
+          )
+        ) : isDelayed ? (
           <button
             onClick={toggleEdit}
             className="hover:text-mc-black ml-1 px-1 text-slate-400 opacity-0 transition-opacity group-hover/reason:opacity-100"
@@ -219,7 +240,7 @@ const ReasonCell = ({
           >
             <Pencil className="h-3 w-3" />
           </button>
-        )}
+        ) : null}
       </div>
 
       {isEditing &&
@@ -2400,12 +2421,12 @@ Supply Chain CRM Coordinator`;
   };
 
   const handleReasonUpdate = (poId: string, value: string) => {
-    const cleanId = poId.replace(/^PO-/i, '');
-    patchPurchaseOrder(cleanId, { reason: value })
+    // Determine current status if we wanted to pass it, but endpoint permits omitting it for pure reason update.
+    updatePODelayReason(poId, value)
       .then(() => {
         const updatedPOs = purchaseOrders.map((p) =>
           p.id === poId || (p as any).uuid === poId
-            ? { ...p, reason: value }
+            ? { ...p, delay_reason: value, reason: value }
             : p,
         );
         dispatch(setPurchaseOrdersList(updatedPOs));
@@ -2833,8 +2854,8 @@ Supply Chain CRM Coordinator`;
         },
       },
       {
-        header: 'Reason',
-        accessor: 'reason',
+        header: 'Reason for Delayed',
+        accessor: 'delay_reason',
         headerClassName: 'px-6 py-4',
         className: 'px-6 py-4 min-w-[150px]',
         render: (po: any) => <ReasonCell po={po} onSave={handleReasonUpdate} />,

@@ -62,6 +62,8 @@ export interface PurchaseOrder {
   items: POItem[];
   productionStage: ProductionStage;
   vendor_status?: string;
+  delay_reason?: string;
+  reason?: string;
   commentsCount: number;
   emailCount: number;
   containerLeadTimeDays?: number | null;

@@ -326,6 +326,7 @@ export default function POManagementPage() {
                 po.lead_time ||
                 null,
               delayedDays: po.delayedDays || 0,
+              delay_reason: po.delay_reason || po.reason || null,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
                 ? po.items.map((item) => ({
