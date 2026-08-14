@@ -66,6 +66,7 @@ import {
   postItemComment,
   updateItemComment,
   updatePurchaseOrder,
+  patchPurchaseOrder,
   updatePOStatus,
 } from '../services/purchaseOrder.service';
 import {
@@ -102,6 +103,169 @@ interface DataTableProps {
   pagination?: React.ReactNode;
 }
 const TypedDataTable = DataTable as React.FC<DataTableProps>;
+
+const ReasonCell = ({
+  po,
+  onSave,
+}: {
+  po: any;
+  onSave: (poId: string, value: string) => void;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [text, setText] = useState(po.reason || '');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number | 'auto';
+    bottom: number | 'auto';
+    right: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    bottom: 'auto',
+    right: 'auto',
+  });
+
+  useEffect(() => {
+    if (!isEditing) {
+      setText(po.reason || '');
+    }
+  }, [po.reason, isEditing]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node) &&
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setIsEditing(false);
+        setText(po.reason || '');
+      }
+    };
+    if (isEditing) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditing, po.reason]);
+
+  const toggleEdit = (e: any) => {
+    e.stopPropagation();
+    if (!isEditing && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const popoverHeight = 180; // approximate
+      const popoverWidth = 280; // fixed width
+
+      const spaceBelow = window.innerHeight - rect.bottom;
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < popoverHeight && rect.top > popoverHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
+      let left: number | 'auto' = rect.left;
+      let right: number | 'auto' = 'auto';
+
+      if (rect.left + popoverWidth > window.innerWidth) {
+        left = 'auto';
+        right = window.innerWidth - rect.right;
+      }
+
+      setCoords({ top, left, bottom, right });
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleSave = (e?: any) => {
+    e?.stopPropagation();
+    onSave(po.id, text);
+    setIsEditing(false);
+  };
+
+  const handleCancel = (e?: any) => {
+    e?.stopPropagation();
+    setIsEditing(false);
+    setText(po.reason || '');
+  };
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className="group/reason flex max-w-[150px] items-center gap-1"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span
+          className="truncate text-[11px] text-slate-600"
+          title={po.reason || ''}
+        >
+          {po.reason || ''}
+        </span>
+        {!po.reason ? (
+          <button
+            onClick={toggleEdit}
+            className="hover:text-mc-black ml-1 px-1 text-slate-300 transition-colors"
+            title="Add Reason"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        ) : (
+          <button
+            onClick={toggleEdit}
+            className="hover:text-mc-black ml-1 px-1 text-slate-400 opacity-0 transition-opacity group-hover/reason:opacity-100"
+            title="Edit Reason"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      {isEditing &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              left: coords.left,
+              bottom: coords.bottom,
+              right: coords.right,
+              zIndex: 9999,
+              width: 280,
+            }}
+            className="animate-in fade-in zoom-in-95 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <textarea
+              autoFocus
+              rows={3}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Enter reason..."
+              className="focus:border-mc-black w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-700 outline-hidden transition-colors focus:bg-white"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={handleCancel}
+                className="rounded-md px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="bg-mc-black flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-black"
+              >
+                <Check className="h-3.5 w-3.5" /> Save
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
 
 const VendorStatusDropdown = ({
   poId,
@@ -2235,6 +2399,24 @@ Supply Chain CRM Coordinator`;
       });
   };
 
+  const handleReasonUpdate = (poId: string, value: string) => {
+    const cleanId = poId.replace(/^PO-/i, '');
+    patchPurchaseOrder(cleanId, { reason: value })
+      .then(() => {
+        const updatedPOs = purchaseOrders.map((p) =>
+          p.id === poId || (p as any).uuid === poId
+            ? { ...p, reason: value }
+            : p,
+        );
+        dispatch(setPurchaseOrdersList(updatedPOs));
+        toast.success('Reason updated successfully');
+      })
+      .catch((err) => {
+        console.error('Failed to update reason:', err);
+        toast.error('Failed to update reason');
+      });
+  };
+
   const poColumns = React.useMemo(
     () => [
       {
@@ -2649,6 +2831,13 @@ Supply Chain CRM Coordinator`;
             </span>
           );
         },
+      },
+      {
+        header: 'Reason',
+        accessor: 'reason',
+        headerClassName: 'px-6 py-4',
+        className: 'px-6 py-4 min-w-[150px]',
+        render: (po: any) => <ReasonCell po={po} onSave={handleReasonUpdate} />,
       },
       ...(['Vendor', 'Administrator'].includes(userRole)
         ? [
