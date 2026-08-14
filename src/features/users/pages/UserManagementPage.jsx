@@ -124,8 +124,8 @@ export default function UserManagementPage() {
       {
         header: 'Name',
         accessor: 'name',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[220px]',
-        className: 'px-6 py-3 font-semibold text-mc-black text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
+        className: 'px-6 py-3 w-1/4 font-semibold text-mc-black text-sm',
         render: (u) =>
           u.full_name ||
           `${u.first_name || ''} ${u.last_name || ''}`.trim() ||
@@ -134,14 +134,14 @@ export default function UserManagementPage() {
       {
         header: 'Email',
         accessor: 'email',
-        headerClassName: 'px-6 py-3 bg-transparent text-left',
-        className: 'px-6 py-3 text-mc-gray-soft text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
+        className: 'px-6 py-3 w-1/4 text-mc-gray-soft text-sm',
       },
       {
         header: 'Role',
         accessor: 'role',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[160px]',
-        className: 'px-6 py-3 w-[160px]',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-1/4',
+        className: 'px-6 py-3 w-1/4',
         render: (u) => (
           <span className="border-mc-beige-dark bg-mc-beige-light text-mc-black inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase">
             {u.role || 'User'}
@@ -151,8 +151,8 @@ export default function UserManagementPage() {
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-3 bg-transparent text-center w-[110px]',
-        className: 'px-6 py-3 w-[110px] text-center',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-1/4',
+        className: 'px-6 py-3 w-1/4 text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
             <button
@@ -274,7 +274,7 @@ export default function UserManagementPage() {
             tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
             tableWrapperRef={userTableRef}
             theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
-            tableClassName="w-full text-left text-xs border-collapse"
+            tableClassName="w-full table-fixed text-left text-xs border-collapse"
             tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
             trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
             emptyMessage={
