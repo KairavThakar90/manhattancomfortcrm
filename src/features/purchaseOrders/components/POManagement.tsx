@@ -830,6 +830,7 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
         <span className="font-mono font-medium">
           {Number(initialQty).toLocaleString()}
         </span>
+        {/* Temporarily hidden pencil icon
         {isAdmin && (
           <button
             title="Edit Ordered Quantity"
@@ -839,6 +840,7 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
             <Pencil className="h-3.5 w-3.5" />
           </button>
         )}
+        */}
       </div>
     );
   }
