@@ -4178,60 +4178,76 @@ Supply Chain CRM Coordinator`;
                               units
                             </strong>
                           </div>
-                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
-                            <label className="mb-1 block text-[10px] font-medium text-slate-400">
-                              Enter lead days for po order
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="number"
-                                value={leadTimeDays}
-                                onChange={(e) =>
-                                  setLeadTimeDays(e.target.value)
-                                }
-                                className="focus:border-mc-black focus:ring-mc-black w-full rounded border border-slate-200 bg-white px-2 py-1 font-mono text-sm font-bold text-slate-800 focus:ring-1 focus:outline-none"
-                                placeholder="0"
-                              />
-                              <button
-                                onClick={async () => {
-                                  if (!leadTimeDays) return;
-                                  try {
-                                    await updatePOLeadTime(
-                                      selectedPO.id.replace(/^PO-/i, ''),
-                                      Number(leadTimeDays),
-                                    );
-                                    const updatedPOs = purchaseOrders.map(
-                                      (p: any) =>
-                                        p.id === selectedPO.id ||
-                                        p.uuid === selectedPO.uuid
-                                          ? {
-                                              ...p,
-                                              containerLeadTimeDays:
-                                                Number(leadTimeDays),
-                                            }
-                                          : p,
-                                    );
-                                    dispatch(setPurchaseOrdersList(updatedPOs));
-                                    onAddActivity(
-                                      `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
-                                      'PO Updated',
-                                    );
-                                    toast.success(
-                                      'Lead time updated successfully!',
-                                    );
-                                  } catch (error) {
-                                    console.error(error);
-                                    toast.error('Failed to update lead time.');
+                          {String(userRole).toLowerCase() === 'administrator' ||
+                          String(userRole).toLowerCase() === 'office' ? (
+                            <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                              <label className="mb-1 block text-[10px] font-medium text-slate-400">
+                                Enter lead days for po order
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  value={leadTimeDays}
+                                  onChange={(e) =>
+                                    setLeadTimeDays(e.target.value)
                                   }
-                                }}
-                                className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 rounded px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors hover:shadow-sm"
-                              >
-                                {selectedPO.containerLeadTimeDays
-                                  ? 'Update'
-                                  : 'Save'}
-                              </button>
+                                  className="focus:border-mc-black focus:ring-mc-black w-full rounded border border-slate-200 bg-white px-2 py-1 font-mono text-sm font-bold text-slate-800 focus:ring-1 focus:outline-none"
+                                  placeholder="0"
+                                />
+                                <button
+                                  onClick={async () => {
+                                    if (!leadTimeDays) return;
+                                    try {
+                                      await updatePOLeadTime(
+                                        selectedPO.id.replace(/^PO-/i, ''),
+                                        Number(leadTimeDays),
+                                      );
+                                      const updatedPOs = purchaseOrders.map(
+                                        (p: any) =>
+                                          p.id === selectedPO.id ||
+                                          p.uuid === selectedPO.uuid
+                                            ? {
+                                                ...p,
+                                                containerLeadTimeDays:
+                                                  Number(leadTimeDays),
+                                              }
+                                            : p,
+                                      );
+                                      dispatch(
+                                        setPurchaseOrdersList(updatedPOs),
+                                      );
+                                      onAddActivity(
+                                        `Updated Lead Time for ${selectedPO.id} to ${leadTimeDays} days`,
+                                        'PO Updated',
+                                      );
+                                      toast.success(
+                                        'Lead time updated successfully!',
+                                      );
+                                    } catch (error) {
+                                      console.error(error);
+                                      toast.error(
+                                        'Failed to update lead time.',
+                                      );
+                                    }
+                                  }}
+                                  className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 rounded px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors hover:shadow-sm"
+                                >
+                                  {selectedPO.containerLeadTimeDays
+                                    ? 'Update'
+                                    : 'Save'}
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                              <span className="block text-[10px] font-medium text-slate-400">
+                                Lead Days
+                              </span>
+                              <strong className="font-mono text-sm font-bold text-slate-800">
+                                {selectedPO.containerLeadTimeDays || 0} days
+                              </strong>
+                            </div>
+                          )}
                           {/* <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                           <span className="text-[10px] text-slate-400 font-medium block">
                             Container IDs
