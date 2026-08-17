@@ -47,3 +47,42 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #c9963a;
 }
+
+/* Custom Toastify Overrides */
+.Toastify__toast {
+  border-radius: 12px !important;
+  min-height: 48px !important;
+  padding: 12px 14px !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  font-family: var(--font-sans) !important;
+  max-width: 380px !important;
+  width: max-content !important;
+  margin: 16px auto !important;
+}
+
+@media (min-width: 640px) {
+  .Toastify__toast {
+    margin: 16px 16px 16px auto !important;
+  }
+}
+
+.Toastify__toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+.Toastify__close-button {
+  align-self: center !important;
+  color: #94a3b8 !important;
+}
+.Toastify__toast-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
