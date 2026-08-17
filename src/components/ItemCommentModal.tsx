@@ -95,7 +95,12 @@ export default function ItemCommentModal({
       setActiveItem(targetItem);
       // Reset ALL mention state fresh on each open / item switch
       setTagUsers([]);
-      setIsFetchingTagUsers(false);
+      setIsFetchingTagUsers(true);
+      getTagUsers()
+        .then((users) => setTagUsers(Array.isArray(users) ? users : []))
+        .catch(() => {})
+        .finally(() => setIsFetchingTagUsers(false));
+
       setShowMentionDropdown(false);
       setMentionFilter('');
       setMentionIndex(0);
@@ -282,7 +287,15 @@ export default function ItemCommentModal({
       .filter((w) => w.startsWith('@'))
       .map((w) => {
         const cleanW = w.replace(/[.,!?;:]+$/, '');
-        return taggedUserMap[cleanW];
+        if (taggedUserMap[cleanW]) return taggedUserMap[cleanW];
+
+        // Fallback: search in fetched tagUsers
+        const found = tagUsers.find((u: any) => {
+          const name = typeof u === 'string' ? u : u.name || '';
+          const tagBase = name.trim().replace(/\s+/g, '_');
+          return `@${tagBase}`.toLowerCase() === cleanW.toLowerCase();
+        });
+        return found ? (typeof found === 'string' ? found : found.id) : null;
       })
       .filter(Boolean);
 
@@ -376,7 +389,15 @@ export default function ItemCommentModal({
       .filter((w) => w.startsWith('@'))
       .map((w) => {
         const cleanW = w.replace(/[.,!?;:]+$/, '');
-        return taggedUserMap[cleanW];
+        if (taggedUserMap[cleanW]) return taggedUserMap[cleanW];
+
+        // Fallback: search in fetched tagUsers
+        const found = tagUsers.find((u: any) => {
+          const name = typeof u === 'string' ? u : u.name || '';
+          const tagBase = name.trim().replace(/\s+/g, '_');
+          return `@${tagBase}`.toLowerCase() === cleanW.toLowerCase();
+        });
+        return found ? (typeof found === 'string' ? found : found.id) : null;
       })
       .filter(Boolean);
 

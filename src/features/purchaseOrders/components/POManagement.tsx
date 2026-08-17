@@ -902,6 +902,17 @@ export default function POManagement({
   const [deepLinkItemId, setDeepLinkItemId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Eagerly fetch tag users for proper ID mapping during edits
+    if (tagUsers.length === 0 && !isFetchingTagUsers) {
+      setIsFetchingTagUsers(true);
+      getTagUsers()
+        .then((users) => setTagUsers(Array.isArray(users) ? users : []))
+        .catch(() => {})
+        .finally(() => setIsFetchingTagUsers(false));
+    }
+  }, []);
+
+  useEffect(() => {
     if (deepLinkItemId) {
       let foundItem = null;
 
@@ -2133,7 +2144,15 @@ Supply Chain CRM Coordinator`;
       .filter((w) => w.startsWith('@'))
       .map((w) => {
         const cleanW = w.replace(/[.,!?;:]+$/, '');
-        return taggedUserMap[cleanW];
+        if (taggedUserMap[cleanW]) return taggedUserMap[cleanW];
+
+        // Fallback: search in fetched tagUsers
+        const found = tagUsers.find((u: any) => {
+          const name = typeof u === 'string' ? u : u.name || '';
+          const tagBase = name.trim().replace(/\s+/g, '_');
+          return `@${tagBase}`.toLowerCase() === cleanW.toLowerCase();
+        });
+        return found ? (typeof found === 'string' ? found : found.id) : null;
       })
       .filter(Boolean);
 
@@ -2215,7 +2234,15 @@ Supply Chain CRM Coordinator`;
       .filter((w) => w.startsWith('@'))
       .map((w) => {
         const cleanW = w.replace(/[.,!?;:]+$/, '');
-        return taggedUserMap[cleanW];
+        if (taggedUserMap[cleanW]) return taggedUserMap[cleanW];
+
+        // Fallback: search in fetched tagUsers
+        const found = tagUsers.find((u: any) => {
+          const name = typeof u === 'string' ? u : u.name || '';
+          const tagBase = name.trim().replace(/\s+/g, '_');
+          return `@${tagBase}`.toLowerCase() === cleanW.toLowerCase();
+        });
+        return found ? (typeof found === 'string' ? found : found.id) : null;
       })
       .filter(Boolean);
 
@@ -2780,7 +2807,7 @@ Supply Chain CRM Coordinator`;
             className="group flex cursor-pointer items-center gap-1 select-none"
             onClick={() => handleSort('invoiceDelayStatus' as any)}
           >
-            <span>Invoice Status</span>
+            <span>PO Approved Date</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
