@@ -1155,40 +1155,40 @@ export default function ContainerFlowPage() {
         headerClassName: 'px-4 py-3 select-none group',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
-      {
-        header: (
-          <div
-            className="flex cursor-pointer items-center justify-center gap-1"
-            onClick={() => handleListSort('is_received')}
-          >
-            <span>Shipping Status</span>
-            <span className="group-hover:text-mc-black text-slate-400">
-              {listSortConfig.key === 'is_received' ? (
-                listSortConfig.direction === 'asc' ? (
-                  <ArrowUp className="h-3 w-3" />
-                ) : (
-                  <ArrowDown className="h-3 w-3" />
-                )
-              ) : (
-                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
-              )}
-            </span>
-          </div>
-        ),
-        accessor: 'is_received',
-        headerClassName: 'px-4 py-3 text-center select-none group',
-        className: 'px-4 py-4 text-center',
-        render: (c) =>
-          c.is_received ? (
-            <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
-              <CheckCircle2 className="h-3 w-3" /> Yes
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
-              No
-            </span>
-          ),
-      },
+      // {
+      //   header: (
+      //     <div
+      //       className="flex cursor-pointer items-center justify-center gap-1"
+      //       onClick={() => handleListSort('is_received')}
+      //     >
+      //       <span>Shipping Status</span>
+      //       <span className="group-hover:text-mc-black text-slate-400">
+      //         {listSortConfig.key === 'is_received' ? (
+      //           listSortConfig.direction === 'asc' ? (
+      //             <ArrowUp className="h-3 w-3" />
+      //           ) : (
+      //             <ArrowDown className="h-3 w-3" />
+      //           )
+      //         ) : (
+      //           <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+      //         )}
+      //       </span>
+      //     </div>
+      //   ),
+      //   accessor: 'is_received',
+      //   headerClassName: 'px-4 py-3 text-center select-none group',
+      //   className: 'px-4 py-4 text-center',
+      //   render: (c) =>
+      //     c.is_received ? (
+      //       <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
+      //         <CheckCircle2 className="h-3 w-3" /> Yes
+      //       </span>
+      //     ) : (
+      //       <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
+      //         No
+      //       </span>
+      //     ),
+      // },
       {
         header: (
           <div

@@ -2905,7 +2905,7 @@ Supply Chain CRM Coordinator`;
             className="group flex cursor-pointer items-center gap-1 select-none"
             onClick={() => handleSort('invoiceDelayStatus' as any)}
           >
-            <span>Invoice Status</span>
+            <span>Approved PO</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
