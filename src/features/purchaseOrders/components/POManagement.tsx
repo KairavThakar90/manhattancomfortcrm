@@ -2788,12 +2788,14 @@ Supply Chain CRM Coordinator`;
             ? po.customer[0]
             : po.customer;
 
-          if (cust && (cust.first_name || cust.last_name)) {
-            customerName =
-              `${cust.first_name || ''} ${cust.last_name || ''}`.trim();
-          } else if (po.first_name || po.last_name) {
-            customerName =
-              `${po.first_name || ''} ${po.last_name || ''}`.trim();
+          if (cust && cust.last_name) {
+            customerName = cust.last_name.trim();
+          } else if (cust && cust.first_name) {
+            customerName = cust.first_name.trim();
+          } else if (po.last_name) {
+            customerName = po.last_name.trim();
+          } else if (po.first_name) {
+            customerName = po.first_name.trim();
           } else if (po.customerName || po.customer_name) {
             customerName = po.customerName || po.customer_name;
           } else if (cust && (cust.customer_name || cust.name)) {

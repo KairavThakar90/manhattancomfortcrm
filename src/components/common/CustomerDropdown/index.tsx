@@ -65,10 +65,16 @@ export default function CustomerDropdown({
   const formatName = (item: any) => {
     if (!item) return 'Unnamed';
     const c = item.customer || item;
-    if (c.first_name || c.last_name) {
-      return `${c.first_name || ''} ${c.last_name || ''}`.trim();
+    if (c.last_name) {
+      return c.last_name.trim();
     }
-    return c.customer_name || c.name || 'Unnamed';
+    if (c.first_name) {
+      return c.first_name.trim();
+    }
+    if (c.customer_name) {
+      return c.customer_name;
+    }
+    return c.name || 'Unnamed';
   };
 
   const getCustId = (item: any) => {
