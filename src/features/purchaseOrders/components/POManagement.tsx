@@ -2768,7 +2768,7 @@ Supply Chain CRM Coordinator`;
             onClick={() => handleSort('invoiceDate')}
           >
             <div className="flex flex-col">
-              <span>Invoice Date</span>
+              <span>PO Approved Date</span>
               <span className="text-[9px] text-slate-400 normal-case">
                 (YYYY-MM-DD)
               </span>
@@ -2807,7 +2807,7 @@ Supply Chain CRM Coordinator`;
             className="group flex cursor-pointer items-center gap-1 select-none"
             onClick={() => handleSort('invoiceDelayStatus' as any)}
           >
-            <span>PO Approved Date</span>
+            <span>Invoice Status</span>
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
