@@ -90,22 +90,22 @@ export async function deleteUser(id: string): Promise<void> {
 }
 
 /** Fetch taggable users (names only) for @mention in comments */
-export async function getTagUsers(): Promise<string[]> {
+export async function getTagUsers(): Promise<any[]> {
   const { data } = await apiClient.get<any[]>(USERS_TAG);
   if (!Array.isArray(data)) return [];
   return data
     .map((item) => {
       // API may return plain strings or User objects — normalize to display name
-      if (typeof item === 'string') return item;
-      return (
+      if (typeof item === 'string') return { id: item, name: item };
+      const name =
         item.full_name ||
         `${item.first_name || ''} ${item.last_name || ''}`.trim() ||
         item.username ||
         item.email ||
-        ''
-      );
+        '';
+      return { id: item.id || '', name };
     })
-    .filter(Boolean);
+    .filter((u) => Boolean(u.name));
 }
 
 export async function getUserActivities(params?: {

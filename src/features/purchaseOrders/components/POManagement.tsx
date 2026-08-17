@@ -886,7 +886,7 @@ export default function POManagement({
   );
 
   // Mention Tagging State
-  const [tagUsers, setTagUsers] = useState<string[]>([]);
+  const [tagUsers, setTagUsers] = useState<any[]>([]);
   const [isFetchingTagUsers, setIsFetchingTagUsers] = useState(false);
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -2073,7 +2073,9 @@ Supply Chain CRM Coordinator`;
     setMentionHighlightIndex(0);
   };
 
-  const handleSelectMention = (name: string) => {
+  const handleSelectMention = (userObj: any) => {
+    const name = typeof userObj === 'string' ? userObj : userObj.name || '';
+    const id = typeof userObj === 'string' ? userObj : userObj.id || '';
     // Use name directly as the tag (spaces → underscores for clean tags)
     const tagBase = name.trim().replace(/\s+/g, '_');
     const tag = `@${tagBase}`;
@@ -2084,19 +2086,21 @@ Supply Chain CRM Coordinator`;
     );
 
     setNewCommentText(`${textBefore}${tag} ${textAfter.trimStart()}`);
-    setTaggedUserMap((prev) => ({ ...prev, [tag]: tag }));
+    setTaggedUserMap((prev) => ({ ...prev, [tag]: id }));
     setShowMentionDropdown(false);
     setMentionHighlightIndex(0);
   };
 
-  const getFilteredMentions = (): string[] => {
+  const getFilteredMentions = (): any[] => {
     const f = mentionFilter.toLowerCase();
     if (!f) return tagUsers;
-    return tagUsers.filter(
-      (name) =>
+    return tagUsers.filter((u) => {
+      const name = typeof u === 'string' ? u : u.name || '';
+      return (
         name.toLowerCase().includes(f) ||
-        name.toLowerCase().replace(/\s+/g, '_').includes(f),
-    );
+        name.toLowerCase().replace(/\s+/g, '_').includes(f)
+      );
+    });
   };
 
   const handleCommentKeyDown = (
@@ -4694,7 +4698,11 @@ Supply Chain CRM Coordinator`;
                                     }
 
                                     return filtered.map(
-                                      (name: string, idx: number) => {
+                                      (userObj: any, idx: number) => {
+                                        const name =
+                                          typeof userObj === 'string'
+                                            ? userObj
+                                            : userObj.name || '';
                                         const initial = (
                                           name[0] || 'U'
                                         ).toUpperCase();
@@ -4702,10 +4710,14 @@ Supply Chain CRM Coordinator`;
                                           idx === mentionHighlightIndex;
                                         return (
                                           <button
-                                            key={name}
+                                            key={
+                                              typeof userObj === 'string'
+                                                ? userObj
+                                                : userObj.id
+                                            }
                                             type="button"
                                             onClick={() =>
-                                              handleSelectMention(name)
+                                              handleSelectMention(userObj)
                                             }
                                             className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${isHighlighted ? 'bg-mc-gold/10 border-mc-gold border-l-2' : 'hover:bg-slate-50'}`}
                                           >
