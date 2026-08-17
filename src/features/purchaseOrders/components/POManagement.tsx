@@ -786,6 +786,100 @@ interface POManagementProps {
   onActiveSubTabChange?: (tab: 'grid' | 'kanban' | 'calendar') => void;
 }
 
+const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
+  const [val, setVal] = useState(initialQty);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state if initialQty changes from outside (e.g., successful refresh)
+  useEffect(() => {
+    setVal(initialQty);
+  }, [initialQty]);
+
+  const handleSave = async (e: any) => {
+    e.stopPropagation();
+    if (val === initialQty || val === '') {
+      setIsEditing(false);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await onSave(item.sku || item.id, Number(val));
+      setIsEditing(false);
+    } catch {
+      setVal(initialQty);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = (e: any) => {
+    e.stopPropagation();
+    setVal(initialQty);
+    setIsEditing(false);
+  };
+
+  const isAdmin = String(userRole).toLowerCase() === 'administrator';
+
+  if (!isEditing || !isAdmin) {
+    return (
+      <div
+        className="group flex items-center justify-end gap-2"
+        onClick={(e) => (isAdmin ? e.stopPropagation() : undefined)}
+      >
+        <span className="font-mono font-medium">
+          {Number(initialQty).toLocaleString()}
+        </span>
+        {isAdmin && (
+          <button
+            title="Edit Ordered Quantity"
+            onClick={() => setIsEditing(true)}
+            className="hover:text-mc-black text-slate-300 transition-colors"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center justify-end gap-1.5"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <input
+        type="number"
+        value={val}
+        autoFocus
+        onChange={(e) => setVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleSave(e);
+          if (e.key === 'Escape') handleCancel(e);
+        }}
+        className="focus:border-mc-black focus:ring-mc-black w-[60px] rounded border border-slate-200 bg-white px-1.5 py-1 text-right font-mono text-[11px] font-bold text-slate-800 transition focus:ring-1 focus:outline-none"
+        min="0"
+      />
+      <div className="flex gap-1">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="bg-mc-gold rounded px-2 py-1 text-[10px] font-bold text-white shadow-sm transition hover:bg-yellow-600 disabled:opacity-50"
+        >
+          {isSaving ? '...' : 'Save'}
+        </button>
+        <button
+          onClick={handleCancel}
+          disabled={isSaving}
+          className="rounded bg-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-300 disabled:opacity-50"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function POManagement({
   loading = false,
   purchaseOrders: propPurchaseOrders,
@@ -3125,6 +3219,52 @@ Supply Chain CRM Coordinator`;
     ],
   );
 
+  const handleUpdateItemQty = React.useCallback(
+    async (sku: string, newQty: number) => {
+      if (!selectedPOId) return;
+      try {
+        await patchPurchaseOrder(selectedPOId.replace(/^PO-/i, ''), {
+          items: [{ sku, qty: newQty } as any],
+        });
+        toast.success('Ordered Quantity updated successfully.');
+        onAddActivity(
+          `Updated Ordered Quantity for SKU ${sku} to ${newQty}`,
+          'PO Updated',
+        );
+
+        const targetPo = purchaseOrders.find(
+          (p: any) => p.id === selectedPOId || p.uuid === selectedPOId,
+        );
+        if (targetPo) {
+          const newItems = targetPo.items.map((it: any) =>
+            it.sku === sku || it.id === sku
+              ? { ...it, qty: newQty, qty_ordered: newQty, orderedQty: newQty }
+              : it,
+          );
+          const updatedPo = {
+            ...targetPo,
+            items: newItems,
+            orderedQty: newItems.reduce(
+              (acc: number, it: any) => acc + (it.qty || it.qty_ordered || 0),
+              0,
+            ),
+          };
+          dispatch(
+            setPurchaseOrdersList(
+              purchaseOrders.map((p: any) =>
+                p.id === updatedPo.id ? updatedPo : p,
+              ),
+            ),
+          );
+        }
+      } catch (error) {
+        toast.error('Failed to update Ordered Quantity.');
+        throw error;
+      }
+    },
+    [selectedPOId, purchaseOrders, dispatch],
+  );
+
   const poItemColumns = React.useMemo(
     () => [
       {
@@ -3197,11 +3337,19 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Ordered Qty',
         accessor: 'qty',
-        headerClassName: 'px-3 py-2  text-right',
-        className: 'px-3 py-2 text-right font-mono font-medium',
+        headerClassName: 'px-3 py-2 text-right',
+        className: 'px-3 py-2 pr-4', // Provide some padding for the inline editor
         render: (item: any) => {
           const qty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
-          return Number(qty).toLocaleString();
+          return (
+            <InlineQtyEditor
+              item={item}
+              initialQty={qty}
+              poId={selectedPOId}
+              onSave={handleUpdateItemQty}
+              userRole={userRole}
+            />
+          );
         },
       },
       {

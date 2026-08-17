@@ -542,9 +542,8 @@ export default function ContainerDetailsModal({
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
                           Door
                         </label>
-                        <input
-                          type="text"
-                          disabled={
+                        <Select
+                          isDisabled={
                             String(
                               localStorage.getItem('userRole'),
                             ).toLowerCase() !== 'warehouse' &&
@@ -552,21 +551,101 @@ export default function ContainerDetailsModal({
                               localStorage.getItem('userRole'),
                             ).toLowerCase() !== 'administrator'
                           }
-                          className={`w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition-colors focus:outline-none ${
-                            String(
-                              localStorage.getItem('userRole'),
-                            ).toLowerCase() !== 'warehouse' &&
-                            String(
-                              localStorage.getItem('userRole'),
-                            ).toLowerCase() !== 'administrator'
-                              ? 'cursor-not-allowed bg-slate-100 text-slate-500 opacity-60'
-                              : 'focus:border-mc-black focus:ring-mc-black bg-slate-50 focus:ring-1'
-                          }`}
-                          value={trackingData.door || ''}
-                          placeholder="e.g. Door 4"
-                          onChange={(e) =>
-                            handleTrackingChange('door', e.target.value)
+                          value={(() => {
+                            const doorVal = trackingData.door;
+                            if (!doorVal) return null;
+                            return { label: doorVal, value: doorVal };
+                          })()}
+                          onChange={(option) =>
+                            handleTrackingChange(
+                              'door',
+                              option ? option.value : '',
+                            )
                           }
+                          options={(() => {
+                            let rawWName = String(
+                              container?.warehouse_name ||
+                                container?.warehouse?.name ||
+                                container?.warehouse ||
+                                '',
+                            )
+                              .trim()
+                              .toLowerCase();
+
+                            if (
+                              [
+                                'undefined',
+                                'null',
+                                'none',
+                                'n/a',
+                                '-',
+                              ].includes(rawWName)
+                            ) {
+                              rawWName = '';
+                            }
+
+                            const opts = [];
+                            let hasCurrentDoor = false;
+
+                            if (rawWName) {
+                              let numDoors = 14;
+                              if (rawWName.includes('california')) {
+                                numDoors = 10;
+                              } else if (
+                                rawWName.includes('south brunswick') ||
+                                rawWName.includes('brunswick')
+                              ) {
+                                numDoors = 14;
+                              }
+
+                              for (let i = 1; i <= numDoors; i++) {
+                                const val = String(i);
+                                if (val === String(trackingData.door))
+                                  hasCurrentDoor = true;
+                                opts.push({ label: val, value: val });
+                              }
+                            }
+
+                            if (trackingData.door && !hasCurrentDoor) {
+                              opts.unshift({
+                                label: trackingData.door,
+                                value: trackingData.door,
+                              });
+                            }
+                            return opts;
+                          })()}
+                          styles={reactSelectStyles}
+                          placeholder={(() => {
+                            let rawWName = String(
+                              container?.warehouse_name ||
+                                container?.warehouse?.name ||
+                                container?.warehouse ||
+                                '',
+                            )
+                              .trim()
+                              .toLowerCase();
+
+                            if (
+                              [
+                                'undefined',
+                                'null',
+                                'none',
+                                'n/a',
+                                '-',
+                              ].includes(rawWName)
+                            ) {
+                              rawWName = '';
+                            }
+                            return rawWName
+                              ? 'Select door'
+                              : 'No warehouse currently assigned';
+                          })()}
+                          noOptionsMessage={() =>
+                            'No warehouse currently assigned'
+                          }
+                          isClearable
+                          isSearchable={false}
+                          menuPortalTarget={document.body}
                         />
                       </div>
                       <div>
