@@ -70,6 +70,7 @@ import {
   patchPurchaseOrder,
   updatePOStatus,
   updatePODelayReason,
+  updatePurchaseOrderItemQuantity,
 } from '../services/purchaseOrder.service';
 import {
   getTagUsers,
@@ -799,13 +800,16 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
 
   const handleSave = async (e: any) => {
     e.stopPropagation();
-    if (val === initialQty || val === '') {
+    if (Number(val) === Number(initialQty) || val === '') {
       setIsEditing(false);
       return;
     }
     setIsSaving(true);
     try {
-      await onSave(item.sku || item.id, Number(val));
+      await onSave(
+        item.uuid || item.id || item.poItemId || item.sku,
+        Number(val),
+      );
       setIsEditing(false);
     } catch {
       setVal(initialQty);
@@ -831,17 +835,18 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
         <span className="font-mono font-medium">
           {Number(initialQty).toLocaleString()}
         </span>
-        {/* Temporarily hidden pencil icon
         {isAdmin && (
           <button
             title="Edit Ordered Quantity"
-            onClick={() => setIsEditing(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
             className="hover:text-mc-black text-slate-300 transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
         )}
-        */}
       </div>
     );
   }
@@ -3207,24 +3212,26 @@ Supply Chain CRM Coordinator`;
   );
 
   const handleUpdateItemQty = React.useCallback(
-    async (sku: string, newQty: number) => {
+    async (itemIdOrSku: string, newQty: number) => {
       if (!selectedPOId) return;
       try {
-        await patchPurchaseOrder(selectedPOId.replace(/^PO-/i, ''), {
-          items: [{ sku, qty: newQty } as any],
-        });
+        await updatePurchaseOrderItemQuantity(itemIdOrSku, newQty);
         toast.success('Ordered Quantity updated successfully.');
         onAddActivity(
-          `Updated Ordered Quantity for SKU ${sku} to ${newQty}`,
+          `Updated Ordered Quantity for Item ${itemIdOrSku} to ${newQty}`,
           'PO Updated',
         );
+        onRefreshData?.();
 
         const targetPo = purchaseOrders.find(
           (p: any) => p.id === selectedPOId || p.uuid === selectedPOId,
         );
         if (targetPo) {
           const newItems = targetPo.items.map((it: any) =>
-            it.sku === sku || it.id === sku
+            it.sku === itemIdOrSku ||
+            it.id === itemIdOrSku ||
+            it.uuid === itemIdOrSku ||
+            it.poItemId === itemIdOrSku
               ? { ...it, qty: newQty, qty_ordered: newQty, orderedQty: newQty }
               : it,
           );
@@ -3249,7 +3256,7 @@ Supply Chain CRM Coordinator`;
         throw error;
       }
     },
-    [selectedPOId, purchaseOrders, dispatch],
+    [selectedPOId, purchaseOrders, dispatch, onRefreshData],
   );
 
   const poItemColumns = React.useMemo(

@@ -13,6 +13,7 @@ import {
   PO_ITEM_COMMENT_UPDATE,
   PO_SYNC,
   PO_STATUS_UPDATE,
+  PO_ITEM_QTY_UPDATE,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -150,6 +151,17 @@ export async function patchPurchaseOrder(
   payload: Partial<UpdatePOPayload>,
 ): Promise<PurchaseOrder> {
   const { data } = await apiClient.patch<PurchaseOrder>(PO_UPDATE(id), payload);
+  return data;
+}
+
+/** Partially update a purchase order item's quantity */
+export async function updatePurchaseOrderItemQuantity(
+  itemId: string,
+  qtyOrdered: number,
+): Promise<any> {
+  const { data } = await apiClient.patch(PO_ITEM_QTY_UPDATE(itemId), {
+    qty_ordered: qtyOrdered,
+  });
   return data;
 }
 
