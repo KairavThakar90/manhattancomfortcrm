@@ -3221,7 +3221,19 @@ Supply Chain CRM Coordinator`;
     async (itemIdOrSku: string, newQty: number) => {
       if (!selectedPOId) return;
       try {
-        await updatePurchaseOrderItemQuantity(itemIdOrSku, newQty);
+        try {
+          await updatePurchaseOrderItemQuantity(itemIdOrSku, newQty);
+        } catch (itemErr) {
+          console.warn(
+            'Item specific update failed, falling back to PO patch.',
+            itemErr,
+          );
+          await patchPurchaseOrder(selectedPOId.replace(/^PO-/i, ''), {
+            items: [
+              { sku: itemIdOrSku, qty: newQty, qty_ordered: newQty } as any,
+            ],
+          });
+        }
         toast.success('Ordered Quantity updated successfully.');
         onAddActivity(
           `Updated Ordered Quantity for Item ${itemIdOrSku} to ${newQty}`,
@@ -3312,7 +3324,7 @@ Supply Chain CRM Coordinator`;
         throw error;
       }
     },
-    [selectedPOId, purchaseOrders, dispatch, onRefreshData],
+    [selectedPOId, purchaseOrders, dispatch, onRefreshData, onAddActivity],
   );
 
   const poItemColumns = React.useMemo(
@@ -3612,7 +3624,7 @@ Supply Chain CRM Coordinator`;
         },
       },
     ],
-    [],
+    [selectedPOId, handleUpdateItemQty, userRole],
   );
 
   return (
