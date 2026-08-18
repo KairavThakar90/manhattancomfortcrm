@@ -812,6 +812,30 @@ export default function ContainerFlowPage() {
     }
   };
 
+  const handleRemovePOTab = (poIdToRemove, event) => {
+    event.stopPropagation();
+
+    // 1. Remove from PO selection lists
+    const newPoIds = selectedPOIds.filter((id) => id !== poIdToRemove);
+    setSelectedPOIds(newPoIds);
+
+    // 2. Erase the mapped items natively tied to this PO
+    setSelectedItems((prev) =>
+      prev.filter((item) => item.bound_po_id !== poIdToRemove),
+    );
+
+    // 3. Keep Active POTab healthy
+    setActivePOTab((currentTab) => {
+      if (newPoIds.length === 0) return null;
+      if (currentTab === poIdToRemove) return newPoIds[0];
+      return currentTab;
+    });
+
+    if (newPoIds.length === 0) {
+      setEstimatedArrivalDate('');
+    }
+  };
+
   const handleAddItem = (itemId) => {
     const item = availableItems.find(
       (i) => (i.po_item_id || i.id || i.uuid || i.poItemId) === itemId,
@@ -1887,9 +1911,18 @@ export default function ContainerFlowPage() {
                           : 'border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft hover:border-mc-gold/50 hover:bg-mc-white shadow-sm'
                       }`}
                     >
-                      <span className="font-mono text-sm font-bold">
-                        PO-{poIdStr}
-                      </span>
+                      <div className="flex w-full items-start justify-between">
+                        <span className="mt-0.5 font-mono text-sm font-bold">
+                          PO-{poIdStr}
+                        </span>
+                        <div
+                          className="hover:text-mc-red -mt-1 -mr-1 flex cursor-pointer items-center justify-center rounded-full p-1 text-slate-300 transition-colors hover:bg-rose-100/80"
+                          onClick={(e) => handleRemovePOTab(poRawId, e)}
+                          title="Remove Purchase Order"
+                        >
+                          <X className="h-3.5 w-3.5" strokeWidth={3} />
+                        </div>
+                      </div>
                       <span
                         className="text-mc-gold -mt-1 w-full truncate text-[9px] font-bold tracking-wide uppercase opacity-90"
                         data-tooltip-id="vendor-tooltip"
