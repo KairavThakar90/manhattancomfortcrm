@@ -6,7 +6,7 @@ import React, {
   useMemo,
   useId,
 } from 'react';
-import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Check, Loader2, X } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -22,6 +22,7 @@ export default function InfiniteScrollDropdown({
   searchPlaceholder = 'Search...',
   disabled = false,
   menuPlacement = 'bottom',
+  isMulti = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,7 +73,16 @@ export default function InfiniteScrollDropdown({
     if (node) observerRef.current.observe(node);
   }, []);
 
-  const selectedItem = items.find((item) => item.value === value);
+  // For single select
+  const selectedItem = !isMulti
+    ? items.find((item) => item.value === value)
+    : null;
+  const multiValues = isMulti && Array.isArray(value) ? value : [];
+  const selectedMultiItems = isMulti
+    ? multiValues.map(
+        (v) => items.find((i) => i.value === v) || { label: v, value: v },
+      )
+    : [];
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
@@ -80,21 +90,50 @@ export default function InfiniteScrollDropdown({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`focus:border-mc-gold focus:ring-mc-gold flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none ${disabled ? 'border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft cursor-not-allowed' : 'border-mc-beige-dark bg-mc-white text-mc-black hover:bg-mc-beige-light font-bold'}`}
+        className={`focus:border-mc-gold focus:ring-mc-gold flex min-h-[38px] w-full items-center justify-between rounded-lg border px-3 py-1.5 text-sm transition-colors focus:ring-1 focus:outline-none ${disabled ? 'border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft cursor-not-allowed' : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light font-bold'}`}
       >
-        <span
-          className={`truncate ${!selectedItem && !value ? 'text-mc-gray-soft font-normal' : ''}`}
-        >
-          {selectedItem ? selectedItem.label : value || placeholder}
-        </span>
+        <div className="flex flex-1 flex-wrap items-center gap-1 overflow-hidden pr-2">
+          {!isMulti && (
+            <span
+              className={`truncate ${!selectedItem && !value ? 'text-mc-gray-soft font-normal' : 'text-mc-black'}`}
+            >
+              {selectedItem ? selectedItem.label : value || placeholder}
+            </span>
+          )}
+
+          {isMulti && selectedMultiItems.length === 0 && (
+            <span className="text-mc-gray-soft truncate font-normal">
+              {placeholder}
+            </span>
+          )}
+
+          {isMulti &&
+            selectedMultiItems.map((item) => (
+              <span
+                key={item.value}
+                className="bg-mc-beige-dark/20 text-mc-black border-mc-beige-dark/30 flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-bold"
+              >
+                {item.chipLabel || item.label}
+                <span
+                  className="hover:text-mc-red ml-1 flex cursor-pointer items-center justify-center rounded-full p-0.5 text-gray-500 transition-colors hover:bg-rose-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(multiValues.filter((v) => v !== item.value));
+                  }}
+                >
+                  <X className="h-3 w-3 flex-shrink-0" strokeWidth={3} />
+                </span>
+              </span>
+            ))}
+        </div>
         <ChevronDown
-          className={`text-mc-gray-soft h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`text-mc-gray-soft h-4 w-4 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
         <div
-          className={`border-mc-beige-dark bg-mc-white absolute z-50 flex w-full flex-col overflow-hidden rounded-lg border shadow-lg ${
+          className={`border-mc-beige-dark bg-mc-white absolute z-[9999] flex w-full flex-col overflow-hidden rounded-lg border shadow-lg ${
             menuPlacement === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
           }`}
         >
@@ -121,7 +160,9 @@ export default function InfiniteScrollDropdown({
             )}
 
             {items.map((item, index) => {
-              const isSelected = item.value === value;
+              const isSelected = isMulti
+                ? multiValues.includes(item.value)
+                : item.value === value;
               const isLast = index === items.length - 1;
               return (
                 <button
@@ -131,10 +172,17 @@ export default function InfiniteScrollDropdown({
                   data-tooltip-id={tooltipId}
                   data-tooltip-content={item.label}
                   onClick={() => {
-                    onChange(item.value, item);
-                    setIsOpen(false);
+                    if (isMulti) {
+                      const newValues = isSelected
+                        ? multiValues.filter((v) => v !== item.value)
+                        : [...multiValues, item.value];
+                      onChange(newValues);
+                    } else {
+                      onChange(item.value, item);
+                      setIsOpen(false);
+                    }
                   }}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${isSelected ? 'bg-mc-beige-light text-mc-black font-bold' : 'text-mc-black hover:bg-mc-beige-light/50 font-medium'}`}
+                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${isSelected ? 'bg-mc-beige-light/70 text-mc-black font-bold' : 'text-mc-black hover:bg-mc-beige-light/50 font-medium'}`}
                 >
                   <span className="truncate text-left">{item.label}</span>
                   {isSelected && (

@@ -163,6 +163,7 @@ export default function ContainerFlowPage() {
 
   // State for the flow
   const [selectedPOIds, setSelectedPOIds] = useState([]);
+  const [activePOTab, setActivePOTab] = useState(null);
   const [collapsedPOs, setCollapsedPOs] = useState({});
   const [containerName, setContainerName] = useState('');
   const [originalContainerName, setOriginalContainerName] = useState('');
@@ -311,6 +312,9 @@ export default function ContainerFlowPage() {
         po.vendor_name ||
         'Unknown Vendor';
 
+      const pos = po.sellercloud_po_id
+        ? po.sellercloud_po_id.toString().replace(/^PO-/, '')
+        : String(po.order_number || po.id).replace(/^PO-/i, '');
       const label = `${po.sellercloud_po_id ? `${po.sellercloud_po_id.toString().replace(/^PO-/, '')}` : String(po.order_number || po.id).replace(/^PO-/i, '')} - ${vendorName}`;
 
       if (!seenLabels.has(label)) {
@@ -318,6 +322,7 @@ export default function ContainerFlowPage() {
         finalItems.push({
           value: po.id,
           label,
+          chipLabel: `PO-${pos}`,
         });
       }
     });
@@ -1812,390 +1817,392 @@ export default function ContainerFlowPage() {
           </div>
 
           <div className="relative z-[50]">
-            <Select
+            <InfiniteScrollDropdown
               isMulti
-              options={poDropdownItems.map((p) => ({
-                value: p.value,
-                label: p.label,
-              }))}
-              value={poDropdownItems.filter((p) =>
-                selectedPOIds.includes(p.value),
-              )}
-              onChange={handlePOChange}
-              isDisabled={isEditMode}
+              value={selectedPOIds}
+              onChange={(newVals) =>
+                handlePOChange(
+                  poDropdownItems.filter((p) => newVals.includes(p.value)),
+                )
+              }
+              onSearch={handlePoSearch}
+              onLoadMore={() => {}}
+              hasMore={false}
+              isLoading={poLoading}
+              items={poDropdownItems}
+              disabled={isEditMode}
               placeholder="-- Choose Purchase Orders --"
-              className="react-select-container text-sm font-medium"
-              classNamePrefix="react-select"
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base, state) => ({
-                  ...base,
-                  minHeight: '42px',
-                  borderRadius: '0.5rem',
-                  borderColor: state.isFocused
-                    ? 'var(--color-mc-gold)'
-                    : '#e2e8f0',
-                  boxShadow: state.isFocused
-                    ? '0 0 0 1px var(--color-mc-gold)'
-                    : 'none',
-                  '&:hover': { borderColor: 'var(--color-mc-gold)' },
-                }),
-              }}
+              searchPlaceholder="Search POs..."
             />
           </div>
         </div>
 
         {selectedPOs.length > 0 && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 grid grid-cols-1 gap-4 duration-300 md:grid-cols-3">
-            {/* Step 2: Item Allocation */}
-            <div className="border-mc-beige-dark bg-mc-white flex h-[525px] flex-col rounded-xl border p-4 shadow-none md:col-span-2">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+          <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col gap-4 duration-300 md:flex-row">
+            {/* Left Sidebar for PO Tabs */}
+            <div className="border-mc-beige-dark bg-mc-white flex h-auto w-full shrink-0 flex-col rounded-xl border p-4 shadow-none md:h-[525px] md:w-48 lg:w-56">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
+                  2
+                </span>
+                <h2 className="text-mc-black text-base font-bold">
+                  Selected POs
+                </h2>
+              </div>
+              <div className="custom-scrollbar flex max-h-full w-full gap-2 overflow-x-auto overflow-y-auto pr-1 pb-2 md:flex-col md:pb-0">
+                {selectedPOs.map((po) => {
+                  const poRawId = po.sellercloud_po_id || po.id;
+                  const poIdStr = String(poRawId).replace(/^PO-/, '');
+                  const isActive = activePOTab === poRawId;
+                  const thisPoAllocated = selectedItems.filter(
+                    (item) => item.bound_po_id == poRawId,
+                  ).length;
+                  const vendorName =
+                    po.vendor?.name ||
+                    po.vendorName ||
+                    po.vendor_name ||
+                    vendorsList?.find?.((v) => v.id === po.vendor_id)?.name ||
+                    'Unknown Vendor';
+
+                  return (
+                    <button
+                      key={poRawId}
+                      onClick={() => setActivePOTab(poRawId)}
+                      className={`flex min-w-[140px] flex-col items-start gap-1 rounded-xl border p-3 text-left whitespace-nowrap transition-all outline-none ${
+                        isActive
+                          ? 'border-mc-gold ring-mc-gold bg-mc-white text-mc-black shadow-md ring-1 ring-inset'
+                          : 'border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft hover:border-mc-gold/50 hover:bg-mc-white shadow-sm'
+                      }`}
+                    >
+                      <span className="font-mono text-sm font-bold">
+                        PO-{poIdStr}
+                      </span>
+                      <span
+                        className="text-mc-gray-soft -mt-1 mb-0.5 w-full max-w-[150px] truncate text-xs font-medium"
+                        title={vendorName}
+                      >
+                        {vendorName}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold tracking-wider uppercase ${isActive ? 'text-mc-gold' : ''}`}
+                      >
+                        {thisPoAllocated} items
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Main Grid for Allocate Items & Container Details */}
+            <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Step 2: Item Allocation */}
+              <div className="border-mc-beige-dark bg-mc-white relative flex h-[525px] flex-col rounded-xl border p-4 shadow-none md:col-span-2">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-mc-black ml-1 text-base font-bold">
+                      Allocate Items{' '}
+                      {activePOTab ? (
+                        <span className="text-mc-gold ml-2 font-mono text-sm tracking-wide">
+                          PO-{String(activePOTab).replace(/^PO-/, '')}
+                        </span>
+                      ) : (
+                        ''
+                      )}
+                    </h2>
+                  </div>
+
+                  {/* Scope dropdown items to the active tab po */}
+                  {(() => {
+                    const activeItemsToAdd = itemDropdownItems.filter(
+                      (opt) => opt.bound_po_id == activePOTab,
+                    );
+                    return activeItemsToAdd.length > 0 || loadingPOItems ? (
+                      <div className="relative z-[40] w-64">
+                        <InfiniteScrollDropdown
+                          value=""
+                          onChange={(val) => {
+                            if (val) handleAddItem(val);
+                          }}
+                          onSearch={(query) => setItemSearchQuery(query)}
+                          onLoadMore={() => {}}
+                          hasMore={false}
+                          isLoading={loadingPOItems}
+                          items={activeItemsToAdd}
+                          disabled={isEditMode || activeItemsToAdd.length === 0}
+                          placeholder={
+                            loadingPOItems
+                              ? 'Loading items...'
+                              : activeItemsToAdd.length === 0
+                                ? 'All items allocated'
+                                : '+ Add items'
+                          }
+                          searchPlaceholder="Search items..."
+                        />
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+
+                {!activePOTab ? (
+                  <div className="border-mc-beige-dark bg-mc-beige-light/30 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                    <Container className="text-mc-beige-dark mb-3 h-10 w-10" />
+                    <h3 className="text-mc-black mb-1 text-sm font-bold">
+                      No PO Selected
+                    </h3>
+                    <p className="text-mc-gray-soft max-w-sm text-xs">
+                      Please select a PO from the left panel to allocate its
+                      items.
+                    </p>
+                  </div>
+                ) : (
+                  (() => {
+                    const activeAllocatedItems = selectedItems.filter(
+                      (item) => item.bound_po_id == activePOTab,
+                    );
+                    return activeAllocatedItems.length === 0 ? (
+                      <div className="border-mc-beige-dark bg-mc-beige-light/30 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                        <Container className="text-mc-beige-dark mb-3 h-10 w-10" />
+                        <h3 className="text-mc-black mb-1 text-sm font-bold">
+                          No items allocated
+                        </h3>
+                        <p className="text-mc-gray-soft max-w-sm text-xs">
+                          Select items from the right dropdown to add them to
+                          this container from this PO.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="custom-scrollbar flex-1 overflow-y-auto pr-2">
+                        <div className="space-y-3">
+                          {activeAllocatedItems.map((item) => (
+                            <div
+                              key={item.id || item.sku}
+                              className="hover:border-mc-gold border-mc-beige-dark bg-mc-white flex flex-col justify-between gap-4 rounded-lg border p-3 shadow-sm transition-colors sm:flex-row sm:items-center"
+                            >
+                              <div className="flex items-start gap-3 overflow-hidden">
+                                <div className="mt-0.5">
+                                  <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
+                                    <Container className="h-4 w-4" />
+                                  </div>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    {item.bound_po_id && (
+                                      <span className="bg-mc-gold/20 text-mc-gold rounded px-1.5 py-0.5 font-mono text-[10px] font-bold">
+                                        PO-
+                                        {String(item.bound_po_id).replace(
+                                          /^PO-/,
+                                          '',
+                                        )}
+                                      </span>
+                                    )}
+                                    <span className="text-mc-black font-mono text-[13px] font-bold">
+                                      {item.sku}
+                                    </span>
+                                  </div>
+                                  <p
+                                    className="text-mc-gray-soft truncate text-[11px]"
+                                    title={item.name}
+                                  >
+                                    {item.name}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3">
+                                <div className="flex flex-col items-end">
+                                  <label className="text-mc-gray-soft mb-1 text-[10px] font-bold tracking-wider uppercase">
+                                    Quantity
+                                  </label>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={item.maxQty}
+                                      value={
+                                        item.allocateQty === ''
+                                          ? ''
+                                          : item.allocateQty
+                                      }
+                                      onChange={(e) =>
+                                        handleQtyChange(item.id, e.target.value)
+                                      }
+                                      className={`focus:border-mc-gold focus:ring-mc-gold/20 w-20 rounded-md border px-2 py-1 text-right text-sm shadow-sm transition-colors focus:ring-2 ${
+                                        Number(item.allocateQty) >
+                                          item.maxQty ||
+                                        Number(item.allocateQty) < 0
+                                          ? 'border-mc-red text-mc-red bg-mc-red/10'
+                                          : 'border-mc-beige-dark text-mc-black'
+                                      }`}
+                                      placeholder="0"
+                                    />
+                                    <span className="text-mc-gray-soft w-8 text-xs font-medium whitespace-nowrap">
+                                      / {item.maxQty}
+                                    </span>
+                                  </div>
+                                  {/* Inline Validation Messages */}
+                                  {Number(item.allocateQty) > item.maxQty && (
+                                    <span className="mt-1 text-[10px] font-bold text-rose-500">
+                                      Exceeds max ({item.maxQty})
+                                    </span>
+                                  )}
+                                  {item.allocateQty !== '' &&
+                                    Number(item.allocateQty) < 0 && (
+                                      <span className="mt-1 text-[10px] font-bold text-rose-500">
+                                        Must be &gt;= 0
+                                      </span>
+                                    )}
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveItem(item.id)}
+                                  className="text-mc-gray-soft mt-4 ml-2 flex-shrink-0 rounded-lg p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                                  title="Remove item"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+
+              {/* Step 3: Container Details */}
+              <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-none md:col-span-1">
+                <div className="mb-4 flex items-center gap-2">
                   <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
-                    2
+                    3
                   </span>
                   <h2 className="text-mc-black text-base font-bold">
-                    Allocate Items
+                    Container Details
                   </h2>
                 </div>
 
-                {/* Title is already rendered above */}
-              </div>
-
-              {selectedPOs.length === 0 ? (
-                <div className="border-mc-beige-dark bg-mc-beige-light/30 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <Container className="text-mc-beige-dark mb-3 h-10 w-10" />
-                  <h3 className="text-mc-black mb-1 text-sm font-bold">
-                    No items selected
-                  </h3>
-                  <p className="text-mc-gray-soft max-w-sm text-xs">
-                    Select a PO from the dropdown above to start adding items to
-                    this container.
-                  </p>
-                </div>
-              ) : (
-                <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto pr-2">
-                  {selectedPOs.map((po) => {
-                    const poRawId = po.sellercloud_po_id || po.id;
-                    const poIdStr = String(poRawId).replace(/^PO-/, '');
-                    const poItemsToAdd = itemDropdownItems.filter(
-                      (opt) => opt.bound_po_id == poRawId,
-                    );
-                    const allocatedItemsForPo = selectedItems.filter(
-                      (item) => item.bound_po_id == poRawId,
-                    );
-
-                    return (
-                      <div
-                        key={po.id}
-                        className="border-mc-beige-dark bg-mc-beige-light/10 overflow-hidden rounded-xl border"
-                      >
-                        {/* Header with Add Item Dropdown & Accordion Toggle */}
-                        <div
-                          className="bg-mc-beige-light/30 border-mc-beige-dark hover:bg-mc-beige-light/50 flex cursor-pointer flex-col items-start justify-between gap-3 border-b px-4 py-3 transition-colors sm:flex-row sm:items-center"
-                          onClick={() =>
-                            setCollapsedPOs((prev) => ({
-                              ...prev,
-                              [poRawId]: !prev[poRawId],
-                            }))
-                          }
+                <div className="space-y-3">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between">
+                      <label className="text-mc-black block text-xs font-semibold">
+                        Container Number / Name
+                      </label>
+                      {isEditMode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsManualContainerEntry(!isManualContainerEntry);
+                            setContainerName('');
+                          }}
+                          className="text-mc-gold text-[10px] font-bold hover:underline"
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="bg-mc-gold/20 text-mc-gold flex items-center justify-center rounded px-2 py-1 font-mono text-xs font-bold shadow-sm">
-                              PO-{poIdStr}
-                            </div>
-                            <span className="text-mc-black/60 text-xs font-medium">
-                              ({allocatedItemsForPo.length} items allocated)
-                            </span>
-                            <ChevronDown
-                              className={`text-mc-gray-soft h-4 w-4 transition-transform duration-200 ${collapsedPOs[poRawId] ? 'rotate-180' : ''}`}
-                            />
-                          </div>
-
-                          <div
-                            className="relative z-[40] w-full sm:w-64"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Select
-                              value={null}
-                              onChange={(val) => {
-                                if (val) handleAddItem(val.value);
-                              }}
-                              options={poItemsToAdd}
-                              isDisabled={
-                                isEditMode || poItemsToAdd.length === 0
-                              }
-                              isLoading={loadingPOItems}
-                              placeholder={
-                                poItemsToAdd.length === 0 && !loadingPOItems
-                                  ? 'All items allocated'
-                                  : '+ Add item from PO...'
-                              }
-                              className="react-select-container text-xs"
-                              classNamePrefix="react-select"
-                              menuPortalTarget={document.body}
-                              styles={{
-                                menuPortal: (base) => ({
-                                  ...base,
-                                  zIndex: 9999,
-                                }),
-                                control: (base, state) => ({
-                                  ...base,
-                                  minHeight: '36px',
-                                  borderRadius: '0.375rem',
-                                  borderColor: state.isFocused
-                                    ? 'var(--color-mc-gold)'
-                                    : '#e2e8f0',
-                                  boxShadow: state.isFocused
-                                    ? '0 0 0 1px var(--color-mc-gold)'
-                                    : 'none',
-                                  '&:hover': {
-                                    borderColor: 'var(--color-mc-gold)',
-                                  },
-                                }),
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Allocated Items List (Conditionally rendered) */}
-                        {!collapsedPOs[poRawId] && (
-                          <div className="animate-in slide-in-from-top-2 fade-in p-4 duration-200">
-                            {allocatedItemsForPo.length === 0 ? (
-                              <div className="text-mc-gray-soft py-6 text-center text-sm italic">
-                                No items allocated from this PO yet.
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {allocatedItemsForPo.map((item) => (
-                                  <div
-                                    key={item.id || item.sku}
-                                    className="hover:border-mc-gold border-mc-beige-dark bg-mc-white flex flex-col justify-between gap-4 rounded-lg border p-3 shadow-sm transition-colors sm:flex-row sm:items-center"
-                                  >
-                                    {/* Item Details */}
-                                    <div className="flex items-start gap-3 overflow-hidden">
-                                      <div className="mt-0.5">
-                                        <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
-                                          <Container className="h-4 w-4" />
-                                        </div>
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5">
-                                          <span className="text-mc-black font-mono text-[13px] font-bold">
-                                            {item.sku}
-                                          </span>
-                                        </div>
-                                        <p
-                                          className="text-mc-gray-soft truncate text-[11px]"
-                                          title={item.name}
-                                        >
-                                          {item.name}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-3">
-                                      <div className="flex flex-col items-end">
-                                        <label className="text-mc-gray-soft mb-1 text-[10px] font-bold tracking-wider uppercase">
-                                          Quantity
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            max={item.maxQty}
-                                            value={
-                                              item.allocateQty === ''
-                                                ? ''
-                                                : item.allocateQty
-                                            }
-                                            onChange={(e) =>
-                                              handleQtyChange(
-                                                item.id,
-                                                e.target.value,
-                                              )
-                                            }
-                                            className={`focus:border-mc-gold focus:ring-mc-gold/20 w-20 rounded-md border px-2 py-1 text-right text-sm shadow-sm transition-colors focus:ring-2 ${
-                                              Number(item.allocateQty) >
-                                                item.maxQty ||
-                                              Number(item.allocateQty) < 0
-                                                ? 'border-mc-red text-mc-red bg-mc-red/10'
-                                                : 'border-mc-beige-dark text-mc-black'
-                                            }`}
-                                          />
-                                          <span className="text-mc-gray-soft shrink-0 text-xs">
-                                            / {item.maxQty}
-                                          </span>
-                                        </div>
-                                        {/* Inline Validation Messages */}
-                                        {Number(item.allocateQty) >
-                                          item.maxQty && (
-                                          <span className="mt-1 text-[10px] font-bold text-rose-500">
-                                            Exceeds max ({item.maxQty})
-                                          </span>
-                                        )}
-                                        {item.allocateQty !== '' &&
-                                          Number(item.allocateQty) < 0 && (
-                                            <span className="mt-1 text-[10px] font-bold text-rose-500">
-                                              Must be &gt;= 0
-                                            </span>
-                                          )}
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleRemoveItem(item.id)
-                                        }
-                                        className="text-mc-gray-soft mt-4 rounded-md p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                                        title="Remove Item"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Step 3: Container Details */}
-            <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-none md:col-span-1">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
-                  3
-                </span>
-                <h2 className="text-mc-black text-base font-bold">
-                  Container Details
-                </h2>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <div className="mb-1 flex items-center justify-between">
-                    <label className="text-mc-black block text-xs font-semibold">
-                      Container Number / Name
-                    </label>
-                    {isEditMode && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsManualContainerEntry(!isManualContainerEntry);
-                          setContainerName('');
+                          {isManualContainerEntry
+                            ? 'Select Existing'
+                            : 'Enter Manually'}
+                        </button>
+                      )}
+                    </div>
+                    {isManualContainerEntry ? (
+                      <input
+                        type="text"
+                        value={containerName}
+                        onChange={(e) => setContainerName(e.target.value)}
+                        placeholder="e.g. TCNU 1234567"
+                        className="focus:ring-mc-gold border-mc-beige-dark bg-mc-beige-light/30 text-mc-black w-full rounded-md border px-3 py-1.5 font-mono text-sm font-bold focus:ring-2 focus:outline-none"
+                      />
+                    ) : (
+                      <InfiniteScrollDropdown
+                        value={containerName}
+                        onChange={(val) => {
+                          if (val === '__CREATE_NEW__') {
+                            setIsManualContainerEntry(true);
+                            setContainerName('');
+                          } else {
+                            setContainerName(val);
+                          }
                         }}
-                        className="text-mc-gold text-[10px] font-bold hover:underline"
-                      >
-                        {isManualContainerEntry
-                          ? 'Select Existing'
-                          : 'Enter Manually'}
-                      </button>
+                        onSearch={handleContainerSearch}
+                        onLoadMore={loadMoreContainers}
+                        hasMore={containerHasMore}
+                        isLoading={containerLoading}
+                        items={containerDropdownItems}
+                        placeholder="e.g. TCNU 1234567"
+                        searchPlaceholder="Search or create containers..."
+                      />
                     )}
                   </div>
-                  {isManualContainerEntry ? (
-                    <input
-                      type="text"
-                      value={containerName}
-                      onChange={(e) => setContainerName(e.target.value)}
-                      placeholder="e.g. TCNU 1234567"
-                      className="focus:ring-mc-gold border-mc-beige-dark bg-mc-beige-light/30 text-mc-black w-full rounded-md border px-3 py-1.5 font-mono text-sm font-bold focus:ring-2 focus:outline-none"
-                    />
-                  ) : (
-                    <InfiniteScrollDropdown
-                      value={containerName}
-                      onChange={(val) => {
-                        if (val === '__CREATE_NEW__') {
-                          setIsManualContainerEntry(true);
-                          setContainerName('');
-                        } else {
-                          setContainerName(val);
-                        }
-                      }}
-                      onSearch={handleContainerSearch}
-                      onLoadMore={loadMoreContainers}
-                      hasMore={containerHasMore}
-                      isLoading={containerLoading}
-                      items={containerDropdownItems}
-                      placeholder="e.g. TCNU 1234567"
-                      searchPlaceholder="Search or create containers..."
-                    />
-                  )}
-                </div>
 
-                <div className="mt-3">
-                  <label className="text-mc-black mb-1 block text-xs font-semibold">
-                    Estimated Arrival Date
-                  </label>
-                  <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
-                    <input
-                      type="text"
-                      placeholder="yyyy-mm-dd"
-                      value={estimatedArrivalDate}
-                      readOnly
-                      className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 text-sm font-medium outline-none ${
-                        !estimatedArrivalDate
-                          ? 'text-mc-gray-soft font-normal'
-                          : 'text-mc-black'
-                      }`}
-                    />
-                    <Calendar
-                      className={`pointer-events-none absolute top-1/2 right-2.5 h-[15px] w-[15px] -translate-y-1/2 ${
-                        !estimatedArrivalDate
-                          ? 'text-mc-gray-soft'
-                          : 'text-mc-black'
-                      }`}
-                    />
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={estimatedArrivalDate}
-                      onChange={(e) => setEstimatedArrivalDate(e.target.value)}
-                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  <div className="mt-3">
+                    <label className="text-mc-black mb-1 block text-xs font-semibold">
+                      Estimated Arrival Date
+                    </label>
+                    <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
+                      <input
+                        type="text"
+                        placeholder="yyyy-mm-dd"
+                        value={estimatedArrivalDate}
+                        readOnly
+                        className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 text-sm font-medium outline-none ${
+                          !estimatedArrivalDate
+                            ? 'text-mc-gray-soft font-normal'
+                            : 'text-mc-black'
+                        }`}
+                      />
+                      <Calendar
+                        className={`pointer-events-none absolute top-1/2 right-2.5 h-[15px] w-[15px] -translate-y-1/2 ${
+                          !estimatedArrivalDate
+                            ? 'text-mc-gray-soft'
+                            : 'text-mc-black'
+                        }`}
+                      />
+                      <input
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={estimatedArrivalDate}
+                        onChange={(e) =>
+                          setEstimatedArrivalDate(e.target.value)
+                        }
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="text-mc-black mb-1 block text-xs font-semibold">
+                      Select Warehouse
+                    </label>
+                    <InfiniteScrollDropdown
+                      value={selectedWarehouseId}
+                      onChange={(val) => setSelectedWarehouseId(val)}
+                      onSearch={(q) => setWarehouseSearch(q)}
+                      items={warehouseDropdownItems}
+                      placeholder="Select a warehouse..."
+                      searchPlaceholder="Search warehouses..."
+                      hasMore={false}
+                      isLoading={false}
                     />
                   </div>
-                </div>
 
-                <div className="mt-3">
-                  <label className="text-mc-black mb-1 block text-xs font-semibold">
-                    Select Warehouse
-                  </label>
-                  <InfiniteScrollDropdown
-                    value={selectedWarehouseId}
-                    onChange={(val) => setSelectedWarehouseId(val)}
-                    onSearch={(q) => setWarehouseSearch(q)}
-                    items={warehouseDropdownItems}
-                    placeholder="Select a warehouse..."
-                    searchPlaceholder="Search warehouses..."
-                    hasMore={false}
-                    isLoading={false}
-                  />
-                </div>
-
-                <div className="border-mc-beige-dark bg-mc-beige-light mt-3 rounded-lg border p-3">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="text-mc-gold mt-0.5 h-4 w-4 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-mc-black text-xs font-bold">
-                        PO Status
-                      </h4>
-                      <p className="text-mc-black text-opacity-80 mt-0.5 text-[10px]">
-                        Currently allocating items for{' '}
-                        <span className="font-mono font-bold">
-                          {selectedPOs
-                            .map(
-                              (po) =>
-                                `PO-${String(po.sellercloud_po_id || po.id).replace(/^PO-/, '')}`,
-                            )
-                            .join(', ')}
-                        </span>
-                        .
-                      </p>
+                  <div className="border-mc-beige-dark bg-mc-beige-light mt-3 rounded-lg border p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="text-mc-gold mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-mc-black text-xs font-bold">
+                          PO Status
+                        </h4>
+                        <p className="text-mc-black text-opacity-80 mt-0.5 text-[10px]">
+                          Currently allocating items for{' '}
+                          <span className="font-mono font-bold">
+                            {selectedPOs
+                              .map(
+                                (po) =>
+                                  `PO-${String(po.sellercloud_po_id || po.id).replace(/^PO-/, '')}`,
+                              )
+                              .join(', ')}
+                          </span>
+                          .
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
