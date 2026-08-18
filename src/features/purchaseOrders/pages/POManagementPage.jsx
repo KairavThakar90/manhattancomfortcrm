@@ -53,6 +53,7 @@ export default function POManagementPage() {
   const [completionFilter, setCompletionFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [customerFilter, setCustomerFilter] = useState('all');
+  const [channelFilter, setChannelFilter] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -125,6 +126,10 @@ export default function POManagementPage() {
     setCustomerFilter(val);
     setCurrentPage(1);
   };
+  const handleChannelFilterChange = (val) => {
+    setChannelFilter(val);
+    setCurrentPage(1);
+  };
   const [dateFrom, setDateFrom] = useState('');
   const handleDateFromChange = (val) => {
     setDateFrom(val);
@@ -146,6 +151,7 @@ export default function POManagementPage() {
         completionFilter,
         vendorFilter,
         customerFilter,
+        channelFilter,
         dateFrom,
         userRole,
         sortConfig,
@@ -195,6 +201,10 @@ export default function POManagementPage() {
 
         if (customerFilter !== 'all') {
           params.customer_id = customerFilter;
+        }
+
+        if (channelFilter !== 'all') {
+          params.channel_id = channelFilter;
         }
 
         if (userRole === 'Vendor') {
@@ -512,6 +522,7 @@ export default function POManagementPage() {
     completionFilter,
     vendorFilter,
     customerFilter,
+    channelFilter,
     dateFrom,
     userRole,
     refreshTrigger,
@@ -652,6 +663,8 @@ export default function POManagementPage() {
         onVendorFilterChange={handleVendorFilterChange}
         customerFilter={customerFilter}
         onCustomerFilterChange={handleCustomerFilterChange}
+        channelFilter={channelFilter}
+        onChannelFilterChange={handleChannelFilterChange}
         dateFrom={dateFrom}
         onDateFromChange={handleDateFromChange}
         sortConfig={sortConfig}

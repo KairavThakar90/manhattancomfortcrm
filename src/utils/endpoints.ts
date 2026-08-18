@@ -46,6 +46,7 @@ export const PO_DELETE = (id: string) => `/purchase-orders/${id}`;
 export const PO_FILTERS_ALL = '/purchase-orders/filters/all';
 export const PO_EXPORT_CSV = '/purchase-orders/export/csv';
 export const PO_SYNC = '/purchase-orders/sync';
+export const PO_CHANNEL_ORDER_IDS = '/purchase-orders/channel-order-ids';
 export const PO_STATUS_UPDATE = (id: string) => `/purchase-orders/${id}/status`;
 export const PO_ITEM_QTY_UPDATE = (id: string) =>
   `/purchase-orders/items/${id}/quantity`;

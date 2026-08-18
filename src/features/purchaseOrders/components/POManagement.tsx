@@ -82,6 +82,7 @@ import FullPageLoader from '../../../components/common/FullPageLoader';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import CustomerDropdown from '../../../components/common/CustomerDropdown';
+import ChannelDropdown from '../../../components/common/ChannelDropdown';
 import DataTable from '../../../components/common/DataTable';
 import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLoading';
 import DateFilterInput from '../../../components/common/DateFilterInput';
@@ -778,6 +779,8 @@ interface POManagementProps {
   onVendorFilterChange?: (val: string) => void;
   customerFilter?: string;
   onCustomerFilterChange?: (val: string) => void;
+  channelFilter?: string;
+  onChannelFilterChange?: (val: string) => void;
   dateFrom?: string;
   onDateFromChange?: (val: string) => void;
   pageSize?: number;
@@ -922,6 +925,8 @@ export default function POManagement({
   onVendorFilterChange: propOnVendorFilterChange,
   customerFilter: propCustomerFilter,
   onCustomerFilterChange: propOnCustomerFilterChange,
+  channelFilter: propChannelFilter,
+  onChannelFilterChange: propOnChannelFilterChange,
   dateFrom: propDateFrom,
   onDateFromChange: propOnDateFromChange,
   pageSize: propPageSize,
@@ -958,6 +963,7 @@ export default function POManagement({
     useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
   const [localCustomerFilter, setLocalCustomerFilter] = useState<string>('all');
+  const [localChannelFilter, setLocalChannelFilter] = useState<string>('all');
   const [leadTimeDays, setLeadTimeDays] = useState<string>('');
 
   // Comments state fetched from detail API
@@ -1405,6 +1411,12 @@ export default function POManagement({
   const setDateFrom = propOnDateFromChange
     ? propOnDateFromChange
     : setLocalDateFrom;
+
+  const channelFilter =
+    propChannelFilter !== undefined ? propChannelFilter : localChannelFilter;
+  const setChannelFilter = propOnChannelFilterChange
+    ? propOnChannelFilterChange
+    : setLocalChannelFilter;
 
   // Pagination
   const [localCurrentPage, setLocalCurrentPage] = useState(1);
@@ -3876,6 +3888,29 @@ Supply Chain CRM Coordinator`;
                   }}
                   showAllOption={true}
                   placeholder="All Customers"
+                  className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+          {userRole !== 'Vendor' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold">
+                  Channel:
+                </span>
+              </div>
+              <div className="w-40">
+                <ChannelDropdown
+                  value={propChannelFilter ?? localChannelFilter}
+                  onChange={(val) => {
+                    if (propOnChannelFilterChange)
+                      propOnChannelFilterChange(val);
+                    else setLocalChannelFilter(val);
+                  }}
+                  showAllOption={true}
+                  placeholder="All Channels"
                   className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                 />
               </div>
