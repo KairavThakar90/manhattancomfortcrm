@@ -833,18 +833,20 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
     setIsEditing(false);
   };
 
-  const isAdmin = String(userRole).toLowerCase() === 'administrator';
+  const canEdit =
+    String(userRole).toLowerCase() === 'administrator' ||
+    String(userRole).toLowerCase() === 'office';
 
-  if (!isEditing || !isAdmin) {
+  if (!isEditing || !canEdit) {
     return (
       <div
         className="group flex items-center justify-end gap-2"
-        onClick={(e) => (isAdmin ? e.stopPropagation() : undefined)}
+        onClick={(e) => (canEdit ? e.stopPropagation() : undefined)}
       >
         <span className="font-mono font-medium">
           {Number(initialQty).toLocaleString()}
         </span>
-        {isAdmin && (
+        {canEdit && (
           <button
             title="Edit Ordered Quantity"
             onClick={(e) => {
