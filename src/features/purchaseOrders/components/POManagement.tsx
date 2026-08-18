@@ -805,11 +805,17 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
       return;
     }
     setIsSaving(true);
+
+    const resolvedId =
+      item.item_id ||
+      item.uuid ||
+      item.id ||
+      item.po_item_id ||
+      item.poItemId ||
+      item.sku;
+
     try {
-      await onSave(
-        item.uuid || item.id || item.poItemId || item.sku,
-        Number(val),
-      );
+      await onSave(resolvedId, Number(val));
       setIsEditing(false);
     } catch {
       setVal(initialQty);
@@ -3230,6 +3236,7 @@ Supply Chain CRM Coordinator`;
             it.sku === itemIdOrSku ||
             it.id === itemIdOrSku ||
             it.uuid === itemIdOrSku ||
+            it.po_item_id === itemIdOrSku ||
             it.poItemId === itemIdOrSku
               ? { ...it, qty: newQty, qty_ordered: newQty, orderedQty: newQty }
               : it,
