@@ -32,6 +32,11 @@ const parseApiCommentObject = (c: any, defaultTargetId: string) => {
   if (possibleFiles && possibleFiles.length > 0) {
     const f = possibleFiles[0];
     fileUrl = f.url || f.file_url || f.file;
+    // Add cache buster to prevent old images from showing when same file overrides
+    if (fileUrl && !fileUrl.startsWith('blob:')) {
+      const char = fileUrl.includes('?') ? '&' : '?';
+      fileUrl = `${fileUrl}${char}cb=${Date.now()}`;
+    }
     fileName = f.name || f.filename || f.file_name || '';
     fileType = f.content_type || f.type || f.file_type || '';
   }
@@ -795,7 +800,13 @@ export default function ItemCommentModal({
                     <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
                       <button
                         type="button"
-                        onClick={() => setNewCommentFile(null)}
+                        onClick={() => {
+                          setNewCommentFile(null);
+                          const input = document.getElementById(
+                            'item-comment-attachment-input',
+                          ) as HTMLInputElement;
+                          if (input) input.value = '';
+                        }}
                         className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                       >
                         <X className="h-4 w-4" />

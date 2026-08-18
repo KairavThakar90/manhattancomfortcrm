@@ -1214,8 +1214,15 @@ export default function POManagement({
       userId: c.user_id || c.author_id || null,
       role: c.role || 'Administrator',
       message: c.comment || c.message || c.text || '',
-      fileUrl:
-        firstFile?.file_url || firstFile?.url || c.file_url || c.file || null,
+      fileUrl: (() => {
+        let fUrl =
+          firstFile?.file_url || firstFile?.url || c.file_url || c.file || null;
+        if (fUrl && !fUrl.startsWith('blob:')) {
+          const char = fUrl.includes('?') ? '&' : '?';
+          fUrl = `${fUrl}${char}cb=${Date.now()}`;
+        }
+        return fUrl;
+      })(),
       fileName:
         firstFile?.file_name ||
         firstFile?.name ||
@@ -4846,7 +4853,13 @@ Supply Chain CRM Coordinator`;
                             <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
                               <button
                                 type="button"
-                                onClick={() => setNewCommentFile(null)}
+                                onClick={() => {
+                                  setNewCommentFile(null);
+                                  const input = document.getElementById(
+                                    'comment-attachment-input',
+                                  ) as HTMLInputElement;
+                                  if (input) input.value = '';
+                                }}
                                 className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                               >
                                 <X className="h-4 w-4" />
