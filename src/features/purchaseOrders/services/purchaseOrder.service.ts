@@ -209,15 +209,22 @@ export async function postPOComment(
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 0,
     });
     return data;
   }
 
-  const { data } = await apiClient.post(PO_COMMENTS(poId), {
-    comment: message,
-    parent_id: parent_id || null,
-    tagged_user_ids: tagged_user_ids || [],
-  });
+  const { data } = await apiClient.post(
+    PO_COMMENTS(poId),
+    {
+      comment: message,
+      parent_id: parent_id || null,
+      tagged_user_ids: tagged_user_ids || [],
+    },
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 
@@ -227,10 +234,16 @@ export async function updatePOComment(
   message: string,
   tagged_user_ids?: string[],
 ): Promise<any> {
-  const { data } = await apiClient.put(PO_COMMENT_UPDATE(commentId), {
-    comment: message,
-    tagged_user_ids: tagged_user_ids || [],
-  });
+  const { data } = await apiClient.put(
+    PO_COMMENT_UPDATE(commentId),
+    {
+      comment: message,
+      tagged_user_ids: tagged_user_ids || [],
+    },
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 
@@ -273,15 +286,22 @@ export async function postItemComment(
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 0,
     });
     return data;
   }
 
-  const { data } = await apiClient.post(PO_ITEM_COMMENTS(itemId), {
-    comment: message,
-    parent_id: parent_id || null,
-    tagged_user_ids: tagged_user_ids || [],
-  });
+  const { data } = await apiClient.post(
+    PO_ITEM_COMMENTS(itemId),
+    {
+      comment: message,
+      parent_id: parent_id || null,
+      tagged_user_ids: tagged_user_ids || [],
+    },
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 
@@ -291,9 +311,15 @@ export async function updateItemComment(
   message: string,
   tagged_user_ids?: string[],
 ): Promise<any> {
-  const { data } = await apiClient.put(PO_ITEM_COMMENT_UPDATE(commentId), {
-    comment: message,
-    tagged_user_ids: tagged_user_ids || [],
-  });
+  const { data } = await apiClient.put(
+    PO_ITEM_COMMENT_UPDATE(commentId),
+    {
+      comment: message,
+      tagged_user_ids: tagged_user_ids || [],
+    },
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
