@@ -3221,8 +3221,7 @@ Supply Chain CRM Coordinator`;
           `Updated Ordered Quantity for Item ${itemIdOrSku} to ${newQty}`,
           'PO Updated',
         );
-        onRefreshData?.();
-
+        // Optimistic UI state update initially
         const targetPo = purchaseOrders.find(
           (p: any) => p.id === selectedPOId || p.uuid === selectedPOId,
         );
@@ -3250,6 +3249,56 @@ Supply Chain CRM Coordinator`;
               ),
             ),
           );
+          setDetailedPOItems((prev) => (prev.length > 0 ? newItems : prev));
+
+          // Background call to ensure true backend sync without flashing loaders
+          getPurchaseOrderById(selectedPOId.replace(/^PO-/i, ''))
+            .then((rawPo) => {
+              if (rawPo && rawPo.items) {
+                const verifiedItems = rawPo.items.map((rawItem: any) => ({
+                  ...rawItem,
+                  sku: rawItem.sku || 'N/A',
+                  name: rawItem.product_name || rawItem.name || 'N/A',
+                  qty:
+                    rawItem.qty_ordered !== undefined
+                      ? rawItem.qty_ordered
+                      : rawItem.qty || 0,
+                  receivedQty:
+                    rawItem.qty_received !== undefined
+                      ? rawItem.qty_received
+                      : rawItem.receivedQty || 0,
+                  unitPrice:
+                    rawItem.unit_price !== undefined
+                      ? rawItem.unit_price
+                      : rawItem.unitPrice || 0,
+                  expected_delivery_date: rawItem.expected_delivery_date
+                    ? rawItem.expected_delivery_date.split('T')[0]
+                    : null,
+                }));
+                const verifiedPo = {
+                  ...updatedPo,
+                  items: verifiedItems,
+                  orderedQty: verifiedItems.reduce(
+                    (acc: number, it: any) =>
+                      acc + (it.qty || it.qty_ordered || 0),
+                    0,
+                  ),
+                };
+                dispatch(
+                  setPurchaseOrdersList(
+                    purchaseOrders.map((p: any) =>
+                      p.id === verifiedPo.id ? verifiedPo : p,
+                    ),
+                  ),
+                );
+                setDetailedPOItems((prev) =>
+                  prev.length > 0 ? verifiedItems : prev,
+                );
+              }
+            })
+            .catch((err) => {
+              console.error('Background PO refresh failed', err);
+            });
         }
       } catch (error) {
         toast.error('Failed to update Ordered Quantity.');
