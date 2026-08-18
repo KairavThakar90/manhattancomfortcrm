@@ -17,22 +17,25 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
-  Edit,
-  Trash2,
-  Calendar,
-  Eye,
+  Search as SearchIcon,
   X,
   ExternalLink,
+  Eye,
+  FileDown,
+  Download,
+  Calendar,
+  Edit,
+  Trash2,
   Loader2,
   RefreshCw,
   Search,
   Filter,
   FileSpreadsheet,
-  Download,
   Upload,
   ChevronDown,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Select from 'react-select';
 
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import Pagination from '../../../components/common/Pagination';
@@ -159,7 +162,8 @@ export default function ContainerFlowPage() {
   const [exportFilterStatus, setExportFilterStatus] = useState('all');
 
   // State for the flow
-  const [selectedPOId, setSelectedPOId] = useState('');
+  const [selectedPOIds, setSelectedPOIds] = useState([]);
+  const [collapsedPOs, setCollapsedPOs] = useState({});
   const [containerName, setContainerName] = useState('');
   const [originalContainerName, setOriginalContainerName] = useState('');
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
@@ -284,15 +288,16 @@ export default function ContainerFlowPage() {
       rawList.push(...poList);
     }
 
-    // Ensure selected PO is always in the list
-    if (
-      selectedPOId &&
-      !rawList.some((p) => String(p.id) === String(selectedPOId))
-    ) {
-      const reduxPO = purchaseOrders?.find(
-        (p) => String(p.id) === String(selectedPOId),
-      );
-      if (reduxPO) rawList.unshift(reduxPO);
+    // Ensure selected POs are always in the list
+    if (selectedPOIds && selectedPOIds.length > 0) {
+      selectedPOIds.forEach((id) => {
+        if (!rawList.some((p) => String(p.id) === String(id))) {
+          const reduxPO = purchaseOrders?.find(
+            (p) => String(p.id) === String(id),
+          );
+          if (reduxPO) rawList.unshift(reduxPO);
+        }
+      });
     }
 
     const finalItems = [];
@@ -318,7 +323,7 @@ export default function ContainerFlowPage() {
     });
 
     return finalItems;
-  }, [poList, purchaseOrders, vendorsList, selectedPOId, poSearch]);
+  }, [poList, purchaseOrders, vendorsList, selectedPOIds, poSearch]);
 
   // ====== Container Infinite Scroll Logic ======
   const reduxContainers = useSelector((state) => state.containers?.list || []);
@@ -585,57 +590,79 @@ export default function ContainerFlowPage() {
   ]);
 
   // Derived data
-  const selectedPO = useMemo(() => {
-    return (
-      poList.find((po) => po.id === selectedPOId) ||
-      purchaseOrders.find((po) => po.id === selectedPOId) ||
-      null
-    );
-  }, [selectedPOId, poList, purchaseOrders]);
+  const selectedPOs = useMemo(() => {
+    return selectedPOIds
+      .map(
+        (id) =>
+          poList.find((po) => po.id === id) ||
+          purchaseOrders.find((po) => po.id === id),
+      )
+      .filter(Boolean);
+  }, [selectedPOIds, poList, purchaseOrders]);
 
   const [fetchedPOItems, setFetchedPOItems] = useState([]);
   const [loadingPOItems, setLoadingPOItems] = useState(false);
 
   useEffect(() => {
     async function fetchItems() {
-      if (!selectedPO) {
+      if (selectedPOs.length === 0) {
         setFetchedPOItems([]);
         return;
       }
-      const rawPoId = selectedPO.sellercloud_po_id || selectedPO.id;
-      if (!rawPoId) return;
-      const poId = rawPoId.toString().replace(/^PO-/, '');
-
       try {
         setLoadingPOItems(true);
-        const data = await getContainerPOItems(poId);
-        let items = Array.isArray(data)
-          ? data
-          : data.results || data.data || data.items || [];
+        const allItems = [];
 
-        if (items.length === 0 && selectedPO.items) {
-          items = selectedPO.items;
-        }
+        await Promise.all(
+          selectedPOs.map(async (po) => {
+            const rawPoId = po.sellercloud_po_id || po.id;
+            if (!rawPoId) return;
+            const poId = rawPoId.toString().replace(/^PO-/, '');
 
-        setFetchedPOItems(items);
+            try {
+              const data = await getContainerPOItems(poId);
+              let items = Array.isArray(data)
+                ? data
+                : data.results || data.data || data.items || [];
+              if (items.length === 0 && po.items) {
+                items = po.items;
+              }
+              const cloned = items.map((i) => ({ ...i, bound_po_id: rawPoId }));
+              allItems.push(...cloned);
+            } catch (e) {
+              const fallbackItems = po.items || [];
+              const cloned = fallbackItems.map((i) => ({
+                ...i,
+                bound_po_id: rawPoId,
+              }));
+              allItems.push(...cloned);
+            }
+          }),
+        );
+
+        setFetchedPOItems(allItems);
       } catch (err) {
         console.error('Failed to fetch detailed PO items', err);
-        setFetchedPOItems(selectedPO?.items || []);
       } finally {
         setLoadingPOItems(false);
       }
     }
     fetchItems();
-  }, [selectedPO]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPOs.length, selectedPOIds.join(',')]);
 
   const availableItems = useMemo(() => {
-    const items =
-      fetchedPOItems.length > 0 ? fetchedPOItems : selectedPO?.items || [];
+    const items = fetchedPOItems.length > 0 ? fetchedPOItems : [];
     if (!items) return [];
     return items.filter(
-      (item) => !selectedItems.some((sItem) => sItem.sku === item.sku),
+      (item) =>
+        !selectedItems.some(
+          (sItem) =>
+            sItem.id ===
+            (item.po_item_id || item.id || item.uuid || item.poItemId),
+        ),
     );
-  }, [selectedPO, selectedItems, fetchedPOItems]);
+  }, [selectedItems, fetchedPOItems]);
 
   const [itemSearchQuery, setItemSearchQuery] = useState('');
 
@@ -651,9 +678,10 @@ export default function ContainerFlowPage() {
         );
       })
       .map((item) => ({
-        value: item.sku,
+        value: item.po_item_id || item.id || item.uuid || item.poItemId,
         label:
           `${item.sku} ${item.product_name || item.name ? `- ${item.product_name || item.name}` : ''}`.trim(),
+        bound_po_id: item.bound_po_id,
       }));
   }, [availableItems, itemSearchQuery]);
 
@@ -743,30 +771,38 @@ export default function ContainerFlowPage() {
     return sorted;
   }, [allContainers, listSortConfig]);
 
-  const handlePOChange = (val) => {
-    setSelectedPOId(val);
+  const handlePOChange = (selections) => {
+    const ids = selections ? selections.map((s) => s.value) : [];
+    setSelectedPOIds(ids);
     setContainerName('');
     setOriginalContainerName('');
     setSelectedItems([]);
 
-    const po =
-      poList.find((p) => p.id === val) ||
-      purchaseOrders.find((p) => p.id === val);
-    if (
-      po &&
-      (po.expected_delivery_date || po.eta) &&
-      (po.expected_delivery_date || po.eta) !== 'Pending' &&
-      (po.expected_delivery_date || po.eta) !== 'N/A'
-    ) {
-      const dateStr = (po.expected_delivery_date || po.eta).split('T')[0];
-      setEstimatedArrivalDate(dateStr);
-    } else {
+    if (ids.length === 0) {
       setEstimatedArrivalDate('');
+    } else {
+      const firstPoId = ids[0];
+      const po =
+        poList.find((p) => p.id === firstPoId) ||
+        purchaseOrders.find((p) => p.id === firstPoId);
+      if (
+        po &&
+        (po.expected_delivery_date || po.eta) &&
+        (po.expected_delivery_date || po.eta) !== 'Pending' &&
+        (po.expected_delivery_date || po.eta) !== 'N/A'
+      ) {
+        const dateStr = (po.expected_delivery_date || po.eta).split('T')[0];
+        setEstimatedArrivalDate(dateStr);
+      } else {
+        setEstimatedArrivalDate('');
+      }
     }
   };
 
-  const handleAddItem = (sku) => {
-    const item = availableItems.find((i) => i.sku === sku);
+  const handleAddItem = (itemId) => {
+    const item = availableItems.find(
+      (i) => (i.po_item_id || i.id || i.uuid || i.poItemId) === itemId,
+    );
     if (item) {
       const remainingQty =
         item.qty_remaining !== undefined
@@ -793,19 +829,20 @@ export default function ContainerFlowPage() {
           allocateQty: 0,
           maxQty:
             remainingQty > 0 ? remainingQty : item.qty_ordered || item.qty || 0,
+          bound_po_id: item.bound_po_id,
         },
       ]);
     }
   };
 
-  const handleRemoveItem = (sku) => {
-    setSelectedItems(selectedItems.filter((item) => item.sku !== sku));
+  const handleRemoveItem = (id) => {
+    setSelectedItems(selectedItems.filter((item) => item.id !== id));
   };
 
-  const handleQtyChange = (sku, val) => {
+  const handleQtyChange = (id, val) => {
     setSelectedItems((prev) =>
       prev.map((item) => {
-        if (item.sku === sku) {
+        if (item.id === id) {
           let numVal = val === '' ? '' : Number(val);
           return { ...item, allocateQty: numVal };
         }
@@ -815,7 +852,7 @@ export default function ContainerFlowPage() {
   };
 
   const handleSave = async () => {
-    if (!selectedPOId) {
+    if (selectedPOIds.length === 0) {
       toast.error('Please select a Purchase Order first.');
       return;
     }
@@ -889,14 +926,14 @@ export default function ContainerFlowPage() {
     setSelectedWarehouseId('');
     setEditingContainerId(null);
     setSelectedItems([]);
-    setSelectedPOId('');
+    setSelectedPOIds([]);
     setShowList(true); // Switch back to Assign Container Table
   };
 
   const handleCreateContainer = () => {
     setIsEditMode(false);
     setEditingContainerId(null);
-    setSelectedPOId('');
+    setSelectedPOIds([]);
     setContainerName('');
     setOriginalContainerName('');
     setSelectedWarehouseId('');
@@ -979,33 +1016,31 @@ export default function ContainerFlowPage() {
       const detailsResp = await getContainerDetails(container.id);
       const data = Array.isArray(detailsResp) ? detailsResp[0] : detailsResp;
       const details = data?.details || data?.items || container.items || [];
-      const rawPoId =
-        data?.po_id ||
-        data?.purchase_orders?.[0]?.id ||
-        data?.purchase_orders?.[0]?.uuid ||
-        data?.purchase_orders?.[0]?.po_number ||
-        data?.purchase_orders?.[0]?.sellercloud_po_id ||
-        (container.poIds?.[0] !== 'N/A' ? container.poIds?.[0] : '');
+      let rawPoIds = data?.purchase_orders?.map((po) => po.id) || [];
+      if (
+        rawPoIds.length === 0 &&
+        container.poIds &&
+        container.poIds[0] !== 'N/A'
+      ) {
+        rawPoIds = container.poIds;
+      }
+      if (rawPoIds.length === 0 && data?.po_id) {
+        rawPoIds = [data.po_id];
+      }
 
-      let finalPoId = rawPoId;
-      if (rawPoId) {
+      const finalPoIds = [];
+      rawPoIds.forEach((raw) => {
         const found =
           poList.find(
             (p) =>
-              p.id === rawPoId ||
-              p.sellercloud_po_id == rawPoId ||
-              p.po_number == rawPoId,
+              p.id === raw || p.sellercloud_po_id == raw || p.po_number == raw,
           ) ||
           purchaseOrders.find(
             (p) =>
-              p.id === rawPoId ||
-              p.sellercloud_po_id == rawPoId ||
-              p.po_number == rawPoId,
+              p.id === raw || p.sellercloud_po_id == raw || p.po_number == raw,
           );
-        if (found) {
-          finalPoId = found.id;
-        }
-      }
+        if (found && !finalPoIds.includes(found.id)) finalPoIds.push(found.id);
+      });
 
       setEditingContainerId(container.id);
       setContainerName(container.name);
@@ -1021,7 +1056,7 @@ export default function ContainerFlowPage() {
       }
       setIsManualContainerEntry(false);
 
-      setSelectedPOId(finalPoId);
+      setSelectedPOIds(finalPoIds);
 
       if (details.length > 0) {
         setSelectedItems(
@@ -1051,15 +1086,16 @@ export default function ContainerFlowPage() {
     }
   };
 
-  const currentStep = !selectedPOId
-    ? 1
-    : selectedItems.length === 0
-      ? 2
-      : !containerName || !estimatedArrivalDate
-        ? 3
-        : !selectedWarehouseId
-          ? 4
-          : 4;
+  const currentStep =
+    selectedPOIds.length === 0
+      ? 1
+      : selectedItems.length === 0
+        ? 2
+        : !containerName || !estimatedArrivalDate
+          ? 3
+          : !selectedWarehouseId
+            ? 4
+            : 4;
 
   const containerColumns = useMemo(
     () => [
@@ -1764,34 +1800,53 @@ export default function ContainerFlowPage() {
 
       {/* Main Content Area */}
       <div className="mx-auto w-full max-w-7xl space-y-4 p-4 pb-10">
-        {/* Step 1: Select PO */}
+        {/* Step 1: Select POs */}
         <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-none">
           <div className="mb-3 flex items-center gap-2">
             <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
               1
             </span>
             <h2 className="text-mc-black text-base font-bold">
-              Select Purchase Order
+              Select Purchase Orders
             </h2>
           </div>
 
-          <div className="relative">
-            <InfiniteScrollDropdown
-              value={selectedPOId}
+          <div className="relative z-[50]">
+            <Select
+              isMulti
+              options={poDropdownItems.map((p) => ({
+                value: p.value,
+                label: p.label,
+              }))}
+              value={poDropdownItems.filter((p) =>
+                selectedPOIds.includes(p.value),
+              )}
               onChange={handlePOChange}
-              onSearch={handlePoSearch}
-              onLoadMore={() => {}}
-              hasMore={false}
-              isLoading={poLoading}
-              items={poDropdownItems}
-              disabled={isEditMode}
-              placeholder="-- Choose a Purchase Order --"
-              searchPlaceholder="Search POs..."
+              isDisabled={isEditMode}
+              placeholder="-- Choose Purchase Orders --"
+              className="react-select-container text-sm font-medium"
+              classNamePrefix="react-select"
+              menuPortalTarget={document.body}
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                control: (base, state) => ({
+                  ...base,
+                  minHeight: '42px',
+                  borderRadius: '0.5rem',
+                  borderColor: state.isFocused
+                    ? 'var(--color-mc-gold)'
+                    : '#e2e8f0',
+                  boxShadow: state.isFocused
+                    ? '0 0 0 1px var(--color-mc-gold)'
+                    : 'none',
+                  '&:hover': { borderColor: 'var(--color-mc-gold)' },
+                }),
+              }}
             />
           </div>
         </div>
 
-        {selectedPO && (
+        {selectedPOs.length > 0 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 grid grid-cols-1 gap-4 duration-300 md:grid-cols-3">
             {/* Step 2: Item Allocation */}
             <div className="border-mc-beige-dark bg-mc-white flex h-[525px] flex-col rounded-xl border p-4 shadow-none md:col-span-2">
@@ -1805,34 +1860,10 @@ export default function ContainerFlowPage() {
                   </h2>
                 </div>
 
-                {(availableItems.length > 0 || loadingPOItems) && (
-                  <div className="relative w-64">
-                    <InfiniteScrollDropdown
-                      value=""
-                      onChange={(val) => {
-                        if (val) {
-                          handleAddItem(val);
-                        }
-                      }}
-                      onSearch={(query) => setItemSearchQuery(query)}
-                      onLoadMore={() => {}}
-                      hasMore={false}
-                      isLoading={loadingPOItems}
-                      items={itemDropdownItems}
-                      placeholder={
-                        loadingPOItems
-                          ? 'Loading items...'
-                          : isEditMode
-                            ? '+ Add item from PO...'
-                            : '+ Add items'
-                      }
-                      searchPlaceholder="Search items..."
-                    />
-                  </div>
-                )}
+                {/* Title is already rendered above */}
               </div>
 
-              {selectedItems.length === 0 ? (
+              {selectedPOs.length === 0 ? (
                 <div className="border-mc-beige-dark bg-mc-beige-light/30 flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
                   <Container className="text-mc-beige-dark mb-3 h-10 w-10" />
                   <h3 className="text-mc-black mb-1 text-sm font-bold">
@@ -1844,98 +1875,193 @@ export default function ContainerFlowPage() {
                   </p>
                 </div>
               ) : (
-                <div className="custom-scrollbar flex-1 overflow-y-auto pr-2">
-                  <div className="space-y-3">
-                    {selectedItems.map((item) => (
+                <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto pr-2">
+                  {selectedPOs.map((po) => {
+                    const poRawId = po.sellercloud_po_id || po.id;
+                    const poIdStr = String(poRawId).replace(/^PO-/, '');
+                    const poItemsToAdd = itemDropdownItems.filter(
+                      (opt) => opt.bound_po_id == poRawId,
+                    );
+                    const allocatedItemsForPo = selectedItems.filter(
+                      (item) => item.bound_po_id == poRawId,
+                    );
+
+                    return (
                       <div
-                        key={item.sku}
-                        className="hover:border-mc-gold border-mc-beige-dark bg-mc-white flex flex-col justify-between gap-4 rounded-lg border p-3 transition-colors sm:flex-row sm:items-center"
+                        key={po.id}
+                        className="border-mc-beige-dark bg-mc-beige-light/10 overflow-hidden rounded-xl border"
                       >
-                        <div className="flex items-start gap-3 overflow-hidden">
-                          <div className="mt-0.5">
-                            <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
-                              <Container className="h-4 w-4" />
+                        {/* Header with Add Item Dropdown & Accordion Toggle */}
+                        <div
+                          className="bg-mc-beige-light/30 border-mc-beige-dark hover:bg-mc-beige-light/50 flex cursor-pointer flex-col items-start justify-between gap-3 border-b px-4 py-3 transition-colors sm:flex-row sm:items-center"
+                          onClick={() =>
+                            setCollapsedPOs((prev) => ({
+                              ...prev,
+                              [poRawId]: !prev[poRawId],
+                            }))
+                          }
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="bg-mc-gold/20 text-mc-gold flex items-center justify-center rounded px-2 py-1 font-mono text-xs font-bold shadow-sm">
+                              PO-{poIdStr}
                             </div>
+                            <span className="text-mc-black/60 text-xs font-medium">
+                              ({allocatedItemsForPo.length} items allocated)
+                            </span>
+                            <ChevronDown
+                              className={`text-mc-gray-soft h-4 w-4 transition-transform duration-200 ${collapsedPOs[poRawId] ? 'rotate-180' : ''}`}
+                            />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className="text-mc-black truncate text-sm font-bold"
-                              title={item.sku}
-                            >
-                              {item.sku}
-                            </p>
-                            <p className="text-mc-gray-soft mt-0.5 truncate text-xs">
-                              {item.name}
-                            </p>
+
+                          <div
+                            className="relative z-[40] w-full sm:w-64"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Select
+                              value={null}
+                              onChange={(val) => {
+                                if (val) handleAddItem(val.value);
+                              }}
+                              options={poItemsToAdd}
+                              isDisabled={
+                                isEditMode || poItemsToAdd.length === 0
+                              }
+                              isLoading={loadingPOItems}
+                              placeholder={
+                                poItemsToAdd.length === 0 && !loadingPOItems
+                                  ? 'All items allocated'
+                                  : '+ Add item from PO...'
+                              }
+                              className="react-select-container text-xs"
+                              classNamePrefix="react-select"
+                              menuPortalTarget={document.body}
+                              styles={{
+                                menuPortal: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                }),
+                                control: (base, state) => ({
+                                  ...base,
+                                  minHeight: '36px',
+                                  borderRadius: '0.375rem',
+                                  borderColor: state.isFocused
+                                    ? 'var(--color-mc-gold)'
+                                    : '#e2e8f0',
+                                  boxShadow: state.isFocused
+                                    ? '0 0 0 1px var(--color-mc-gold)'
+                                    : 'none',
+                                  '&:hover': {
+                                    borderColor: 'var(--color-mc-gold)',
+                                  },
+                                }),
+                              }}
+                            />
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                          <div className="flex flex-col items-end">
-                            <label className="text-mc-gray-soft mb-1 text-[10px] font-bold tracking-wider uppercase">
-                              Quantity
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max={item.maxQty}
-                                value={
-                                  item.allocateQty === ''
-                                    ? ''
-                                    : item.allocateQty
-                                }
-                                onChange={(e) =>
-                                  handleQtyChange(item.sku, e.target.value)
-                                }
-                                className={`bg-mc-beige-light/30 w-20 rounded border px-2 py-1 text-right font-mono text-sm font-bold focus:ring-1 focus:outline-none ${
-                                  item.allocateQty > item.maxQty ||
-                                  item.allocateQty < 0
-                                    ? 'border-rose-300 bg-rose-50 text-rose-700 focus:ring-rose-500'
-                                    : 'focus:ring-mc-gold border-mc-beige-dark text-mc-black'
-                                }`}
-                                placeholder="0"
-                              />
-                              <span className="text-mc-gray-soft w-8 text-xs font-medium whitespace-nowrap">
-                                / {item.maxQty}
-                              </span>
-                            </div>
-                            {/* Inline Validation Messages */}
-                            {item.allocateQty > item.maxQty && (
-                              <span className="mt-1 text-[10px] font-bold text-rose-500">
-                                Exceeds max ({item.maxQty})
-                              </span>
+                        {/* Allocated Items List (Conditionally rendered) */}
+                        {!collapsedPOs[poRawId] && (
+                          <div className="animate-in slide-in-from-top-2 fade-in p-4 duration-200">
+                            {allocatedItemsForPo.length === 0 ? (
+                              <div className="text-mc-gray-soft py-6 text-center text-sm italic">
+                                No items allocated from this PO yet.
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {allocatedItemsForPo.map((item) => (
+                                  <div
+                                    key={item.id || item.sku}
+                                    className="hover:border-mc-gold border-mc-beige-dark bg-mc-white flex flex-col justify-between gap-4 rounded-lg border p-3 shadow-sm transition-colors sm:flex-row sm:items-center"
+                                  >
+                                    {/* Item Details */}
+                                    <div className="flex items-start gap-3 overflow-hidden">
+                                      <div className="mt-0.5">
+                                        <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
+                                          <Container className="h-4 w-4" />
+                                        </div>
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5">
+                                          <span className="text-mc-black font-mono text-[13px] font-bold">
+                                            {item.sku}
+                                          </span>
+                                        </div>
+                                        <p
+                                          className="text-mc-gray-soft truncate text-[11px]"
+                                          title={item.name}
+                                        >
+                                          {item.name}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex flex-col items-end">
+                                        <label className="text-mc-gray-soft mb-1 text-[10px] font-bold tracking-wider uppercase">
+                                          Quantity
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max={item.maxQty}
+                                            value={
+                                              item.allocateQty === ''
+                                                ? ''
+                                                : item.allocateQty
+                                            }
+                                            onChange={(e) =>
+                                              handleQtyChange(
+                                                item.id,
+                                                e.target.value,
+                                              )
+                                            }
+                                            className={`focus:border-mc-gold focus:ring-mc-gold/20 w-20 rounded-md border px-2 py-1 text-right text-sm shadow-sm transition-colors focus:ring-2 ${
+                                              Number(item.allocateQty) >
+                                                item.maxQty ||
+                                              Number(item.allocateQty) < 0
+                                                ? 'border-mc-red text-mc-red bg-mc-red/10'
+                                                : 'border-mc-beige-dark text-mc-black'
+                                            }`}
+                                          />
+                                          <span className="text-mc-gray-soft shrink-0 text-xs">
+                                            / {item.maxQty}
+                                          </span>
+                                        </div>
+                                        {/* Inline Validation Messages */}
+                                        {Number(item.allocateQty) >
+                                          item.maxQty && (
+                                          <span className="mt-1 text-[10px] font-bold text-rose-500">
+                                            Exceeds max ({item.maxQty})
+                                          </span>
+                                        )}
+                                        {item.allocateQty !== '' &&
+                                          Number(item.allocateQty) < 0 && (
+                                            <span className="mt-1 text-[10px] font-bold text-rose-500">
+                                              Must be &gt;= 0
+                                            </span>
+                                          )}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleRemoveItem(item.id)
+                                        }
+                                        className="text-mc-gray-soft mt-4 rounded-md p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                                        title="Remove Item"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             )}
-                            {item.allocateQty !== '' &&
-                              item.allocateQty < 0 && (
-                                <span className="mt-1 text-[10px] font-bold text-rose-500">
-                                  Must be &gt;= 0
-                                </span>
-                              )}
                           </div>
-                          <button
-                            onClick={() => handleRemoveItem(item.sku)}
-                            className="text-mc-beige-dark mt-4 ml-2 flex-shrink-0 rounded-lg p-1.5 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                            title="Remove item"
-                          >
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -2061,9 +2187,12 @@ export default function ContainerFlowPage() {
                       <p className="text-mc-black text-opacity-80 mt-0.5 text-[10px]">
                         Currently allocating items for{' '}
                         <span className="font-mono font-bold">
-                          {selectedPO.sellercloud_po_id
-                            ? `PO-${selectedPO.sellercloud_po_id.toString().replace(/^PO-/, '')}`
-                            : selectedPO.id}
+                          {selectedPOs
+                            .map(
+                              (po) =>
+                                `PO-${String(po.sellercloud_po_id || po.id).replace(/^PO-/, '')}`,
+                            )
+                            .join(', ')}
                         </span>
                         .
                       </p>
