@@ -787,8 +787,16 @@ export default function ContainerFlowPage() {
 
     setActivePOTab((currentTab) => {
       if (ids.length === 0) return null;
-      if (ids.includes(currentTab)) return currentTab;
-      return ids[0];
+      const rawIds = ids.map((id) => {
+        const po =
+          poList?.find((p) => String(p.id) === String(id)) ||
+          purchaseOrders?.find((p) => String(p.id) === String(id));
+        return po ? po.sellercloud_po_id || po.id : id;
+      });
+      if (currentTab && rawIds.map(String).includes(String(currentTab))) {
+        return currentTab;
+      }
+      return rawIds[0];
     });
 
     if (ids.length === 0) {
@@ -812,22 +820,33 @@ export default function ContainerFlowPage() {
     }
   };
 
-  const handleRemovePOTab = (poIdToRemove, event) => {
+  const handleRemovePOTab = (poToRemove, event) => {
     event.stopPropagation();
+    if (!poToRemove) return;
+
+    const poRawId = poToRemove.sellercloud_po_id || poToRemove.id;
 
     // 1. Remove from PO selection lists
-    const newPoIds = selectedPOIds.filter((id) => id !== poIdToRemove);
+    const newPoIds = selectedPOIds.filter(
+      (id) => String(id) !== String(poToRemove.id),
+    );
     setSelectedPOIds(newPoIds);
 
     // 2. Erase the mapped items natively tied to this PO
     setSelectedItems((prev) =>
-      prev.filter((item) => item.bound_po_id !== poIdToRemove),
+      prev.filter((item) => String(item.bound_po_id) !== String(poRawId)),
     );
 
     // 3. Keep Active POTab healthy
     setActivePOTab((currentTab) => {
       if (newPoIds.length === 0) return null;
-      if (currentTab === poIdToRemove) return newPoIds[0];
+      if (String(currentTab) === String(poRawId)) {
+        const nextPoId = newPoIds[0];
+        const nextPo =
+          poList?.find((p) => String(p.id) === String(nextPoId)) ||
+          purchaseOrders?.find((p) => String(p.id) === String(nextPoId));
+        return nextPo ? nextPo.sellercloud_po_id || nextPo.id : nextPoId;
+      }
       return currentTab;
     });
 
@@ -901,14 +920,38 @@ export default function ContainerFlowPage() {
       toast.error('Please enter a container name.');
       return;
     }
+    const itemsToSave = selectedItems.filter(
+      (item) => item.allocateQty && Number(item.allocateQty) > 0,
+    );
+
+    const missingPOs = [];
+    for (const po of selectedPOs) {
+      const poRawId = po.sellercloud_po_id || po.id;
+      const hasAllocatedItems = itemsToSave.some(
+        (item) =>
+          String(item.bound_po_id) === String(poRawId) ||
+          String(item.bound_po_id) === String(po.id),
+      );
+      if (!hasAllocatedItems) {
+        const poDisplay = po.sellercloud_po_id
+          ? String(po.sellercloud_po_id).replace(/^PO-/, '')
+          : String(po.order_number || po.id).replace(/^PO-/i, '');
+        missingPOs.push(`PO-${poDisplay}`);
+      }
+    }
+
+    if (missingPOs.length > 0) {
+      toast.error(
+        `Please allocate at least one item with a quantity greater than 0 for: ${missingPOs.join(', ')}.`,
+      );
+      return;
+    }
+
     if (selectedItems.length === 0) {
       toast.error('Please add at least one item to the container.');
       return;
     }
 
-    const itemsToSave = selectedItems.filter(
-      (item) => item.allocateQty && item.allocateQty > 0,
-    );
     if (itemsToSave.length === 0) {
       toast.error(
         'Please allocate at least one item with a quantity greater than 0.',
@@ -1917,7 +1960,7 @@ export default function ContainerFlowPage() {
                         </span>
                         <div
                           className="hover:text-mc-red -mt-1 -mr-1 flex cursor-pointer items-center justify-center rounded-full p-1 text-slate-300 transition-colors hover:bg-rose-100/80"
-                          onClick={(e) => handleRemovePOTab(poRawId, e)}
+                          onClick={(e) => handleRemovePOTab(po, e)}
                           title="Remove Purchase Order"
                         >
                           <X className="h-3.5 w-3.5" strokeWidth={3} />
@@ -2047,15 +2090,6 @@ export default function ContainerFlowPage() {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5">
-                                    {item.bound_po_id && (
-                                      <span className="bg-mc-gold/20 text-mc-gold rounded px-1.5 py-0.5 font-mono text-[10px] font-bold">
-                                        PO-
-                                        {String(item.bound_po_id).replace(
-                                          /^PO-/,
-                                          '',
-                                        )}
-                                      </span>
-                                    )}
                                     <span className="text-mc-black font-mono text-[13px] font-bold">
                                       {item.sku}
                                     </span>
