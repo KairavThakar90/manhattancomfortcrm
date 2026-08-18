@@ -1231,6 +1231,7 @@ export default function POManagement({
         'Attachment',
       fileType: firstFile?.content_type || firstFile?.mimetype || '',
       timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+      rawTimestamp: c.created_at || c.timestamp || new Date().toISOString(),
       parentId: c.parent_id ? String(c.parent_id) : null,
     };
   };
@@ -2377,6 +2378,7 @@ Supply Chain CRM Coordinator`;
       role: userRole,
       message: messageText,
       timestamp: new Date().toISOString().slice(0, 10),
+      rawTimestamp: new Date().toISOString(),
       parentId: replyToCommentId,
       fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
       fileName: newCommentFile ? newCommentFile.name : null,
@@ -2458,35 +2460,9 @@ Supply Chain CRM Coordinator`;
       .then((detailData: any) => {
         if (!detailData) return;
         const rawComments = detailData.comments || [];
-        const mappedComments = rawComments.map((c: any) => {
-          const fileArr = c.files || c.attachments || c.documents || [];
-          const firstFile =
-            Array.isArray(fileArr) && fileArr.length > 0 ? fileArr[0] : null;
-
-          return {
-            id: String(c.id || `COM-${Math.random()}`),
-            poId: selectedPO.id,
-            user: c.user_name || c.user || c.author || 'User',
-            userId: c.user_id || c.author_id || null,
-            role: c.role || 'Administrator',
-            message: c.comment || c.message || c.text || '',
-            fileUrl:
-              firstFile?.file_url ||
-              firstFile?.url ||
-              c.file_url ||
-              c.file ||
-              null,
-            fileName:
-              firstFile?.file_name ||
-              firstFile?.name ||
-              c.file_name ||
-              c.filename ||
-              'Attachment',
-            fileType: firstFile?.content_type || firstFile?.mimetype || '',
-            timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
-            parentId: c.parent_id ? String(c.parent_id) : null,
-          };
-        });
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, selectedPO.id),
+        );
 
         // Only update if we didn't just switch away to another PO
         setFetchedComments((current) => {
@@ -4468,8 +4444,8 @@ Supply Chain CRM Coordinator`;
                             const sortNodes = (nodes: any[]) => {
                               return nodes.sort(
                                 (a, b) =>
-                                  new Date(a.timestamp).getTime() -
-                                  new Date(b.timestamp).getTime(),
+                                  new Date(a.rawTimestamp).getTime() -
+                                  new Date(b.rawTimestamp).getTime(),
                               );
                             };
 

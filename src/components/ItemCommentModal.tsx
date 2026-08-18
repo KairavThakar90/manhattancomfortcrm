@@ -49,6 +49,7 @@ const parseApiCommentObject = (c: any, defaultTargetId: string) => {
     role: c.role || 'Administrator',
     message: c.comment || c.message || c.text || '',
     timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
+    rawTimestamp: c.created_at || c.timestamp || new Date().toISOString(),
     parentId: c.parent_id ? String(c.parent_id) : null,
     fileUrl,
     fileName,
@@ -333,6 +334,7 @@ export default function ItemCommentModal({
       userId: currentUser?.id,
       message: messageText,
       timestamp: 'Just now',
+      rawTimestamp: new Date().toISOString(),
       parentId: replyId,
       fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
       fileName: newCommentFile ? newCommentFile.name : null,
@@ -453,7 +455,9 @@ export default function ItemCommentModal({
     return nodes.sort((a, b) => {
       if (a.timestamp === 'Just now') return 1;
       if (b.timestamp === 'Just now') return -1;
-      return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      return (
+        new Date(a.rawTimestamp).getTime() - new Date(b.rawTimestamp).getTime()
+      );
     });
   };
 
