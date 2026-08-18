@@ -15,6 +15,7 @@ import {
 import { useCRM } from '../hooks/useCRM';
 import { User, getTagUsers } from '../features/users/services/user.service';
 import { toast } from 'react-toastify';
+import { compressImageIfNeeded } from '../utils/imageCompression';
 
 const formatUtcTimestamp = (ts: any) => {
   if (!ts) return new Date().toISOString().slice(0, 10);
@@ -906,7 +907,7 @@ export default function ItemCommentModal({
                     id="item-comment-attachment-input"
                     className="hidden"
                     accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       if (e.target.files && e.target.files.length > 0) {
                         const file = e.target.files[0];
                         const isAllowedExt = file.name.match(
@@ -919,15 +920,19 @@ export default function ItemCommentModal({
                           e.target.value = '';
                           return;
                         }
+
+                        const compressedFile =
+                          await compressImageIfNeeded(file);
+
                         const maxSizeInBytes = 5 * 1024 * 1024;
-                        if (file.size > maxSizeInBytes) {
+                        if (compressedFile.size > maxSizeInBytes) {
                           toast.error(
                             'File exceeds the 5MB limits. Please upload a smaller file.',
                           );
                           e.target.value = '';
                           return;
                         }
-                        setNewCommentFile(file);
+                        setNewCommentFile(compressedFile);
                       }
                     }}
                   />

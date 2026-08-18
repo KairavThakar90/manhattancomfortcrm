@@ -46,6 +46,7 @@ import {
 import { toast } from 'react-toastify';
 import { Tooltip } from 'react-tooltip';
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
+import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import {
   PurchaseOrder,
   Vendor,
@@ -4964,7 +4965,7 @@ Supply Chain CRM Coordinator`;
                             id="comment-attachment-input"
                             className="hidden"
                             accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               if (e.target.files && e.target.files.length > 0) {
                                 const file = e.target.files[0];
                                 const isAllowedExt = file.name.match(
@@ -4979,8 +4980,11 @@ Supply Chain CRM Coordinator`;
                                   return;
                                 }
 
+                                const compressedFile =
+                                  await compressImageIfNeeded(file);
+
                                 const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-                                if (file.size > maxSizeInBytes) {
+                                if (compressedFile.size > maxSizeInBytes) {
                                   toast.error(
                                     'File exceeds the 5MB limits. Please upload a smaller file.',
                                   );
@@ -4988,7 +4992,7 @@ Supply Chain CRM Coordinator`;
                                   return;
                                 }
 
-                                setNewCommentFile(file);
+                                setNewCommentFile(compressedFile);
                               }
                             }}
                           />
