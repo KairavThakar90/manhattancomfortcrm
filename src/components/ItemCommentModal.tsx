@@ -17,11 +17,9 @@ import { User, getTagUsers } from '../features/users/services/user.service';
 import { toast } from 'react-toastify';
 
 const formatUtcTimestamp = (ts: any) => {
-  if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
+  if (!ts) return new Date().toISOString().slice(0, 10);
   const d = new Date(ts);
-  return isNaN(d.getTime())
-    ? ts
-    : d.toISOString().slice(0, 16).replace('T', ' ');
+  return isNaN(d.getTime()) ? ts : d.toISOString().slice(0, 10);
 };
 
 const parseApiCommentObject = (c: any, defaultTargetId: string) => {

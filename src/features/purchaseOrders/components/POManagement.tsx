@@ -1193,11 +1193,9 @@ export default function POManagement({
   };
 
   const formatUtcTimestamp = (ts: any) => {
-    if (!ts) return new Date().toISOString().slice(0, 16).replace('T', ' ');
+    if (!ts) return new Date().toISOString().slice(0, 10);
     const d = new Date(ts);
-    return isNaN(d.getTime())
-      ? ts
-      : d.toISOString().slice(0, 16).replace('T', ' ');
+    return isNaN(d.getTime()) ? ts : d.toISOString().slice(0, 10);
   };
 
   const parseApiCommentObject = (
@@ -2065,7 +2063,7 @@ Supply Chain CRM Coordinator`;
       id: `EML-${Math.floor(200 + Math.random() * 800)}`,
       poId: selectedPO.id,
       subject: `Timeline Follow-up - Purchase Order ${selectedPO.id}`,
-      sentAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      sentAt: new Date().toISOString().slice(0, 10),
       status: 'Sent',
       openCount: 0,
       lastOpenTime: null,
@@ -2370,7 +2368,7 @@ Supply Chain CRM Coordinator`;
             : 'You',
       role: userRole,
       message: messageText,
-      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      timestamp: new Date().toISOString().slice(0, 10),
       parentId: replyToCommentId,
       fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
       fileName: newCommentFile ? newCommentFile.name : null,
