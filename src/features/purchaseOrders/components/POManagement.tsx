@@ -1641,6 +1641,7 @@ export default function POManagement({
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -4938,10 +4939,15 @@ Supply Chain CRM Coordinator`;
                                   .getElementById('comment-attachment-input')
                                   ?.click()
                               }
-                              className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700"
+                              className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                               title="Attach file or image"
+                              disabled={isCompressing}
                             >
-                              <Paperclip className="h-4 w-4" />
+                              {isCompressing ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Paperclip className="h-4 w-4" />
+                              )}
                             </button>
                           </div>
                           {commentError && (
@@ -4969,17 +4975,19 @@ Supply Chain CRM Coordinator`;
                                   return;
                                 }
 
-                                const compressedFile =
-                                  await compressImageIfNeeded(file);
-
                                 const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-                                if (compressedFile.size > maxSizeInBytes) {
+                                if (file.size > maxSizeInBytes) {
                                   toast.error(
                                     'File exceeds the 5MB limits. Please upload a smaller file.',
                                   );
                                   e.target.value = '';
                                   return;
                                 }
+
+                                setIsCompressing(true);
+                                const compressedFile =
+                                  await compressImageIfNeeded(file);
+                                setIsCompressing(false);
 
                                 setNewCommentFile(compressedFile);
                               }
