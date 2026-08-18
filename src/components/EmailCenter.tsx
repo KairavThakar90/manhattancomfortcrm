@@ -239,59 +239,59 @@ Sourcing & S&OP Operations Assistant`;
   return (
     <div className="space-y-6">
       {/* Outreach KPI Widget Dashboard (Rule 6) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold text-slate-400">
             Total Sent Communications
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display text-2xl font-bold text-slate-900">
               {emails.length * 3}
             </strong>
-            <span className="text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-sm flex items-center">
+            <span className="flex items-center rounded-sm bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
               <ArrowUpRight className="h-3 w-3" />
               <span>+15% Load</span>
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold text-slate-400">
             Average Opened Count
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-indigo-900">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display text-2xl font-bold text-indigo-900">
               85.4%
             </strong>
-            <span className="text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-sm">
+            <span className="rounded-sm bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
               Optimum
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold text-slate-400">
             Active Click-Through (CTR)
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display text-2xl font-bold text-slate-900">
               42.8%
             </strong>
-            <span className="text-indigo-600 text-[10px] font-bold bg-indigo-50 px-2 py-0.5 rounded-sm">
+            <span className="rounded-sm bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
               Top Tier
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold text-slate-400">
             Sourcing Response Interval
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-900">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display text-2xl font-bold text-slate-900">
               18.4 Hours
             </strong>
-            <span className="text-rose-500 text-[10px] font-bold bg-rose-50 px-2 py-0.5 rounded-sm">
+            <span className="rounded-sm bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-500">
               Needs S&OP Trim
             </span>
           </div>
@@ -299,15 +299,15 @@ Sourcing & S&OP Operations Assistant`;
       </div>
 
       {/* Grid and Composer Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+      <div className="flex flex-col gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search emails by Subject, PO number, Vendor..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition text-slate-800"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-4 pl-9 text-xs text-slate-800 transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
           />
         </div>
 
@@ -315,7 +315,7 @@ Sourcing & S&OP Operations Assistant`;
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:outline-hidden text-slate-700 font-semibold"
+            className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700 focus:outline-hidden"
           >
             <option value="all">All Outreach Statuses</option>
             <option value="Sent">Sent</option>
@@ -327,7 +327,7 @@ Sourcing & S&OP Operations Assistant`;
 
           <button
             onClick={() => setShowComposer(true)}
-            className="flex items-center gap-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-xs font-bold transition shadow-xs"
+            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Compose Sourcing Email</span>
@@ -336,11 +336,11 @@ Sourcing & S&OP Operations Assistant`;
       </div>
 
       {/* Main Sent Outreach Engagement Table */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full border-collapse text-left text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
+              <tr className="border-b border-slate-100 bg-slate-50 font-semibold tracking-wider text-slate-500 uppercase">
                 <th className="px-6 py-4">PO Association</th>
                 <th className="px-6 py-4">Subject Outreach / Theme</th>
                 <th className="px-6 py-4">Timestamp Sent</th>
@@ -357,27 +357,27 @@ Sourcing & S&OP Operations Assistant`;
                 return (
                   <tr
                     key={email.id}
-                    className="hover:bg-slate-50/70 transition"
+                    className="transition hover:bg-slate-50/70"
                   >
                     <td className="px-6 py-4">
-                      <span className="font-bold font-mono text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-sm">
+                      <span className="rounded-sm bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-800">
                         {email.poId}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium text-slate-800">
                       <div>
                         <span>{email.subject}</span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
+                        <p className="mt-0.5 text-[10px] text-slate-400">
                           {po?.vendorName}
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
                       {email.sentAt}
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                           email.status === 'Replied'
                             ? 'bg-emerald-50 text-emerald-700'
                             : email.status === 'Opened'
@@ -390,27 +390,27 @@ Sourcing & S&OP Operations Assistant`;
                         {email.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">
+                    <td className="px-6 py-4 text-center font-mono font-bold text-slate-800">
                       {email.openCount}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold font-mono text-slate-800">
+                    <td className="px-6 py-4 text-center font-mono font-bold text-slate-800">
                       {email.linkClicks}
                     </td>
-                    <td className="px-6 py-4 text-center text-slate-600 font-mono">
+                    <td className="px-6 py-4 text-center font-mono text-slate-600">
                       {email.repliedAt ? (
-                        <span className="text-emerald-600 font-bold text-[10px] flex items-center justify-center gap-1">
+                        <span className="flex items-center justify-center gap-1 text-[10px] font-bold text-emerald-600">
                           <CheckCircle className="h-3.5 w-3.5" />
                           <span>Replied</span>
                         </span>
                       ) : (
-                        <span className="text-slate-400 text-[10px]">
+                        <span className="text-[10px] text-slate-400">
                           Awaiting reply
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-[10px]">
+                    <td className="px-6 py-4 font-mono text-[10px] text-slate-500">
                       {email.attachmentName ? (
-                        <span className="text-indigo-600 font-semibold underline cursor-pointer hover:text-indigo-800 flex items-center gap-1">
+                        <span className="flex cursor-pointer items-center gap-1 font-semibold text-indigo-600 underline hover:text-indigo-800">
                           <FileText className="h-3.5 w-3.5" />
                           <span>{email.attachmentName}</span>
                         </span>
@@ -428,16 +428,16 @@ Sourcing & S&OP Operations Assistant`;
 
       {/* COMPOSER SLIDEOVER MODAL */}
       {showComposer && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-end z-50 animate-fadeIn">
-          <div className="bg-white h-full max-w-lg w-full p-6 shadow-2xl flex flex-col justify-between border-l border-slate-100 animate-slideLeft">
+        <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div className="animate-slideLeft flex h-full w-full max-w-lg flex-col justify-between border-l border-slate-100 bg-white p-6 shadow-2xl">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-display font-bold text-slate-900 text-base">
+                <h3 className="font-display text-base font-bold text-slate-900">
                   New Procurement Outreach
                 </h3>
                 <button
                   onClick={() => setShowComposer(false)}
-                  className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -446,7 +446,7 @@ Sourcing & S&OP Operations Assistant`;
               {/* Form details */}
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">
+                  <label className="mb-1 block font-semibold text-slate-600">
                     Target Purchase Order
                   </label>
                   <select
@@ -454,7 +454,7 @@ Sourcing & S&OP Operations Assistant`;
                     onChange={(e) =>
                       setComposerForm({ ...composerForm, poId: e.target.value })
                     }
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden text-slate-800 font-semibold"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 font-semibold text-slate-800 focus:outline-hidden"
                     required
                   >
                     <option value="">-- Associate Sourcing PO --</option>
@@ -468,7 +468,7 @@ Sourcing & S&OP Operations Assistant`;
 
                 {/* Templates selectors */}
                 <div>
-                  <label className="font-semibold text-slate-500 block mb-1.5">
+                  <label className="mb-1.5 block font-semibold text-slate-500">
                     Apply Procurement Templates
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -477,10 +477,10 @@ Sourcing & S&OP Operations Assistant`;
                         key={tmpl.id}
                         type="button"
                         onClick={() => handleSelectTemplate(tmpl.id)}
-                        className={`p-2 rounded-lg border text-left font-semibold transition hover:border-indigo-400 text-[10px] ${
+                        className={`rounded-lg border p-2 text-left text-[10px] font-semibold transition hover:border-indigo-400 ${
                           composerForm.templateId === tmpl.id
-                            ? 'bg-indigo-50 border-indigo-400 text-indigo-950'
-                            : 'bg-white border-slate-200 text-slate-600'
+                            ? 'border-indigo-400 bg-indigo-50 text-indigo-950'
+                            : 'border-slate-200 bg-white text-slate-600'
                         }`}
                       >
                         {tmpl.name}
@@ -490,14 +490,14 @@ Sourcing & S&OP Operations Assistant`;
                 </div>
 
                 {/* AI Assistant Compose trigger */}
-                <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 flex items-center justify-between">
+                <div className="flex items-center justify-between rounded-xl border border-indigo-100/50 bg-indigo-50/50 p-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4.5 w-4.5 text-indigo-600" />
                     <div>
                       <h4 className="font-semibold text-indigo-950">
                         AI Sourcing Draft Composer
                       </h4>
-                      <p className="text-[9px] text-indigo-700 mt-0.5">
+                      <p className="mt-0.5 text-[9px] text-indigo-700">
                         Let AI review the selected PO and write follow-ups
                         instantly.
                       </p>
@@ -508,7 +508,7 @@ Sourcing & S&OP Operations Assistant`;
                     type="button"
                     onClick={handleAIGenerate}
                     disabled={aiWriting}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[10px] transition"
+                    className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-indigo-700"
                   >
                     {aiWriting ? 'Sourcing...' : 'Generate Draft'}
                   </button>
@@ -516,7 +516,7 @@ Sourcing & S&OP Operations Assistant`;
 
                 {/* Subject */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">
+                  <label className="mb-1 block font-semibold text-slate-600">
                     Subject outreach
                   </label>
                   <input
@@ -529,14 +529,14 @@ Sourcing & S&OP Operations Assistant`;
                         subject: e.target.value,
                       })
                     }
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:bg-white text-slate-800 font-medium"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 font-medium text-slate-800 focus:bg-white focus:outline-hidden"
                     required
                   />
                 </div>
 
                 {/* Body Textarea */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">
+                  <label className="mb-1 block font-semibold text-slate-600">
                     Email Body Draft
                   </label>
                   <textarea
@@ -546,14 +546,14 @@ Sourcing & S&OP Operations Assistant`;
                       setComposerForm({ ...composerForm, body: e.target.value })
                     }
                     rows={8}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:bg-white text-slate-800 leading-relaxed font-mono"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2.5 font-mono leading-relaxed text-slate-800 focus:bg-white focus:outline-hidden"
                     required
                   />
                 </div>
 
                 {/* Attachment */}
                 <div>
-                  <label className="font-semibold text-slate-600 block mb-1">
+                  <label className="mb-1 block font-semibold text-slate-600">
                     Add Procurement Attachment (Optional)
                   </label>
                   <input
@@ -566,24 +566,24 @@ Sourcing & S&OP Operations Assistant`;
                         attachmentName: e.target.value,
                       })
                     }
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono focus:outline-hidden"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-4">
+            <div className="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-4">
               <button
                 type="button"
                 onClick={() => setShowComposer(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600"
               >
                 Discard Draft
               </button>
               <button
                 type="button"
                 onClick={handleSendEmail}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1"
+                className="flex items-center gap-1 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
               >
                 <Send className="h-3 w-3" />
                 <span>Dispatch SMTP Pipeline</span>

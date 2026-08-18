@@ -95,46 +95,46 @@ export default function ReportsAnalytics({
   return (
     <div className="space-y-6">
       {/* S&OP Financial BI High-level Header Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block uppercase tracking-wider">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
             Total Committed Capital
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-950 font-mono">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display font-mono text-2xl font-bold text-slate-950">
               ${totalCommitedCapital.toLocaleString()}
             </strong>
-            <span className="p-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5 rounded-lg bg-emerald-50 p-1.5 text-xs font-bold text-emerald-700">
               <ArrowUpRight className="h-3.5 w-3.5" />
               <span>Capital On-tract</span>
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block uppercase tracking-wider">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
             Capital Blocked In Delays
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-rose-950 font-mono">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display font-mono text-2xl font-bold text-rose-950">
               ${totalDelayedValue.toLocaleString()}
             </strong>
-            <span className="p-1.5 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5 rounded-lg bg-rose-50 p-1.5 text-xs font-bold text-rose-700">
               <ArrowDownRight className="h-3.5 w-3.5" />
               <span>Sourcing Risk</span>
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-          <span className="text-slate-400 text-xs font-semibold block uppercase tracking-wider">
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
+          <span className="block text-xs font-semibold tracking-wider text-slate-400 uppercase">
             S&OP Lead Time Variance
           </span>
-          <div className="flex items-center justify-between mt-2">
-            <strong className="text-2xl font-display font-bold text-slate-950 font-mono">
+          <div className="mt-2 flex items-center justify-between">
+            <strong className="font-display font-mono text-2xl font-bold text-slate-950">
               {averageDelayDays} Days Avg
             </strong>
-            <span className="p-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold flex items-center gap-0.5">
+            <span className="flex items-center gap-0.5 rounded-lg bg-amber-50 p-1.5 text-xs font-bold text-amber-700">
               <AlertTriangle className="h-3.5 w-3.5 animate-pulse" />
               <span>Trim Target</span>
             </span>
@@ -143,11 +143,11 @@ export default function ReportsAnalytics({
       </div>
 
       {/* Reports Navigation Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-xs gap-4">
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
+      <div className="flex flex-col justify-between gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-xs md:flex-row md:items-center">
+        <div className="flex w-fit items-center gap-1 rounded-lg bg-slate-100 p-1">
           <button
             onClick={() => setSelectedReport('delays')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               selectedReport === 'delays'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -159,7 +159,7 @@ export default function ReportsAnalytics({
 
           <button
             onClick={() => setSelectedReport('vendors')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               selectedReport === 'vendors'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -171,7 +171,7 @@ export default function ReportsAnalytics({
 
           <button
             onClick={() => setSelectedReport('logistics')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               selectedReport === 'logistics'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -183,7 +183,7 @@ export default function ReportsAnalytics({
 
           <button
             onClick={() => setSelectedReport('finance')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-1.5 ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
               selectedReport === 'finance'
                 ? 'bg-white text-slate-900 shadow-xs'
                 : 'text-slate-500 hover:text-slate-800'
@@ -198,7 +198,7 @@ export default function ReportsAnalytics({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => triggerReportExport('csv')}
-            className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+            className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
           >
             <FileSpreadsheet className="h-3.5 w-3.5" />
             <span>Excel / CSV</span>
@@ -206,7 +206,7 @@ export default function ReportsAnalytics({
 
           <button
             onClick={() => triggerReportExport('pdf')}
-            className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-xs font-medium transition"
+            className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
           >
             <FileDown className="h-3.5 w-3.5" />
             <span>PDF S&OP report</span>
@@ -215,13 +215,13 @@ export default function ReportsAnalytics({
       </div>
 
       {/* REPORT CONTENT PANEL */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs">
         {/* REPORT 1: DELAYS */}
         {selectedReport === 'delays' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">
+                <h3 className="font-display text-sm font-bold text-slate-900">
                   Delayed Purchase Orders Risk Audit
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -229,17 +229,17 @@ export default function ReportsAnalytics({
                   shipment schedules.
                 </p>
               </div>
-              <span className="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-1 rounded-full">
+              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600">
                 {delayedPOs.length} Contracts At Risk
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Detailed tabular analysis */}
-              <div className="md:col-span-2 space-y-3">
-                <table className="w-full text-left text-xs border-collapse">
+              <div className="space-y-3 md:col-span-2">
+                <table className="w-full border-collapse text-left text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+                    <tr className="border-b border-slate-100 bg-slate-50 font-semibold tracking-wider text-slate-500 uppercase">
                       <th className="px-4 py-3">PO Code</th>
                       <th className="px-4 py-3">Vendor / country</th>
                       <th className="px-4 py-3">Delayed Days</th>
@@ -256,9 +256,9 @@ export default function ReportsAnalytics({
                       return (
                         <tr
                           key={po.id}
-                          className="hover:bg-slate-50/50 transition"
+                          className="transition hover:bg-slate-50/50"
                         >
-                          <td className="px-4 py-3 font-bold font-mono text-xs text-slate-900">
+                          <td className="px-4 py-3 font-mono text-xs font-bold text-slate-900">
                             {po.id}
                           </td>
                           <td className="px-4 py-3">
@@ -269,7 +269,7 @@ export default function ReportsAnalytics({
                               Vietnam • {po.productionStage} stage
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-rose-600 font-bold font-mono text-sm">
+                          <td className="px-4 py-3 font-mono text-sm font-bold text-rose-600">
                             {po.delayedDays} Days Late
                           </td>
                           <td className="px-4 py-3 font-mono font-bold text-slate-800">
@@ -286,25 +286,25 @@ export default function ReportsAnalytics({
               </div>
 
               {/* Predictive AI Analytics block */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase">
+                  <h4 className="flex items-center gap-1.5 text-xs font-bold text-slate-800 uppercase">
                     <Sparkles className="h-4.5 w-4.5 text-indigo-600" />
                     <span>Predictive S&OP Insights</span>
                   </h4>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-[11px] leading-relaxed text-slate-600">
                     AI Lead-time forecasting model predicts that **Global Tech
                     Sourcing** has a **84% likelihood** of delaying secondary
                     contract PO-10030 by an additional 12 days due to
                     semiconductor allocation limits in Southeast Asian hubs.
                   </p>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                  <p className="text-[11px] leading-relaxed text-slate-600">
                     We suggest initiating contact with alternate manufacturers
                     in Taiwan or India to diversify micro-IC modules sourcing.
                   </p>
                 </div>
 
-                <div className="p-2.5 bg-rose-50 border border-rose-100 rounded-lg text-[10px] text-rose-950 font-semibold font-mono leading-tight">
+                <div className="rounded-lg border border-rose-100 bg-rose-50 p-2.5 font-mono text-[10px] leading-tight font-semibold text-rose-950">
                   High Risk Vendors Flagged: 1 (Global Tech)
                 </div>
               </div>
@@ -315,9 +315,9 @@ export default function ReportsAnalytics({
         {/* REPORT 2: VENDOR PERFORMANCE AUDIT */}
         {selectedReport === 'vendors' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">
+                <h3 className="font-display text-sm font-bold text-slate-900">
                   Onboarded Supplier Metrics Ledger
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -325,7 +325,7 @@ export default function ReportsAnalytics({
                   contractual compliance.
                 </p>
               </div>
-              <span className="text-xs text-indigo-600 font-bold uppercase">
+              <span className="text-xs font-bold text-indigo-600 uppercase">
                 Sourcing Base Audited
               </span>
             </div>
@@ -334,16 +334,16 @@ export default function ReportsAnalytics({
               {vendors.map((vendor) => (
                 <div
                   key={vendor.id}
-                  className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="flex flex-col justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4 md:flex-row md:items-center"
                 >
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <h4 className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                       <span>{vendor.name}</span>
-                      <span className="text-[10px] font-mono bg-slate-200 text-slate-600 px-1.5 py-0.2 rounded-sm">
+                      <span className="py-0.2 rounded-sm bg-slate-200 px-1.5 font-mono text-[10px] text-slate-600">
                         {vendor.id}
                       </span>
                     </h4>
-                    <div className="flex gap-4 text-[10px] text-slate-400 mt-1 font-mono uppercase">
+                    <div className="mt-1 flex gap-4 font-mono text-[10px] text-slate-400 uppercase">
                       <span>
                         Country:{' '}
                         <strong className="text-slate-700">
@@ -367,18 +367,18 @@ export default function ReportsAnalytics({
 
                   <div className="flex items-center gap-8 text-xs font-semibold">
                     <div>
-                      <span className="text-slate-400 block text-[10px]">
+                      <span className="block text-[10px] text-slate-400">
                         Delayed Contracts
                       </span>
                       <span
-                        className={`font-mono text-sm ${vendor.delayedOrders > 2 ? 'text-rose-600 font-bold' : 'text-slate-700'}`}
+                        className={`font-mono text-sm ${vendor.delayedOrders > 2 ? 'font-bold text-rose-600' : 'text-slate-700'}`}
                       >
                         {vendor.delayedOrders} POs
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 block text-[10px]">
+                      <span className="block text-[10px] text-slate-400">
                         Supplier Score
                       </span>
                       <span
@@ -403,21 +403,21 @@ export default function ReportsAnalytics({
         {/* REPORT 3: CONTAINER UTILIZATION */}
         {selectedReport === 'logistics' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">
+                <h3 className="font-display text-sm font-bold text-slate-900">
                   Vessel Booking & Container Utilization
                 </h3>
                 <p className="text-xs text-slate-500">
                   Active shipment tracking and container specifications mapping.
                 </p>
               </div>
-              <span className="text-xs text-indigo-600 font-bold uppercase">
+              <span className="text-xs font-bold text-indigo-600 uppercase">
                 Logistics Live
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 uppercase">
                   Active Ocean Containers List
@@ -427,22 +427,22 @@ export default function ReportsAnalytics({
                   .map((po) => (
                     <div
                       key={po.id}
-                      className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                      className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs"
                     >
                       <div>
-                        <span className="font-bold font-mono text-slate-800">
+                        <span className="font-mono font-bold text-slate-800">
                           {po.container}
                         </span>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
+                        <p className="mt-0.5 text-[10px] text-slate-400">
                           Vessel booking ref for contract: {po.id}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <span className="font-mono text-slate-800 font-bold">
+                        <span className="font-mono font-bold text-slate-800">
                           {po.orderedQty} units
                         </span>
-                        <p className="text-[10px] text-slate-400 font-mono">
+                        <p className="font-mono text-[10px] text-slate-400">
                           Dock ETA: {po.eta}
                         </p>
                       </div>
@@ -451,39 +451,39 @@ export default function ReportsAnalytics({
               </div>
 
               {/* Simple custom SVG chart representing Container Sourcing Capacity */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div>
                   <h4 className="text-xs font-bold text-slate-700 uppercase">
                     Container Volume Utilization Ratio
                   </h4>
-                  <p className="text-[10px] text-slate-500 mt-1">
+                  <p className="mt-1 text-[10px] text-slate-500">
                     Measuring bulk sizing committed vs actual space utilization.
                   </p>
 
-                  <div className="mt-6 flex justify-around items-end h-32 text-center">
+                  <div className="mt-6 flex h-32 items-end justify-around text-center">
                     <div>
-                      <div className="w-10 bg-indigo-100 h-28 rounded-md relative overflow-hidden flex flex-col justify-end">
-                        <div className="bg-indigo-600 h-[82%] w-full rounded-b-md" />
+                      <div className="relative flex h-28 w-10 flex-col justify-end overflow-hidden rounded-md bg-indigo-100">
+                        <div className="h-[82%] w-full rounded-b-md bg-indigo-600" />
                       </div>
-                      <span className="text-[10px] font-bold font-mono text-slate-600 mt-2 block">
+                      <span className="mt-2 block font-mono text-[10px] font-bold text-slate-600">
                         CNT-025 (82%)
                       </span>
                     </div>
 
                     <div>
-                      <div className="w-10 bg-indigo-100 h-28 rounded-md relative overflow-hidden flex flex-col justify-end">
-                        <div className="bg-indigo-600 h-[96%] w-full rounded-b-md" />
+                      <div className="relative flex h-28 w-10 flex-col justify-end overflow-hidden rounded-md bg-indigo-100">
+                        <div className="h-[96%] w-full rounded-b-md bg-indigo-600" />
                       </div>
-                      <span className="text-[10px] font-bold font-mono text-slate-600 mt-2 block">
+                      <span className="mt-2 block font-mono text-[10px] font-bold text-slate-600">
                         CNT-026 (96%)
                       </span>
                     </div>
 
                     <div>
-                      <div className="w-10 bg-indigo-100 h-28 rounded-md relative overflow-hidden flex flex-col justify-end">
-                        <div className="bg-indigo-600 h-[64%] w-full rounded-b-md" />
+                      <div className="relative flex h-28 w-10 flex-col justify-end overflow-hidden rounded-md bg-indigo-100">
+                        <div className="h-[64%] w-full rounded-b-md bg-indigo-600" />
                       </div>
-                      <span className="text-[10px] font-bold font-mono text-slate-600 mt-2 block">
+                      <span className="mt-2 block font-mono text-[10px] font-bold text-slate-600">
                         CNT-099 (64%)
                       </span>
                     </div>
@@ -497,9 +497,9 @@ export default function ReportsAnalytics({
         {/* REPORT 4: FINANCE & INVOICES */}
         {selectedReport === 'finance' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">
+                <h3 className="font-display text-sm font-bold text-slate-900">
                   Financial Invoice Audits & OCR Tracking
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -507,17 +507,17 @@ export default function ReportsAnalytics({
                   integrity.
                 </p>
               </div>
-              <span className="text-xs text-emerald-600 font-bold uppercase">
+              <span className="text-xs font-bold text-emerald-600 uppercase">
                 Finance Clean
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                <span className="text-slate-400 text-[10px] font-semibold block uppercase">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                <span className="block text-[10px] font-semibold text-slate-400 uppercase">
                   Approved Invoices
                 </span>
-                <strong className="text-xl font-bold text-emerald-600 block mt-2">
+                <strong className="mt-2 block text-xl font-bold text-emerald-600">
                   {
                     purchaseOrders.filter(
                       (po) => po.invoiceStatus === 'Approved',
@@ -525,16 +525,16 @@ export default function ReportsAnalytics({
                   }{' '}
                   Contracts
                 </strong>
-                <span className="text-[9px] text-slate-400 block mt-1">
+                <span className="mt-1 block text-[9px] text-slate-400">
                   Paid & authorized by finance
                 </span>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                <span className="text-slate-400 text-[10px] font-semibold block uppercase">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                <span className="block text-[10px] font-semibold text-slate-400 uppercase">
                   Pending S&OP Audits
                 </span>
-                <strong className="text-xl font-bold text-amber-600 block mt-2">
+                <strong className="mt-2 block text-xl font-bold text-amber-600">
                   {
                     purchaseOrders.filter(
                       (po) => po.invoiceStatus === 'Pending',
@@ -542,19 +542,19 @@ export default function ReportsAnalytics({
                   }{' '}
                   Contracts
                 </strong>
-                <span className="text-[9px] text-slate-400 block mt-1">
+                <span className="mt-1 block text-[9px] text-slate-400">
                   Awaiting invoice PDF drafts
                 </span>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                <span className="text-slate-400 text-[10px] font-semibold block uppercase">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                <span className="block text-[10px] font-semibold text-slate-400 uppercase">
                   AI OCR Match Rate
                 </span>
-                <strong className="text-xl font-bold text-indigo-600 block mt-2">
+                <strong className="mt-2 block text-xl font-bold text-indigo-600">
                   100% Accuracy
                 </strong>
-                <span className="text-[9px] text-slate-400 block mt-1">
+                <span className="mt-1 block text-[9px] text-slate-400">
                   Automated validation matches
                 </span>
               </div>

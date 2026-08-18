@@ -79,35 +79,35 @@ export default function VendorManagement({
   return (
     <div className="space-y-6">
       {/* Risk Sourcing Intelligence Bar - PREDICTIVE ANALYTICS */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs md:flex-row md:items-center">
         <div>
-          <h3 className="font-display font-bold text-slate-900 text-sm flex items-center gap-2">
+          <h3 className="font-display flex items-center gap-2 text-sm font-bold text-slate-900">
             <AlertTriangle className="h-4.5 w-4.5 text-rose-500" />
             <span>Sourcing Risk & Predictive Analytics</span>
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="mt-1 text-xs text-slate-500">
             Analyzing lead times, average delivery variations, and quality
             scores.
           </p>
         </div>
 
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex flex-wrap gap-4">
           {vendors.map((vendor) => {
             const isHighRisk = vendor.performanceScore < 80;
             return (
               <div
                 key={vendor.id}
-                className={`px-3.5 py-2 rounded-xl text-xs border flex items-center gap-2 transition ${
+                className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs transition ${
                   isHighRisk
-                    ? 'bg-rose-50 border-rose-100 text-rose-950 font-semibold'
-                    : 'bg-emerald-50/50 border-emerald-100 text-emerald-950'
+                    ? 'border-rose-100 bg-rose-50 font-semibold text-rose-950'
+                    : 'border-emerald-100 bg-emerald-50/50 text-emerald-950'
                 }`}
               >
                 <div
-                  className={`h-2.5 w-2.5 rounded-full ${isHighRisk ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`}
+                  className={`h-2.5 w-2.5 rounded-full ${isHighRisk ? 'animate-pulse bg-rose-500' : 'bg-emerald-500'}`}
                 />
                 <div>
-                  <span className="block text-[10px] text-slate-400 font-mono uppercase font-bold">
+                  <span className="block font-mono text-[10px] font-bold text-slate-400 uppercase">
                     {vendor.id}
                   </span>
                   <span className="block text-xs font-semibold">
@@ -115,7 +115,7 @@ export default function VendorManagement({
                   </span>
                 </div>
                 {isHighRisk && (
-                  <span className="text-[10px] bg-rose-600 text-white font-bold px-1.5 py-0.5 rounded-sm">
+                  <span className="rounded-sm bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
                     HIGH RISK
                   </span>
                 )}
@@ -126,19 +126,19 @@ export default function VendorManagement({
       </div>
 
       {/* Main Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Supplier Directory List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-slate-900 text-base">
+            <h2 className="font-display text-base font-bold text-slate-900">
               Active Manufacturer Base
             </h2>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="font-mono text-xs text-slate-500">
               {vendors.length} Onboarded Vendors
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {vendors.map((vendor) => {
               const poCount = purchaseOrders.filter(
                 (po) => po.vendorId === vendor.id,
@@ -154,32 +154,32 @@ export default function VendorManagement({
                     setSelectedVendorId(vendor.id);
                     setIsEditingContact(false);
                   }}
-                  className={`p-5 bg-white rounded-2xl border transition hover:shadow-md cursor-pointer flex flex-col justify-between h-48 ${
+                  className={`flex h-48 cursor-pointer flex-col justify-between rounded-2xl border bg-white p-5 transition hover:shadow-md ${
                     selectedVendorId === vendor.id
-                      ? 'border-indigo-600 shadow-xs bg-indigo-50/5'
+                      ? 'border-indigo-600 bg-indigo-50/5 shadow-xs'
                       : 'border-slate-100'
                   }`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-[10px] text-indigo-600 font-mono font-bold uppercase tracking-wider">
+                        <span className="font-mono text-[10px] font-bold tracking-wider text-indigo-600 uppercase">
                           {vendor.id}
                         </span>
-                        <h3 className="font-display font-bold text-slate-900 text-sm mt-0.5">
+                        <h3 className="font-display mt-0.5 text-sm font-bold text-slate-900">
                           {vendor.name}
                         </h3>
                       </div>
                       <div className="flex items-center gap-1 font-mono text-xs font-bold text-slate-700">
-                        <Star className="h-4.5 w-4.5 text-amber-400 fill-amber-400" />
+                        <Star className="h-4.5 w-4.5 fill-amber-400 text-amber-400" />
                         <span>{vendor.performanceScore}%</span>
                       </div>
                     </div>
 
-                    <div className="text-xs text-slate-500 space-y-1 pt-1">
+                    <div className="space-y-1 pt-1 text-xs text-slate-500">
                       <p className="flex items-center gap-1.5 text-slate-400">
                         <User className="h-3.5 w-3.5" />
-                        <span className="text-slate-600 font-medium">
+                        <span className="font-medium text-slate-600">
                           {vendor.contact}
                         </span>
                       </p>
@@ -192,7 +192,7 @@ export default function VendorManagement({
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-50 pt-3 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                  <div className="flex items-center justify-between border-t border-slate-50 pt-3 text-[11px] font-medium text-slate-500">
                     <div className="flex gap-3">
                       <span>
                         Orders:{' '}
@@ -201,13 +201,13 @@ export default function VendorManagement({
                         </strong>
                       </span>
                       {delayCount > 0 && (
-                        <span className="text-rose-600 font-semibold">
+                        <span className="font-semibold text-rose-600">
                           {delayCount} Delayed
                         </span>
                       )}
                     </div>
 
-                    <span className="text-indigo-600 font-semibold flex items-center gap-0.5">
+                    <span className="flex items-center gap-0.5 font-semibold text-indigo-600">
                       <span>Inspect Profile</span>
                       <ChevronRight className="h-3 w-3" />
                     </span>
@@ -219,26 +219,26 @@ export default function VendorManagement({
         </div>
 
         {/* Selected Vendor Profile Details Drawer */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden h-fit">
+        <div className="h-fit overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
           {selectedVendor ? (
             <div className="divide-y divide-slate-100">
               {/* Profile Header */}
-              <div className="p-6 bg-slate-50/60 flex items-start justify-between">
+              <div className="flex items-start justify-between bg-slate-50/60 p-6">
                 <div>
-                  <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-bold font-mono uppercase tracking-wider">
+                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-mono text-[10px] font-bold tracking-wider text-indigo-700 uppercase">
                     {selectedVendor.id}
                   </span>
-                  <h3 className="font-display font-bold text-slate-900 text-base mt-2">
+                  <h3 className="font-display mt-2 text-base font-bold text-slate-900">
                     {selectedVendor.name}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="mt-0.5 text-xs text-slate-400">
                     Primary Manufacturing Sourcing Hub
                   </p>
                 </div>
 
                 <button
                   onClick={() => handleStartEdit(selectedVendor)}
-                  className="p-2 hover:bg-white border border-slate-200 rounded-lg text-slate-600 shadow-xs transition"
+                  className="rounded-lg border border-slate-200 p-2 text-slate-600 shadow-xs transition hover:bg-white"
                   title="Modify contact coordinates"
                 >
                   <Edit2 className="h-4 w-4" />
@@ -249,14 +249,14 @@ export default function VendorManagement({
               {isEditingContact && editForm ? (
                 <form
                   onSubmit={handleSaveContact}
-                  className="p-6 space-y-4 animate-fadeIn bg-indigo-50/10"
+                  className="animate-fadeIn space-y-4 bg-indigo-50/10 p-6"
                 >
-                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  <h4 className="text-xs font-bold tracking-wider text-slate-800 uppercase">
                     Modify Contact Coordinates
                   </h4>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 block mb-1">
+                    <label className="mb-1 block text-[10px] font-semibold text-slate-500">
                       Contact Name
                     </label>
                     <input
@@ -265,13 +265,13 @@ export default function VendorManagement({
                       onChange={(e) =>
                         setEditForm({ ...editForm, contact: e.target.value })
                       }
-                      className="w-full p-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden"
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 text-xs focus:outline-hidden"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 block mb-1">
+                    <label className="mb-1 block text-[10px] font-semibold text-slate-500">
                       Contact Email
                     </label>
                     <input
@@ -280,13 +280,13 @@ export default function VendorManagement({
                       onChange={(e) =>
                         setEditForm({ ...editForm, email: e.target.value })
                       }
-                      className="w-full p-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 font-mono text-xs focus:outline-hidden"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 block mb-1">
+                    <label className="mb-1 block text-[10px] font-semibold text-slate-500">
                       Contact Phone
                     </label>
                     <input
@@ -295,7 +295,7 @@ export default function VendorManagement({
                       onChange={(e) =>
                         setEditForm({ ...editForm, phone: e.target.value })
                       }
-                      className="w-full p-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden font-mono"
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 font-mono text-xs focus:outline-hidden"
                       required
                     />
                   </div>
@@ -304,13 +304,13 @@ export default function VendorManagement({
                     <button
                       type="button"
                       onClick={() => setIsEditingContact(false)}
-                      className="flex-1 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-500 bg-white"
+                      className="flex-1 rounded-lg border border-slate-200 bg-white py-1.5 text-xs font-medium text-slate-500"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition"
+                      className="flex-1 rounded-lg bg-indigo-600 py-1.5 text-xs font-bold text-white transition hover:bg-indigo-700"
                     >
                       Save Changes
                     </button>
@@ -318,34 +318,34 @@ export default function VendorManagement({
                 </form>
               ) : (
                 /* Contact Coordinates Static Display */
-                <div className="p-6 space-y-4">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                <div className="space-y-4 p-6">
+                  <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">
                     Contact coordinates
                   </h4>
 
                   <div className="space-y-3.5 text-xs">
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
+                    <div className="flex items-center justify-between border-b border-slate-50 py-1">
                       <span className="text-slate-400">Account Manager:</span>
                       <span className="font-semibold text-slate-800">
                         {selectedVendor.contact}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
+                    <div className="flex items-center justify-between border-b border-slate-50 py-1">
                       <span className="text-slate-400">Email:</span>
-                      <span className="font-mono text-slate-800 hover:underline cursor-pointer">
+                      <span className="cursor-pointer font-mono text-slate-800 hover:underline">
                         {selectedVendor.email}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
+                    <div className="flex items-center justify-between border-b border-slate-50 py-1">
                       <span className="text-slate-400">Direct Phone:</span>
                       <span className="font-mono text-slate-800">
                         {selectedVendor.phone}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
+                    <div className="flex items-center justify-between border-b border-slate-50 py-1">
                       <span className="text-slate-400">Hub Country:</span>
                       <span className="font-semibold text-slate-800">
                         {selectedVendor.country}
@@ -356,25 +356,25 @@ export default function VendorManagement({
               )}
 
               {/* Performance Scorecard Stats */}
-              <div className="p-6 space-y-4">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <div className="space-y-4 p-6">
+                <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">
                   Sourcing Scorecard
                 </h4>
 
                 <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                    <span className="block text-[10px] font-medium text-slate-400">
                       Total Sourced POs
                     </span>
-                    <strong className="text-lg font-bold text-slate-800 font-mono">
+                    <strong className="font-mono text-lg font-bold text-slate-800">
                       {selectedVendor.totalOrders} POs
                     </strong>
                   </div>
-                  <div className="bg-slate-50/50 p-3 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                    <span className="block text-[10px] font-medium text-slate-400">
                       Avg Delivery Time
                     </span>
-                    <strong className="text-lg font-bold text-slate-800 font-mono">
+                    <strong className="font-mono text-lg font-bold text-slate-800">
                       {selectedVendor.avgDeliveryDays} Days
                     </strong>
                   </div>
@@ -382,8 +382,8 @@ export default function VendorManagement({
 
                 {/* Sourcing warning alerts if score is poor */}
                 {selectedVendor.performanceScore < 80 ? (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-950 text-[11px] leading-relaxed">
-                    <strong className="font-bold flex items-center gap-1">
+                  <div className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-[11px] leading-relaxed text-rose-950">
+                    <strong className="flex items-center gap-1 font-bold">
                       <AlertTriangle className="h-4 w-4 text-rose-600" />
                       <span>Action Recommended: Risk Level High</span>
                     </strong>
@@ -395,8 +395,8 @@ export default function VendorManagement({
                     alternative sourcing paths or contract audits.
                   </div>
                 ) : (
-                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-950 text-[11px] leading-relaxed">
-                    <strong className="font-bold flex items-center gap-1">
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-[11px] leading-relaxed text-emerald-950">
+                    <strong className="flex items-center gap-1 font-bold">
                       <CheckCircle className="h-4 w-4 text-emerald-600" />
                       <span>Fulfillment Metrics Healthy</span>
                     </strong>
@@ -407,25 +407,22 @@ export default function VendorManagement({
               </div>
 
               {/* Vendor Specific active POs list */}
-              <div className="p-6 space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <div className="space-y-3 p-6">
+                <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">
                   Active Sourced Orders
                 </h4>
 
-                <div className="space-y-2 max-h-[160px] overflow-y-auto">
+                <div className="max-h-[160px] space-y-2 overflow-y-auto">
                   {vendorPOs.map((po) => (
                     <div
                       key={po.id}
-                      className="p-2.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-100 flex items-center justify-between text-xs transition"
+                      className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-xs transition hover:bg-slate-100"
                     >
-                      <span className="font-bold font-mono text-slate-800">
+                      <span className="font-mono font-bold text-slate-800">
                         {po.id}
                       </span>
                       <select
-                        className={`px-2 py-0.5 rounded-md text-[9px] font-bold border-0 cursor-pointer outline-hidden focus:ring-2 focus:ring-indigo-500
-                          ${po.status === 'Delayed' ? 'bg-rose-50 text-rose-600' : 'bg-slate-200 text-slate-600'}
-                          ${isUpdatingStatusId === po.id ? 'opacity-50' : ''}
-                        `}
+                        className={`cursor-pointer rounded-md border-0 px-2 py-0.5 text-[9px] font-bold outline-hidden focus:ring-2 focus:ring-indigo-500 ${po.status === 'Delayed' ? 'bg-rose-50 text-rose-600' : 'bg-slate-200 text-slate-600'} ${isUpdatingStatusId === po.id ? 'opacity-50' : ''} `}
                         value={
                           ['New', 'NEW'].includes(po.status as string)
                             ? 'NEW'
@@ -511,7 +508,7 @@ export default function VendorManagement({
                     </div>
                   ))}
                   {vendorPOs.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-2">
+                    <p className="py-2 text-center text-xs text-slate-400 italic">
                       No active sourced orders found.
                     </p>
                   )}

@@ -36,6 +36,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
 
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import Pagination from '../../../components/common/Pagination';
@@ -783,6 +785,12 @@ export default function ContainerFlowPage() {
     setOriginalContainerName('');
     setSelectedItems([]);
 
+    setActivePOTab((currentTab) => {
+      if (ids.length === 0) return null;
+      if (ids.includes(currentTab)) return currentTab;
+      return ids[0];
+    });
+
     if (ids.length === 0) {
       setEstimatedArrivalDate('');
     } else {
@@ -1062,6 +1070,11 @@ export default function ContainerFlowPage() {
       setIsManualContainerEntry(false);
 
       setSelectedPOIds(finalPoIds);
+      if (finalPoIds.length > 0) {
+        setActivePOTab(finalPoIds[0]);
+      } else {
+        setActivePOTab(null);
+      }
 
       if (details.length > 0) {
         setSelectedItems(
@@ -1878,8 +1891,9 @@ export default function ContainerFlowPage() {
                         PO-{poIdStr}
                       </span>
                       <span
-                        className="text-mc-gray-soft -mt-1 mb-0.5 w-full max-w-[150px] truncate text-xs font-medium"
-                        title={vendorName}
+                        className="text-mc-gold -mt-1 w-full truncate text-[9px] font-bold tracking-wide uppercase opacity-90"
+                        data-tooltip-id="vendor-tooltip"
+                        data-tooltip-content={vendorName}
                       >
                         {vendorName}
                       </span>
@@ -1892,6 +1906,19 @@ export default function ContainerFlowPage() {
                   );
                 })}
               </div>
+              <Tooltip
+                id="vendor-tooltip"
+                place="bottom-start"
+                delayShow={300}
+                style={{
+                  zIndex: 100,
+                  maxWidth: '250px',
+                  fontSize: '11px',
+                  backgroundColor: '#1a1a1a',
+                  color: '#ffffff',
+                  borderRadius: '6px',
+                }}
+              />
             </div>
 
             {/* Main Grid for Allocate Items & Container Details */}

@@ -233,15 +233,15 @@ export default function AIAssistant({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex flex-col h-[580px]">
+    <div className="flex h-[580px] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs">
       {/* Header Banner */}
-      <div className="bg-slate-50/60 p-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 p-4">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-xs">
-            <Sparkles className="h-4.5 w-4.5 text-indigo-100 animate-pulse" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+            <Sparkles className="h-4.5 w-4.5 animate-pulse text-indigo-100" />
           </div>
           <div>
-            <h3 className="font-display font-bold text-slate-900 text-sm">
+            <h3 className="font-display text-sm font-bold text-slate-900">
               S&OP Sourcing AI Companion
             </h3>
             <p className="text-[10px] text-slate-400">
@@ -252,25 +252,25 @@ export default function AIAssistant({
 
         <button
           onClick={() => setMessages([messages[0]])}
-          className="text-[10px] font-semibold text-slate-500 hover:text-indigo-600 hover:underline bg-white px-2.5 py-1 rounded-md border border-slate-200"
+          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-500 hover:text-indigo-600 hover:underline"
         >
           Reset Chat
         </button>
       </div>
 
       {/* Messages Feed */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-5">
         {messages.map((msg, index) => {
           const isAI = msg.sender === 'ai';
           return (
             <div
               key={index}
-              className={`flex gap-3 max-w-[85%] ${isAI ? 'mr-auto' : 'ml-auto flex-row-reverse'}`}
+              className={`flex max-w-[85%] gap-3 ${isAI ? 'mr-auto' : 'ml-auto flex-row-reverse'}`}
             >
               <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shadow-xs ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shadow-xs ${
                   isAI
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                    ? 'border border-indigo-100 bg-indigo-50 text-indigo-700'
                     : 'bg-indigo-600 text-white'
                 }`}
               >
@@ -292,10 +292,10 @@ export default function AIAssistant({
                 </div>
 
                 <div
-                  className={`p-4 rounded-2xl text-xs leading-relaxed ${
+                  className={`rounded-2xl p-4 text-xs leading-relaxed ${
                     isAI
-                      ? 'bg-slate-50 border border-slate-100 text-slate-800 rounded-tl-none markdown-body'
-                      : 'bg-indigo-600 text-white rounded-tr-none shadow-xs'
+                      ? 'markdown-body rounded-tl-none border border-slate-100 bg-slate-50 text-slate-800'
+                      : 'rounded-tr-none bg-indigo-600 text-white shadow-xs'
                   }`}
                 >
                   {/* Simplistic formatting support for beautiful summaries */}
@@ -304,7 +304,7 @@ export default function AIAssistant({
                       return (
                         <h4
                           key={idx}
-                          className="font-display font-bold text-slate-900 text-sm mt-3 first:mt-0 mb-1.5"
+                          className="font-display mt-3 mb-1.5 text-sm font-bold text-slate-900 first:mt-0"
                         >
                           {line.replace('###', '')}
                         </h4>
@@ -314,7 +314,7 @@ export default function AIAssistant({
                       return (
                         <p
                           key={idx}
-                          className="font-semibold text-slate-900 mt-2"
+                          className="mt-2 font-semibold text-slate-900"
                         >
                           {line.replace(/\*\*/g, '')}
                         </p>
@@ -324,7 +324,7 @@ export default function AIAssistant({
                       return (
                         <li
                           key={idx}
-                          className="ml-3 mt-1 list-disc text-slate-700"
+                          className="mt-1 ml-3 list-disc text-slate-700"
                         >
                           {line.replace('*', '').trim()}
                         </li>
@@ -343,15 +343,15 @@ export default function AIAssistant({
         })}
 
         {isThinking && (
-          <div className="flex gap-3 max-w-[85%] mr-auto animate-pulse">
-            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-              <RefreshCw className="h-4 w-4 text-slate-400 animate-spin" />
+          <div className="mr-auto flex max-w-[85%] animate-pulse gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100">
+              <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-400 font-bold">
+              <span className="text-[10px] font-bold text-slate-400">
                 Scanning database parameters...
               </span>
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 rounded-tl-none text-xs text-slate-500 italic">
+              <div className="rounded-2xl rounded-tl-none border border-slate-100 bg-slate-50 p-3 text-xs text-slate-500 italic">
                 AI Sourcing Engine is compiling delayed days, contract codes and
                 S&OP ratios. Please wait...
               </div>
@@ -362,12 +362,12 @@ export default function AIAssistant({
       </div>
 
       {/* Suggested prompts dock */}
-      <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex gap-2 overflow-x-auto flex-nowrap scrollbar-none">
+      <div className="flex scrollbar-none flex-nowrap gap-2 overflow-x-auto border-t border-slate-100 bg-slate-50/50 p-3">
         {SUGGESTED_PROMPTS.map((prompt, idx) => (
           <button
             key={idx}
             onClick={() => handleQuery(prompt.query)}
-            className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 hover:border-indigo-400 text-slate-600 rounded-lg text-[10px] font-semibold transition"
+            className="flex flex-shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-indigo-400"
           >
             <Bot className="h-3 w-3 text-indigo-500" />
             <span>{prompt.label}</span>
@@ -378,18 +378,18 @@ export default function AIAssistant({
       {/* Prompt input bar */}
       <form
         onSubmit={handleSendPrompt}
-        className="p-4 border-t border-slate-100 flex gap-2"
+        className="flex gap-2 border-t border-slate-100 p-4"
       >
         <input
           type="text"
           placeholder="Ask AI: 'Show delayed POs from China', 'Generate daily S&OP report'..."
           value={customPrompt}
           onChange={(e) => setCustomPrompt(e.target.value)}
-          className="flex-1 px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:bg-white transition text-slate-800"
+          className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-800 transition focus:border-indigo-500 focus:bg-white focus:outline-hidden"
         />
         <button
           type="submit"
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700"
         >
           <Bot className="h-4 w-4" />
           <span>Ask Sourcing AI</span>
