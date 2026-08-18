@@ -2688,6 +2688,30 @@ Supply Chain CRM Coordinator`;
         ),
       },
       {
+        header: 'Channel',
+        accessor: 'channel_order_id',
+        headerClassName: 'px-6 py-4',
+        className: 'px-6 py-4',
+        render: (po: any) => (
+          <span
+            className={
+              !po.channel_order_id || po.channel_order_id === 'N/A'
+                ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
+                : 'block max-w-[120px] truncate text-[11px] font-bold text-slate-700'
+            }
+            title={
+              !po.channel_order_id || po.channel_order_id === 'N/A'
+                ? undefined
+                : po.channel_order_id
+            }
+          >
+            {!po.channel_order_id || po.channel_order_id === 'N/A'
+              ? 'N/A'
+              : highlightText(po.channel_order_id, searchQuery)}
+          </span>
+        ),
+      },
+      {
         header: 'Comments',
         accessor: 'commentsCount',
         headerClassName: 'px-4 py-4  text-center flex-shrink-0 w-20',

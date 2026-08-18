@@ -289,6 +289,7 @@ export default function POManagementPage() {
               id: po.sellercloud_po_id ? `PO-${po.sellercloud_po_id}` : po.id,
               uuid: po.id,
               orderId: po.order_number || 'N/A',
+              channel_order_id: po.channel_order_id || 'N/A',
               vendorId: frontVendorId,
               vendorName,
               companyName:
