@@ -104,7 +104,8 @@ export async function getPurchaseOrders(params?: {
   page_size?: number;
   limit?: number;
 }): Promise<PurchaseOrder[] | PaginatedResult<PurchaseOrder> | any> {
-  const { data } = await apiClient.get<any>(PO_LIST, { params });
+  const fetchParams = { ...params, _t: Date.now() };
+  const { data } = await apiClient.get<any>(PO_LIST, { params: fetchParams });
   return data;
 }
 

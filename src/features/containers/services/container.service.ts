@@ -26,6 +26,7 @@ export async function getContainers(params?: {
 export async function getContainerPOItems(sellercloud_po_id: string | number) {
   const { data } = await apiClient.get(
     CONTAINER_PO_ITEMS(sellercloud_po_id.toString()),
+    { params: { _t: Date.now() } }, // Force fresh fetch
   );
   return data;
 }

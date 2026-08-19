@@ -179,6 +179,10 @@ export default function ContainerFlowPage() {
   const [isViewContainerLoading, setIsViewContainerLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewPayload, setPreviewPayload] = useState(null);
+  const [previewItems, setPreviewItems] = useState([]);
+
   // Items tracking
   const [selectedItems, setSelectedItems] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -289,12 +293,21 @@ export default function ContainerFlowPage() {
   const poDropdownItems = useMemo(() => {
     // Show Redux data first, merge with API poList
     const rawList = [];
-    // Only merge the full Redux cache if the user is not actively searching
-    if (!poSearch && Array.isArray(purchaseOrders)) {
-      rawList.push(...purchaseOrders);
-    }
+    // Prioritize fresh API poList over Redux cache
     if (Array.isArray(poList)) {
       rawList.push(...poList);
+    }
+    // Only merge the full Redux cache if the user is not actively searching
+    if (!poSearch && Array.isArray(purchaseOrders)) {
+      const reduxToAdd = purchaseOrders.filter((po) => {
+        if (!selectedWarehouseId) return true;
+        // if we have a warehouse, only add if the PO belongs to this warehouse
+        return (
+          String(po.sellercloud_warehouse_id) === String(selectedWarehouseId) ||
+          String(po.warehouse_id) === String(selectedWarehouseId)
+        );
+      });
+      rawList.push(...reduxToAdd);
     }
 
     // Ensure selected POs are always in the list
@@ -336,7 +349,14 @@ export default function ContainerFlowPage() {
     });
 
     return finalItems;
-  }, [poList, purchaseOrders, vendorsList, selectedPOIds, poSearch]);
+  }, [
+    poList,
+    purchaseOrders,
+    vendorsList,
+    selectedPOIds,
+    poSearch,
+    selectedWarehouseId,
+  ]);
 
   // ====== Container Infinite Scroll Logic ======
   const reduxContainers = useSelector((state) => state.containers?.list || []);
@@ -995,33 +1015,41 @@ export default function ContainerFlowPage() {
       })),
     };
 
+    setPreviewPayload(apiPayload);
+    setPreviewItems(itemsToSave);
+    setShowPreviewModal(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!previewPayload) return;
     try {
       setIsSaving(true);
       if (isEditMode && editingContainerId) {
-        await updateContainer(editingContainerId, apiPayload);
+        await updateContainer(editingContainerId, previewPayload);
         toast.success('Container updated successfully!');
       } else {
-        await createContainer(apiPayload);
+        await createContainer(previewPayload);
         toast.success('Container created and items allocated successfully!');
       }
 
       // Refresh the API list
       fetchContainerAPI(1, '', false);
       fetchTablePage(listPage, listPageSize);
+      setShowPreviewModal(false);
+
+      setContainerName('');
+      setOriginalContainerName('');
+      setSelectedWarehouseId('');
+      setEditingContainerId(null);
+      setSelectedItems([]);
+      setSelectedPOIds([]);
+      setShowList(true); // Switch back to Assign Container Table
     } catch (error) {
       console.error('Error saving container', error);
       toast.error('Failed to save container data to server.');
     } finally {
       setIsSaving(false);
     }
-
-    setContainerName('');
-    setOriginalContainerName('');
-    setSelectedWarehouseId('');
-    setEditingContainerId(null);
-    setSelectedItems([]);
-    setSelectedPOIds([]);
-    setShowList(true); // Switch back to Assign Container Table
   };
 
   const handleCreateContainer = () => {
@@ -2335,6 +2363,120 @@ export default function ContainerFlowPage() {
           }
         }}
       />
+
+      {/* Preview Confirmation Modal */}
+      {showPreviewModal && previewPayload && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-sm">
+          <div className="bg-mc-white border-mc-gold/20 flex max-h-[75vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border-2 p-5 shadow-2xl">
+            <div className="mb-4 flex shrink-0 items-center justify-between">
+              <h2 className="text-mc-black text-lg font-bold">
+                Confirm Container Details
+              </h2>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="text-mc-gray-soft hover:bg-mc-beige hover:border-mc-gold flex h-8 w-8 items-center justify-center rounded-full border border-transparent transition-colors"
+                disabled={isSaving}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="bg-mc-beige-light/40 border-mc-beige-dark mb-4 grid shrink-0 grid-cols-2 gap-3 rounded-lg border p-3 shadow-sm">
+              <div>
+                <label className="text-mc-gray-soft text-[9px] font-bold tracking-wider uppercase">
+                  Container Name
+                </label>
+                <p className="text-mc-black font-mono text-xs font-bold">
+                  {previewPayload.container_name}
+                </p>
+              </div>
+              <div>
+                <label className="text-mc-gray-soft text-[9px] font-bold tracking-wider uppercase">
+                  Warehouse
+                </label>
+                <p className="text-mc-black font-mono text-xs font-bold">
+                  {warehousesList.find(
+                    (w) => w.id === previewPayload.warehouse_id,
+                  )?.name || 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <h3 className="text-mc-black mb-1.5 shrink-0 text-[11px] font-bold tracking-wide uppercase">
+                Items to Allocate
+              </h3>
+              <div className="border-mc-beige-dark custom-scrollbar flex-1 overflow-y-auto rounded-xl border shadow-sm">
+                <div className="divide-mc-beige-dark bg-mc-white divide-y">
+                  {previewItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between px-3 py-1.5 transition-colors hover:bg-slate-50"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-mc-black font-mono text-[11px] font-bold">
+                          {item.sku}
+                        </span>
+                        <span className="text-mc-gray-soft max-w-[350px] truncate text-[10px]">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-mc-gray-soft mr-2 text-[9px] font-bold uppercase">
+                          Allocating
+                        </span>
+                        <span className="text-mc-gold font-mono text-xs font-bold">
+                          {item.allocateQty}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-mc-beige-light border-mc-gold/40 shadow-mc-gold/10 mt-3 flex shrink-0 items-center justify-between rounded-lg border p-3 shadow-sm">
+                <span className="text-mc-black text-xs font-bold tracking-wider uppercase">
+                  Total Items Allocated
+                </span>
+                <span className="text-mc-gold font-mono text-lg font-bold">
+                  {previewItems.reduce(
+                    (acc, curr) => acc + (Number(curr.allocateQty) || 0),
+                    0,
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="border-mc-beige-dark mt-4 flex shrink-0 items-center justify-end gap-2 border-t pt-3">
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                disabled={isSaving}
+                className="hover:bg-mc-beige border-mc-beige-dark text-mc-gray hover:text-mc-black rounded-md border px-4 py-1.5 text-[11px] font-bold transition-colors"
+                type="button"
+              >
+                Back to Edit
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                disabled={isSaving}
+                className="bg-mc-gold text-mc-black shadow-mc-gold/20 flex min-w-[120px] items-center justify-center gap-2 rounded-md px-4 py-1.5 text-[11px] font-bold shadow-sm transition-all hover:brightness-110"
+                type="button"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                {isSaving
+                  ? 'Processing...'
+                  : isEditMode
+                    ? 'Confirm Update'
+                    : 'Confirm & Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FullPageLoader removed in favor of localized TableLoader */}
     </div>
