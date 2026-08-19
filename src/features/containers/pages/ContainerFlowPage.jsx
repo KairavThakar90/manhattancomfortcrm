@@ -781,27 +781,37 @@ export default function ContainerFlowPage() {
   const handlePOChange = (selections) => {
     const ids = selections ? selections.map((s) => s.value) : [];
     setSelectedPOIds(ids);
-    setContainerName('');
-    setOriginalContainerName('');
-    setSelectedItems([]);
+
+    const rawIds = ids.map((id) => {
+      const po =
+        poList?.find((p) => String(p.id) === String(id)) ||
+        purchaseOrders?.find((p) => String(p.id) === String(id));
+      return po ? po.sellercloud_po_id || po.id : id;
+    });
+
+    if (ids.length === 0) {
+      setContainerName('');
+      setOriginalContainerName('');
+      setSelectedItems([]);
+      setEstimatedArrivalDate('');
+    } else {
+      // Retain items only for POs still selected
+      setSelectedItems((prev) =>
+        prev.filter((item) =>
+          rawIds.map(String).includes(String(item.bound_po_id)),
+        ),
+      );
+    }
 
     setActivePOTab((currentTab) => {
       if (ids.length === 0) return null;
-      const rawIds = ids.map((id) => {
-        const po =
-          poList?.find((p) => String(p.id) === String(id)) ||
-          purchaseOrders?.find((p) => String(p.id) === String(id));
-        return po ? po.sellercloud_po_id || po.id : id;
-      });
       if (currentTab && rawIds.map(String).includes(String(currentTab))) {
         return currentTab;
       }
       return rawIds[0];
     });
 
-    if (ids.length === 0) {
-      setEstimatedArrivalDate('');
-    } else {
+    if (ids.length > 0) {
       const firstPoId = ids[0];
       const po =
         poList.find((p) => p.id === firstPoId) ||
@@ -813,9 +823,7 @@ export default function ContainerFlowPage() {
         (po.expected_delivery_date || po.eta) !== 'N/A'
       ) {
         const dateStr = (po.expected_delivery_date || po.eta).split('T')[0];
-        setEstimatedArrivalDate(dateStr);
-      } else {
-        setEstimatedArrivalDate('');
+        setEstimatedArrivalDate((prev) => prev || dateStr);
       }
     }
   };
