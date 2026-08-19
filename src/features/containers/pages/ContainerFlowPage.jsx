@@ -250,20 +250,26 @@ export default function ContainerFlowPage() {
   const [poLoading, setPoLoading] = useState(false);
   const poSearchTimeout = useRef(null);
 
-  const fetchPOs = useCallback(async (searchQuery = '') => {
-    try {
-      setPoLoading(true);
-      const data = await getPurchaseOrders({
-        ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
-      });
-      const results = Array.isArray(data) ? data : data.results || [];
-      setPoList(results);
-    } catch (err) {
-      console.error('Failed to fetch POs for dropdown', err);
-    } finally {
-      setPoLoading(false);
-    }
-  }, []);
+  const fetchPOs = useCallback(
+    async (searchQuery = '') => {
+      try {
+        setPoLoading(true);
+        const data = await getPurchaseOrders({
+          ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+          ...(selectedWarehouseId
+            ? { sellercloud_warehouse_id: selectedWarehouseId }
+            : {}),
+        });
+        const results = Array.isArray(data) ? data : data.results || [];
+        setPoList(results);
+      } catch (err) {
+        console.error('Failed to fetch POs for dropdown', err);
+      } finally {
+        setPoLoading(false);
+      }
+    },
+    [selectedWarehouseId],
+  );
 
   useEffect(() => {
     setTimeout(() => {
@@ -1180,15 +1186,13 @@ export default function ContainerFlowPage() {
   };
 
   const currentStep =
-    selectedPOIds.length === 0
+    !selectedWarehouseId || selectedPOIds.length === 0
       ? 1
       : selectedItems.length === 0
         ? 2
         : !containerName || !estimatedArrivalDate
           ? 3
-          : !selectedWarehouseId
-            ? 4
-            : 4;
+          : 3;
 
   const containerColumns = useMemo(
     () => [
@@ -1823,13 +1827,7 @@ export default function ContainerFlowPage() {
             className="bg-mc-gold absolute top-1/2 left-0 z-0 h-1 -translate-y-1/2 rounded-full transition-all duration-500 ease-in-out"
             style={{
               width:
-                currentStep === 1
-                  ? '0%'
-                  : currentStep === 2
-                    ? '33%'
-                    : currentStep === 3
-                      ? '66%'
-                      : '100%',
+                currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
             }}
           ></div>
 
@@ -1841,9 +1839,9 @@ export default function ContainerFlowPage() {
               {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : '1'}
             </div>
             <span
-              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 1 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
+              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold whitespace-nowrap transition-colors ${currentStep >= 1 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
             >
-              Select PO
+              Select Warehouse & PO
             </span>
           </div>
 
@@ -1864,9 +1862,9 @@ export default function ContainerFlowPage() {
           {/* Step 3 */}
           <div className="group relative z-10 flex flex-col items-center">
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep > 3 ? 'border-mc-gold bg-mc-gold text-mc-black' : currentStep === 3 ? 'border-mc-gold text-mc-gold shadow-mc-gold/20 bg-mc-white shadow-none' : 'border-mc-beige-dark bg-mc-white text-mc-gray-soft'}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep === 3 ? 'border-mc-gold text-mc-gold shadow-mc-gold/20 bg-mc-white shadow-none' : 'border-mc-beige-dark bg-mc-white text-mc-gray-soft'}`}
             >
-              {currentStep > 3 ? <CheckCircle2 className="h-4 w-4" /> : '3'}
+              3
             </div>
             <span
               className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep >= 3 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
@@ -1874,54 +1872,80 @@ export default function ContainerFlowPage() {
               Container Details
             </span>
           </div>
-
-          {/* Step 4 */}
-          <div className="group relative z-10 flex flex-col items-center">
-            <div
-              className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-500 ${currentStep === 4 ? 'border-mc-gold text-mc-gold shadow-mc-gold/20 bg-mc-white shadow-none' : 'border-mc-beige-dark bg-mc-white text-mc-gray-soft'}`}
-            >
-              4
-            </div>
-            <span
-              className={`absolute -bottom-5 w-32 text-center text-[10px] font-bold transition-colors ${currentStep === 4 ? 'text-mc-black' : 'text-mc-gray-soft'}`}
-            >
-              Select Warehouse
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="mx-auto w-full max-w-7xl space-y-4 p-4 pb-10">
-        {/* Step 1: Select POs */}
-        <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-none">
-          <div className="mb-3 flex items-center gap-2">
+        {/* Step 1: Select Warehouse & POs */}
+        <div className="border-mc-beige-dark bg-mc-white relative z-[60] rounded-xl border p-4 shadow-none">
+          <div className="mb-4 flex items-center gap-2">
             <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
               1
             </span>
             <h2 className="text-mc-black text-base font-bold">
-              Select Purchase Orders
+              Select Warehouse & Purchase Orders
             </h2>
           </div>
 
-          <div className="relative z-[50]">
-            <InfiniteScrollDropdown
-              isMulti
-              value={selectedPOIds}
-              onChange={(newVals) =>
-                handlePOChange(
-                  poDropdownItems.filter((p) => newVals.includes(p.value)),
-                )
-              }
-              onSearch={handlePoSearch}
-              onLoadMore={() => {}}
-              hasMore={false}
-              isLoading={poLoading}
-              items={poDropdownItems}
-              disabled={isEditMode}
-              placeholder="-- Choose Purchase Orders --"
-              searchPlaceholder="Search POs..."
-            />
+          <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+            <div>
+              <label className="text-mc-black mb-1.5 block text-xs font-semibold">
+                Select Warehouse
+              </label>
+              <div className="relative z-[50]">
+                <InfiniteScrollDropdown
+                  value={selectedWarehouseId}
+                  onChange={(val) => {
+                    if (val !== selectedWarehouseId) {
+                      setSelectedWarehouseId(val);
+                      setSelectedPOIds([]);
+                      setContainerName('');
+                      setOriginalContainerName('');
+                      setSelectedItems([]);
+                      setEstimatedArrivalDate('');
+                      setActivePOTab(null);
+                    }
+                  }}
+                  onSearch={(q) => setWarehouseSearch(q)}
+                  items={warehouseDropdownItems}
+                  disabled={isEditMode}
+                  placeholder="-- Choose Warehouse --"
+                  searchPlaceholder="Search warehouses..."
+                  hasMore={false}
+                  isLoading={false}
+                />
+              </div>
+            </div>
+
+            {selectedWarehouseId && (
+              <div className="animate-in fade-in slide-in-from-top-2 md:slide-in-from-left-4 duration-300">
+                <label className="text-mc-black mb-1.5 block text-xs font-semibold">
+                  Select Purchase Orders
+                </label>
+                <div className="relative z-[40]">
+                  <InfiniteScrollDropdown
+                    isMulti
+                    value={selectedPOIds}
+                    onChange={(newVals) =>
+                      handlePOChange(
+                        poDropdownItems.filter((p) =>
+                          newVals.includes(p.value),
+                        ),
+                      )
+                    }
+                    onSearch={handlePoSearch}
+                    onLoadMore={() => {}}
+                    hasMore={false}
+                    isLoading={poLoading}
+                    items={poDropdownItems}
+                    disabled={isEditMode}
+                    placeholder="-- Choose Purchase Orders --"
+                    searchPlaceholder="Search POs..."
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -2267,22 +2291,6 @@ export default function ContainerFlowPage() {
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
                     </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <label className="text-mc-black mb-1 block text-xs font-semibold">
-                      Select Warehouse
-                    </label>
-                    <InfiniteScrollDropdown
-                      value={selectedWarehouseId}
-                      onChange={(val) => setSelectedWarehouseId(val)}
-                      onSearch={(q) => setWarehouseSearch(q)}
-                      items={warehouseDropdownItems}
-                      placeholder="Select a warehouse..."
-                      searchPlaceholder="Search warehouses..."
-                      hasMore={false}
-                      isLoading={false}
-                    />
                   </div>
 
                   <div className="border-mc-beige-dark bg-mc-beige-light mt-3 rounded-lg border p-3">
