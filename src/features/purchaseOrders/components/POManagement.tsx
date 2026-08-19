@@ -1496,6 +1496,7 @@ export default function POManagement({
     'Units per Case',
     'Case Price',
     'Item Expected Delivery',
+    'Comment',
   ];
 
   const CONTAINER_LEVEL_COLUMNS = ['Container Name', 'Container ETA'];
@@ -1875,6 +1876,15 @@ export default function POManagement({
       const payload: any = {
         columns: finalColumns,
         filter_status: exportFilterStatus,
+        vendor_id: vendorFilter !== 'all' ? vendorFilter : undefined,
+        customer_id:
+          (propCustomerFilter ?? localCustomerFilter) !== 'all'
+            ? (propCustomerFilter ?? localCustomerFilter)
+            : undefined,
+        channel_id: channelFilter !== 'all' ? channelFilter : undefined,
+        search: searchQuery || undefined,
+        date_from: dateFrom || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
       };
 
       const blob = await exportPurchaseOrdersCSV(payload);
