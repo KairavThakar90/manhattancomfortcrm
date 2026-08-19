@@ -118,20 +118,10 @@ const ReasonCell = ({
   const [isEditing, setIsEditing] = useState(false);
   const currentReason = po.delay_reason || po.reason || '';
 
-  const checkIsInvoiceDelayed = () => {
-    if (po.is_invoice_delayed) return true;
-    const invoiceDate = po.invoice_date || po.invoiceDetails?.date;
-    const createdOn = po.created_on || po.creationDate;
-    if (invoiceDate) return false;
-    if (!createdOn || createdOn === 'N/A') return false;
-    const diffDays = Math.floor(
-      (new Date().getTime() - new Date(createdOn).getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-    return diffDays > 10;
-  };
-
-  const isDelayed = checkIsInvoiceDelayed();
+  const isDelayed =
+    String(po.status || '')
+      .trim()
+      .toUpperCase() === 'DELAYED';
   const [text, setText] = useState(currentReason);
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -2714,6 +2704,30 @@ Supply Chain CRM Coordinator`;
           </span>
         ),
       },
+      ...(['Vendor', 'Administrator'].includes(userRole)
+        ? [
+            {
+              header: 'Status',
+              accessor: 'status',
+              headerClassName: 'px-6 py-4  relative',
+              className: 'px-6 py-4 min-w-[200px]',
+              render: (po: any) => (
+                <VendorStatusDropdown
+                  poId={po.id}
+                  currentStatus={po.status || 'NOT_STARTED'}
+                  onUpdate={handleVendorStatusUpdate}
+                />
+              ),
+            },
+          ]
+        : []),
+      {
+        header: 'Reason for Delayed',
+        accessor: 'delay_reason',
+        headerClassName: 'px-6 py-4',
+        className: 'px-6 py-4 min-w-[150px]',
+        render: (po: any) => <ReasonCell po={po} onSave={handleReasonUpdate} />,
+      },
       {
         header: 'Comments',
         accessor: 'commentsCount',
@@ -3026,30 +3040,6 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
-      {
-        header: 'Reason for Delayed',
-        accessor: 'delay_reason',
-        headerClassName: 'px-6 py-4',
-        className: 'px-6 py-4 min-w-[150px]',
-        render: (po: any) => <ReasonCell po={po} onSave={handleReasonUpdate} />,
-      },
-      ...(['Vendor', 'Administrator'].includes(userRole)
-        ? [
-            {
-              header: 'Status',
-              accessor: 'status',
-              headerClassName: 'px-6 py-4  relative',
-              className: 'px-6 py-4 min-w-[200px]',
-              render: (po: any) => (
-                <VendorStatusDropdown
-                  poId={po.id}
-                  currentStatus={po.status || 'NOT_STARTED'}
-                  onUpdate={handleVendorStatusUpdate}
-                />
-              ),
-            },
-          ]
-        : []),
       {
         header: (
           <div
