@@ -1480,6 +1480,7 @@ export default function POManagement({
   const PO_LEVEL_COLUMNS = [
     'PO ID',
     'PO Title',
+    'Channel',
     'Vendor',
     'Status Code',
     'Receiving Status',
