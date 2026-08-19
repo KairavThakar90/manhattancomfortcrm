@@ -39,8 +39,16 @@ const YEARS = Array.from(
   (_, i) => MIN_YEAR + i,
 );
 
-function parseDateOnly(value) {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+function parseDateOnly(value, mode) {
+  if (!value) return null;
+  if (mode === 'month') {
+    if (!/^\d{4}-\d{2}$/.test(value)) return null;
+    const [y, m] = value.split('-').map(Number);
+    const date = new Date(y, m - 1, 1);
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const [y, m, d] = value.split('-').map(Number);
   const date = new Date(y, m - 1, d);
   if (
@@ -54,9 +62,10 @@ function parseDateOnly(value) {
   return date;
 }
 
-function formatDateOnly(date) {
+function formatDateOnly(date, mode) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
+  if (mode === 'month') return `${y}-${m}`;
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
@@ -85,14 +94,17 @@ export default function DateFilterInput({
   title = 'Date filter',
   className = '',
   disabled = false,
+  mode = 'date', // 'date' | 'month'
 }) {
-  const selected = parseDateOnly(value);
+  const selected = parseDateOnly(value, mode);
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() =>
     startOfMonth(selected || new Date()),
   );
-  // 'none' | 'month' | 'year'
-  const [pickerMode, setPickerMode] = useState('none');
+  // 'none' (days) | 'month' | 'year'
+  const [pickerMode, setPickerMode] = useState(
+    mode === 'month' ? 'month' : 'none',
+  );
   const rootRef = useRef(null);
   const yearGridRef = useRef(null);
 
@@ -100,9 +112,9 @@ export default function DateFilterInput({
     if (disabled) return;
     if (!open) {
       // Opening: reset view to selected date or today
-      const parsed = parseDateOnly(value);
+      const parsed = parseDateOnly(value, mode);
       setViewMonth(startOfMonth(parsed || new Date()));
-      setPickerMode('none');
+      setPickerMode(mode === 'month' ? 'month' : 'none');
     }
     setOpen((v) => !v);
   };
@@ -173,9 +185,11 @@ export default function DateFilterInput({
           }`}
         >
           {selected ? (
-            <span className="font-bold">{formatDateOnly(selected)}</span>
+            <span className="font-bold">{formatDateOnly(selected, mode)}</span>
           ) : (
-            <span className="text-mc-gray-soft font-medium">yyyy-mm-dd</span>
+            <span className="text-mc-gray-soft font-medium">
+              {mode === 'month' ? 'yyyy-mm' : 'yyyy-mm-dd'}
+            </span>
           )}
         </button>
         {selected && !disabled && (
@@ -201,37 +215,49 @@ export default function DateFilterInput({
               type="button"
               className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
               onClick={() => {
-                setPickerMode('none');
-                setViewMonth(new Date(currentYear, currentMonth - 1, 1));
+                if (mode === 'month') {
+                  setViewMonth(new Date(currentYear - 1, currentMonth, 1));
+                } else {
+                  setPickerMode('none');
+                  setViewMonth(new Date(currentYear, currentMonth - 1, 1));
+                }
               }}
-              aria-label="Previous month"
+              aria-label={mode === 'month' ? 'Previous year' : 'Previous month'}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
             <div className="flex items-center gap-0.5">
-              {/* Month selector button */}
-              <button
-                type="button"
-                onClick={() =>
-                  setPickerMode((m) => (m === 'month' ? 'none' : 'month'))
-                }
-                className={[
-                  'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-bold transition',
-                  pickerMode === 'month'
-                    ? 'bg-mc-beige-light text-mc-black'
-                    : 'text-mc-black hover:bg-mc-beige-light/50',
-                ].join(' ')}
-              >
-                {MONTH_FULL[currentMonth]}
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </button>
+              {/* Month selector button (hidden in month mode) */}
+              {mode !== 'month' && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPickerMode((m) => (m === 'month' ? 'none' : 'month'))
+                  }
+                  className={[
+                    'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-bold transition',
+                    pickerMode === 'month'
+                      ? 'bg-mc-beige-light text-mc-black'
+                      : 'text-mc-black hover:bg-mc-beige-light/50',
+                  ].join(' ')}
+                >
+                  {MONTH_FULL[currentMonth]}
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </button>
+              )}
 
               {/* Year selector button */}
               <button
                 type="button"
                 onClick={() =>
-                  setPickerMode((m) => (m === 'year' ? 'none' : 'year'))
+                  setPickerMode((m) =>
+                    m === 'year'
+                      ? mode === 'month'
+                        ? 'month'
+                        : 'none'
+                      : 'year',
+                  )
                 }
                 className={[
                   'flex items-center gap-0.5 rounded-md px-2 py-1 text-xs font-bold transition',
@@ -249,10 +275,14 @@ export default function DateFilterInput({
               type="button"
               className="rounded-md p-1 text-slate-500 transition hover:bg-slate-100"
               onClick={() => {
-                setPickerMode('none');
-                setViewMonth(new Date(currentYear, currentMonth + 1, 1));
+                if (mode === 'month') {
+                  setViewMonth(new Date(currentYear + 1, currentMonth, 1));
+                } else {
+                  setPickerMode('none');
+                  setViewMonth(new Date(currentYear, currentMonth + 1, 1));
+                }
               }}
-              aria-label="Next month"
+              aria-label={mode === 'month' ? 'Next year' : 'Next month'}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -268,8 +298,15 @@ export default function DateFilterInput({
                     key={name}
                     type="button"
                     onClick={() => {
-                      setViewMonth(new Date(currentYear, idx, 1));
-                      setPickerMode('none');
+                      if (mode === 'month') {
+                        onChange(
+                          `${currentYear}-${String(idx + 1).padStart(2, '0')}`,
+                        );
+                        setOpen(false);
+                      } else {
+                        setViewMonth(new Date(currentYear, idx, 1));
+                        setPickerMode('none');
+                      }
                     }}
                     className={[
                       'rounded-md py-1.5 text-xs font-medium transition',
@@ -300,7 +337,7 @@ export default function DateFilterInput({
                     data-active={isActive}
                     onClick={() => {
                       setViewMonth(new Date(yr, currentMonth, 1));
-                      setPickerMode('none');
+                      setPickerMode(mode === 'month' ? 'month' : 'none');
                     }}
                     className={[
                       'rounded-md py-1.5 text-xs font-medium transition',
@@ -342,7 +379,7 @@ export default function DateFilterInput({
                       key={formatDateOnly(day)}
                       type="button"
                       onClick={() => {
-                        onChange(formatDateOnly(day));
+                        onChange(formatDateOnly(day, mode));
                         setOpen(false);
                       }}
                       className={[

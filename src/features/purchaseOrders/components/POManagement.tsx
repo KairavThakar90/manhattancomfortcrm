@@ -3958,6 +3958,7 @@ Supply Chain CRM Coordinator`;
                   handlePageChange(1);
                 }}
                 title="Order Date Filter"
+                mode="month"
               />
             </div>
           )}

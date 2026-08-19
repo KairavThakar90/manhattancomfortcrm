@@ -4,9 +4,9 @@ import React from 'react';
  * TableLoader Component (MUI Table Linear Progress Bar style)
  * Placed between header and content, rendering a sleek MUI DataGrid style linear progress bar.
  */
-export default function TableLoader() {
+export default function TableLoader(props) {
   return (
-    <div className="bg-mc-gold/20 relative h-1 w-full overflow-hidden">
+    <div className="bg-mc-gold/20 absolute top-0 right-0 left-0 z-50 h-1 w-full overflow-hidden">
       <style>{`
         @keyframes muiLinearProgress1 {
           0% {
