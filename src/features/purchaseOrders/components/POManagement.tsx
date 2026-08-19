@@ -2691,7 +2691,7 @@ Supply Chain CRM Coordinator`;
         ),
       },
       {
-        header: 'Channel',
+        header: 'Channel Order ID',
         accessor: 'channel_order_id',
         headerClassName: 'px-6 py-4',
         className: 'px-6 py-4',
@@ -2702,10 +2702,15 @@ Supply Chain CRM Coordinator`;
                 ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
                 : 'block max-w-[120px] truncate text-[11px] font-bold text-slate-700'
             }
-            title={
+            data-tooltip-id={
               !po.channel_order_id || po.channel_order_id === 'N/A'
                 ? undefined
-                : po.channel_order_id
+                : 'po-item-tooltip'
+            }
+            data-tooltip-content={
+              !po.channel_order_id || po.channel_order_id === 'N/A'
+                ? undefined
+                : po.channel_name || po.channel || po.channel_order_id
             }
           >
             {!po.channel_order_id || po.channel_order_id === 'N/A'

@@ -392,8 +392,9 @@ export default function ContainerDetailsModal({
                   : 'Container Tracking & Financial Information'}
               </button>
             )}
-            {String(localStorage.getItem('userRole')).toLowerCase() !==
-              'vendor' && (
+            {['administrator', 'office'].includes(
+              String(localStorage.getItem('userRole')).toLowerCase(),
+            ) && (
               <button
                 className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'activities' ? 'border-mc-gold text-mc-black bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
                 onClick={() => setActiveTab('activities')}
@@ -1133,8 +1134,9 @@ export default function ContainerDetailsModal({
               )}
 
             {activeTab === 'activities' &&
-              String(localStorage.getItem('userRole')).toLowerCase() !==
-                'vendor' && (
+              ['administrator', 'office'].includes(
+                String(localStorage.getItem('userRole')).toLowerCase(),
+              ) && (
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                   <div className="border-mc-beige-dark bg-mc-white mt-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
                     <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
@@ -1170,61 +1172,15 @@ export default function ContainerDetailsModal({
                                 item.user_name || item.user || 'SYSTEM',
                             },
                             {
-                              header: 'Action / Details',
+                              header: 'Details',
                               accessor: 'action',
                               headerClassName: 'px-6 py-4 bg-transparent',
                               className: 'px-6 py-4 text-slate-700',
-                              render: (item) => {
-                                const formatAction = (str) => {
-                                  if (!str) return '-';
-                                  return str
-                                    .replace(/_/g, ' ')
-                                    .toLowerCase()
-                                    .replace(/\b\w/g, (l) => l.toUpperCase());
-                                };
-                                const actionText = formatAction(item.action);
-
-                                let detailsText = '';
-                                if (item.human_readable_message) {
-                                  detailsText = item.human_readable_message;
-                                } else if (item.details) {
-                                  if (
-                                    typeof item.details === 'object' &&
-                                    item.details !== null
-                                  ) {
-                                    if (item.details.path) {
-                                      detailsText = `API Path: ${item.details.path}`;
-                                    } else {
-                                      try {
-                                        const str = JSON.stringify(
-                                          item.details,
-                                        );
-                                        detailsText =
-                                          str.length > 80
-                                            ? str.substring(0, 80) + '...'
-                                            : str;
-                                      } catch (e) {
-                                        detailsText = 'Complex Data';
-                                      }
-                                    }
-                                  } else {
-                                    detailsText = String(item.details);
-                                  }
-                                }
-
-                                return (
-                                  <div>
-                                    <div className="mb-0.5 font-semibold">
-                                      {actionText}
-                                    </div>
-                                    {detailsText && (
-                                      <div className="max-w-lg truncate text-[11px] text-slate-500">
-                                        {detailsText}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              },
+                              render: (item) => (
+                                <div className="max-w-lg text-[12px] font-medium text-slate-700">
+                                  {item.human_readable_message || '-'}
+                                </div>
+                              ),
                             },
                           ]}
                           data={
