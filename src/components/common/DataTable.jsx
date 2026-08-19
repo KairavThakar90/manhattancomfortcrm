@@ -44,7 +44,12 @@ export default function DataTable({
   tableWrapperRef = null,
 }) {
   return (
-    <div className={containerClassName}>
+    <div className={`relative ${containerClassName || ''}`}>
+      {isLoading && (
+        <div className="absolute top-0 right-0 left-0 z-50 overflow-hidden">
+          <TableLoader />
+        </div>
+      )}
       <div
         ref={tableWrapperRef}
         className={`relative ${tableWrapperClassName}`}
@@ -66,16 +71,6 @@ export default function DataTable({
             </tr>
           </thead>
           <tbody className={tbodyClassName}>
-            {isLoading && (
-              <tr>
-                <td
-                  colSpan={columns.length || 1}
-                  className="relative h-1 overflow-hidden border-b-0 p-0"
-                >
-                  <TableLoader />
-                </td>
-              </tr>
-            )}
             {data.length === 0 && !isLoading ? (
               <tr>
                 <td

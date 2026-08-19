@@ -15,9 +15,13 @@ import {
   FileUp,
   FileText,
   Download,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { updateContainer } from '../services/container.service';
+import {
+  updateContainer,
+  getContainerActivities,
+} from '../services/container.service';
 import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
@@ -38,6 +42,11 @@ export default function ContainerDetailsModal({
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
+  const [activities, setActivities] = useState([]);
+  const [activitiesPage, setActivitiesPage] = useState(1);
+  const [activitiesPageSize, setActivitiesPageSize] = useState(10);
+  const [activitiesTotal, setActivitiesTotal] = useState(0);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
   const countryOptions = useMemo(() => countryList().getData(), []);
 
   const reactSelectStyles = {
@@ -133,6 +142,51 @@ export default function ContainerDetailsModal({
       });
     }
   }
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchActivities = async () => {
+      setIsLoadingActivities(true);
+      try {
+        const data = await getContainerActivities(container.id, {
+          page: activitiesPage,
+          page_size: activitiesPageSize,
+        });
+        if (!active) return;
+
+        if (Array.isArray(data)) {
+          setActivities(data);
+          setActivitiesTotal(data.length);
+        } else if (data?.results) {
+          setActivities(data.results);
+          setActivitiesTotal(
+            data.total || data.meta?.total || data.results.length,
+          );
+        } else if (data?.data) {
+          setActivities(data.data);
+          setActivitiesTotal(data.total || data.data.length);
+        } else {
+          setActivities([]);
+          setActivitiesTotal(0);
+        }
+      } catch (err) {
+        if (!active) return;
+        console.error('Failed to fetch activities', err);
+        toast.error('Failed to load container activities');
+      } finally {
+        if (active) setIsLoadingActivities(false);
+      }
+    };
+
+    if (activeTab === 'activities' && container?.id) {
+      fetchActivities();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [activeTab, container?.id, activitiesPage, activitiesPageSize]);
 
   const handleSaveTracking = async () => {
     setEmailError('');
@@ -338,6 +392,15 @@ export default function ContainerDetailsModal({
                   : 'Container Tracking & Financial Information'}
               </button>
             )}
+            {String(localStorage.getItem('userRole')).toLowerCase() !==
+              'vendor' && (
+              <button
+                className={`flex-1 border-b-2 py-3 text-center text-xs font-bold transition ${activeTab === 'activities' ? 'border-mc-gold text-mc-black bg-white' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                onClick={() => setActiveTab('activities')}
+              >
+                Activities
+              </button>
+            )}
           </div>
 
           {/* Modal Body */}
@@ -400,8 +463,8 @@ export default function ContainerDetailsModal({
                           {
                             header: 'VENDOR NAME',
                             accessor: 'vendor_name',
-                            headerClassName: 'px-3 py-2 w-1/3 bg-white',
-                            className: 'px-3 py-2 max-w-[120px]',
+                            headerClassName: 'px-6 py-4 w-1/3 bg-transparent',
+                            className: 'px-6 py-4 max-w-[120px]',
                             render: (item) => (
                               <span className="block truncate font-mono font-bold text-slate-500">
                                 {item.vendor_name || 'N/A'}
@@ -411,9 +474,9 @@ export default function ContainerDetailsModal({
                           {
                             header: 'SKU',
                             accessor: 'sku',
-                            headerClassName: 'px-3 py-2 bg-white w-40',
+                            headerClassName: 'px-6 py-4 bg-transparent w-40',
                             className:
-                              'px-3 py-2 min-w-[140px] whitespace-nowrap',
+                              'px-6 py-4 min-w-[140px] whitespace-nowrap',
                             render: (item) => (
                               <div
                                 className="group flex cursor-pointer items-center gap-1.5"
@@ -440,8 +503,8 @@ export default function ContainerDetailsModal({
                           {
                             header: 'PRODUCT NAME',
                             accessor: 'product_name',
-                            headerClassName: 'px-3 py-2 bg-white',
-                            className: 'px-3 py-2 max-w-[150px]',
+                            headerClassName: 'px-6 py-4 bg-transparent',
+                            className: 'px-6 py-4 max-w-[150px]',
                             render: (item) => {
                               const name =
                                 item.product_name || item.name || '-';
@@ -464,9 +527,9 @@ export default function ContainerDetailsModal({
                             header: 'QTY ASSIGNED',
                             accessor: 'qty',
                             headerClassName:
-                              'px-3 py-2 text-right w-32 bg-white',
+                              'px-6 py-4 text-right w-32 bg-transparent',
                             className:
-                              'px-3 py-2 text-right font-mono font-medium',
+                              'px-6 py-4 text-right font-mono font-medium',
                             render: (item) =>
                               item.qty_in_container || item.qty || 0,
                           },
@@ -1065,6 +1128,150 @@ export default function ContainerDetailsModal({
                         />
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+            {activeTab === 'activities' &&
+              String(localStorage.getItem('userRole')).toLowerCase() !==
+                'vendor' && (
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <div className="border-mc-beige-dark bg-mc-white mt-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
+                    <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
+                      <h4 className="text-mc-black shrink-0 text-xs font-extrabold tracking-wider uppercase">
+                        Container Activities
+                      </h4>
+                    </div>
+                    {(activities && activities.length > 0) ||
+                    isLoadingActivities ? (
+                      <>
+                        <DataTable
+                          columns={[
+                            {
+                              header: 'Date & Time',
+                              accessor: 'timestamp',
+                              headerClassName: 'px-6 py-4 bg-transparent w-48',
+                              className:
+                                'px-6 py-4 whitespace-nowrap text-xs font-mono text-slate-500',
+                              render: (item) => {
+                                const date = new Date(
+                                  item.created_at || item.timestamp,
+                                );
+                                return date.toLocaleString();
+                              },
+                            },
+                            {
+                              header: 'User',
+                              accessor: 'user',
+                              headerClassName: 'px-6 py-4 bg-transparent w-48',
+                              className:
+                                'px-6 py-4 font-bold text-slate-800 uppercase text-[10px]',
+                              render: (item) =>
+                                item.user_name || item.user || 'SYSTEM',
+                            },
+                            {
+                              header: 'Action / Details',
+                              accessor: 'action',
+                              headerClassName: 'px-6 py-4 bg-transparent',
+                              className: 'px-6 py-4 text-slate-700',
+                              render: (item) => {
+                                const formatAction = (str) => {
+                                  if (!str) return '-';
+                                  return str
+                                    .replace(/_/g, ' ')
+                                    .toLowerCase()
+                                    .replace(/\b\w/g, (l) => l.toUpperCase());
+                                };
+                                const actionText = formatAction(item.action);
+
+                                let detailsText = '';
+                                if (item.human_readable_message) {
+                                  detailsText = item.human_readable_message;
+                                } else if (item.details) {
+                                  if (
+                                    typeof item.details === 'object' &&
+                                    item.details !== null
+                                  ) {
+                                    if (item.details.path) {
+                                      detailsText = `API Path: ${item.details.path}`;
+                                    } else {
+                                      try {
+                                        const str = JSON.stringify(
+                                          item.details,
+                                        );
+                                        detailsText =
+                                          str.length > 80
+                                            ? str.substring(0, 80) + '...'
+                                            : str;
+                                      } catch (e) {
+                                        detailsText = 'Complex Data';
+                                      }
+                                    }
+                                  } else {
+                                    detailsText = String(item.details);
+                                  }
+                                }
+
+                                return (
+                                  <div>
+                                    <div className="mb-0.5 font-semibold">
+                                      {actionText}
+                                    </div>
+                                    {detailsText && (
+                                      <div className="max-w-lg truncate text-[11px] text-slate-500">
+                                        {detailsText}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              },
+                            },
+                          ]}
+                          data={
+                            activitiesTotal === activities.length
+                              ? activities.slice(
+                                  (activitiesPage - 1) * activitiesPageSize,
+                                  activitiesPage * activitiesPageSize,
+                                )
+                              : activities
+                          }
+                          keyField={(item, idx) => item.id || idx}
+                          defaultThClassName="px-4 py-3 bg-transparent"
+                          theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
+                          tableClassName="w-full text-left text-xs border-collapse"
+                          tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
+                          trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
+                          containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg"
+                          isLoading={isLoadingActivities}
+                        />
+                        {activitiesTotal > 0 && (
+                          <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
+                            <Pagination
+                              currentPage={activitiesPage}
+                              totalCount={activitiesTotal}
+                              pageSize={activitiesPageSize}
+                              onPageChange={(pg) => setActivitiesPage(pg)}
+                              onPageSizeChange={(size) => {
+                                setActivitiesPageSize(size);
+                                setActivitiesPage(1);
+                              }}
+                            />
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
+                        <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50">
+                          <Clock className="h-8 w-8 text-slate-300" />
+                        </div>
+                        <p className="mb-1 font-medium text-slate-500">
+                          No activities found
+                        </p>
+                        <p className="max-w-sm text-sm text-slate-400">
+                          There are no recorded activities for this container.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

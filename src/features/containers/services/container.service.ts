@@ -8,6 +8,7 @@ import {
   CONTAINER_DETAILS,
   CONTAINER_SYNC,
   CONTAINERS_EXPORT_CSV,
+  CONTAINER_ACTIVITIES,
 } from '../../../utils/endpoints';
 
 export async function getContainers(params?: {
@@ -81,4 +82,14 @@ export async function exportContainersCSV(payload: any) {
   link.remove();
 
   return response;
+}
+
+export async function getContainerActivities(
+  id: string | number,
+  params?: any,
+) {
+  const { data } = await apiClient.get(CONTAINER_ACTIVITIES(id.toString()), {
+    params,
+  });
+  return data;
 }
