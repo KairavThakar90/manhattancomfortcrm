@@ -165,6 +165,7 @@ export default function ContainerFlowPage() {
 
   // State for the flow
   const [selectedPOIds, setSelectedPOIds] = useState([]);
+  const [cachedPOs, setCachedPOs] = useState({});
   const [activePOTab, setActivePOTab] = useState(null);
   const [collapsedPOs, setCollapsedPOs] = useState({});
   const [containerName, setContainerName] = useState('');
@@ -314,9 +315,9 @@ export default function ContainerFlowPage() {
     if (selectedPOIds && selectedPOIds.length > 0) {
       selectedPOIds.forEach((id) => {
         if (!rawList.some((p) => String(p.id) === String(id))) {
-          const reduxPO = purchaseOrders?.find(
-            (p) => String(p.id) === String(id),
-          );
+          const reduxPO =
+            purchaseOrders?.find((p) => String(p.id) === String(id)) ||
+            cachedPOs[id];
           if (reduxPO) rawList.unshift(reduxPO);
         }
       });
@@ -356,6 +357,7 @@ export default function ContainerFlowPage() {
     selectedPOIds,
     poSearch,
     selectedWarehouseId,
+    cachedPOs,
   ]);
 
   // ====== Container Infinite Scroll Logic ======
@@ -627,11 +629,12 @@ export default function ContainerFlowPage() {
     return selectedPOIds
       .map(
         (id) =>
-          poList.find((po) => po.id === id) ||
-          purchaseOrders.find((po) => po.id === id),
+          poList?.find((po) => po.id === id) ||
+          purchaseOrders?.find((po) => po.id === id) ||
+          cachedPOs[id],
       )
       .filter(Boolean);
-  }, [selectedPOIds, poList, purchaseOrders]);
+  }, [selectedPOIds, poList, purchaseOrders, cachedPOs]);
 
   const [fetchedPOItems, setFetchedPOItems] = useState([]);
   const [loadingPOItems, setLoadingPOItems] = useState(false);
@@ -808,11 +811,24 @@ export default function ContainerFlowPage() {
     const ids = selections ? selections.map((s) => s.value) : [];
     setSelectedPOIds(ids);
 
+    if (ids.length > 0) {
+      const newCached = {};
+      ids.forEach((id) => {
+        const found =
+          poList?.find((p) => String(p.id) === String(id)) ||
+          purchaseOrders?.find((p) => String(p.id) === String(id)) ||
+          cachedPOs[id];
+        if (found) newCached[id] = found;
+      });
+      setCachedPOs((prev) => ({ ...prev, ...newCached }));
+    }
+
     const rawIds = ids.map((id) => {
       const po =
         poList?.find((p) => String(p.id) === String(id)) ||
-        purchaseOrders?.find((p) => String(p.id) === String(id));
-      return po ? po.sellercloud_po_id || po.id : id;
+        purchaseOrders?.find((p) => String(p.id) === String(id)) ||
+        cachedPOs[id];
+      return po ? po.sellercloud_po_id || po.order_number || po.id : id;
     });
 
     if (ids.length === 0) {
@@ -1274,6 +1290,34 @@ export default function ContainerFlowPage() {
         render: (c) =>
           highlightText(c.warehouse_name || 'N/A', listSearchQuery),
       },
+      // {
+      //   header: 'PO Number',
+      //   accessor: 'poIds',
+      //   className: 'px-6 py-4 font-mono text-xs text-slate-600',
+      //   render: (c) => {
+      //     if (
+      //       !c.poIds ||
+      //       c.poIds.length === 0 ||
+      //       (c.poIds.length === 1 && c.poIds[0] === 'N/A')
+      //     )
+      //       return <span className="text-slate-400">N/A</span>;
+      //     const uniquePOs = Array.from(new Set(c.poIds));
+      //     return (
+      //       <div className="flex max-w-[140px] flex-col gap-1">
+      //         {uniquePOs.slice(0, 2).map((po, idx) => (
+      //           <span key={idx} className="truncate" title={String(po)}>
+      //             {highlightText(String(po), listSearchQuery)}
+      //           </span>
+      //         ))}
+      //         {uniquePOs.length > 2 && (
+      //           <span className="text-[10px] font-bold text-slate-400">
+      //             +{uniquePOs.length - 2} more
+      //           </span>
+      //         )}
+      //       </div>
+      //     );
+      //   },
+      // },
       {
         header: 'Total Items',
         accessor: 'total_items',
@@ -1956,11 +2000,7 @@ export default function ContainerFlowPage() {
                     isMulti
                     value={selectedPOIds}
                     onChange={(newVals) =>
-                      handlePOChange(
-                        poDropdownItems.filter((p) =>
-                          newVals.includes(p.value),
-                        ),
-                      )
+                      handlePOChange(newVals.map((val) => ({ value: val })))
                     }
                     onSearch={handlePoSearch}
                     onLoadMore={() => {}}
@@ -2334,7 +2374,7 @@ export default function ContainerFlowPage() {
                             {selectedPOs
                               .map(
                                 (po) =>
-                                  `PO-${String(po.sellercloud_po_id || po.id).replace(/^PO-/, '')}`,
+                                  `PO-${String(po.sellercloud_po_id || po.order_number || po.id).replace(/^PO-/, '')}`,
                               )
                               .join(', ')}
                           </span>

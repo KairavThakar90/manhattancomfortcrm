@@ -177,6 +177,11 @@ export default function InfiniteScrollDropdown({
                         ? multiValues.filter((v) => v !== item.value)
                         : [...multiValues, item.value];
                       onChange(newValues);
+
+                      if (!isSelected) {
+                        setSearchQuery('');
+                        if (onSearch) onSearch('');
+                      }
                     } else {
                       onChange(item.value, item);
                       setIsOpen(false);
