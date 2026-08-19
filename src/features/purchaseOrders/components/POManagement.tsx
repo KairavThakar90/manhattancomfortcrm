@@ -1496,7 +1496,7 @@ export default function POManagement({
     'Units per Case',
     'Case Price',
     'Item Expected Delivery',
-    'Comment',
+    'Item Comments',
   ];
 
   const CONTAINER_LEVEL_COLUMNS = ['Container Name', 'Container ETA'];
@@ -5506,7 +5506,7 @@ Supply Chain CRM Coordinator`;
             >
               <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
                 <h3 className="font-display text-base font-bold text-slate-900">
-                  Export Purchase Orders
+                  Export CSV
                 </h3>
                 <button
                   onClick={() => setShowExportModal(false)}
