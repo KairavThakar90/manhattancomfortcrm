@@ -204,7 +204,7 @@ export default function POManagementPage() {
         }
 
         if (channelFilter !== 'all') {
-          params.channel_id = channelFilter;
+          params.channel_order_id = channelFilter;
         }
 
         if (userRole === 'Vendor') {
