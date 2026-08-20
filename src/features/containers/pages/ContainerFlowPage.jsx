@@ -53,6 +53,21 @@ import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfin
 import { getWarehouses } from '../../../services/warehouse.service';
 import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
 import { useCRM } from '../../../hooks/useCRM';
+import ColumnsDropdown from '../../../components/common/ColumnsDropdown';
+import { useColumnVisibility } from '../../../hooks/useColumnVisibility';
+
+const CONTAINER_COLUMN_DEFS = [
+  { key: 'id', label: 'Container ID' },
+  { key: 'name', label: 'Container Name' },
+  { key: 'warehouse_name', label: 'Warehouse' },
+  { key: 'po_numbers', label: 'PO Number' },
+  { key: 'total_items', label: 'Total Items' },
+  { key: 'total_qty_in_container', label: 'Total Qty' },
+  { key: 'total_qty_received', label: 'Total Received' },
+  { key: 'arrivalDate', label: 'ETA (Delivery)' },
+  { key: 'received_date', label: 'Received Date' },
+  { key: 'actions', label: 'Actions', locked: true },
+];
 import {
   getContainers,
   getContainerPOItems,
@@ -176,6 +191,13 @@ export default function ContainerFlowPage() {
   const dispatch = useDispatch();
   const { user: currentUser } = useCRM();
   const isWarehouse = currentUser?.role?.toLowerCase() === 'warehouse';
+
+  const {
+    isVisible: isContainerColumnVisible,
+    toggleColumn: toggleContainerColumn,
+    saveVisibility: saveContainerColumnVisibility,
+    saving: savingContainerColumns,
+  } = useColumnVisibility('container', CONTAINER_COLUMN_DEFS, currentUser?.id);
   const rawPurchaseOrders = useSelector((state) => state.purchaseOrders?.list);
   const purchaseOrders = useMemo(
     () => rawPurchaseOrders || [],
@@ -1495,6 +1517,11 @@ export default function ContainerFlowPage() {
     [listSortConfig, handleListSort, listSearchQuery],
   );
 
+  const visibleContainerColumns = useMemo(
+    () => containerColumns.filter((col) => isContainerColumnVisible(col.accessor)),
+    [containerColumns, isContainerColumnVisible],
+  );
+
   if (showList) {
     return (
       <div className="bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
@@ -1675,6 +1702,13 @@ export default function ContainerFlowPage() {
                   title="Received Date Filter"
                 />
               </div>
+              <ColumnsDropdown
+                columns={CONTAINER_COLUMN_DEFS}
+                isVisible={isContainerColumnVisible}
+                onToggle={toggleContainerColumn}
+                onSave={saveContainerColumnVisibility}
+                saving={savingContainerColumns}
+              />
             </div>
           </div>
           <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
@@ -1682,7 +1716,7 @@ export default function ContainerFlowPage() {
               <TableLoader message={'Please wait a moment...'} />
             )}
             <DataTable
-              columns={containerColumns}
+              columns={visibleContainerColumns}
               data={paginatedContainers}
               keyField="id"
               containerClassName="flex-1 flex flex-col min-h-0 w-full"

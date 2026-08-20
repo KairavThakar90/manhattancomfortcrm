@@ -88,6 +88,31 @@ import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLo
 import DateFilterInput from '../../../components/common/DateFilterInput';
 import ContainerDetailsModal from '../../../features/containers/components/ContainerDetailsModal';
 import { getContainerDetails } from '../../../features/containers/services/container.service';
+import ColumnsDropdown from '../../../components/common/ColumnsDropdown';
+import {
+  useColumnVisibility,
+  ColumnDef,
+} from '../../../hooks/useColumnVisibility';
+
+const PO_COLUMN_DEFS: ColumnDef[] = [
+  { key: 'id', label: 'PO Number' },
+  { key: 'orderId', label: 'Order Id' },
+  { key: 'channel_order_id', label: 'Channel Order ID' },
+  { key: 'status', label: 'Status' },
+  { key: 'delay_reason', label: 'Reason for Delayed' },
+  { key: 'commentsCount', label: 'Comments' },
+  { key: 'creationDate', label: 'Order Date' },
+  { key: 'vendorName', label: 'Vendor' },
+  { key: 'customerName', label: 'Customer Name' },
+  { key: 'warehouseName', label: 'Warehouse' },
+  { key: 'items', label: 'PO Items' },
+  { key: 'orderedQty', label: 'Ordered / Received Qty' },
+  { key: 'invoiceDetails', label: 'PO Approved Date' },
+  { key: 'invoiceDelayStatus', label: 'Approved PO' },
+  { key: 'expected_delivery_date', label: 'ETA Delivery' },
+  { key: 'containerIds', label: 'Containers' },
+  { key: 'actions', label: 'Actions', locked: true },
+];
 
 interface DataTableProps {
   columns: any[];
@@ -937,6 +962,13 @@ export default function POManagement({
   const isVendor =
     currentUser?.role === 'Vendor' ||
     localStorage.getItem('userRole') === 'Vendor';
+
+  const {
+    isVisible: isPOColumnVisible,
+    toggleColumn: togglePOColumn,
+    saveVisibility: savePOColumnVisibility,
+    saving: savingPOColumns,
+  } = useColumnVisibility('po', PO_COLUMN_DEFS, currentUser?.id);
 
   const purchaseOrders = reduxPOs || [];
   // Navigation inside PO module
@@ -3294,6 +3326,11 @@ Supply Chain CRM Coordinator`;
     ],
   );
 
+  const visiblePOColumns = React.useMemo(
+    () => poColumns.filter((col: any) => isPOColumnVisible(col.accessor)),
+    [poColumns, isPOColumnVisible],
+  );
+
   const handleUpdateItemQty = React.useCallback(
     async (itemIdOrSku: string, newQty: number) => {
       if (!selectedPOId) return;
@@ -4000,6 +4037,15 @@ Supply Chain CRM Coordinator`;
               />
             </div>
           )}
+          {activeSubTab === 'grid' && (
+            <ColumnsDropdown
+              columns={PO_COLUMN_DEFS}
+              isVisible={isPOColumnVisible}
+              onToggle={togglePOColumn}
+              onSave={savePOColumnVisibility}
+              saving={savingPOColumns}
+            />
+          )}
         </div>
       </div>
 
@@ -4008,7 +4054,7 @@ Supply Chain CRM Coordinator`;
         <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
           {loading && <TableLoader />}
           <TypedDataTable
-            columns={poColumns}
+            columns={visiblePOColumns}
             data={paginatedPOs}
             keyField="id"
             containerClassName="flex-1 flex flex-col min-h-0 w-full relative"

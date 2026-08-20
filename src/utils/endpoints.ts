@@ -15,6 +15,7 @@ export const AUTH_REFRESH = '/auth/refresh';
 export const AUTH_VERIFY_2FA = '/auth/verify-2fa';
 export const AUTH_ME = '/auth/me';
 export const AUTH_UPDATE_PASSWORD = '/auth/update-password';
+export const AUTH_COLUMN_PREFERENCES = '/auth/me/column-preferences';
 export const APP_HEALTH = '/health';
 
 // ------------------------------------------
