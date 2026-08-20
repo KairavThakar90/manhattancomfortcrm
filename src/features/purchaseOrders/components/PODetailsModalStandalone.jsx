@@ -28,11 +28,11 @@ import {
  */
 export default function PODetailsModalStandalone({ poId, onClose }) {
   const dispatch = useDispatch();
-  const { user: currentUser } = useCRM();
-  const userRole = currentUser?.role;
-  const isVendor =
-    currentUser?.role === 'Vendor' ||
-    localStorage.getItem('userRole') === 'Vendor';
+  const { user: currentUser, userRole: contextUserRole } = useCRM();
+
+  const userRole =
+    currentUser?.role || contextUserRole || localStorage.getItem('userRole');
+  const isVendor = String(userRole).toLowerCase() === 'vendor';
 
   const reduxPOs = useSelector((state) => state.purchaseOrders?.list) || [];
 
@@ -56,6 +56,15 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
   const cleanId = String(poId || '')
     .replace(/^P[O0]-/i, '')
     .trim();
+
+  // Reset state during render if ID changes (React recommended approach)
+  const [prevId, setPrevId] = useState(null);
+  if (cleanId !== prevId) {
+    setPrevId(cleanId);
+    setIsLoading(true);
+    setIsLoadingComments(true);
+    setError(null);
+  }
 
   const formatUtcTimestamp = (ts) => {
     if (!ts) return new Date().toISOString().slice(0, 10);
@@ -167,12 +176,12 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
 
   const fetchPO = () => {
     if (!cleanId) return;
-    setIsLoading(true);
-    setIsLoadingComments(true);
-    setError(null);
+
+    let isMounted = true;
 
     getPurchaseOrderById(cleanId)
       .then((detailData) => {
+        if (!isMounted) return;
         if (!detailData) {
           setError('Purchase order not found.');
           return;
@@ -188,24 +197,34 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
           : null;
         if (canonicalId && canonicalId !== cleanId) {
           return getPurchaseOrderById(canonicalId).then((canonicalDetail) => {
-            applyDetail(canonicalDetail || detailData, canonicalId);
+            if (isMounted)
+              applyDetail(canonicalDetail || detailData, canonicalId);
           });
         }
 
-        applyDetail(detailData, cleanId);
+        if (isMounted) applyDetail(detailData, cleanId);
       })
       .catch((err) => {
+        if (!isMounted) return;
         console.error('PODetailsModalStandalone fetch error:', err);
         setError('Failed to load purchase order details.');
       })
       .finally(() => {
-        setIsLoading(false);
-        setIsLoadingComments(false);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsLoadingComments(false);
+        }
       });
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     fetchPO();
+
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cleanId]);
 

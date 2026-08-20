@@ -1,7 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ChevronDown, Loader2, X, Plus, Image, Paperclip, ChevronRight, ChevronLeft, MapPin, Mail, FileText, Download, CheckCircle2, MessageSquare, Tag, LayoutDashboard, Truck, Settings, Phone, ExternalLink, Send, Reply, ChevronUp, Pencil, Copy } from 'lucide-react';
+import {
+  ChevronDown,
+  Loader2,
+  X,
+  Plus,
+  Image,
+  Paperclip,
+  ChevronRight,
+  ChevronLeft,
+  MapPin,
+  Mail,
+  FileText,
+  Download,
+  CheckCircle2,
+  MessageSquare,
+  Tag,
+  LayoutDashboard,
+  Truck,
+  Settings,
+  Phone,
+  ExternalLink,
+  Send,
+  Reply,
+  ChevronUp,
+  Pencil,
+  Copy,
+} from 'lucide-react';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import { getTagUsers } from '../../users/services/user.service';
 import { Tooltip } from 'react-tooltip';
@@ -30,7 +56,12 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
     }
     setIsSaving(true);
     const resolvedId =
-      item.item_id || item.uuid || item.id || item.po_item_id || item.poItemId || item.sku;
+      item.item_id ||
+      item.uuid ||
+      item.id ||
+      item.po_item_id ||
+      item.poItemId ||
+      item.sku;
     try {
       await onSave(resolvedId, Number(val));
       setIsEditing(false);
@@ -77,7 +108,10 @@ const InlineQtyEditor = ({ item, initialQty, poId, onSave, userRole }: any) => {
   }
 
   return (
-    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="flex items-center justify-end gap-1.5"
+      onClick={(e) => e.stopPropagation()}
+    >
       <input
         type="number"
         value={val}
@@ -180,11 +214,15 @@ export function PODetailsModal(props) {
   const purchaseOrders = reduxPurchaseOrders || [];
 
   const [leadTimeDays, setLeadTimeDays] = useState<string>(
-    selectedPO?.containerLeadTimeDays ? String(selectedPO.containerLeadTimeDays) : '',
+    selectedPO?.containerLeadTimeDays
+      ? String(selectedPO.containerLeadTimeDays)
+      : '',
   );
   useEffect(() => {
     setLeadTimeDays(
-      selectedPO?.containerLeadTimeDays ? String(selectedPO.containerLeadTimeDays) : '',
+      selectedPO?.containerLeadTimeDays
+        ? String(selectedPO.containerLeadTimeDays)
+        : '',
     );
   }, [selectedPO?.id, selectedPO?.containerLeadTimeDays]);
 
@@ -193,7 +231,8 @@ export function PODetailsModal(props) {
 
   const [itemsCurrentPage, setItemsCurrentPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
-  const [isItemsPaginationLoading, setIsItemsPaginationLoading] = useState(false);
+  const [isItemsPaginationLoading, setIsItemsPaginationLoading] =
+    useState(false);
   useEffect(() => {
     setItemsCurrentPage(1);
   }, [selectedPO?.id]);
@@ -202,9 +241,12 @@ export function PODetailsModal(props) {
     itemsCurrentPage * itemsPageSize,
   );
 
-  const [collapsedComments, setCollapsedComments] = useState<Record<string, boolean>>({});
+  const [collapsedComments, setCollapsedComments] = useState<
+    Record<string, boolean>
+  >({});
   const [highlightedCommentId] = useState<string | null>(null);
-  const [selectedItemForComments, setSelectedItemForComments] = useState<any>(null);
+  const [selectedItemForComments, setSelectedItemForComments] =
+    useState<any>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState('');
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -226,7 +268,9 @@ export function PODetailsModal(props) {
   const [mentionIndex, setMentionIndex] = useState(0);
   const [mentionFilter, setMentionFilter] = useState('');
   const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0);
-  const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>({});
+  const [taggedUserMap, setTaggedUserMap] = useState<Record<string, string>>(
+    {},
+  );
 
   useEffect(() => {
     if (tagUsers.length === 0 && !isFetchingTagUsers) {
@@ -258,7 +302,9 @@ export function PODetailsModal(props) {
     const tag = `@${tagBase}`;
 
     const textBefore = newCommentText.slice(0, mentionIndex);
-    const textAfter = newCommentText.slice(mentionIndex + 1 + mentionFilter.length);
+    const textAfter = newCommentText.slice(
+      mentionIndex + 1 + mentionFilter.length,
+    );
 
     setNewCommentText(`${textBefore}${tag} ${textAfter.trimStart()}`);
     setTaggedUserMap((prev) => ({ ...prev, [tag]: id }));
@@ -280,7 +326,8 @@ export function PODetailsModal(props) {
         const mentionTextOrig = textBeforeCursor.slice(atPos + 1);
         const wordsAfterAt = mentionTextOrig.split(/\s+/);
 
-        const isCompletedTag = wordsAfterAt.length > 1 && taggedUserMap[`@${wordsAfterAt[0]}`];
+        const isCompletedTag =
+          wordsAfterAt.length > 1 && taggedUserMap[`@${wordsAfterAt[0]}`];
         const isAbandonedSearch = wordsAfterAt.length > 3;
 
         if (isCompletedTag || isAbandonedSearch) {
@@ -296,8 +343,12 @@ export function PODetailsModal(props) {
         if (tagUsers.length === 0 && !isFetchingTagUsers) {
           setIsFetchingTagUsers(true);
           getTagUsers()
-            .then((users: any) => setTagUsers(Array.isArray(users) ? users : []))
-            .catch((err: any) => console.error('Failed to fetch tag users', err))
+            .then((users: any) =>
+              setTagUsers(Array.isArray(users) ? users : []),
+            )
+            .catch((err: any) =>
+              console.error('Failed to fetch tag users', err),
+            )
             .finally(() => setIsFetchingTagUsers(false));
         }
         return;
@@ -438,15 +489,29 @@ export function PODetailsModal(props) {
     };
 
     if (commentScope === 'sku' && selectedSkuId) {
-      setFetchedSkuComments?.((prev: any[]) => [...(prev || []), { ...optimisticComment, itemId: selectedSkuId }]);
-      postItemComment(selectedSkuId, messageText, taggedUserIds, replyId, fileToUpload ? [fileToUpload] : undefined)
+      setFetchedSkuComments?.((prev: any[]) => [
+        ...(prev || []),
+        { ...optimisticComment, itemId: selectedSkuId },
+      ]);
+      postItemComment(
+        selectedSkuId,
+        messageText,
+        taggedUserIds,
+        replyId,
+        fileToUpload ? [fileToUpload] : undefined,
+      )
         .then(() => {
-          onAddActivity?.(`Added discussion comment on SKU (${selectedSkuId})`, 'Vendor Comment');
+          onAddActivity?.(
+            `Added discussion comment on SKU (${selectedSkuId})`,
+            'Vendor Comment',
+          );
           toast.success('Comment posted successfully');
         })
         .catch((err: any) => {
           console.error('Failed to save comment to server:', err);
-          toast.error(`Failed to post comment: ${describeError(err)}`, { autoClose: 4000 });
+          toast.error(`Failed to post comment: ${describeError(err)}`, {
+            autoClose: 4000,
+          });
         })
         .finally(() => setIsPostingComment(false));
       return;
@@ -455,21 +520,34 @@ export function PODetailsModal(props) {
     setFetchedComments?.((prev: any[]) => [...(prev || []), optimisticComment]);
 
     const targetId = String(selectedPO.id).replace(/^PO-/i, '');
-    postPOComment(targetId, messageText, taggedUserIds, replyId, fileToUpload ? [fileToUpload] : undefined)
+    postPOComment(
+      targetId,
+      messageText,
+      taggedUserIds,
+      replyId,
+      fileToUpload ? [fileToUpload] : undefined,
+    )
       .then(() => {
-        onAddActivity?.(`Added discussion comment on ${selectedPO.id}`, 'Vendor Comment');
+        onAddActivity?.(
+          `Added discussion comment on ${selectedPO.id}`,
+          'Vendor Comment',
+        );
         toast.success('Comment posted successfully');
         return getPurchaseOrderById(targetId);
       })
       .then((detailData: any) => {
         if (!detailData) return;
         const rawComments = detailData.comments || [];
-        const mappedComments = rawComments.map((c: any) => parseApiCommentObject(c, selectedPO.id));
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, selectedPO.id),
+        );
         setFetchedComments?.(mappedComments);
       })
       .catch((err: any) => {
         console.error('Failed to save comment to server:', err);
-        toast.error(`Failed to post comment: ${describeError(err)}`, { autoClose: 4000 });
+        toast.error(`Failed to post comment: ${describeError(err)}`, {
+          autoClose: 4000,
+        });
       })
       .finally(() => setIsPostingComment(false));
   };
@@ -482,7 +560,9 @@ export function PODetailsModal(props) {
       const targetId = String(selectedPO.id).replace(/^PO-/i, '');
       const detailData = await getPurchaseOrderById(targetId);
       const rawComments = detailData?.comments || [];
-      setFetchedComments?.(rawComments.map((c: any) => parseApiCommentObject(c, selectedPO.id)));
+      setFetchedComments?.(
+        rawComments.map((c: any) => parseApiCommentObject(c, selectedPO.id)),
+      );
       toast.success('Comment updated successfully!');
     } catch (err) {
       console.error('Failed to update comment:', err);
@@ -510,7 +590,9 @@ export function PODetailsModal(props) {
           <span className="group-hover:text-mc-gold truncate font-mono font-bold text-slate-500 transition-colors">
             {item.sku}
           </span>
-          {item.sku && <Copy className="group-hover:text-mc-gold h-3.5 w-3.5 text-slate-400 transition-colors" />}
+          {item.sku && (
+            <Copy className="group-hover:text-mc-gold h-3.5 w-3.5 text-slate-400 transition-colors" />
+          )}
         </div>
       ),
     },
@@ -520,10 +602,19 @@ export function PODetailsModal(props) {
       headerClassName: 'px-3 py-2',
       className: 'px-3 py-2 max-w-[150px]',
       render: (item: any) => {
-        const productName = item.name || item.product_name || item.productName || 'Unknown Product';
+        const productName =
+          item.name ||
+          item.product_name ||
+          item.productName ||
+          'Unknown Product';
         return (
-          <span className="cursor-pointer font-medium text-slate-800" title={productName}>
-            {productName.length > 25 ? productName.substring(0, 25) + '...' : productName}
+          <span
+            className="cursor-pointer font-medium text-slate-800"
+            title={productName}
+          >
+            {productName.length > 25
+              ? productName.substring(0, 25) + '...'
+              : productName}
           </span>
         );
       },
@@ -551,7 +642,10 @@ export function PODetailsModal(props) {
       accessor: 'receivedQty',
       headerClassName: 'px-3 py-2 text-right',
       className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
-      render: (item: any) => Number(item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0).toLocaleString(),
+      render: (item: any) =>
+        Number(
+          item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0,
+        ).toLocaleString(),
     },
     {
       header: 'Remaining Qty',
@@ -560,7 +654,8 @@ export function PODetailsModal(props) {
       className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
       render: (item: any) => {
         const oQty = item.qty_ordered ?? item.qty ?? item.orderedQty ?? 0;
-        const rQty = item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
+        const rQty =
+          item.qty_received ?? item.receivedQty ?? item.received_qty ?? 0;
         const remQty =
           item.qty_remaining !== undefined && item.qty_remaining !== null
             ? item.qty_remaining
@@ -573,7 +668,8 @@ export function PODetailsModal(props) {
       accessor: 'unitPrice',
       headerClassName: 'px-3 py-2 text-right',
       className: 'px-3 py-2 text-right font-mono font-medium text-slate-500',
-      render: (item: any) => `$${Number(item.unit_price ?? item.unitPrice ?? item.price ?? 0).toFixed(2)}`,
+      render: (item: any) =>
+        `$${Number(item.unit_price ?? item.unitPrice ?? item.price ?? 0).toFixed(2)}`,
     },
     {
       header: 'Total',
@@ -604,9 +700,14 @@ export function PODetailsModal(props) {
               const isObj = typeof c === 'object' && c !== null;
               const cDbId = isObj ? c.id : null;
               const cScId = isObj ? c.sellercloud_container_id : null;
-              const cName = isObj ? c.container_name || c.name || 'Unnamed' : String(c);
+              const cName = isObj
+                ? c.container_name || c.name || 'Unnamed'
+                : String(c);
               const cClickId = isObj
-                ? c.id || c.sellercloud_container_id || c.name || c.container_name
+                ? c.id ||
+                  c.sellercloud_container_id ||
+                  c.name ||
+                  c.container_name
                 : c;
               const qty = isObj ? (c.qty_in_container ?? 0) : 0;
               const displayId = cScId || cDbId;
@@ -615,7 +716,10 @@ export function PODetailsModal(props) {
                   key={idx}
                   onClick={(e: any) => {
                     e.stopPropagation();
-                    if (cClickId && typeof onOpenContainerDetails === 'function')
+                    if (
+                      cClickId &&
+                      typeof onOpenContainerDetails === 'function'
+                    )
                       onOpenContainerDetails(String(cClickId), String(cName));
                   }}
                   className="text-mc-black cursor-pointer rounded-sm bg-slate-100 px-1.5 py-0.5 text-left font-mono text-[11px] whitespace-nowrap transition-colors hover:bg-slate-200"
@@ -641,10 +745,15 @@ export function PODetailsModal(props) {
           <div className="flex flex-col gap-0.5">
             {item.containers.map((c: any, idx: number) => {
               const isObj = typeof c === 'object' && c !== null;
-              const rawDate = isObj ? c.estimated_arrival_date || c.received_date : null;
+              const rawDate = isObj
+                ? c.estimated_arrival_date || c.received_date
+                : null;
               const displayDate = rawDate ? rawDate.split('T')[0] : 'TBD';
               const cId = isObj
-                ? c.id || c.sellercloud_container_id || c.name || c.container_name
+                ? c.id ||
+                  c.sellercloud_container_id ||
+                  c.name ||
+                  c.container_name
                 : c;
               return (
                 <button
@@ -652,7 +761,9 @@ export function PODetailsModal(props) {
                   onClick={(e: any) => {
                     e.stopPropagation();
                     if (cId && typeof onOpenContainerDetails === 'function') {
-                      const passName = isObj ? c.container_name || c.name : undefined;
+                      const passName = isObj
+                        ? c.container_name || c.name
+                        : undefined;
                       onOpenContainerDetails(String(cId), passName);
                     }
                   }}
@@ -687,7 +798,10 @@ export function PODetailsModal(props) {
             onClick={(e: any) => {
               e.stopPropagation();
               if (item.id !== undefined || item.sku) {
-                const resolvedId = item.id !== undefined && item.id !== null ? item.id : item.sku;
+                const resolvedId =
+                  item.id !== undefined && item.id !== null
+                    ? item.id
+                    : item.sku;
                 setSelectedItemForComments({ ...item, id: resolvedId });
               } else {
                 toast.error('This item lacks an identifier.');
@@ -716,7 +830,7 @@ export function PODetailsModal(props) {
 
   return (
     <>
-{/* PO DETAIL OVERLAY MODAL (Rule 2) */}
+      {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO &&
         createPortal(
           <div
@@ -799,19 +913,27 @@ export function PODetailsModal(props) {
               {/* Tab Selection inside Modal */}
               {!isCommentOnlyView && (
                 <div className="z-20 flex border-b border-slate-100 bg-slate-50/50">
-                  {(['details', 'comments'] as const).map((section) => (
-                    <button
-                      key={section}
-                      onClick={() => setActiveDrawerSection(section)}
-                      className={`flex-1 border-b-2 py-3 text-xs font-bold capitalize transition ${
-                        activeDrawerSection === section
-                          ? 'text-mc-black border-mc-gold bg-white'
-                          : 'border-transparent text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {section}
-                    </button>
-                  ))}
+                  {(['details', 'comments'] as const)
+                    .filter((section) => {
+                      if (section === 'comments') {
+                        const r = String(userRole).toLowerCase();
+                        return r === 'administrator' || r === 'admin' || r === 'office';
+                      }
+                      return true;
+                    })
+                    .map((section) => (
+                      <button
+                        key={section}
+                        onClick={() => setActiveDrawerSection(section)}
+                        className={`flex-1 border-b-2 py-3 text-xs font-bold capitalize transition ${
+                          activeDrawerSection === section
+                            ? 'text-mc-black border-mc-gold bg-white'
+                            : 'border-transparent text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {section}
+                      </button>
+                    ))}
                 </div>
               )}
 
@@ -990,13 +1112,18 @@ export function PODetailsModal(props) {
                           </strong>
                         </div> */}
                         </div>
-
                         <div className="border-mc-beige-dark bg-mc-white mt-3 flex min-h-0 flex-1 flex-col rounded-xl border p-4 shadow-sm">
                           <h5 className="text-mc-black mb-3 shrink-0 text-xs font-extrabold tracking-wider uppercase">
                             Item Specifications (Products)
                           </h5>
                           <TypedDataTable
-                            columns={poItemColumns}
+                            columns={poItemColumns.filter((c) => {
+                              if (c.header === 'Comments') {
+                                const r = String(userRole).toLowerCase();
+                                return r === 'administrator' || r === 'admin' || r === 'office';
+                              }
+                              return true;
+                            })}
                             data={paginatedItems}
                             keyField="sku"
                             isLoading={
@@ -1757,7 +1884,6 @@ export function PODetailsModal(props) {
                     </form>
                   </div>
                 )}
-
               </div>
             </div>
           </div>,

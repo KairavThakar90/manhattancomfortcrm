@@ -122,6 +122,56 @@ const highlightText = (text, query) => {
   );
 };
 
+const POListCell = ({ rawPOs, listSearchQuery, setQuickViewPOId }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const uniquePOs = Array.from(new Set(rawPOs)).map((po) => {
+    if (po === 'N/A') return po;
+    return String(po)
+      .replace(/^P[O0]-/i, '')
+      .trim();
+  });
+
+  const MAX_VISIBLE = 2;
+  const displayPOs = expanded ? uniquePOs : uniquePOs.slice(0, MAX_VISIBLE);
+
+  return (
+    <div className="flex max-w-[140px] flex-wrap items-center gap-[2px] leading-snug">
+      {displayPOs.map((po, idx) => (
+        <React.Fragment key={idx}>
+          <button
+            type="button"
+            className="hover:text-mc-gold m-0 cursor-pointer border-none bg-transparent p-0 text-left transition-colors hover:underline"
+            title={po}
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuickViewPOId(po);
+            }}
+          >
+            {highlightText(po, listSearchQuery)}
+          </button>
+          {idx < displayPOs.length - 1 && (
+            <span className="mr-1 text-slate-500">,</span>
+          )}
+        </React.Fragment>
+      ))}
+
+      {uniquePOs.length > MAX_VISIBLE && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
+          className="ml-1 text-[10px] font-bold text-slate-400 transition-colors hover:text-slate-600 focus:outline-none"
+        >
+          {expanded ? 'less' : `+${uniquePOs.length - MAX_VISIBLE} more`}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default function ContainerFlowPage() {
   const dispatch = useDispatch();
   const { user: currentUser } = useCRM();
@@ -1315,37 +1365,12 @@ export default function ContainerFlowPage() {
           )
             return <span className="text-slate-400">N/A</span>;
 
-          const uniquePOs = Array.from(new Set(rawPOs)).map((po) => {
-            const poStr = String(po);
-            if (!poStr.match(/^P[O0]-/i) && poStr !== 'N/A') {
-              return 'PO-' + poStr;
-            }
-            return poStr;
-          });
-
           return (
-            <div className="flex max-w-[140px] flex-col gap-1">
-              {uniquePOs.slice(0, 2).map((po, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="hover:text-mc-gold m-0 cursor-pointer truncate border-none bg-transparent p-0 text-left transition-colors hover:underline"
-                  title={po}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('[POQuickView] Setting poId =', po);
-                    setQuickViewPOId(po);
-                  }}
-                >
-                  {highlightText(po, listSearchQuery)}
-                </button>
-              ))}
-              {uniquePOs.length > 2 && (
-                <span className="text-[10px] font-bold text-slate-400">
-                  +{uniquePOs.length - 2} more
-                </span>
-              )}
-            </div>
+            <POListCell
+              rawPOs={rawPOs}
+              listSearchQuery={listSearchQuery}
+              setQuickViewPOId={setQuickViewPOId}
+            />
           );
         },
       },
