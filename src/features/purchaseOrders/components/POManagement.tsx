@@ -58,6 +58,7 @@ import { useCRM } from '../../../hooks/useCRM';
 import {
   updatePOLeadTime,
   exportPurchaseOrdersCSV,
+  exportPurchaseOrderCSV,
   getPurchaseOrders,
   postPOComment,
   getPurchaseOrderById,
@@ -1959,6 +1960,42 @@ export default function POManagement({
       console.error('Export failed', error);
       toast.dismiss();
       toast.error('Failed to export CSV. Please try again.');
+    }
+  };
+
+  // Export a single PO's data from the details modal via the backend export API (Rule 12)
+  const handleExportPO = async (po: any) => {
+    if (!po) return;
+    const toastId = toast.loading('Generating PO Export...');
+    try {
+      const sellercloudPoId =
+        po.sellercloud_po_id || String(po.id).replace(/^PO-/i, '');
+      const blob = await exportPurchaseOrderCSV(sellercloudPoId);
+
+      const downloadUrl = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `PO-${po.id}_Export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast.update(toastId, {
+        render: 'Export successful!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+      });
+      onAddActivity(`Exported PO ${po.id}`, 'PO Updated');
+    } catch (error) {
+      console.error('Failed to export PO:', error);
+      toast.update(toastId, {
+        render: 'Failed to export PO. Please try again.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
@@ -4259,6 +4296,14 @@ Supply Chain CRM Coordinator`;
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleExportPO(selectedPO)}
+                      className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Export
+                    </button>
+
                     {selectedPO.sellercloud_link && !isVendor && (
                       <button
                         onClick={() =>
@@ -4329,7 +4374,15 @@ Supply Chain CRM Coordinator`;
                     <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 md:grid-cols-3">
                       {/* Stats Panel - Changed from col-span-2 to col-span-3 to occupy full width while Internal Approval Status is temporarily hidden */}
                       <div className="flex min-h-0 flex-col space-y-3 md:col-span-3">
-                        <div className="grid shrink-0 grid-cols-5 gap-4">
+                        <div className="grid shrink-0 grid-cols-6 gap-4">
+                          <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                            <span className="block text-[10px] font-medium text-slate-400">
+                              PO Number
+                            </span>
+                            <strong className="font-mono text-sm font-bold text-slate-800">
+                              {selectedPO.id}
+                            </strong>
+                          </div>
                           <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                             <span className="block text-[10px] font-medium text-slate-400">
                               Order ID

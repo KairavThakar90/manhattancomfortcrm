@@ -7,6 +7,7 @@ import {
   PO_DELETE,
   PO_FILTERS_ALL,
   PO_EXPORT_CSV,
+  PO_EXPORT_SINGLE_CSV,
   PO_COMMENTS,
   PO_COMMENT_UPDATE,
   PO_ITEM_COMMENTS,
@@ -114,6 +115,17 @@ export async function exportPurchaseOrdersCSV(payload?: any) {
   const response = await apiClient.post(PO_EXPORT_CSV, payload, {
     responseType: 'blob', // crucial for downloading files
   });
+  return response.data;
+}
+
+/** Export a single PO to CSV by sellercloud_po_id */
+export async function exportPurchaseOrderCSV(sellercloud_po_id: string) {
+  const response = await apiClient.get(
+    PO_EXPORT_SINGLE_CSV(sellercloud_po_id),
+    {
+      responseType: 'blob', // crucial for downloading files
+    },
+  );
   return response.data;
 }
 
