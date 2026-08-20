@@ -169,8 +169,8 @@ export default function UserManagementPage() {
       {
         header: 'Name',
         accessor: 'name',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[25%]',
-        className: 'px-6 py-3 w-[25%] font-semibold text-mc-black text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[20%]',
+        className: 'px-6 py-3 w-[20%] font-semibold text-mc-black text-sm',
         render: (u) => {
           const val =
             u.full_name ||
@@ -186,8 +186,8 @@ export default function UserManagementPage() {
       {
         header: 'Email',
         accessor: 'email',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[30%]',
-        className: 'px-6 py-3 w-[30%] text-mc-gray-soft text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[25%]',
+        className: 'px-6 py-3 w-[25%] text-mc-gray-soft text-sm',
         render: (u) => {
           const val = u.email || 'N/A';
           return (
@@ -200,8 +200,8 @@ export default function UserManagementPage() {
       {
         header: 'Role',
         accessor: 'role',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[15%]',
-        className: 'px-6 py-3 w-[15%]',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[12%]',
+        className: 'px-6 py-3 w-[12%]',
         render: (u) => (
           <span className="border-mc-beige-dark bg-mc-beige-light text-mc-black inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase">
             {u.role || 'User'}
@@ -218,8 +218,8 @@ export default function UserManagementPage() {
           </div>
         ),
         accessor: 'created_at',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[15%]',
-        className: 'px-6 py-3 w-[15%] text-mc-gray-soft text-sm font-mono',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[13%]',
+        className: 'px-6 py-3 w-[13%] text-mc-gray-soft text-sm font-mono',
         render: (u) => {
           const dateStr = u.created_at || u.date_joined || u.createdAt;
           if (!dateStr) return 'N/A';
@@ -231,10 +231,40 @@ export default function UserManagementPage() {
         },
       },
       {
+        header: (
+          <div className="flex max-w-max flex-col gap-0.5">
+            <span>Last Login</span>
+            <span className="text-[9px] font-medium tracking-wide text-slate-400 opacity-80">
+              (YYYY/MM/DD)
+            </span>
+          </div>
+        ),
+        accessor: 'last_login',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[17%]',
+        className: 'px-6 py-3 w-[17%] text-mc-gray-soft text-xs font-mono',
+        render: (u) => {
+          if (!u.last_login) return '-';
+          try {
+            const d = new Date(u.last_login);
+            if (isNaN(d.getTime())) return 'N/A';
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const time = d.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            return `${year}/${month}/${day} ${time}`;
+          } catch (e) {
+            return 'N/A';
+          }
+        },
+      },
+      {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-3 bg-transparent text-center w-[15%]',
-        className: 'px-6 py-3 w-[15%] text-center',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[13%]',
+        className: 'px-6 py-3 w-[13%] text-center',
         render: (u) => (
           <div className="flex items-center justify-center gap-2">
             <button
