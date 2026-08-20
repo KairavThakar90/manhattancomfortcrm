@@ -1472,6 +1472,7 @@ export default function POManagement({
     'PO Title',
     'Channel Order ID',
     'Vendor',
+    'Warehouse',
     'Status Code',
     'Receiving Status',
     'Created On',
@@ -2725,7 +2726,7 @@ Supply Chain CRM Coordinator`;
           </span>
         ),
       },
-      ...(['Vendor', 'Administrator'].includes(userRole)
+      ...(['Vendor', 'Warehouse', 'Administrator'].includes(userRole)
         ? [
             {
               header: 'Status',
@@ -2883,7 +2884,33 @@ Supply Chain CRM Coordinator`;
           );
         },
       },
-
+      {
+        header: 'Warehouse',
+        accessor: 'warehouseName',
+        headerClassName: 'px-6 py-4',
+        className: 'px-6 py-4 text-slate-700 max-w-[150px] truncate',
+        render: (po: any) => {
+          const warehouse =
+            po.warehouse?.name ||
+            po.warehouseName ||
+            po.warehouse_name ||
+            (typeof po.warehouse === 'string' ? po.warehouse : 'N/A');
+          return (
+            <span
+              className={
+                warehouse === 'N/A'
+                  ? 'rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500'
+                  : 'inline-block w-full cursor-pointer truncate text-[11px] font-bold text-slate-700'
+              }
+              title={warehouse !== 'N/A' ? warehouse : undefined}
+            >
+              {warehouse !== 'N/A'
+                ? highlightText(warehouse, searchQuery)
+                : 'N/A'}
+            </span>
+          );
+        },
+      },
       {
         header: 'PO Items',
         accessor: 'items',

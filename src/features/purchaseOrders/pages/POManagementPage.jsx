@@ -300,6 +300,11 @@ export default function POManagementPage() {
                 '-',
               customer: po.customer || null,
               customerName: po.first_name || po.customerName || null,
+              warehouseName:
+                po.warehouse?.name ||
+                po.warehouse_name ||
+                po.warehouse ||
+                'N/A',
               status,
               orderedQty,
               receivedQty,
