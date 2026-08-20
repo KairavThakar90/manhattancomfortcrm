@@ -66,6 +66,7 @@ const CONTAINER_COLUMN_DEFS = [
   { key: 'total_qty_received', label: 'Total Received' },
   { key: 'arrivalDate', label: 'ETA (Delivery)' },
   { key: 'received_date', label: 'Received Date' },
+  { key: 'date_emptied', label: 'Unloaded' },
   { key: 'actions', label: 'Actions', locked: true },
 ];
 import {
@@ -92,6 +93,7 @@ const CONTAINER_EXPORT_COLUMNS = [
   'item_name',
   'qty_ordered',
   'qty_in_container',
+  'date_emptied',
 ];
 
 const CONTAINER_EXPORT_COLUMNS_LABELS = {
@@ -106,6 +108,7 @@ const CONTAINER_EXPORT_COLUMNS_LABELS = {
   item_name: 'Item Description',
   qty_ordered: 'Qty Ordered',
   qty_in_container: 'Qty In Container',
+  date_emptied: 'Unloaded Date',
 };
 
 const highlightText = (text, query) => {
@@ -854,6 +857,7 @@ export default function ContainerFlowPage() {
         total_qty_received: c.total_qty_received || 0,
         is_received: !!c.is_received,
         received_date: formattedRecvDate,
+        date_emptied: c.date_emptied,
         sellercloud_link: c.sellercloud_link || null,
       };
     });
@@ -1495,6 +1499,27 @@ export default function ContainerFlowPage() {
         accessor: 'received_date',
         headerClassName: 'px-4 py-3 select-none group',
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
+      },
+      {
+        header: 'Unloaded',
+        accessor: 'date_emptied',
+        headerClassName: 'px-4 py-3 select-none text-center',
+        className: 'px-4 py-4 text-center',
+        render: (c) => {
+          const hasDate =
+            c.date_emptied &&
+            c.date_emptied !== 'N/A' &&
+            c.date_emptied !== 'Pending';
+          return hasDate ? (
+            <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
+              <CheckCircle2 className="h-3 w-3" /> Yes
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
+              No
+            </span>
+          );
+        },
       },
       {
         header: 'Actions',
