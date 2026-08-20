@@ -2614,12 +2614,18 @@ Supply Chain CRM Coordinator`;
         render: (po: any) => (
           <div className="flex flex-col items-start gap-1">
             <div className="flex max-w-[120px] items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-              <span
-                className="truncate font-mono text-[10px] font-bold text-slate-900"
+              <button
+                className="hover:text-mc-gold m-0 cursor-pointer truncate border-none bg-transparent p-0 font-mono text-[10px] font-bold text-slate-900 hover:underline"
                 title={String(po.id).replace(/^PO-/i, '')}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  setIsCommentOnlyView(false);
+                  onSelectPO(po.id);
+                  setActiveDrawerSection('details');
+                }}
               >
                 {highlightText(String(po.id).replace(/^PO-/i, ''), searchQuery)}
-              </span>
+              </button>
               {po.delta_sellercloud_link && !isVendor && (
                 <a
                   title="Open in Sellercloud (Purchasing)"

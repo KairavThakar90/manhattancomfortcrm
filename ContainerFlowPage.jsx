@@ -6,7 +6,6 @@ import React, {
   useRef,
 } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import PODetailsModalStandalone from '../../purchaseOrders/components/PODetailsModalStandalone';
 import {
   Package,
   Container,
@@ -134,7 +133,6 @@ export default function ContainerFlowPage() {
 
   // State for toggling between views
   const [showList, setShowList] = useState(true);
-  const [quickViewPOId, setQuickViewPOId] = useState(null);
   const [listPage, setListPage] = useState(1);
   const [listPageSize, setListPageSize] = useState(25);
   const [listSearchQuery, setListSearchQuery] = useState('');
@@ -726,17 +724,9 @@ export default function ContainerFlowPage() {
   const allContainers = useMemo(() => {
     // Map redux containers to the expected table format
     return reduxContainers.map((c) => {
-      // Collect PO IDs: check po_numbers first (new API format), then purchase_orders, then po_id
-      let poIds = [];
-      if (c.po_numbers && c.po_numbers.length > 0) {
-        poIds = c.po_numbers.map((n) => String(n));
-      } else if (c.purchase_orders?.length > 0) {
-        poIds = c.purchase_orders.map(
-          (p) => p.po_number || p.sellercloud_po_id || String(p.id),
-        );
-      } else if (c.po_id) {
-        poIds = [String(c.po_id)];
-      }
+      const poIds =
+        c.purchase_orders?.map((p) => p.po_number || p.sellercloud_po_id) || [];
+      if (poIds.length === 0 && c.po_id) poIds.push(c.po_id);
 
       const totalItems =
         c.total_qty_in_container ||
@@ -769,7 +759,6 @@ export default function ContainerFlowPage() {
           c.container_number ||
           'Unnamed Container',
         poIds: poIds.length > 0 ? poIds : ['N/A'],
-        po_numbers: poIds.length > 0 ? poIds : [],
         totalItems: totalItems,
         arrivalDate: formattedDate,
         items: c.details || c.items || [],
@@ -1166,13 +1155,12 @@ export default function ContainerFlowPage() {
       const data = Array.isArray(detailsResp) ? detailsResp[0] : detailsResp;
       const details = data?.details || data?.items || container.items || [];
       let rawPoIds = data?.purchase_orders?.map((po) => po.id) || [];
-      let fallbackArray = container.po_numbers || container.poIds;
       if (
         rawPoIds.length === 0 &&
-        fallbackArray &&
-        fallbackArray[0] !== 'N/A'
+        container.poIds &&
+        container.poIds[0] !== 'N/A'
       ) {
-        rawPoIds = fallbackArray;
+        rawPoIds = container.poIds;
       }
       if (rawPoIds.length === 0 && data?.po_id) {
         rawPoIds = [data.po_id];
@@ -1302,53 +1290,34 @@ export default function ContainerFlowPage() {
         render: (c) =>
           highlightText(c.warehouse_name || 'N/A', listSearchQuery),
       },
-      {
-        header: 'PO Number',
-        accessor: 'po_numbers',
-        className: 'px-6 py-4 font-mono text-xs text-slate-600',
-        render: (c) => {
-          const rawPOs = c.po_numbers || c.poIds || [];
-          if (
-            !rawPOs ||
-            rawPOs.length === 0 ||
-            (rawPOs.length === 1 && rawPOs[0] === 'N/A')
-          )
-            return <span className="text-slate-400">N/A</span>;
-
-          const uniquePOs = Array.from(new Set(rawPOs)).map((po) => {
-            const poStr = String(po);
-            if (!poStr.match(/^P[O0]-/i) && poStr !== 'N/A') {
-              return 'PO-' + poStr;
-            }
-            return poStr;
-          });
-
-          return (
-            <div className="flex max-w-[140px] flex-col gap-1">
-              {uniquePOs.slice(0, 2).map((po, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="hover:text-mc-gold m-0 cursor-pointer truncate border-none bg-transparent p-0 text-left transition-colors hover:underline"
-                  title={po}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('[POQuickView] Setting poId =', po);
-                    setQuickViewPOId(po);
-                  }}
-                >
-                  {highlightText(po, listSearchQuery)}
-                </button>
-              ))}
-              {uniquePOs.length > 2 && (
-                <span className="text-[10px] font-bold text-slate-400">
-                  +{uniquePOs.length - 2} more
-                </span>
-              )}
-            </div>
-          );
-        },
-      },
+      // {
+      //   header: 'PO Number',
+      //   accessor: 'poIds',
+      //   className: 'px-6 py-4 font-mono text-xs text-slate-600',
+      //   render: (c) => {
+      //     if (
+      //       !c.poIds ||
+      //       c.poIds.length === 0 ||
+      //       (c.poIds.length === 1 && c.poIds[0] === 'N/A')
+      //     )
+      //       return <span className="text-slate-400">N/A</span>;
+      //     const uniquePOs = Array.from(new Set(c.poIds));
+      //     return (
+      //       <div className="flex max-w-[140px] flex-col gap-1">
+      //         {uniquePOs.slice(0, 2).map((po, idx) => (
+      //           <span key={idx} className="truncate" title={String(po)}>
+      //             {highlightText(String(po), listSearchQuery)}
+      //           </span>
+      //         ))}
+      //         {uniquePOs.length > 2 && (
+      //           <span className="text-[10px] font-bold text-slate-400">
+      //             +{uniquePOs.length - 2} more
+      //           </span>
+      //         )}
+      //       </div>
+      //     );
+      //   },
+      // },
       {
         header: 'Total Items',
         accessor: 'total_items',
@@ -1862,14 +1831,6 @@ export default function ContainerFlowPage() {
             }
           }}
         />
-
-        {/* PO Details Modal */}
-        {quickViewPOId && (
-          <PODetailsModalStandalone
-            poId={quickViewPOId}
-            onClose={() => setQuickViewPOId(null)}
-          />
-        )}
       </div>
     );
   }
@@ -2558,13 +2519,6 @@ export default function ContainerFlowPage() {
       )}
 
       {/* FullPageLoader removed in favor of localized TableLoader */}
-      {/* PO Details Modal */}
-      {quickViewPOId && (
-        <PODetailsModalStandalone
-          poId={quickViewPOId}
-          onClose={() => setQuickViewPOId(null)}
-        />
-      )}
     </div>
   );
 }
