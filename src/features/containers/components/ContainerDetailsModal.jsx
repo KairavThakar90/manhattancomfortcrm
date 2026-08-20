@@ -193,15 +193,6 @@ export default function ContainerDetailsModal({
     const currentUserRole = String(
       localStorage.getItem('userRole'),
     ).toLowerCase();
-    if (
-      (currentUserRole === 'warehouse' ||
-        currentUserRole === 'administrator') &&
-      trackingData.date_emptied &&
-      !trackingData.trucker_email
-    ) {
-      setEmailError('Email is required when Date Emptied is specified.');
-      return;
-    }
 
     try {
       setIsSaving(true);
@@ -763,13 +754,11 @@ export default function ContainerDetailsModal({
                         trackingData.date_emptied && (
                           <div className="mt-2 border-t border-slate-100 pt-4 sm:col-span-2">
                             <label className="mb-1 block text-xs font-semibold text-slate-700">
-                              Trucker Email (Required){' '}
-                              <span className="text-rose-500">*</span>
+                              Trucker Email
                             </label>
                             <div className="flex flex-wrap items-center gap-2">
                               <input
                                 type="email"
-                                required
                                 value={trackingData.trucker_email || ''}
                                 onChange={(e) =>
                                   handleTrackingChange(
