@@ -1518,7 +1518,8 @@ export default function ContainerFlowPage() {
   );
 
   const visibleContainerColumns = useMemo(
-    () => containerColumns.filter((col) => isContainerColumnVisible(col.accessor)),
+    () =>
+      containerColumns.filter((col) => isContainerColumnVisible(col.accessor)),
     [containerColumns, isContainerColumnVisible],
   );
 

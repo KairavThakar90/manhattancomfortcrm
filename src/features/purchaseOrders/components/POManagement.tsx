@@ -136,9 +136,13 @@ const TypedDataTable = DataTable as React.FC<DataTableProps>;
 const ReasonCell = ({
   po,
   onSave,
+  autoOpen,
+  onClearAutoOpen,
 }: {
   po: any;
   onSave: (poId: string, value: string) => void;
+  autoOpen?: boolean;
+  onClearAutoOpen?: () => void;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const currentReason = po.delay_reason || po.reason || '';
@@ -184,8 +188,8 @@ const ReasonCell = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isEditing, currentReason]);
 
-  const toggleEdit = (e: any) => {
-    e.stopPropagation();
+  const toggleEdit = (e?: any) => {
+    e?.stopPropagation?.();
     if (!isEditing && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const popoverHeight = 180; // approximate
@@ -212,6 +216,13 @@ const ReasonCell = ({
     }
     setIsEditing(!isEditing);
   };
+
+  useEffect(() => {
+    if (autoOpen && !isEditing) {
+      toggleEdit();
+      onClearAutoOpen?.();
+    }
+  }, [autoOpen, isEditing, onClearAutoOpen]);
 
   const handleSave = (e?: any) => {
     e?.stopPropagation();
@@ -971,6 +982,8 @@ export default function POManagement({
   } = useColumnVisibility('po', PO_COLUMN_DEFS, currentUser?.id);
 
   const purchaseOrders = reduxPOs || [];
+  const [autoOpenPOId, setAutoOpenPOId] = useState<string | null>(null);
+
   // Navigation inside PO module
   const [localActiveSubTab, setLocalActiveSubTab] = useState<
     'grid' | 'kanban' | 'calendar'
@@ -2593,6 +2606,9 @@ Supply Chain CRM Coordinator`;
         );
         dispatch(setPurchaseOrdersList(updatedPOs));
         toast.success(`Vendor Status updated to ${newStatus}`);
+        if (newStatus.toUpperCase() === 'DELAYED') {
+          setAutoOpenPOId(poId);
+        }
       })
       .catch((err) => {
         console.error('Failed to update vendor status:', err);
@@ -2780,7 +2796,16 @@ Supply Chain CRM Coordinator`;
         accessor: 'delay_reason',
         headerClassName: 'px-6 py-4',
         className: 'px-6 py-4 min-w-[150px]',
-        render: (po: any) => <ReasonCell po={po} onSave={handleReasonUpdate} />,
+        render: (po: any) => (
+          <ReasonCell
+            po={po}
+            onSave={handleReasonUpdate}
+            autoOpen={
+              autoOpenPOId === po.id || autoOpenPOId === (po as any).uuid
+            }
+            onClearAutoOpen={() => setAutoOpenPOId(null)}
+          />
+        ),
       },
       {
         header: 'Comments',
