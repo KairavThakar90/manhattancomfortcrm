@@ -13,6 +13,8 @@ export default function POQuickView({ poId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [prevId, setPrevId] = useState(null);
+
   // Strip PO- prefix to get raw numeric ID for API call
   const cleanId = String(poId)
     .replace(/^P[O0]-/i, '')
@@ -20,14 +22,22 @@ export default function POQuickView({ poId, onClose }) {
   // Display label with PO- prefix
   const displayId = cleanId.match(/^\d+$/) ? 'PO-' + cleanId : poId;
 
+  // Reset state during render if ID changes (React recommended approach)
+  if (cleanId !== prevId) {
+    setPrevId(cleanId);
+    setLoading(true);
+    setPo(null);
+    setError(null);
+  }
+
   useEffect(() => {
     if (!cleanId) return;
-    setLoading(true);
-    setError(null);
-    setPo(null);
+
+    let isMounted = true;
 
     getPurchaseOrderById(cleanId)
       .then((data) => {
+        if (!isMounted) return;
         if (data) {
           setPo(data);
         } else {
@@ -35,10 +45,17 @@ export default function POQuickView({ poId, onClose }) {
         }
       })
       .catch((err) => {
+        if (!isMounted) return;
         console.error('POQuickView fetch error:', err);
         setError('Failed to load purchase order details.');
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [cleanId]);
 
   // Close on Escape key
