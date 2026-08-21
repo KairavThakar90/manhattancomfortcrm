@@ -1260,8 +1260,36 @@ export default function POManagement({
     isItemMode: boolean = false,
   ): any => {
     const fileArr = c.files || c.attachments || c.documents || [];
-    const firstFile =
-      Array.isArray(fileArr) && fileArr.length > 0 ? fileArr[0] : null;
+
+    // Instead of extracting only firstFile, extract an array of parsed file metadata:
+    const parsedFiles = fileArr.map((f: any) => {
+      let fUrl = f.file_url || f.url || c.file_url || c.file || null;
+      if (fUrl && !fUrl.startsWith('blob:')) {
+        const char = fUrl.includes('?') ? '&' : '?';
+        fUrl = `${fUrl}${char}cb=${Date.now()}`;
+      }
+      return {
+        fileUrl: fUrl,
+        fileName:
+          f.file_name || f.name || c.file_name || c.filename || 'Attachment',
+        fileType: f.content_type || f.mimetype || '',
+      };
+    });
+
+    // Also support legacy `c.file_url` if fileArr is empty
+    if (parsedFiles.length === 0 && (c.file_url || c.file)) {
+      let fUrl = c.file_url || c.file;
+      if (fUrl && !fUrl.startsWith('blob:')) {
+        const char = fUrl.includes('?') ? '&' : '?';
+        fUrl = `${fUrl}${char}cb=${Date.now()}`;
+      }
+      parsedFiles.push({
+        fileUrl: fUrl,
+        fileName: c.file_name || c.filename || 'Attachment',
+        fileType: '',
+      });
+    }
+
     return {
       id: String(c.id || `COM-${Math.random()}`),
       ...(isItemMode ? { itemId: defaultTargetId } : { poId: defaultTargetId }),
@@ -1269,22 +1297,11 @@ export default function POManagement({
       userId: c.user_id || c.author_id || null,
       role: c.role || 'Administrator',
       message: c.comment || c.message || c.text || '',
-      fileUrl: (() => {
-        let fUrl =
-          firstFile?.file_url || firstFile?.url || c.file_url || c.file || null;
-        if (fUrl && !fUrl.startsWith('blob:')) {
-          const char = fUrl.includes('?') ? '&' : '?';
-          fUrl = `${fUrl}${char}cb=${Date.now()}`;
-        }
-        return fUrl;
-      })(),
-      fileName:
-        firstFile?.file_name ||
-        firstFile?.name ||
-        c.file_name ||
-        c.filename ||
-        'Attachment',
-      fileType: firstFile?.content_type || firstFile?.mimetype || '',
+      files: parsedFiles,
+      // Keep single legacy fields for backwards compatibility with any non-looped UI components
+      fileUrl: parsedFiles.length > 0 ? parsedFiles[0].fileUrl : null,
+      fileName: parsedFiles.length > 0 ? parsedFiles[0].fileName : null,
+      fileType: parsedFiles.length > 0 ? parsedFiles[0].fileType : null,
       timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
       rawTimestamp: c.created_at || c.timestamp || new Date().toISOString(),
       parentId: c.parent_id ? String(c.parent_id) : null,
@@ -1704,7 +1721,7 @@ export default function POManagement({
 
   // New Comment state
   const [newCommentText, setNewCommentText] = useState('');
-  const [newCommentFile, setNewCommentFile] = useState<File | null>(null);
+  const [newCommentFiles, setNewCommentFiles] = useState<File[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
@@ -1713,7 +1730,7 @@ export default function POManagement({
   useEffect(() => {
     // Reset typing state when opening drawer or changing scopes
     setNewCommentText('');
-    setNewCommentFile(null);
+    setNewCommentFiles([]);
     setCommentError(null);
     setReplyToCommentId(null);
     setReplyToUser(null);
@@ -1892,7 +1909,7 @@ export default function POManagement({
     activeDrawerSection,
     commentScope,
     selectedSkuId,
-    newCommentFile,
+    newCommentFiles,
     replyToCommentId,
     highlightedCommentId,
   ]);
@@ -2435,10 +2452,10 @@ Supply Chain CRM Coordinator`;
   // Add a discussion comment
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPO || (!newCommentText.trim() && !newCommentFile)) return;
+    if (!selectedPO || (!newCommentText.trim() && newCommentFiles.length === 0))
+      return;
 
-    const fileToUpload = newCommentFile;
-
+    const filesToUpload = newCommentFiles;
     let messageText = newCommentText.trim();
 
     // Extract tagged users — validation must happen BEFORE any state changes
@@ -2461,15 +2478,15 @@ Supply Chain CRM Coordinator`;
 
     if (taggedUserIds.length === 0) {
       setCommentError(
-        newCommentFile && !newCommentText.trim()
-          ? 'Please type a message with an @tag to send this attachment.'
+        newCommentFiles.length > 0 && !newCommentText.trim()
+          ? 'Please type a message with an @tag to send these attachments.'
           : 'You must @ tag at least one user to post a comment.',
       );
       return;
     }
 
     // All validation passed — now commit state changes
-    if (newCommentFile) {
+    if (newCommentFiles.length > 0) {
       setIsPostingComment(true);
     }
 
@@ -2490,9 +2507,17 @@ Supply Chain CRM Coordinator`;
       timestamp: new Date().toISOString().slice(0, 10),
       rawTimestamp: new Date().toISOString(),
       parentId: replyToCommentId,
-      fileUrl: newCommentFile ? URL.createObjectURL(newCommentFile) : null,
-      fileName: newCommentFile ? newCommentFile.name : null,
-      fileType: newCommentFile ? newCommentFile.type : null,
+      files: newCommentFiles.map((file) => ({
+        fileUrl: URL.createObjectURL(file),
+        fileName: file.name,
+        fileType: file.type,
+      })),
+      fileUrl:
+        newCommentFiles.length > 0
+          ? URL.createObjectURL(newCommentFiles[0])
+          : null,
+      fileName: newCommentFiles.length > 0 ? newCommentFiles[0].name : null,
+      fileType: newCommentFiles.length > 0 ? newCommentFiles[0].type : null,
     };
 
     const replyId = replyToCommentId;
@@ -2503,7 +2528,7 @@ Supply Chain CRM Coordinator`;
     if (commentScope === 'sku' && selectedSkuId) {
       setFetchedSkuComments((prev) => [...prev, optimisticComment]);
       setTimeout(() => setNewCommentText(''), 0);
-      setNewCommentFile(null);
+      setNewCommentFiles([]);
       setShowMentionDropdown(false);
 
       postItemComment(
@@ -2511,7 +2536,7 @@ Supply Chain CRM Coordinator`;
         messageText,
         taggedUserIds,
         replyId,
-        fileToUpload ? [fileToUpload] : undefined,
+        filesToUpload.length > 0 ? filesToUpload : undefined,
       )
         .then(() => {
           onAddActivity(
@@ -2535,7 +2560,7 @@ Supply Chain CRM Coordinator`;
           });
         })
         .finally(() => {
-          if (fileToUpload) setIsPostingComment(false);
+          if (filesToUpload.length > 0) setIsPostingComment(false);
         });
       return;
     }
@@ -2543,7 +2568,7 @@ Supply Chain CRM Coordinator`;
     onAddComment(optimisticComment);
     setFetchedComments((prev) => [...prev, optimisticComment]);
     setTimeout(() => setNewCommentText(''), 0);
-    setNewCommentFile(null);
+    setNewCommentFiles([]);
     setShowMentionDropdown(false);
 
     // Fire-and-forget background sync (No UI locks!)
@@ -2554,7 +2579,7 @@ Supply Chain CRM Coordinator`;
       messageText,
       taggedUserIds,
       replyId,
-      fileToUpload ? [fileToUpload] : undefined,
+      filesToUpload.length > 0 ? filesToUpload : undefined,
     )
       .then(() => {
         onAddActivity(
@@ -4867,98 +4892,129 @@ Supply Chain CRM Coordinator`;
                                       )}
 
                                       {/* WhatsApp Style Attachment Render */}
-                                      {node.fileUrl && (
-                                        <div className="mt-2.5">
-                                          {(() => {
-                                            const isOptimistic = String(
-                                              node.id,
-                                            ).includes('OPT-');
-                                            const isImage =
-                                              node.fileType?.startsWith(
-                                                'image/',
-                                              ) ||
-                                              node.fileUrl.match(
-                                                /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
-                                              ) ||
-                                              node.fileUrl.startsWith('blob:');
+                                      {(() => {
+                                        const filesToRender =
+                                          node.files && node.files.length > 0
+                                            ? node.files
+                                            : node.fileUrl
+                                              ? [
+                                                  {
+                                                    fileUrl: node.fileUrl,
+                                                    fileName: node.fileName,
+                                                    fileType: node.fileType,
+                                                  },
+                                                ]
+                                              : [];
 
-                                            if (isImage) {
-                                              return (
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    !isOptimistic &&
-                                                    setPreviewImage(
-                                                      node.fileUrl,
-                                                    )
-                                                  }
-                                                  className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
-                                                >
-                                                  <img
-                                                    src={node.fileUrl}
-                                                    alt="Attachment"
-                                                    className="h-48 w-64 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
-                                                    onLoad={() => {
-                                                      messagesEndRef.current?.scrollIntoView(
-                                                        {
-                                                          behavior: 'smooth',
-                                                        },
-                                                      );
-                                                    }}
-                                                  />
-                                                  {isOptimistic && (
-                                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
-                                                      <div className="flex flex-col items-center gap-2">
-                                                        <Loader2 className="h-6 w-6 animate-spin text-white" />
-                                                        <span className="text-[10px] font-bold tracking-wider text-white uppercase shadow-sm">
-                                                          Uploading...
+                                        if (filesToRender.length === 0)
+                                          return null;
+
+                                        const isOptimistic = String(
+                                          node.id,
+                                        ).includes('OPT-');
+
+                                        return (
+                                          <div className="mt-2.5 flex flex-wrap gap-2">
+                                            {filesToRender.map(
+                                              (fileObj: any, idx: number) => {
+                                                const isImage =
+                                                  fileObj.fileType?.startsWith(
+                                                    'image/',
+                                                  ) ||
+                                                  fileObj.fileUrl?.match(
+                                                    /\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i,
+                                                  ) ||
+                                                  fileObj.fileUrl?.startsWith(
+                                                    'blob:',
+                                                  );
+
+                                                if (isImage) {
+                                                  return (
+                                                    <button
+                                                      key={idx}
+                                                      type="button"
+                                                      onClick={() =>
+                                                        !isOptimistic &&
+                                                        setPreviewImage(
+                                                          fileObj.fileUrl,
+                                                        )
+                                                      }
+                                                      className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                    >
+                                                      <img
+                                                        src={fileObj.fileUrl}
+                                                        alt="Attachment"
+                                                        className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
+                                                        onLoad={() => {
+                                                          if (
+                                                            idx ===
+                                                            filesToRender.length -
+                                                              1
+                                                          ) {
+                                                            messagesEndRef.current?.scrollIntoView(
+                                                              {
+                                                                behavior:
+                                                                  'smooth',
+                                                              },
+                                                            );
+                                                          }
+                                                        }}
+                                                      />
+                                                      {isOptimistic && (
+                                                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
+                                                          <div className="flex flex-col items-center gap-2">
+                                                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                          </div>
+                                                        </div>
+                                                      )}
+                                                    </button>
+                                                  );
+                                                }
+
+                                                return (
+                                                  <div
+                                                    key={idx}
+                                                    className="relative w-max"
+                                                  >
+                                                    <a
+                                                      href={
+                                                        isOptimistic
+                                                          ? '#'
+                                                          : fileObj.fileUrl
+                                                      }
+                                                      target={
+                                                        isOptimistic
+                                                          ? undefined
+                                                          : '_blank'
+                                                      }
+                                                      rel="noreferrer"
+                                                      className={`flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors ${isOptimistic ? 'pointer-events-none opacity-70' : 'hover:bg-slate-100'}`}
+                                                    >
+                                                      <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
+                                                        <Paperclip className="h-4 w-4" />
+                                                      </div>
+                                                      <div className="flex flex-col">
+                                                        <span className="text-[11px] font-bold">
+                                                          Attachment
+                                                        </span>
+                                                        <span className="max-w-[12rem] truncate text-[10px] text-slate-400">
+                                                          {fileObj.fileName ||
+                                                            'Document'}
                                                         </span>
                                                       </div>
-                                                    </div>
-                                                  )}
-                                                </button>
-                                              );
-                                            } else {
-                                              return (
-                                                <div className="relative w-max">
-                                                  <a
-                                                    href={
-                                                      isOptimistic
-                                                        ? '#'
-                                                        : node.fileUrl
-                                                    }
-                                                    target={
-                                                      isOptimistic
-                                                        ? undefined
-                                                        : '_blank'
-                                                    }
-                                                    rel="noreferrer"
-                                                    className={`flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors ${isOptimistic ? 'pointer-events-none opacity-70' : 'hover:bg-slate-100'}`}
-                                                  >
-                                                    <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
-                                                      <Paperclip className="h-4 w-4" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                      <span className="text-[11px] font-bold">
-                                                        Attachment
-                                                      </span>
-                                                      <span className="text-[10px] text-slate-400">
-                                                        {node.fileName ||
-                                                          'Document'}
-                                                      </span>
-                                                    </div>
-                                                  </a>
-                                                  {isOptimistic && (
-                                                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
-                                                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              );
-                                            }
-                                          })()}
-                                        </div>
-                                      )}
+                                                    </a>
+                                                    {isOptimistic && (
+                                                      <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
+                                                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              },
+                                            )}
+                                          </div>
+                                        );
+                                      })()}
 
                                       {/* Action Bar */}
                                       <div className="mt-2 flex items-center gap-4">
@@ -5126,43 +5182,55 @@ Supply Chain CRM Coordinator`;
                       )}
                       <div className="flex w-full items-end gap-3">
                         <div className="min-w-0 flex-1 flex-col">
-                          {newCommentFile && (
-                            <div className="bg-mc-black relative mb-3 flex w-full max-w-sm flex-col rounded-2xl p-3 shadow-lg">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setNewCommentFile(null);
-                                  const input = document.getElementById(
-                                    'comment-attachment-input',
-                                  ) as HTMLInputElement;
-                                  if (input) input.value = '';
-                                }}
-                                className="absolute top-4 right-4 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                              {newCommentFile.type.startsWith('image/') ? (
-                                <div className="bg-mc-gray-dark relative flex h-48 w-full items-center justify-center overflow-hidden rounded-xl">
-                                  <img
-                                    src={URL.createObjectURL(newCommentFile)}
-                                    alt="Preview"
-                                    className="h-full w-full object-contain"
-                                  />
+                          {newCommentFiles.length > 0 && (
+                            <div className="custom-scrollbar mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-2">
+                              {newCommentFiles.map((file, idx) => (
+                                <div
+                                  key={idx}
+                                  className="bg-mc-black relative flex w-48 shrink-0 flex-col rounded-xl p-2 shadow-md"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newFiles = [...newCommentFiles];
+                                      newFiles.splice(idx, 1);
+                                      setNewCommentFiles(newFiles);
+
+                                      if (newFiles.length === 0) {
+                                        const input = document.getElementById(
+                                          'comment-attachment-input',
+                                        ) as HTMLInputElement;
+                                        if (input) input.value = '';
+                                      }
+                                    }}
+                                    className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                  {file.type.startsWith('image/') ? (
+                                    <div className="bg-mc-gray-dark relative flex h-24 w-full items-center justify-center overflow-hidden rounded-lg">
+                                      <img
+                                        src={URL.createObjectURL(file)}
+                                        alt="Preview"
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="bg-mc-gray-dark flex h-24 w-full flex-col items-center justify-center rounded-lg">
+                                      <Paperclip className="text-mc-gray-soft mb-1 h-6 w-6" />
+                                      <span className="bg-mc-gray-soft text-mc-white rounded px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase shadow-xs">
+                                        {file.name.split('.').pop()}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="bg-mc-gray-dark text-mc-white mt-2 w-full truncate rounded-md px-2 py-1 text-center text-[10px] font-semibold">
+                                    {file.name}{' '}
+                                    <span className="block text-[9px] font-normal text-white/50">
+                                      ({(file.size / 1024).toFixed(1)} KB)
+                                    </span>
+                                  </div>
                                 </div>
-                              ) : (
-                                <div className="bg-mc-gray-dark flex h-48 w-full flex-col items-center justify-center rounded-xl">
-                                  <Paperclip className="text-mc-gray-soft mb-2 h-10 w-10" />
-                                  <span className="bg-mc-gray-soft text-mc-white rounded-md px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase shadow-xs">
-                                    {newCommentFile.name.split('.').pop()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="bg-mc-gray-dark text-mc-white mt-3 w-full truncate rounded-lg px-3 py-2 text-center text-[13px] font-semibold">
-                                {newCommentFile.name}{' '}
-                                <span className="font-normal text-white/50">
-                                  ({(newCommentFile.size / 1024).toFixed(1)} KB)
-                                </span>
-                              </div>
+                              ))}
                             </div>
                           )}
                           {/* Dropdown anchored to input row only */}
@@ -5259,37 +5327,52 @@ Supply Chain CRM Coordinator`;
                             type="file"
                             id="comment-attachment-input"
                             className="hidden"
+                            multiple
                             accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
                             onChange={async (e) => {
                               if (e.target.files && e.target.files.length > 0) {
-                                const file = e.target.files[0];
-                                const isAllowedExt = file.name.match(
-                                  /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                                const selectedFiles = Array.from(
+                                  e.target.files,
                                 );
-
-                                if (!isAllowedExt) {
-                                  toast.error(
-                                    'Invalid file type. Only Images, PDFs, Word, Excel, and CSVs are allowed.',
-                                  );
-                                  e.target.value = '';
-                                  return;
-                                }
-
-                                const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-                                if (file.size > maxSizeInBytes) {
-                                  toast.error(
-                                    'File exceeds the 5MB limits. Please upload a smaller file.',
-                                  );
-                                  e.target.value = '';
-                                  return;
-                                }
+                                const processedFiles: File[] = [];
 
                                 setIsCompressing(true);
-                                const compressedFile =
-                                  await compressImageIfNeeded(file);
+
+                                for (const file of selectedFiles) {
+                                  const isAllowedExt = file.name.match(
+                                    /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                                  );
+
+                                  if (!isAllowedExt) {
+                                    toast.error(
+                                      `Invalid file type for ${file.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
+                                    );
+                                    continue;
+                                  }
+
+                                  const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+                                  if (file.size > maxSizeInBytes) {
+                                    toast.error(
+                                      `File ${file.name} exceeds the 5MB limits. Please upload a smaller file.`,
+                                    );
+                                    continue;
+                                  }
+
+                                  const compressedFile =
+                                    await compressImageIfNeeded(file);
+                                  processedFiles.push(compressedFile);
+                                }
+
                                 setIsCompressing(false);
 
-                                setNewCommentFile(compressedFile);
+                                if (processedFiles.length > 0) {
+                                  setNewCommentFiles((prev) => [
+                                    ...prev,
+                                    ...processedFiles,
+                                  ]);
+                                }
+
+                                e.target.value = '';
                               }
                             }}
                           />
@@ -5298,7 +5381,8 @@ Supply Chain CRM Coordinator`;
                           type="submit"
                           disabled={
                             isPostingComment ||
-                            (!newCommentText.trim() && !newCommentFile)
+                            (!newCommentText.trim() &&
+                              newCommentFiles.length === 0)
                           }
                           className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                         >
@@ -5308,7 +5392,9 @@ Supply Chain CRM Coordinator`;
                             <>
                               <Send className="h-3.5 w-3.5" />
                               <span>
-                                {newCommentFile ? 'Upload' : 'Comment'}
+                                {newCommentFiles.length > 0
+                                  ? 'Upload'
+                                  : 'Comment'}
                               </span>
                             </>
                           )}
