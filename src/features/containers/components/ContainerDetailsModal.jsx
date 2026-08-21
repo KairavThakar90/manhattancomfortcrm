@@ -138,6 +138,8 @@ export default function ContainerDetailsModal({
         factory_credit_needed: container.factory_credit_needed || '',
         receiving_closure_notes: container.receiving_closure_notes || '',
         trucker_email: container.trucker_email || '',
+        primary_email: container.primary_email || '',
+        trucker_cc_email: container.trucker_cc_email || '',
         attachmentsToUpload: [],
       });
     }
@@ -752,33 +754,73 @@ export default function ContainerDetailsModal({
                           localStorage.getItem('userRole'),
                         ).toLowerCase() === 'administrator') &&
                         trackingData.date_emptied && (
-                          <div className="mt-2 border-t border-slate-100 pt-4 sm:col-span-2">
-                            <label className="mb-1 block text-xs font-semibold text-slate-700">
-                              Trucker Email
-                            </label>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <input
-                                type="email"
-                                value={trackingData.trucker_email || ''}
-                                onChange={(e) =>
-                                  handleTrackingChange(
-                                    'trucker_email',
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="e.g. manager@manhattancomfort.com"
-                                className={`focus:ring-mc-black min-w-[200px] flex-1 rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none ${
-                                  emailError
-                                    ? 'border-rose-500 bg-rose-50 focus:border-rose-500'
-                                    : 'focus:border-mc-black border-slate-200 bg-slate-50'
-                                }`}
-                              />
+                          <div className="mt-2 grid grid-cols-1 gap-6 border-t border-slate-100 pt-4 sm:col-span-2 sm:grid-cols-3">
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold text-slate-700">
+                                Trucker Email
+                              </label>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="email"
+                                  value={trackingData.trucker_email || ''}
+                                  onChange={(e) =>
+                                    handleTrackingChange(
+                                      'trucker_email',
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="e.g. manager@manhattancomfort.com"
+                                  className={`focus:ring-mc-black w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none ${
+                                    emailError
+                                      ? 'border-rose-500 bg-rose-50 focus:border-rose-500'
+                                      : 'focus:border-mc-black border-slate-200 bg-slate-50'
+                                  }`}
+                                />
+                              </div>
+                              {emailError && (
+                                <p className="mt-1.5 text-[10px] font-bold text-rose-500">
+                                  {emailError}
+                                </p>
+                              )}
                             </div>
-                            {emailError && (
-                              <p className="mt-1.5 text-[10px] font-bold text-rose-500">
-                                {emailError}
-                              </p>
-                            )}
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold text-slate-700">
+                                Primary Email
+                              </label>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="email"
+                                  value={trackingData.primary_email || ''}
+                                  onChange={(e) =>
+                                    handleTrackingChange(
+                                      'primary_email',
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="e.g. primary@manhattancomfort.com"
+                                  className={`focus:ring-mc-black focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none`}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold text-slate-700">
+                                CC
+                              </label>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <input
+                                  type="email"
+                                  value={trackingData.trucker_cc_email || ''}
+                                  onChange={(e) =>
+                                    handleTrackingChange(
+                                      'trucker_cc_email',
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder="e.g. cc@manhattancomfort.com"
+                                  className={`focus:ring-mc-black focus:border-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none`}
+                                />
+                              </div>
+                            </div>
                           </div>
                         )}
                       <div>
