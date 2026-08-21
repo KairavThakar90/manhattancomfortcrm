@@ -506,14 +506,36 @@ export default function ContainerDetailsModal({
                                 name.length > 25
                                   ? name.substring(0, 25) + '...'
                                   : name;
+                              const imageSrc =
+                                item.image_url ||
+                                item.imageUrl ||
+                                item.image ||
+                                item.imageSource ||
+                                item.product_image ||
+                                null;
                               return (
-                                <span
-                                  className="cursor-pointer font-medium text-slate-800"
-                                  data-tooltip-id="sku-tooltip"
-                                  data-tooltip-content={name}
-                                >
-                                  {displayName}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                  {imageSrc ? (
+                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200">
+                                      <img
+                                        src={imageSrc}
+                                        alt=""
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
+                                      <Package className="h-4 w-4" />
+                                    </div>
+                                  )}
+                                  <span
+                                    className="cursor-pointer font-medium text-slate-800"
+                                    data-tooltip-id="sku-tooltip"
+                                    data-tooltip-content={name}
+                                  >
+                                    {displayName}
+                                  </span>
+                                </div>
                               );
                             },
                           },
@@ -1002,54 +1024,53 @@ export default function ContainerDetailsModal({
 
                           {trackingData.attachmentsToUpload &&
                             trackingData.attachmentsToUpload.length > 0 && (
-                              <div className="mt-2 flex flex-col gap-2">
+                              <div className="mt-4 flex flex-wrap gap-4">
                                 {trackingData.attachmentsToUpload.map(
                                   (file, idx) => (
                                     <div
                                       key={idx}
-                                      className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300"
+                                      className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+                                      title={`${file.name} (${(
+                                        file.size /
+                                        (1024 * 1024)
+                                      ).toFixed(2)} MB)`}
                                     >
                                       {file.type.startsWith('image/') ? (
-                                        <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                                        <div className="relative h-full w-full overflow-hidden rounded-lg">
                                           <img
                                             src={URL.createObjectURL(file)}
                                             alt="Preview"
-                                            className="h-full w-full object-contain"
+                                            className="h-full w-full object-cover"
                                           />
                                         </div>
-                                      ) : null}
-                                      <div className="flex items-center justify-between px-2 pb-1">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                          <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
-                                          <span className="truncate font-medium text-slate-700">
+                                      ) : (
+                                        <div className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400">
+                                          <FileText className="text-mc-gold/70 h-6 w-6" />
+                                          <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
                                             {file.name}
                                           </span>
-                                          <span className="text-xs text-slate-400">
-                                            (
-                                            {(
-                                              file.size /
-                                              (1024 * 1024)
-                                            ).toFixed(2)}{' '}
-                                            MB)
-                                          </span>
                                         </div>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const newFiles = [
-                                              ...trackingData.attachmentsToUpload,
-                                            ];
-                                            newFiles.splice(idx, 1);
-                                            handleTrackingChange(
-                                              'attachmentsToUpload',
-                                              newFiles,
-                                            );
-                                          }}
-                                          className="cursor-pointer rounded-md p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-500"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </button>
-                                      </div>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const newFiles = [
+                                            ...trackingData.attachmentsToUpload,
+                                          ];
+                                          newFiles.splice(idx, 1);
+                                          handleTrackingChange(
+                                            'attachmentsToUpload',
+                                            newFiles,
+                                          );
+                                        }}
+                                        className="absolute -top-1.5 -right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+                                      >
+                                        <X
+                                          className="h-3 w-3"
+                                          strokeWidth={3}
+                                        />
+                                      </button>
                                     </div>
                                   ),
                                 )}
@@ -1059,70 +1080,79 @@ export default function ContainerDetailsModal({
                           {/* Existing attachments from backend */}
                           {(!trackingData.attachmentsToUpload ||
                             trackingData.attachmentsToUpload.length === 0) &&
-                            (Array.isArray(container.attachments)
-                              ? container.attachments
-                              : Array.isArray(container.files)
-                                ? container.files
-                                : container.attachments
-                                  ? [container.attachments]
-                                  : container.files
-                                    ? [container.files]
-                                    : container.attachment
-                                      ? Array.isArray(container.attachment)
-                                        ? container.attachment
-                                        : [container.attachment]
-                                      : []
-                            ).map((att) => {
-                              // Allow array of attachments or a single attachment wrapped in an array if backend returns singular
-                              if (!att || !att.id) return null;
+                            (() => {
+                              const atts = (
+                                Array.isArray(container.attachments)
+                                  ? container.attachments
+                                  : Array.isArray(container.files)
+                                    ? container.files
+                                    : container.attachments
+                                      ? [container.attachments]
+                                      : container.files
+                                        ? [container.files]
+                                        : container.attachment
+                                          ? Array.isArray(container.attachment)
+                                            ? container.attachment
+                                            : [container.attachment]
+                                          : []
+                              ).filter((a) => a && a.id);
+
+                              if (atts.length === 0) return null;
+
                               return (
-                                <div
-                                  key={att.id}
-                                  className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition-colors hover:border-slate-300"
-                                >
-                                  {att.content_type?.startsWith('image/') ||
-                                  att.file_name?.match(
-                                    /\.(jpeg|jpg|gif|png|webp)$/i,
-                                  ) ? (
-                                    <div className="relative flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                                      <img
-                                        src={att.file_url}
-                                        alt="Preview"
-                                        className="h-full w-full cursor-pointer object-contain"
-                                        onClick={() =>
-                                          window.open(att.file_url, '_blank')
-                                        }
-                                      />
-                                    </div>
-                                  ) : null}
-                                  <div className="flex items-center justify-between px-2 pb-1">
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                      <FileText className="text-mc-gold h-4 w-4 flex-shrink-0" />
-                                      <span className="truncate font-medium text-slate-700">
-                                        {att.file_name}
-                                      </span>
-                                      {att.size && (
-                                        <span className="text-xs text-slate-400">
-                                          (
-                                          {(att.size / (1024 * 1024)).toFixed(
-                                            2,
-                                          )}{' '}
-                                          MB)
-                                        </span>
-                                      )}
-                                    </div>
-                                    <a
-                                      href={att.file_url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="cursor-pointer rounded-md p-1.5 text-indigo-500 transition-colors hover:bg-indigo-50"
+                                <div className="mt-4 flex flex-wrap gap-4">
+                                  {atts.map((att) => (
+                                    <div
+                                      key={att.id}
+                                      className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+                                      title={`${att.file_name} ${att.size ? `(${(att.size / (1024 * 1024)).toFixed(2)} MB)` : ''}`}
                                     >
-                                      <Download className="h-4 w-4" />
-                                    </a>
-                                  </div>
+                                      {att.content_type?.startsWith('image/') ||
+                                      att.file_name?.match(
+                                        /\.(jpeg|jpg|gif|png|webp)$/i,
+                                      ) ? (
+                                        <div className="relative h-full w-full overflow-hidden rounded-lg">
+                                          <img
+                                            src={att.file_url}
+                                            alt="Preview"
+                                            className="h-full w-full cursor-pointer object-cover"
+                                            onClick={() =>
+                                              window.open(
+                                                att.file_url,
+                                                '_blank',
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      ) : (
+                                        <div
+                                          className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400"
+                                          onClick={() =>
+                                            window.open(att.file_url, '_blank')
+                                          }
+                                        >
+                                          <FileText className="text-mc-gold/70 h-6 w-6" />
+                                          <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
+                                            {att.file_name}
+                                          </span>
+                                        </div>
+                                      )}
+                                      <a
+                                        href={att.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="absolute -right-1.5 -bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-indigo-500 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50"
+                                      >
+                                        <Download
+                                          className="h-3 w-3"
+                                          strokeWidth={2.5}
+                                        />
+                                      </a>
+                                    </div>
+                                  ))}
                                 </div>
                               );
-                            })}
+                            })()}
                         </div>
                       </div>
                       <div className="sm:col-span-2">

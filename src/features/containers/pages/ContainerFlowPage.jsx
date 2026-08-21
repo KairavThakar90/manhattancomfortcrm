@@ -1019,6 +1019,13 @@ export default function ContainerFlowPage() {
             item.po_item_uuid,
           sku: item.sku,
           name: item.product_name || item.name || 'Unknown Item',
+          image:
+            item.image_url ||
+            item.imageUrl ||
+            item.image ||
+            item.imageSource ||
+            item.product_image ||
+            null,
           allocateQty: 0,
           maxQty:
             remainingQty > 0 ? remainingQty : item.qty_ordered || item.qty || 0,
@@ -1295,6 +1302,13 @@ export default function ContainerFlowPage() {
             id: item.po_item_id || item.id || item.uuid || item.poItemId,
             sku: item.sku,
             name: item.product_name || item.name || 'Unknown Item',
+            image:
+              item.image_url ||
+              item.imageUrl ||
+              item.image ||
+              item.imageSource ||
+              item.product_image ||
+              null,
             allocateQty:
               item.qty_in_container || item.qty || item.allocateQty || 0,
             maxQty:
@@ -2308,9 +2322,19 @@ export default function ContainerFlowPage() {
                             >
                               <div className="flex items-start gap-3 overflow-hidden">
                                 <div className="mt-0.5">
-                                  <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
-                                    <Container className="h-4 w-4" />
-                                  </div>
+                                  {item.image ? (
+                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200">
+                                      <img
+                                        src={item.image}
+                                        alt={item.sku}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
+                                      <Container className="h-4 w-4" />
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-1.5">
