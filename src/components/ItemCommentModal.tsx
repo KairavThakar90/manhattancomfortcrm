@@ -613,9 +613,7 @@ export default function ItemCommentModal({
           >
             {(node.user[0] || 'U').toUpperCase()}
           </div>
-          <div
-            className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
-          >
+          <div className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
             <div className="mb-1.5 flex flex-wrap items-center gap-2">
               <span className="text-[13px] font-bold text-slate-800">
                 {node.user}
@@ -645,7 +643,9 @@ export default function ItemCommentModal({
                           type="button"
                           onClick={() =>
                             setEditingCommentFiles((files) =>
-                              files.filter((_, fileIndex) => fileIndex !== index),
+                              files.filter(
+                                (_, fileIndex) => fileIndex !== index,
+                              ),
                             )
                           }
                           className="text-slate-400 hover:text-red-500"
@@ -668,7 +668,9 @@ export default function ItemCommentModal({
                     type="button"
                     onClick={() =>
                       document
-                        .getElementById(`item-comment-edit-attachment-${node.id}`)
+                        .getElementById(
+                          `item-comment-edit-attachment-${node.id}`,
+                        )
                         ?.click()
                     }
                     className="absolute top-2 right-2 text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -693,7 +695,11 @@ export default function ItemCommentModal({
                       setIsCompressing(true);
 
                       for (const file of Array.from(e.target.files)) {
-                        if (!file.name.match(/\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i)) {
+                        if (
+                          !file.name.match(
+                            /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                          )
+                        ) {
                           toast.error(
                             `Invalid file type for ${file.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
                           );
@@ -913,15 +919,15 @@ export default function ItemCommentModal({
                 </button>
               )}
               <button
-                  type="button"
-                  onClick={() => {
-                    setReplyToCommentId(node.id);
-                    setReplyToUser(node.user);
-                    setReplyToText(node.message);
-                  }}
-                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
-                >
-                  <Reply className="h-3 w-3" /> Reply
+                type="button"
+                onClick={() => {
+                  setReplyToCommentId(node.id);
+                  setReplyToUser(node.user);
+                  setReplyToText(node.message);
+                }}
+                className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
+              >
+                <Reply className="h-3 w-3" /> Reply
               </button>
               {node.children.length > 0 && (
                 <button
@@ -983,21 +989,20 @@ export default function ItemCommentModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-bold text-slate-800">
-                    {selectedPO?.id || 'Purchase Order'}{' '}
-                    - Comments
+                    {selectedPO?.id || 'Purchase Order'} - Comments
                   </h2>
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
                     {fetchedComments.length}
                   </span>
                 </div>
-              <div className="max-w-md truncate text-sm font-medium text-slate-600">
-                {activeItem?.sku} -{' '}
-                {activeItem?.name || activeItem?.product_name} (Qty:{' '}
-                {activeItem?.qty ||
-                  activeItem?.orderedQty ||
-                  activeItem?.quantity}
-                )
-              </div>
+                <div className="max-w-md truncate text-sm font-medium text-slate-600">
+                  {activeItem?.sku} -{' '}
+                  {activeItem?.name || activeItem?.product_name} (Qty:{' '}
+                  {activeItem?.qty ||
+                    activeItem?.orderedQty ||
+                    activeItem?.quantity}
+                  )
+                </div>
               </div>
             </div>
             <button
@@ -1041,7 +1046,7 @@ export default function ItemCommentModal({
           </div>
 
           {/* Footer Form */}
-          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pb-4 pt-3">
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3 pb-4">
             <form
               onSubmit={handlePostComment}
               className="relative flex shrink-0 flex-col gap-2"

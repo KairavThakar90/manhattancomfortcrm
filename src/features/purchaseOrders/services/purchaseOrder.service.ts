@@ -262,7 +262,27 @@ export async function updatePOComment(
   commentId: string,
   message: string,
   tagged_user_ids?: string[],
+  files?: File[],
 ): Promise<any> {
+  if (files && files.length > 0) {
+    const formData = new FormData();
+    formData.append('comment', message);
+    if (tagged_user_ids && tagged_user_ids.length > 0) {
+      tagged_user_ids.forEach((id) => formData.append('tagged_user_ids', id));
+    }
+    files.forEach((file) => formData.append('files', file));
+
+    const { data } = await apiClient.put(
+      PO_COMMENT_UPDATE(commentId),
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 0,
+      },
+    );
+    return data;
+  }
+
   const { data } = await apiClient.put(
     PO_COMMENT_UPDATE(commentId),
     {

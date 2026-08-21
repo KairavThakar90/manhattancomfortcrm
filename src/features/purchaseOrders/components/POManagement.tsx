@@ -1040,6 +1040,7 @@ export default function POManagement({
   // Editing Comment State
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>('');
+  const [editingCommentFiles, setEditingCommentFiles] = useState<File[]>([]);
   const [highlightedCommentId, setHighlightedCommentId] = useState<
     string | null
   >(null);
@@ -2378,7 +2379,11 @@ Supply Chain CRM Coordinator`;
   };
 
   const handleUpdateSubmit = (commentId: string) => {
-    if (!editingCommentText.trim() || !selectedPO) return;
+    if (
+      (!editingCommentText.trim() && editingCommentFiles.length === 0) ||
+      !selectedPO
+    )
+      return;
 
     // Extract tagged users
     const words = editingCommentText.trim().split(/\s+/);
@@ -2398,6 +2403,8 @@ Supply Chain CRM Coordinator`;
       })
       .filter(Boolean);
 
+    const filesToUpload = editingCommentFiles;
+
     // Optimistic UI update
     setFetchedComments((prev) =>
       prev.map((c) =>
@@ -2406,6 +2413,7 @@ Supply Chain CRM Coordinator`;
     );
     setEditingCommentId(null);
     setEditingCommentText('');
+    setEditingCommentFiles([]);
 
     if (commentScope === 'sku' && selectedSkuId) {
       setFetchedSkuComments((prev) =>
@@ -2413,10 +2421,13 @@ Supply Chain CRM Coordinator`;
           c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
         ),
       );
-      setEditingCommentId(null);
-      setEditingCommentText('');
 
-      updateItemComment(commentId, editingCommentText.trim(), taggedUserIds)
+      updateItemComment(
+        commentId,
+        editingCommentText.trim(),
+        taggedUserIds,
+        filesToUpload.length > 0 ? filesToUpload : undefined,
+      )
         .then(() => {
           onAddActivity(
             `Updated comment on SKU (${selectedSkuId})`,
@@ -2440,25 +2451,36 @@ Supply Chain CRM Coordinator`;
       return;
     }
 
-    updatePOComment(commentId, editingCommentText.trim(), taggedUserIds).catch(
-      () => {
-        // Re-fetch invisibly to sync real DB record if it fails or completes
+    updatePOComment(
+      commentId,
+      editingCommentText.trim(),
+      taggedUserIds,
+      filesToUpload.length > 0 ? filesToUpload : undefined,
+    )
+      .then(() => {
+        // Re-fetch invisibly to sync real DB record (attachments in particular)
         const targetId = selectedPO.id.replace(/^PO-/i, '');
-        getPurchaseOrderById(targetId).then((detailData: any) => {
-          if (!detailData) return;
-          const rawComments = detailData.comments || [];
-          const mappedComments = rawComments.map((c: any) =>
-            parseApiCommentObject(c, String(selectedPO.id)),
-          );
-          // Only update if we didn't just switch away to another PO
-          setFetchedComments((current) => {
-            if (current.length > 0 && current[0].poId !== selectedPO.id)
-              return current;
-            return mappedComments;
-          });
+        return getPurchaseOrderById(targetId);
+      })
+      .then((detailData: any) => {
+        if (!detailData) return;
+        const rawComments = detailData.comments || [];
+        const mappedComments = rawComments.map((c: any) =>
+          parseApiCommentObject(c, String(selectedPO.id)),
+        );
+        // Only update if we didn't just switch away to another PO
+        setFetchedComments((current) => {
+          if (current.length > 0 && current[0].poId !== selectedPO.id)
+            return current;
+          return mappedComments;
         });
-      },
-    );
+      })
+      .catch((err) => {
+        console.error('Failed to update PO comment', err);
+        toast.error('Network sync error: Comment may not have saved.', {
+          autoClose: 2000,
+        });
+      });
   };
 
   // Delete a discussion comment (PO-level or SKU-level)
@@ -4968,22 +4990,130 @@ Supply Chain CRM Coordinator`;
                                       </div>
                                       {editingCommentId === node.id ? (
                                         <div className="mt-1 flex w-full flex-col gap-2">
-                                          <textarea
-                                            value={editingCommentText}
-                                            onChange={(e) =>
-                                              setEditingCommentText(
-                                                e.target.value,
-                                              )
-                                            }
-                                            className="w-full rounded border border-slate-300 bg-white p-2 text-[13px] text-slate-800 focus:border-indigo-400 focus:outline-hidden"
-                                            rows={2}
-                                          />
+                                          {editingCommentFiles.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                              {editingCommentFiles.map(
+                                                (file, index) => (
+                                                  <div
+                                                    key={`${file.name}-${index}`}
+                                                    className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-[11px] text-slate-600"
+                                                  >
+                                                    <Paperclip className="h-3.5 w-3.5" />
+                                                    <span className="max-w-40 truncate">
+                                                      {file.name}
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() =>
+                                                        setEditingCommentFiles(
+                                                          (files) =>
+                                                            files.filter(
+                                                              (_, fileIndex) =>
+                                                                fileIndex !==
+                                                                index,
+                                                            ),
+                                                        )
+                                                      }
+                                                      className="text-slate-400 hover:text-red-500"
+                                                      aria-label={`Remove ${file.name}`}
+                                                    >
+                                                      <X className="h-3 w-3" />
+                                                    </button>
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          )}
+                                          <div className="relative">
+                                            <textarea
+                                              value={editingCommentText}
+                                              onChange={(e) =>
+                                                setEditingCommentText(
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="w-full rounded border border-slate-300 bg-white p-2 pr-9 text-[13px] text-slate-800 focus:border-indigo-400 focus:outline-hidden"
+                                              rows={2}
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                document
+                                                  .getElementById(
+                                                    `po-comment-edit-attachment-${node.id}`,
+                                                  )
+                                                  ?.click()
+                                              }
+                                              className="absolute top-2 right-2 text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                              title="Attach file or image"
+                                              disabled={isCompressing}
+                                            >
+                                              {isCompressing ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                              ) : (
+                                                <Paperclip className="h-4 w-4" />
+                                              )}
+                                            </button>
+                                            <input
+                                              id={`po-comment-edit-attachment-${node.id}`}
+                                              type="file"
+                                              className="hidden"
+                                              multiple
+                                              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                                              onChange={async (e) => {
+                                                if (!e.target.files?.length)
+                                                  return;
+                                                const processedFiles: File[] =
+                                                  [];
+                                                setIsCompressing(true);
+
+                                                for (const file of Array.from(
+                                                  e.target.files,
+                                                )) {
+                                                  if (
+                                                    !file.name.match(
+                                                      /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                                                    )
+                                                  ) {
+                                                    toast.error(
+                                                      `Invalid file type for ${file.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
+                                                    );
+                                                    continue;
+                                                  }
+                                                  if (
+                                                    file.size >
+                                                    5 * 1024 * 1024
+                                                  ) {
+                                                    toast.error(
+                                                      `File ${file.name} exceeds the 5MB limit. Please upload a smaller file.`,
+                                                    );
+                                                    continue;
+                                                  }
+                                                  processedFiles.push(
+                                                    await compressImageIfNeeded(
+                                                      file,
+                                                    ),
+                                                  );
+                                                }
+
+                                                setEditingCommentFiles(
+                                                  (files) => [
+                                                    ...files,
+                                                    ...processedFiles,
+                                                  ],
+                                                );
+                                                setIsCompressing(false);
+                                                e.target.value = '';
+                                              }}
+                                            />
+                                          </div>
                                           <div className="flex justify-end gap-2">
                                             <button
                                               type="button"
                                               onClick={() => {
                                                 setEditingCommentId(null);
                                                 setEditingCommentText('');
+                                                setEditingCommentFiles([]);
                                               }}
                                               className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-700"
                                             >
