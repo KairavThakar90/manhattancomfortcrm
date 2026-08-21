@@ -731,7 +731,7 @@ export default function ContainerDetailsModal({
                                 rawWName.includes('south brunswick') ||
                                 rawWName.includes('brunswick')
                               ) {
-                                numDoors = 14;
+                                numDoors = 17;
                               }
 
                               for (let i = 1; i <= numDoors; i++) {
