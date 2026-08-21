@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { PODetailsModal } from './PODetailsModal';
+import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal';
 import { useCRM } from '../../../hooks/useCRM';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import {
@@ -10,6 +11,8 @@ import {
   postPOComment,
   postItemComment,
   updatePOComment,
+  deletePOComment,
+  deletePOCommentAttachment,
   updatePOLeadTime,
   patchPurchaseOrder,
   updatePurchaseOrderItemQuantity,
@@ -43,6 +46,8 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const [error, setError] = useState(null);
   const [isDeletingPOItem, setIsDeletingPOItem] = useState(false);
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   const [activeDrawerSection, setActiveDrawerSection] = useState('details');
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
@@ -76,6 +81,22 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
     const fileArr = c.files || c.attachments || c.documents || [];
     const firstFile =
       Array.isArray(fileArr) && fileArr.length > 0 ? fileArr[0] : null;
+
+    const parsedFiles = (Array.isArray(fileArr) ? fileArr : []).map((f) => {
+      let fUrl = f.file_url || f.url || c.file_url || c.file || null;
+      if (fUrl && !fUrl.startsWith('blob:')) {
+        const char = fUrl.includes('?') ? '&' : '?';
+        fUrl = `${fUrl}${char}cb=${Date.now()}`;
+      }
+      return {
+        id: f.id || null,
+        fileUrl: fUrl,
+        fileName:
+          f.file_name || f.name || c.file_name || c.filename || 'Attachment',
+        fileType: f.content_type || f.mimetype || '',
+      };
+    });
+
     return {
       id: String(c.id || `COM-${Math.random()}`),
       ...(isItemMode ? { itemId: defaultTargetId } : { poId: defaultTargetId }),
@@ -83,7 +104,9 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
       userId: c.user_id || c.author_id || null,
       role: c.role || 'Administrator',
       message: c.comment || c.message || c.text || '',
+      files: parsedFiles,
       fileUrl: (() => {
+        if (parsedFiles.length > 0) return parsedFiles[0].fileUrl;
         let fUrl =
           firstFile?.file_url || firstFile?.url || c.file_url || c.file || null;
         if (fUrl && !fUrl.startsWith('blob:')) {
@@ -93,12 +116,17 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
         return fUrl;
       })(),
       fileName:
-        firstFile?.file_name ||
-        firstFile?.name ||
-        c.file_name ||
-        c.filename ||
-        'Attachment',
-      fileType: firstFile?.content_type || firstFile?.mimetype || '',
+        parsedFiles.length > 0
+          ? parsedFiles[0].fileName
+          : firstFile?.file_name ||
+            firstFile?.name ||
+            c.file_name ||
+            c.filename ||
+            'Attachment',
+      fileType:
+        parsedFiles.length > 0
+          ? parsedFiles[0].fileType
+          : firstFile?.content_type || firstFile?.mimetype || '',
       timestamp: formatUtcTimestamp(c.created_at || c.timestamp),
       rawTimestamp: c.created_at || c.timestamp || new Date().toISOString(),
       parentId: c.parent_id ? String(c.parent_id) : null,
@@ -275,6 +303,69 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
     setIsDeletingPOItem(false);
   };
 
+  const handleDeleteComment = (commentId) => {
+    if (String(commentId).includes('OPT-')) return;
+    setDeleteCommentTarget({ type: 'comment', commentId });
+  };
+
+  const handleDeleteCommentAttachment = (commentId, attachmentId) => {
+    if (!attachmentId) return;
+    setDeleteCommentTarget({ type: 'attachment', commentId, attachmentId });
+  };
+
+  const handleConfirmDeleteComment = () => {
+    if (!deleteCommentTarget) return;
+    const { type, commentId, attachmentId } = deleteCommentTarget;
+    setIsDeletingComment(true);
+
+    if (type === 'comment') {
+      const prevComments = fetchedComments;
+      setFetchedComments((prev) =>
+        prev.filter((c) => c.id !== commentId && c.parentId !== commentId),
+      );
+
+      deletePOComment(commentId)
+        .then(() => toast.success('Comment deleted successfully'))
+        .catch((err) => {
+          console.error('Failed to delete PO comment', err);
+          toast.error('Failed to delete comment.');
+          setFetchedComments(prevComments);
+        })
+        .finally(() => {
+          setIsDeletingComment(false);
+          setDeleteCommentTarget(null);
+        });
+      return;
+    }
+
+    const prevComments = fetchedComments;
+    setFetchedComments((prev) =>
+      prev.map((c) => {
+        if (c.id !== commentId) return c;
+        const newFiles = (c.files || []).filter((f) => f.id !== attachmentId);
+        return {
+          ...c,
+          files: newFiles,
+          fileUrl: newFiles.length > 0 ? newFiles[0].fileUrl : null,
+          fileName: newFiles.length > 0 ? newFiles[0].fileName : null,
+          fileType: newFiles.length > 0 ? newFiles[0].fileType : null,
+        };
+      }),
+    );
+
+    deletePOCommentAttachment(attachmentId)
+      .then(() => toast.success('Attachment deleted successfully'))
+      .catch((err) => {
+        console.error('Failed to delete PO comment attachment', err);
+        toast.error('Failed to delete attachment.');
+        setFetchedComments(prevComments);
+      })
+      .finally(() => {
+        setIsDeletingComment(false);
+        setDeleteCommentTarget(null);
+      });
+  };
+
   const handleUpdatePOLeadTime = async (rawPoId, days) => {
     await updatePOLeadTime(rawPoId, days);
     // Refresh so the local `po` state (and thus the modal) reflects the change.
@@ -329,66 +420,85 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
     detailedPOItems.length > 0 ? detailedPOItems : po.items || [];
 
   return (
-    <PODetailsModal
-      selectedPO={po}
-      onSelectPO={(v) => {
-        if (v === null) onClose();
-      }}
-      isCommentOnlyView={isCommentOnlyView}
-      setIsCommentOnlyView={setIsCommentOnlyView}
-      activeDrawerSection={activeDrawerSection}
-      setActiveDrawerSection={setActiveDrawerSection}
-      currentUser={currentUser}
-      isVendor={isVendor}
-      userRole={userRole}
-      allItemsForPO={allItemsForPO}
-      totalItemsCount={allItemsForPO.length}
-      detailedPOItems={detailedPOItems}
-      handleUpdateItemQty={handleUpdateItemQty}
-      handleRemoveItem={handleRemoveItem}
-      isDeletingPOItem={isDeletingPOItem}
-      tableStyles={{}}
-      parseApiCommentObject={parseApiCommentObject}
-      postPOComment={postPOComment}
-      postItemComment={postItemComment}
-      isLoadingComments={isLoadingComments}
-      fetchedComments={fetchedComments}
-      setFetchedComments={setFetchedComments}
-      selectedPOComments={fetchedComments}
-      isLoadingSkuComments={false}
-      fetchedSkuComments={[]}
-      setFetchedSkuComments={() => {}}
-      commentScope={commentScope}
-      setCommentScope={setCommentScope}
-      selectedSkuId={selectedSkuId}
-      setSelectedSkuId={setSelectedSkuId}
-      isScopeDropdownOpen={isScopeDropdownOpen}
-      setIsScopeDropdownOpen={setIsScopeDropdownOpen}
-      selectedSkuIdRef={selectedSkuIdRef}
-      replyingToCommentId={null}
-      setReplyingToCommentId={() => {}}
-      commentText=""
-      setCommentText={() => {}}
-      uploadFiles={[]}
-      handleFileChange={() => {}}
-      handleRemoveFile={() => {}}
-      isSubmittingComment={false}
-      formatFileSize={() => ''}
-      vendorsList={[]}
-      handleStatusFilterChange={() => {}}
-      statusFilter="all"
-      getPurchaseOrderById={getPurchaseOrderById}
-      toast={toast}
-      patchPurchaseOrder={patchPurchaseOrder}
-      updatePOComment={updatePOComment}
-      updatePOLeadTime={handleUpdatePOLeadTime}
-      handleToggleComments={() => {}}
-      handleMarkResolved={() => {}}
-      handleDeleteComment={() => {}}
-      handleCompletePO={() => {}}
-      onAddActivity={(msg) =>
-        console.debug('[PODetailsModalStandalone] activity:', msg)
-      }
-    />
+    <>
+      <PODetailsModal
+        selectedPO={po}
+        onSelectPO={(v) => {
+          if (v === null) onClose();
+        }}
+        isCommentOnlyView={isCommentOnlyView}
+        setIsCommentOnlyView={setIsCommentOnlyView}
+        activeDrawerSection={activeDrawerSection}
+        setActiveDrawerSection={setActiveDrawerSection}
+        currentUser={currentUser}
+        isVendor={isVendor}
+        userRole={userRole}
+        allItemsForPO={allItemsForPO}
+        totalItemsCount={allItemsForPO.length}
+        detailedPOItems={detailedPOItems}
+        handleUpdateItemQty={handleUpdateItemQty}
+        handleRemoveItem={handleRemoveItem}
+        isDeletingPOItem={isDeletingPOItem}
+        tableStyles={{}}
+        parseApiCommentObject={parseApiCommentObject}
+        postPOComment={postPOComment}
+        postItemComment={postItemComment}
+        isLoadingComments={isLoadingComments}
+        fetchedComments={fetchedComments}
+        setFetchedComments={setFetchedComments}
+        selectedPOComments={fetchedComments}
+        isLoadingSkuComments={false}
+        fetchedSkuComments={[]}
+        setFetchedSkuComments={() => {}}
+        commentScope={commentScope}
+        setCommentScope={setCommentScope}
+        selectedSkuId={selectedSkuId}
+        setSelectedSkuId={setSelectedSkuId}
+        isScopeDropdownOpen={isScopeDropdownOpen}
+        setIsScopeDropdownOpen={setIsScopeDropdownOpen}
+        selectedSkuIdRef={selectedSkuIdRef}
+        replyingToCommentId={null}
+        setReplyingToCommentId={() => {}}
+        commentText=""
+        setCommentText={() => {}}
+        uploadFiles={[]}
+        handleFileChange={() => {}}
+        handleRemoveFile={() => {}}
+        isSubmittingComment={false}
+        formatFileSize={() => ''}
+        vendorsList={[]}
+        handleStatusFilterChange={() => {}}
+        statusFilter="all"
+        getPurchaseOrderById={getPurchaseOrderById}
+        toast={toast}
+        patchPurchaseOrder={patchPurchaseOrder}
+        updatePOComment={updatePOComment}
+        updatePOLeadTime={handleUpdatePOLeadTime}
+        handleToggleComments={() => {}}
+        handleMarkResolved={() => {}}
+        handleDeleteComment={handleDeleteComment}
+        handleDeleteCommentAttachment={handleDeleteCommentAttachment}
+        handleCompletePO={() => {}}
+        onAddActivity={(msg) =>
+          console.debug('[PODetailsModalStandalone] activity:', msg)
+        }
+      />
+      <ConfirmDeleteModal
+        isOpen={!!deleteCommentTarget}
+        isDeleting={isDeletingComment}
+        title={
+          deleteCommentTarget?.type === 'attachment'
+            ? 'Delete Attachment'
+            : 'Delete Comment'
+        }
+        message={
+          deleteCommentTarget?.type === 'attachment'
+            ? "This can't be undone. Are you sure you want to delete this attachment?"
+            : "This can't be undone. Are you sure you want to delete this comment?"
+        }
+        onCancel={() => !isDeletingComment && setDeleteCommentTarget(null)}
+        onConfirm={handleConfirmDeleteComment}
+      />
+    </>
   );
 }

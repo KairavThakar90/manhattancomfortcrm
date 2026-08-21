@@ -171,6 +171,10 @@ export const PO_COMMENTS = (poId: string) =>
   `/purchase-orders/${poId}/comments`;
 export const PO_COMMENT_UPDATE = (commentId: string) =>
   `/purchase-orders/comments/${commentId}`;
+export const PO_COMMENT_DELETE = (commentId: string) =>
+  `/purchase-orders/comments/${commentId}`;
+export const PO_COMMENT_ATTACHMENT_DELETE = (attachmentId: string) =>
+  `/purchase-orders/comments/attachments/${attachmentId}`;
 
 // ------------------------------------------
 // PO Item Comment Endpoints
@@ -179,6 +183,10 @@ export const PO_ITEM_COMMENTS = (itemId: string) =>
   `/purchase-orders/items/${itemId}/comments`;
 export const PO_ITEM_COMMENT_UPDATE = (commentId: string) =>
   `/purchase-orders/items/comments/${commentId}`;
+export const PO_ITEM_COMMENT_DELETE = (commentId: string) =>
+  `/purchase-orders/items/comments/${commentId}`;
+export const PO_ITEM_COMMENT_ATTACHMENT_DELETE = (attachmentId: string) =>
+  `/purchase-orders/items/comments/attachments/${attachmentId}`;
 
 // ------------------------------------------
 // Warehouse Endpoints

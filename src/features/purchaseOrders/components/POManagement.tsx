@@ -64,9 +64,13 @@ import {
   getPurchaseOrderById,
   syncPurchaseOrders,
   updatePOComment,
+  deletePOComment,
+  deletePOCommentAttachment,
   getItemComments,
   postItemComment,
   updateItemComment,
+  deleteItemComment,
+  deleteItemCommentAttachment,
   updatePurchaseOrder,
   patchPurchaseOrder,
   updatePOStatus,
@@ -81,6 +85,7 @@ import Pagination from '../../../components/common/Pagination';
 import TableLoader from '../../../components/common/TableLoader';
 import FullPageLoader from '../../../components/common/FullPageLoader';
 import ItemCommentModal from '../../../components/ItemCommentModal';
+import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import CustomerDropdown from '../../../components/common/CustomerDropdown';
 import ChannelDropdown from '../../../components/common/ChannelDropdown';
@@ -1006,6 +1011,12 @@ export default function POManagement({
 
   // Comments state fetched from detail API
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([]);
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState<{
+    type: 'comment' | 'attachment';
+    commentId: string;
+    attachmentId?: string | null;
+  } | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
   const [detailedPOItems, setDetailedPOItems] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -1269,6 +1280,7 @@ export default function POManagement({
         fUrl = `${fUrl}${char}cb=${Date.now()}`;
       }
       return {
+        id: f.id || null,
         fileUrl: fUrl,
         fileName:
           f.file_name || f.name || c.file_name || c.filename || 'Attachment',
@@ -2447,6 +2459,122 @@ Supply Chain CRM Coordinator`;
         });
       },
     );
+  };
+
+  // Delete a discussion comment (PO-level or SKU-level)
+  const handleDeleteComment = (commentId: string) => {
+    if (String(commentId).includes('OPT-')) return;
+    setDeleteCommentTarget({ type: 'comment', commentId });
+  };
+
+  // Delete a single attachment from a discussion comment (PO-level or SKU-level)
+  const handleDeleteCommentAttachment = (
+    commentId: string,
+    attachmentId: string | null,
+  ) => {
+    if (!attachmentId) return;
+    setDeleteCommentTarget({ type: 'attachment', commentId, attachmentId });
+  };
+
+  const handleConfirmDeleteComment = () => {
+    if (!deleteCommentTarget) return;
+    const { type, commentId, attachmentId } = deleteCommentTarget;
+    setIsDeletingComment(true);
+
+    if (type === 'comment') {
+      if (commentScope === 'sku' && selectedSkuId) {
+        const prevSkuComments = fetchedSkuComments;
+        setFetchedSkuComments((prev) =>
+          prev.filter((c) => c.id !== commentId && c.parentId !== commentId),
+        );
+        deleteItemComment(commentId)
+          .then(() => {
+            toast.success('Comment deleted successfully');
+            onAddActivity(
+              `Deleted comment on SKU (${selectedSkuId})`,
+              'Vendor Comment',
+            );
+          })
+          .catch((err) => {
+            console.error('Failed to delete SKU comment', err);
+            toast.error('Failed to delete comment.');
+            setFetchedSkuComments(prevSkuComments);
+          })
+          .finally(() => {
+            setIsDeletingComment(false);
+            setDeleteCommentTarget(null);
+          });
+        return;
+      }
+
+      const prevComments = fetchedComments;
+      setFetchedComments((prev) =>
+        prev.filter((c) => c.id !== commentId && c.parentId !== commentId),
+      );
+      deletePOComment(commentId)
+        .then(() => {
+          toast.success('Comment deleted successfully');
+          onAddActivity(
+            `Deleted a comment on ${selectedPO?.id}`,
+            'Vendor Comment',
+          );
+        })
+        .catch((err) => {
+          console.error('Failed to delete PO comment', err);
+          toast.error('Failed to delete comment.');
+          setFetchedComments(prevComments);
+        })
+        .finally(() => {
+          setIsDeletingComment(false);
+          setDeleteCommentTarget(null);
+        });
+      return;
+    }
+
+    const stripAttachment = (c: any) => {
+      if (c.id !== commentId) return c;
+      const newFiles = (c.files || []).filter(
+        (f: any) => f.id !== attachmentId,
+      );
+      return {
+        ...c,
+        files: newFiles,
+        fileUrl: newFiles.length > 0 ? newFiles[0].fileUrl : null,
+        fileName: newFiles.length > 0 ? newFiles[0].fileName : null,
+        fileType: newFiles.length > 0 ? newFiles[0].fileType : null,
+      };
+    };
+
+    if (commentScope === 'sku' && selectedSkuId) {
+      const prevSkuComments = fetchedSkuComments;
+      setFetchedSkuComments((prev) => prev.map(stripAttachment));
+      deleteItemCommentAttachment(attachmentId as string)
+        .then(() => toast.success('Attachment deleted successfully'))
+        .catch((err) => {
+          console.error('Failed to delete SKU comment attachment', err);
+          toast.error('Failed to delete attachment.');
+          setFetchedSkuComments(prevSkuComments);
+        })
+        .finally(() => {
+          setIsDeletingComment(false);
+          setDeleteCommentTarget(null);
+        });
+      return;
+    }
+
+    const prevComments = fetchedComments;
+    setFetchedComments((prev) => prev.map(stripAttachment));
+    deletePOCommentAttachment(attachmentId as string)
+      .then(() => toast.success('Attachment deleted successfully'))
+      .catch((err) => {
+        console.error('Failed to delete PO comment attachment', err);
+        toast.error('Failed to delete attachment.');
+        setFetchedComments(prevComments);
+      })
+      .finally(() => {
+        setIsDeletingComment(false);
+        setDeleteCommentTarget(null);
+      });
   };
 
   // Add a discussion comment
@@ -4930,51 +5058,72 @@ Supply Chain CRM Coordinator`;
 
                                                 if (isImage) {
                                                   return (
-                                                    <button
+                                                    <div
                                                       key={idx}
-                                                      type="button"
-                                                      onClick={() =>
-                                                        !isOptimistic &&
-                                                        setPreviewImage(
-                                                          fileObj.fileUrl,
-                                                        )
-                                                      }
-                                                      className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                      className="group/att relative"
                                                     >
-                                                      <img
-                                                        src={fileObj.fileUrl}
-                                                        alt="Attachment"
-                                                        className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
-                                                        onLoad={() => {
-                                                          if (
-                                                            idx ===
-                                                            filesToRender.length -
-                                                              1
-                                                          ) {
-                                                            messagesEndRef.current?.scrollIntoView(
-                                                              {
-                                                                behavior:
-                                                                  'smooth',
-                                                              },
-                                                            );
-                                                          }
-                                                        }}
-                                                      />
-                                                      {isOptimistic && (
-                                                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
-                                                          <div className="flex flex-col items-center gap-2">
-                                                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          !isOptimistic &&
+                                                          setPreviewImage(
+                                                            fileObj.fileUrl,
+                                                          )
+                                                        }
+                                                        className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                      >
+                                                        <img
+                                                          src={fileObj.fileUrl}
+                                                          alt="Attachment"
+                                                          className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
+                                                          onLoad={() => {
+                                                            if (
+                                                              idx ===
+                                                              filesToRender.length -
+                                                                1
+                                                            ) {
+                                                              messagesEndRef.current?.scrollIntoView(
+                                                                {
+                                                                  behavior:
+                                                                    'smooth',
+                                                                },
+                                                              );
+                                                            }
+                                                          }}
+                                                        />
+                                                        {isOptimistic && (
+                                                          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                              <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                            </div>
                                                           </div>
-                                                        </div>
-                                                      )}
-                                                    </button>
+                                                        )}
+                                                      </button>
+                                                      {isMe &&
+                                                        !isOptimistic &&
+                                                        fileObj.id && (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                              handleDeleteCommentAttachment(
+                                                                node.id,
+                                                                fileObj.id,
+                                                              )
+                                                            }
+                                                            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-red-500"
+                                                            title="Delete attachment"
+                                                          >
+                                                            <Trash className="h-3 w-3" />
+                                                          </button>
+                                                        )}
+                                                    </div>
                                                   );
                                                 }
 
                                                 return (
                                                   <div
                                                     key={idx}
-                                                    className="relative w-max"
+                                                    className="group/att relative w-max"
                                                   >
                                                     <a
                                                       href={
@@ -5008,6 +5157,23 @@ Supply Chain CRM Coordinator`;
                                                         <Loader2 className="h-4 w-4 animate-spin text-white" />
                                                       </div>
                                                     )}
+                                                    {isMe &&
+                                                      !isOptimistic &&
+                                                      fileObj.id && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            handleDeleteCommentAttachment(
+                                                              node.id,
+                                                              fileObj.id,
+                                                            )
+                                                          }
+                                                          className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-500 hover:text-white"
+                                                          title="Delete attachment"
+                                                        >
+                                                          <Trash className="h-3 w-3" />
+                                                        </button>
+                                                      )}
                                                   </div>
                                                 );
                                               },
@@ -5060,6 +5226,18 @@ Supply Chain CRM Coordinator`;
                                               Edit
                                             </button>
                                           )}
+                                        {isMe && editingCommentId !== node.id && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleDeleteComment(node.id)
+                                            }
+                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
+                                          >
+                                            <Trash className="h-3 w-3" />{' '}
+                                            Delete
+                                          </button>
+                                        )}
 
                                         {!isMe && (
                                           <button
@@ -5961,6 +6139,23 @@ Supply Chain CRM Coordinator`;
         selectedPO={selectedPO}
         onAddActivity={onAddActivity}
         highlightedCommentId={highlightedCommentId}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteCommentTarget}
+        isDeleting={isDeletingComment}
+        title={
+          deleteCommentTarget?.type === 'attachment'
+            ? 'Delete Attachment'
+            : 'Delete Comment'
+        }
+        message={
+          deleteCommentTarget?.type === 'attachment'
+            ? "This can't be undone. Are you sure you want to delete this attachment?"
+            : "This can't be undone. Are you sure you want to delete this comment?"
+        }
+        onCancel={() => !isDeletingComment && setDeleteCommentTarget(null)}
+        onConfirm={handleConfirmDeleteComment}
       />
 
       <ContainerDetailsModal

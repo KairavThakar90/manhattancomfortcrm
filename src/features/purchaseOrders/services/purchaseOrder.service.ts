@@ -10,8 +10,12 @@ import {
   PO_EXPORT_SINGLE_CSV,
   PO_COMMENTS,
   PO_COMMENT_UPDATE,
+  PO_COMMENT_DELETE,
+  PO_COMMENT_ATTACHMENT_DELETE,
   PO_ITEM_COMMENTS,
   PO_ITEM_COMMENT_UPDATE,
+  PO_ITEM_COMMENT_DELETE,
+  PO_ITEM_COMMENT_ATTACHMENT_DELETE,
   PO_SYNC,
   PO_STATUS_UPDATE,
   PO_ITEM_QTY_UPDATE,
@@ -272,6 +276,22 @@ export async function updatePOComment(
   return data;
 }
 
+/** Delete an existing PO comment */
+export async function deletePOComment(commentId: string): Promise<any> {
+  const { data } = await apiClient.delete(PO_COMMENT_DELETE(commentId));
+  return data;
+}
+
+/** Delete a single attachment from a PO comment */
+export async function deletePOCommentAttachment(
+  attachmentId: string,
+): Promise<any> {
+  const { data } = await apiClient.delete(
+    PO_COMMENT_ATTACHMENT_DELETE(attachmentId),
+  );
+  return data;
+}
+
 export async function syncPurchaseOrders(days: string = '25'): Promise<any> {
   const url = days === 'all' ? PO_SYNC : `${PO_SYNC}?days=${days}`;
   const { data } = await apiClient.post(url, undefined, {
@@ -345,6 +365,22 @@ export async function updateItemComment(
     {
       timeout: 0,
     },
+  );
+  return data;
+}
+
+/** Delete an existing PO Item comment */
+export async function deleteItemComment(commentId: string): Promise<any> {
+  const { data } = await apiClient.delete(PO_ITEM_COMMENT_DELETE(commentId));
+  return data;
+}
+
+/** Delete a single attachment from a PO Item comment */
+export async function deleteItemCommentAttachment(
+  attachmentId: string,
+): Promise<any> {
+  const { data } = await apiClient.delete(
+    PO_ITEM_COMMENT_ATTACHMENT_DELETE(attachmentId),
   );
   return data;
 }

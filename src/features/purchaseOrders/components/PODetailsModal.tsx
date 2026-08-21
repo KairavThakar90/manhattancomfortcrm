@@ -27,6 +27,7 @@ import {
   Reply,
   ChevronUp,
   Pencil,
+  Trash,
   Copy,
 } from 'lucide-react';
 import ItemCommentModal from '../../../components/ItemCommentModal';
@@ -197,6 +198,7 @@ export function PODetailsModal(props) {
     handleToggleComments,
     handleMarkResolved,
     handleDeleteComment,
+    handleDeleteCommentAttachment,
     handleCompletePO,
     statusFilter,
     userRole,
@@ -1538,51 +1540,73 @@ export function PODetailsModal(props) {
 
                                                 if (isImage) {
                                                   return (
-                                                    <button
+                                                    <div
                                                       key={idx}
-                                                      type="button"
-                                                      onClick={() =>
-                                                        !isOptimistic &&
-                                                        setPreviewImage(
-                                                          fileObj.fileUrl,
-                                                        )
-                                                      }
-                                                      className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                      className="group/att relative"
                                                     >
-                                                      <img
-                                                        src={fileObj.fileUrl}
-                                                        alt="Attachment"
-                                                        className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
-                                                        onLoad={() => {
-                                                          if (
-                                                            idx ===
-                                                            filesToRender.length -
-                                                              1
-                                                          ) {
-                                                            messagesEndRef.current?.scrollIntoView(
-                                                              {
-                                                                behavior:
-                                                                  'smooth',
-                                                              },
-                                                            );
-                                                          }
-                                                        }}
-                                                      />
-                                                      {isOptimistic && (
-                                                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
-                                                          <div className="flex flex-col items-center gap-2">
-                                                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          !isOptimistic &&
+                                                          setPreviewImage(
+                                                            fileObj.fileUrl,
+                                                          )
+                                                        }
+                                                        className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                                                      >
+                                                        <img
+                                                          src={fileObj.fileUrl}
+                                                          alt="Attachment"
+                                                          className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
+                                                          onLoad={() => {
+                                                            if (
+                                                              idx ===
+                                                              filesToRender.length -
+                                                                1
+                                                            ) {
+                                                              messagesEndRef.current?.scrollIntoView(
+                                                                {
+                                                                  behavior:
+                                                                    'smooth',
+                                                                },
+                                                              );
+                                                            }
+                                                          }}
+                                                        />
+                                                        {isOptimistic && (
+                                                          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                              <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                                            </div>
                                                           </div>
-                                                        </div>
-                                                      )}
-                                                    </button>
+                                                        )}
+                                                      </button>
+                                                      {isMe &&
+                                                        !isOptimistic &&
+                                                        fileObj.id &&
+                                                        handleDeleteCommentAttachment && (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                              handleDeleteCommentAttachment(
+                                                                node.id,
+                                                                fileObj.id,
+                                                              )
+                                                            }
+                                                            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-red-500"
+                                                            title="Delete attachment"
+                                                          >
+                                                            <Trash className="h-3 w-3" />
+                                                          </button>
+                                                        )}
+                                                    </div>
                                                   );
                                                 }
 
                                                 return (
                                                   <div
                                                     key={idx}
-                                                    className="relative w-max"
+                                                    className="group/att relative w-max"
                                                   >
                                                     <a
                                                       href={
@@ -1616,6 +1640,24 @@ export function PODetailsModal(props) {
                                                         <Loader2 className="h-4 w-4 animate-spin text-white" />
                                                       </div>
                                                     )}
+                                                    {isMe &&
+                                                      !isOptimistic &&
+                                                      fileObj.id &&
+                                                      handleDeleteCommentAttachment && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            handleDeleteCommentAttachment(
+                                                              node.id,
+                                                              fileObj.id,
+                                                            )
+                                                          }
+                                                          className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-500 hover:text-white"
+                                                          title="Delete attachment"
+                                                        >
+                                                          <Trash className="h-3 w-3" />
+                                                        </button>
+                                                      )}
                                                   </div>
                                                 );
                                               },
@@ -1666,6 +1708,20 @@ export function PODetailsModal(props) {
                                             >
                                               <Pencil className="h-3 w-3" />{' '}
                                               Edit
+                                            </button>
+                                          )}
+                                        {isMe &&
+                                          editingCommentId !== node.id &&
+                                          handleDeleteComment && (
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleDeleteComment(node.id)
+                                              }
+                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
+                                            >
+                                              <Trash className="h-3 w-3" />{' '}
+                                              Delete
                                             </button>
                                           )}
 

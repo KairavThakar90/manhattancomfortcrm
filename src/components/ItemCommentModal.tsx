@@ -11,11 +11,13 @@ import {
   Paperclip,
   Download,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
 import { User, getTagUsers } from '../features/users/services/user.service';
 import { toast } from 'react-toastify';
 import { compressImageIfNeeded } from '../utils/imageCompression';
+import ConfirmDeleteModal from './common/ConfirmDeleteModal';
 
 const formatUtcTimestamp = (ts: any) => {
   if (!ts) return new Date().toISOString().slice(0, 10);
@@ -33,6 +35,7 @@ const parseApiCommentObject = (c: any, defaultTargetId: string) => {
       fUrl = `${fUrl}${char}cb=${Date.now()}`;
     }
     return {
+      id: f.id || null,
       fileUrl: fUrl,
       fileName:
         f.file_name || f.name || c.file_name || c.filename || 'Attachment',
@@ -74,6 +77,8 @@ import {
   getItemComments,
   postItemComment,
   updateItemComment,
+  deleteItemComment,
+  deleteItemCommentAttachment,
 } from '../features/purchaseOrders/services/purchaseOrder.service';
 import { POItem, PurchaseOrder } from '../types';
 
@@ -106,6 +111,13 @@ export default function ItemCommentModal({
   const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'comment' | 'attachment';
+    commentId: string;
+    attachmentId?: string | null;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [activeItem, setActiveItem] = useState<any>(null);
 
@@ -459,6 +471,78 @@ export default function ItemCommentModal({
       });
   };
 
+  const handleDeleteComment = (commentId: string) => {
+    if (String(commentId).includes('OPT-')) return;
+    setDeleteTarget({ type: 'comment', commentId });
+  };
+
+  const handleDeleteAttachment = (
+    commentId: string,
+    attachmentId: string | null,
+  ) => {
+    if (!attachmentId) return;
+    setDeleteTarget({ type: 'attachment', commentId, attachmentId });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    const { type, commentId, attachmentId } = deleteTarget;
+    setIsDeleting(true);
+
+    if (type === 'comment') {
+      const prevComments = fetchedComments;
+      setFetchedComments((prev) =>
+        prev.filter((c) => c.id !== commentId && c.parentId !== commentId),
+      );
+
+      deleteItemComment(commentId)
+        .then(() => {
+          toast.success('Comment deleted successfully');
+        })
+        .catch((err) => {
+          console.error(err);
+          toast.error('Failed to delete comment.');
+          setFetchedComments(prevComments);
+        })
+        .finally(() => {
+          setIsDeleting(false);
+          setDeleteTarget(null);
+        });
+      return;
+    }
+
+    const prevComments = fetchedComments;
+    setFetchedComments((prev) =>
+      prev.map((c) => {
+        if (c.id !== commentId) return c;
+        const newFiles = (c.files || []).filter(
+          (f: any) => f.id !== attachmentId,
+        );
+        return {
+          ...c,
+          files: newFiles,
+          fileUrl: newFiles.length > 0 ? newFiles[0].fileUrl : null,
+          fileName: newFiles.length > 0 ? newFiles[0].fileName : null,
+          fileType: newFiles.length > 0 ? newFiles[0].fileType : null,
+        };
+      }),
+    );
+
+    deleteItemCommentAttachment(attachmentId as string)
+      .then(() => {
+        toast.success('Attachment deleted successfully');
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error('Failed to delete attachment.');
+        setFetchedComments(prevComments);
+      })
+      .finally(() => {
+        setIsDeleting(false);
+        setDeleteTarget(null);
+      });
+  };
+
   const buildTree = (comments: any[]) => {
     const commentMap: Record<string, any> = {};
     const roots: any[] = [];
@@ -605,39 +689,52 @@ export default function ItemCommentModal({
 
                     if (isImage) {
                       return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() =>
-                            !isOptimistic && setPreviewImage(fileObj.fileUrl)
-                          }
-                          className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
-                        >
-                          <img
-                            src={fileObj.fileUrl}
-                            alt="Attachment"
-                            className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
-                            onLoad={() => {
-                              if (idx === filesToRender.length - 1) {
-                                messagesEndRef.current?.scrollIntoView({
-                                  behavior: 'smooth',
-                                });
-                              }
-                            }}
-                          />
-                          {isOptimistic && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
-                              <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <div key={idx} className="group/att relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              !isOptimistic && setPreviewImage(fileObj.fileUrl)
+                            }
+                            className={`relative focus:outline-hidden ${isOptimistic ? 'cursor-not-allowed' : ''}`}
+                          >
+                            <img
+                              src={fileObj.fileUrl}
+                              alt="Attachment"
+                              className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
+                              onLoad={() => {
+                                if (idx === filesToRender.length - 1) {
+                                  messagesEndRef.current?.scrollIntoView({
+                                    behavior: 'smooth',
+                                  });
+                                }
+                              }}
+                            />
+                            {isOptimistic && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/40 backdrop-blur-[2px]">
+                                <div className="flex flex-col items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                                </div>
                               </div>
-                            </div>
+                            )}
+                          </button>
+                          {isMe && !isOptimistic && fileObj.id && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteAttachment(node.id, fileObj.id)
+                              }
+                              className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-red-500"
+                              title="Delete attachment"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
                           )}
-                        </button>
+                        </div>
                       );
                     }
 
                     return (
-                      <div key={idx} className="relative w-max">
+                      <div key={idx} className="group/att relative w-max">
                         <a
                           href={isOptimistic ? '#' : fileObj.fileUrl}
                           target={isOptimistic ? undefined : '_blank'}
@@ -660,6 +757,18 @@ export default function ItemCommentModal({
                           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
                             <Loader2 className="h-4 w-4 animate-spin text-white" />
                           </div>
+                        )}
+                        {isMe && !isOptimistic && fileObj.id && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteAttachment(node.id, fileObj.id)
+                            }
+                            className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-500 hover:text-white"
+                            title="Delete attachment"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
                         )}
                       </div>
                     );
@@ -697,6 +806,15 @@ export default function ItemCommentModal({
                   className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
                   <Pencil className="h-3 w-3" /> Edit
+                </button>
+              )}
+              {isMe && editingCommentId !== node.id && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteComment(node.id)}
+                  className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
+                >
+                  <Trash2 className="h-3 w-3" /> Delete
                 </button>
               )}
               {!isMe && (
@@ -1079,6 +1197,23 @@ export default function ItemCommentModal({
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        isDeleting={isDeleting}
+        title={
+          deleteTarget?.type === 'attachment'
+            ? 'Delete Attachment'
+            : 'Delete Comment'
+        }
+        message={
+          deleteTarget?.type === 'attachment'
+            ? "This can't be undone. Are you sure you want to delete this attachment?"
+            : "This can't be undone. Are you sure you want to delete this comment?"
+        }
+        onCancel={() => !isDeleting && setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </>,
     document.body,
   );
