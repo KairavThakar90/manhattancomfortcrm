@@ -159,6 +159,7 @@ export default function ItemCommentModal({
   >({});
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>('');
+  const [editingCommentFiles, setEditingCommentFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (highlightedCommentId) {
@@ -191,6 +192,7 @@ export default function ItemCommentModal({
     setReplyToUser(null);
     setReplyToText(null);
     setEditingCommentId(null);
+    setEditingCommentFiles([]);
 
     setIsLoadingComments(true);
     getItemComments(activeItem.id)
@@ -378,6 +380,7 @@ export default function ItemCommentModal({
     setFetchedComments((prev) => [...prev, optimisticComment]);
     setNewCommentText('');
     setNewCommentFiles([]);
+    setTaggedUserMap({});
     setShowMentionDropdown(false);
 
     const replyIdToSend = replyId;
@@ -423,7 +426,12 @@ export default function ItemCommentModal({
   };
 
   const handleUpdateSubmit = (commentId: string) => {
-    if (!editingCommentText.trim() || !activeItem?.id) return;
+    if (
+      (!editingCommentText.trim() && editingCommentFiles.length === 0) ||
+      !activeItem?.id
+    )
+      return;
+    const filesToUpload = editingCommentFiles;
     const words = editingCommentText.trim().split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
@@ -448,8 +456,14 @@ export default function ItemCommentModal({
     );
     setEditingCommentId(null);
     setEditingCommentText('');
+    setEditingCommentFiles([]);
 
-    updateItemComment(commentId, editingCommentText.trim(), taggedUserIds)
+    updateItemComment(
+      commentId,
+      editingCommentText.trim(),
+      taggedUserIds,
+      filesToUpload.length > 0 ? filesToUpload : undefined,
+    )
       .then(() => {
         toast.success('Comment updated successfully');
         onAddActivity(
@@ -595,12 +609,12 @@ export default function ItemCommentModal({
       >
         <div className="group relative flex items-start gap-3 transition-colors">
           <div
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-xs font-bold shadow-sm ${isMe ? 'bg-mc-black text-mc-white' : 'bg-slate-50 text-slate-700'}`}
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-xs font-bold shadow-sm ${isMe ? 'border-mc-black bg-mc-black text-mc-white' : 'border-slate-200 bg-white text-slate-700'}`}
           >
             {(node.user[0] || 'U').toUpperCase()}
           </div>
           <div
-            className={`flex min-w-0 flex-1 flex-col rounded-2xl border p-3 ${isMe ? 'border-mc-beige-dark bg-mc-beige-light/30 shadow-sm' : 'border-slate-100/80 bg-white shadow-xs'}`}
+            className="flex min-w-0 flex-1 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
           >
             <div className="mb-1.5 flex flex-wrap items-center gap-2">
               <span className="text-[13px] font-bold text-slate-800">
@@ -618,18 +632,98 @@ export default function ItemCommentModal({
 
             {editingCommentId === node.id ? (
               <div className="mt-1 flex w-full flex-col gap-2">
-                <textarea
-                  value={editingCommentText}
-                  onChange={(e) => setEditingCommentText(e.target.value)}
-                  className="border-mc-beige-dark focus:border-mc-black focus:ring-mc-black w-full rounded border bg-white p-2 text-[13px] text-slate-800 focus:ring-1 focus:outline-hidden"
-                  rows={2}
-                />
+                {editingCommentFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editingCommentFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-[11px] text-slate-600"
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span className="max-w-40 truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingCommentFiles((files) =>
+                              files.filter((_, fileIndex) => fileIndex !== index),
+                            )
+                          }
+                          className="text-slate-400 hover:text-red-500"
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="relative">
+                  <textarea
+                    value={editingCommentText}
+                    onChange={(e) => setEditingCommentText(e.target.value)}
+                    className="border-mc-beige-dark focus:border-mc-black focus:ring-mc-black w-full rounded border bg-white p-2 pr-9 text-[13px] text-slate-800 focus:ring-1 focus:outline-hidden"
+                    rows={2}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document
+                        .getElementById(`item-comment-edit-attachment-${node.id}`)
+                        ?.click()
+                    }
+                    className="absolute top-2 right-2 text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Attach file or image"
+                    disabled={isCompressing}
+                  >
+                    {isCompressing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Paperclip className="h-4 w-4" />
+                    )}
+                  </button>
+                  <input
+                    id={`item-comment-edit-attachment-${node.id}`}
+                    type="file"
+                    className="hidden"
+                    multiple
+                    accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                    onChange={async (e) => {
+                      if (!e.target.files?.length) return;
+                      const processedFiles: File[] = [];
+                      setIsCompressing(true);
+
+                      for (const file of Array.from(e.target.files)) {
+                        if (!file.name.match(/\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i)) {
+                          toast.error(
+                            `Invalid file type for ${file.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
+                          );
+                          continue;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error(
+                            `File ${file.name} exceeds the 5MB limit. Please upload a smaller file.`,
+                          );
+                          continue;
+                        }
+                        processedFiles.push(await compressImageIfNeeded(file));
+                      }
+
+                      setEditingCommentFiles((files) => [
+                        ...files,
+                        ...processedFiles,
+                      ]);
+                      setIsCompressing(false);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       setEditingCommentId(null);
                       setEditingCommentText('');
+                      setEditingCommentFiles([]);
                     }}
                     className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-700"
                   >
@@ -796,12 +890,13 @@ export default function ItemCommentModal({
                     <Download className="h-3 w-3" /> Download
                   </a>
                 )}
-              {isMe && editingCommentId !== node.id && !node.fileUrl && (
+              {isMe && editingCommentId !== node.id && (
                 <button
                   type="button"
                   onClick={() => {
                     setEditingCommentId(node.id);
                     setEditingCommentText(node.message);
+                    setEditingCommentFiles([]);
                   }}
                   className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
@@ -817,8 +912,7 @@ export default function ItemCommentModal({
                   <Trash2 className="h-3 w-3" /> Delete
                 </button>
               )}
-              {!isMe && (
-                <button
+              <button
                   type="button"
                   onClick={() => {
                     setReplyToCommentId(node.id);
@@ -828,8 +922,7 @@ export default function ItemCommentModal({
                   className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
                   <Reply className="h-3 w-3" /> Reply
-                </button>
-              )}
+              </button>
               {node.children.length > 0 && (
                 <button
                   type="button"
@@ -882,11 +975,21 @@ export default function ItemCommentModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex shrink-0 items-start justify-between rounded-t-2xl border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-            <div className="relative w-full flex-1">
-              <h2 className="mb-2 text-lg font-bold text-slate-800">
-                SKU Comments
-              </h2>
+          <div className="flex shrink-0 items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-6 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="bg-mc-black flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-800">
+                    {selectedPO?.id || 'Purchase Order'}{' '}
+                    - Comments
+                  </h2>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                    {fetchedComments.length}
+                  </span>
+                </div>
               <div className="max-w-md truncate text-sm font-medium text-slate-600">
                 {activeItem?.sku} -{' '}
                 {activeItem?.name || activeItem?.product_name} (Qty:{' '}
@@ -894,6 +997,7 @@ export default function ItemCommentModal({
                   activeItem?.orderedQty ||
                   activeItem?.quantity}
                 )
+              </div>
               </div>
             </div>
             <button
@@ -907,6 +1011,17 @@ export default function ItemCommentModal({
           {/* Body */}
           <div className="custom-scrollbar flex-1 overflow-y-auto bg-slate-50 p-6">
             <div className="flex flex-col gap-1">
+              <div className="mb-4 flex shrink-0 flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <label className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+                  Discussion Scope
+                </label>
+                <div className="flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700">
+                  <span className="truncate">
+                    SKU: {activeItem?.sku || 'Item Comments'}
+                  </span>
+                  <span className="text-slate-400">⌄</span>
+                </div>
+              </div>
               {isLoadingComments ? (
                 <div className="flex items-center justify-center py-10">
                   <span className="text-sm font-medium text-slate-400">
@@ -926,21 +1041,21 @@ export default function ItemCommentModal({
           </div>
 
           {/* Footer Form */}
-          <div className="shrink-0 border-t border-slate-200 bg-white p-4">
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 pb-4 pt-3">
             <form
               onSubmit={handlePostComment}
-              className="relative flex flex-col gap-2"
+              className="relative flex shrink-0 flex-col gap-2"
             >
               {replyToCommentId && (
-                <div className="relative mb-2 flex items-center justify-between border-b border-slate-100 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Reply className="text-mc-black h-3.5 w-3.5" />
-                    <span className="text-xs font-semibold text-slate-600">
-                      Replying to {replyToUser}:
+                <div className="animate-fadeIn group border-mc-gold relative mb-1 flex items-start gap-2 rounded-lg border-l-4 bg-slate-50 py-2 pr-8 pl-3">
+                  <Reply className="text-mc-gold mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-mc-black block text-xs font-bold">
+                      Replying to {replyToUser}
                     </span>
-                    <span className="max-w-[200px] truncate text-xs text-slate-400">
-                      "{replyToText}"
-                    </span>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
+                      {replyToText || 'Attachment'}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -949,9 +1064,10 @@ export default function ItemCommentModal({
                       setReplyToUser(null);
                       setReplyToText(null);
                     }}
-                    className="p-1 text-slate-400 hover:text-red-500"
+                    className="absolute top-1.5 right-1.5 rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                    aria-label="Cancel reply"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}

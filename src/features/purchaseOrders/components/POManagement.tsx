@@ -5226,20 +5226,21 @@ Supply Chain CRM Coordinator`;
                                               Edit
                                             </button>
                                           )}
-                                        {isMe && editingCommentId !== node.id && (
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              handleDeleteComment(node.id)
-                                            }
-                                            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
-                                          >
-                                            <Trash className="h-3 w-3" />{' '}
-                                            Delete
-                                          </button>
-                                        )}
+                                        {isMe &&
+                                          editingCommentId !== node.id && (
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                handleDeleteComment(node.id)
+                                              }
+                                              className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
+                                            >
+                                              <Trash className="h-3 w-3" />{' '}
+                                              Delete
+                                            </button>
+                                          )}
 
-                                        {!isMe && (
+                                        <>
                                           <button
                                             type="button"
                                             onClick={() => {
@@ -5251,7 +5252,7 @@ Supply Chain CRM Coordinator`;
                                           >
                                             <Reply className="h-3 w-3" /> Reply
                                           </button>
-                                        )}
+                                        </>
                                         {node.children.length > 0 && (
                                           <button
                                             type="button"
@@ -5323,39 +5324,27 @@ Supply Chain CRM Coordinator`;
                       className="relative flex shrink-0 flex-col gap-2 border-t border-slate-100 pt-3"
                     >
                       {replyToUser && (
-                        <div className="animate-fadeIn group relative mb-1 flex flex-col overflow-hidden rounded-lg border-l-4 border-l-indigo-500 bg-slate-100 p-2.5">
-                          <div className="mb-0.5 flex items-center justify-between">
-                            <span className="text-mc-black text-xs font-extrabold">
-                              {replyToUser}
+                        <div className="animate-fadeIn group border-mc-gold relative mb-1 flex items-start gap-2 rounded-lg border-l-4 bg-slate-50 py-2 pr-8 pl-3">
+                          <Reply className="text-mc-gold mt-0.5 h-3.5 w-3.5 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-mc-black block text-xs font-bold">
+                              Replying to {replyToUser}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setReplyToCommentId(null);
-                                setReplyToUser(null);
-                                setReplyToText(null);
-                              }}
-                              className="rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
+                            <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
+                              {replyToText || 'Attachment'}
+                            </p>
                           </div>
-                          <p className="line-clamp-1 pr-6 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
-                            {replyToText
-                              ?.split(/(@[\w.-]+)/g)
-                              .map((part: string, i: number) =>
-                                part.startsWith('@') ? (
-                                  <span
-                                    key={i}
-                                    className="text-mc-black font-bold not-italic"
-                                  >
-                                    {part}
-                                  </span>
-                                ) : (
-                                  part
-                                ),
-                              )}
-                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyToCommentId(null);
+                              setReplyToUser(null);
+                              setReplyToText(null);
+                            }}
+                            className="absolute top-1.5 right-1.5 rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       )}
                       <div className="flex w-full items-end gap-3">
