@@ -240,7 +240,11 @@ export default function ContainerDetailsModal({
       // The API expects the files under the 'files' key if available
       if (attachmentsToUpload && attachmentsToUpload.length > 0) {
         attachmentsToUpload.forEach((file) => {
-          finalPayload.append('files', file);
+          const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+          const safeFile = new File([file], sanitizedFilename, {
+            type: file.type,
+          });
+          finalPayload.append('files', safeFile);
         });
       }
 
@@ -776,7 +780,7 @@ export default function ContainerDetailsModal({
                           localStorage.getItem('userRole'),
                         ).toLowerCase() === 'administrator') &&
                         trackingData.date_emptied && (
-                          <div className="mt-2 grid grid-cols-1 gap-6 border-t border-slate-100 pt-4 sm:col-span-2 sm:grid-cols-3">
+                          <div className="mt-2 grid grid-cols-1 gap-6 border-t border-slate-100 pt-4 sm:col-span-2">
                             <div>
                               <label className="mb-1 block text-xs font-semibold text-slate-700">
                                 Trucker Email
@@ -805,6 +809,7 @@ export default function ContainerDetailsModal({
                                 </p>
                               )}
                             </div>
+                            {/* Temporarily commented out Primary Mail & CC Mail
                             <div>
                               <label className="mb-1 block text-xs font-semibold text-slate-700">
                                 Primary Email
@@ -843,6 +848,7 @@ export default function ContainerDetailsModal({
                                 />
                               </div>
                             </div>
+                            */}
                           </div>
                         )}
                       <div>
