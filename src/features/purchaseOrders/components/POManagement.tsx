@@ -1546,7 +1546,7 @@ export default function POManagement({
   const PO_LEVEL_COLUMNS = [
     'PO ID',
     'PO Title',
-    'Channel Order ID',
+    'Channel ID',
     'Vendor',
     'Customer Name',
     'Warehouse',
