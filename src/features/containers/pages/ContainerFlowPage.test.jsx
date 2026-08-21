@@ -23,4 +23,16 @@ describe('ContainerFlowPage Feature', () => {
     );
     expect(container).toBeTruthy();
   });
+
+  it('renders smart search input field', () => {
+    const { getByPlaceholderText } = render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <ContainerFlowPage />
+        </BrowserRouter>
+      </Provider>,
+    );
+    const searchInput = getByPlaceholderText(/Smart Search/i);
+    expect(searchInput).toBeTruthy();
+  });
 });

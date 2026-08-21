@@ -31,4 +31,29 @@ describe('POManagementPage Feature', () => {
     );
     expect(container).toBeTruthy();
   });
+
+  it('renders smart search input field', () => {
+    const { getByPlaceholderText } = render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <POManagementPage />
+        </BrowserRouter>
+      </Provider>,
+    );
+    const searchInput = getByPlaceholderText(/Smart Search/i);
+    expect(searchInput).toBeTruthy();
+  });
+
+  it('renders buttons correctly', () => {
+    const { getAllByRole } = render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <POManagementPage />
+        </BrowserRouter>
+      </Provider>,
+    );
+    // Sanity check to ensure buttons render
+    const buttons = getAllByRole('button');
+    expect(buttons.length).toBeGreaterThan(0);
+  });
 });

@@ -23,4 +23,30 @@ describe('UserManagementPage Feature', () => {
     );
     expect(container).toBeTruthy();
   });
+
+  it('renders the page title and Add User button', () => {
+    const { getByText } = render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <UserManagementPage />
+        </BrowserRouter>
+      </Provider>,
+    );
+    // User Management title
+    expect(getByText('User Management')).toBeTruthy();
+    // Add User button text
+    expect(getByText('Add User')).toBeTruthy();
+  });
+
+  it('renders search input field', () => {
+    const { getByPlaceholderText } = render(
+      <Provider store={store}>
+        <BrowserRouter>
+          <UserManagementPage />
+        </BrowserRouter>
+      </Provider>,
+    );
+    const searchInput = getByPlaceholderText(/Search by name or email/i);
+    expect(searchInput).toBeTruthy();
+  });
 });
