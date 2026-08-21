@@ -21,6 +21,7 @@ import { toast } from 'react-toastify';
 import {
   updateContainer,
   getContainerActivities,
+  deleteContainerAttachment,
 } from '../services/container.service';
 import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
@@ -42,6 +43,8 @@ export default function ContainerDetailsModal({
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
+  const [attachmentToDelete, setAttachmentToDelete] = useState(null);
+  const [isDeletingAttachment, setIsDeletingAttachment] = useState(false);
   const [activities, setActivities] = useState([]);
   const [activitiesPage, setActivitiesPage] = useState(1);
   const [activitiesPageSize, setActivitiesPageSize] = useState(10);
@@ -120,6 +123,22 @@ export default function ContainerDetailsModal({
         '';
       if (cName === 'undefined') cName = '';
 
+      const atts = (
+        Array.isArray(container.attachments)
+          ? container.attachments
+          : Array.isArray(container.files)
+            ? container.files
+            : container.attachments
+              ? [container.attachments]
+              : container.files
+                ? [container.files]
+                : container.attachment
+                  ? Array.isArray(container.attachment)
+                    ? container.attachment
+                    : [container.attachment]
+                  : []
+      ).filter((a) => a && a.id);
+
       setTrackingData({
         container_name: cName,
         door: container.door || '',
@@ -141,6 +160,8 @@ export default function ContainerDetailsModal({
         primary_email: container.primary_email || '',
         trucker_cc_email: container.trucker_cc_email || '',
         attachmentsToUpload: [],
+        existingAttachments: atts,
+        deleted_attachments: [],
       });
     }
   }
@@ -225,7 +246,18 @@ export default function ContainerDetailsModal({
       });
 
       const finalPayload = new FormData();
-      const { attachmentsToUpload, attachment, ...restPayload } = payload;
+      const {
+        attachmentsToUpload,
+        attachment,
+        existingAttachments,
+        ...restPayload
+      } = payload;
+
+      // Send references for both tracking standard DRF many-to-many list expectations and custom manual flags
+      restPayload.attachments = existingAttachments
+        ? existingAttachments.map((a) => a.id)
+        : [];
+      restPayload.removed_attachments = restPayload.deleted_attachments || [];
 
       // The API expects the JSON data as a stringified object under 'container_data'
       finalPayload.append('container_data', JSON.stringify(restPayload));
@@ -262,6 +294,27 @@ export default function ContainerDetailsModal({
       console.error(e);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleConfirmDeleteAttachment = async () => {
+    if (!attachmentToDelete) return;
+    setIsDeletingAttachment(true);
+    try {
+      await deleteContainerAttachment(attachmentToDelete.id);
+
+      // Update local state to immediately remove the file
+      const newExisting = trackingData.existingAttachments.filter(
+        (a) => a.id !== attachmentToDelete.id,
+      );
+      handleTrackingChange('existingAttachments', newExisting);
+
+      toast.success('Attachment deleted successfully');
+      setAttachmentToDelete(null);
+    } catch (e) {
+      toast.error('Failed to delete attachment');
+    } finally {
+      setIsDeletingAttachment(false);
     }
   };
 
@@ -1028,137 +1081,152 @@ export default function ContainerDetailsModal({
                             />
                           </label>
 
-                          {trackingData.attachmentsToUpload &&
-                            trackingData.attachmentsToUpload.length > 0 && (
+                          {(() => {
+                            const hasUploads =
+                              trackingData.attachmentsToUpload &&
+                              trackingData.attachmentsToUpload.length > 0;
+
+                            const atts = trackingData.existingAttachments || [];
+                            const hasExisting = atts.length > 0;
+
+                            if (!hasUploads && !hasExisting) return null;
+
+                            return (
                               <div className="mt-4 flex flex-wrap gap-4">
-                                {trackingData.attachmentsToUpload.map(
-                                  (file, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
-                                      title={`${file.name} (${(
-                                        file.size /
-                                        (1024 * 1024)
-                                      ).toFixed(2)} MB)`}
-                                    >
-                                      {file.type.startsWith('image/') ? (
-                                        <div className="relative h-full w-full overflow-hidden rounded-lg">
-                                          <img
-                                            src={URL.createObjectURL(file)}
-                                            alt="Preview"
-                                            className="h-full w-full object-cover"
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400">
-                                          <FileText className="text-mc-gold/70 h-6 w-6" />
-                                          <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
-                                            {file.name}
-                                          </span>
-                                        </div>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const newFiles = [
-                                            ...trackingData.attachmentsToUpload,
-                                          ];
-                                          newFiles.splice(idx, 1);
-                                          handleTrackingChange(
-                                            'attachmentsToUpload',
-                                            newFiles,
-                                          );
-                                        }}
-                                        className="absolute -top-1.5 -right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+                                {hasUploads &&
+                                  trackingData.attachmentsToUpload.map(
+                                    (file, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+                                        title={`${file.name} (${(
+                                          file.size /
+                                          (1024 * 1024)
+                                        ).toFixed(2)} MB)`}
                                       >
-                                        <X
-                                          className="h-3 w-3"
-                                          strokeWidth={3}
-                                        />
-                                      </button>
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                            )}
+                                        {file.type.startsWith('image/') ? (
+                                          <div className="relative h-full w-full overflow-hidden rounded-lg">
+                                            <img
+                                              src={URL.createObjectURL(file)}
+                                              alt="Preview"
+                                              className="h-full w-full object-cover"
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div className="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400">
+                                            <FileText className="text-mc-gold/70 h-6 w-6" />
+                                            <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
+                                              {file.name}
+                                            </span>
+                                          </div>
+                                        )}
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const newFiles = [
+                                              ...trackingData.attachmentsToUpload,
+                                            ];
+                                            newFiles.splice(idx, 1);
+                                            handleTrackingChange(
+                                              'attachmentsToUpload',
+                                              newFiles,
+                                            );
+                                          }}
+                                          className="absolute -top-1.5 -right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all group-hover:opacity-100 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+                                        >
+                                          <X
+                                            className="h-3 w-3"
+                                            strokeWidth={3}
+                                          />
+                                        </button>
+                                      </div>
+                                    ),
+                                  )}
 
-                          {/* Existing attachments from backend */}
-                          {(!trackingData.attachmentsToUpload ||
-                            trackingData.attachmentsToUpload.length === 0) &&
-                            (() => {
-                              const atts = (
-                                Array.isArray(container.attachments)
-                                  ? container.attachments
-                                  : Array.isArray(container.files)
-                                    ? container.files
-                                    : container.attachments
-                                      ? [container.attachments]
-                                      : container.files
-                                        ? [container.files]
-                                        : container.attachment
-                                          ? Array.isArray(container.attachment)
-                                            ? container.attachment
-                                            : [container.attachment]
-                                          : []
-                              ).filter((a) => a && a.id);
-
-                              if (atts.length === 0) return null;
-
-                              return (
-                                <div className="mt-4 flex flex-wrap gap-4">
-                                  {atts.map((att) => (
-                                    <div
-                                      key={att.id}
-                                      className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
-                                      title={`${att.file_name} ${att.size ? `(${(att.size / (1024 * 1024)).toFixed(2)} MB)` : ''}`}
-                                    >
-                                      {att.content_type?.startsWith('image/') ||
+                                {/* Existing attachments from backend */}
+                                {hasExisting &&
+                                  atts.map((att, idx) => {
+                                    const isImage =
+                                      att.content_type?.startsWith('image/') ||
                                       att.file_name?.match(
                                         /\.(jpeg|jpg|gif|png|webp)$/i,
-                                      ) ? (
-                                        <div className="relative h-full w-full overflow-hidden rounded-lg">
-                                          <img
-                                            src={att.file_url}
-                                            alt="Preview"
-                                            className="h-full w-full cursor-pointer object-cover"
+                                      );
+
+                                    return (
+                                      <div
+                                        key={att.id}
+                                        className="group relative flex h-20 w-20 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors hover:border-slate-300"
+                                        title={`${att.file_name} ${att.size ? `(${(att.size / (1024 * 1024)).toFixed(2)} MB)` : ''}`}
+                                      >
+                                        {isImage ? (
+                                          <div className="relative h-full w-full overflow-hidden rounded-lg">
+                                            <img
+                                              src={att.file_url}
+                                              alt="Preview"
+                                              className="h-full w-full cursor-pointer object-cover"
+                                              onClick={() =>
+                                                window.open(
+                                                  att.file_url,
+                                                  '_blank',
+                                                )
+                                              }
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div
+                                            className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400"
                                             onClick={() =>
                                               window.open(
                                                 att.file_url,
                                                 '_blank',
                                               )
                                             }
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div
-                                          className="flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg bg-slate-50 text-slate-400"
-                                          onClick={() =>
-                                            window.open(att.file_url, '_blank')
-                                          }
+                                          >
+                                            <FileText className="text-mc-gold/70 h-6 w-6" />
+                                            <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
+                                              {att.file_name}
+                                            </span>
+                                          </div>
+                                        )}
+                                        <a
+                                          href={att.file_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="absolute -right-1.5 -bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-indigo-500 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50"
                                         >
-                                          <FileText className="text-mc-gold/70 h-6 w-6" />
-                                          <span className="mt-1 w-16 truncate px-1 text-center text-[9px] font-medium text-slate-500">
-                                            {att.file_name}
-                                          </span>
-                                        </div>
-                                      )}
-                                      <a
-                                        href={att.file_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="absolute -right-1.5 -bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-indigo-500 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50"
-                                      >
-                                        <Download
-                                          className="h-3 w-3"
-                                          strokeWidth={2.5}
-                                        />
-                                      </a>
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            })()}
+                                          {isImage ? (
+                                            <Eye
+                                              className="h-3 w-3"
+                                              strokeWidth={2.5}
+                                            />
+                                          ) : (
+                                            <Download
+                                              className="h-3 w-3"
+                                              strokeWidth={2.5}
+                                            />
+                                          )}
+                                        </a>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setAttachmentToDelete(att);
+                                          }}
+                                          className="absolute -top-1.5 -right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-500"
+                                        >
+                                          <X
+                                            className="h-3 w-3"
+                                            strokeWidth={3}
+                                          />
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div className="sm:col-span-2">
@@ -1336,6 +1404,42 @@ export default function ContainerDetailsModal({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Popup */}
+      {attachmentToDelete && (
+        <div className="bg-mc-black/60 fixed inset-0 z-[10000] flex items-center justify-center p-4 font-sans backdrop-blur-[2px] transition-all">
+          <div className="border-mc-beige-dark bg-mc-white w-full max-w-sm rounded-xl border p-6 shadow-2xl">
+            <h3 className="text-mc-black mb-2 text-lg font-extrabold tracking-tight">
+              Delete Attachment
+            </h3>
+            <p className="mb-6 text-sm leading-relaxed font-medium text-slate-500">
+              Are you sure you want to permanently delete this attachment? This
+              action cannot be undone and will delete it immediately from the
+              server.
+            </p>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                disabled={isDeletingAttachment}
+                onClick={() => setAttachmentToDelete(null)}
+                className="bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark rounded-lg px-5 py-2.5 text-xs font-bold tracking-wider uppercase transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={isDeletingAttachment}
+                onClick={handleConfirmDeleteAttachment}
+                className="bg-mc-black text-mc-white hover:bg-mc-gray-dark flex items-center justify-center rounded-lg px-5 py-2.5 text-xs font-bold tracking-wider shadow-sm transition-colors hover:text-rose-400 disabled:opacity-50"
+              >
+                {isDeletingAttachment ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Tooltip
         id="sku-tooltip"
         positionStrategy="fixed"

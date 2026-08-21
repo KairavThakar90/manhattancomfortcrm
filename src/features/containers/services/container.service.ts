@@ -5,6 +5,7 @@ import {
   CONTAINERS_CREATE,
   CONTAINERS_UPDATE,
   CONTAINERS_DELETE,
+  CONTAINERS_ATTACHMENT_DELETE,
   CONTAINER_DETAILS,
   CONTAINER_SYNC,
   CONTAINERS_EXPORT_CSV,
@@ -51,6 +52,15 @@ export async function updateContainer(
 
 export async function deleteContainer(id: string | number) {
   const { data } = await apiClient.delete(CONTAINERS_DELETE(id.toString()));
+  return data;
+}
+
+export async function deleteContainerAttachment(
+  attachment_id: string | number,
+) {
+  const { data } = await apiClient.delete(
+    CONTAINERS_ATTACHMENT_DELETE(attachment_id.toString()),
+  );
   return data;
 }
 

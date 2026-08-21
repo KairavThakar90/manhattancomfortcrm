@@ -154,6 +154,8 @@ export const CONTAINERS_LIST = '/containers';
 export const CONTAINERS_CREATE = '/containers';
 export const CONTAINERS_UPDATE = (id: string) => `/containers/${id}`;
 export const CONTAINERS_DELETE = (id: string) => `/containers/${id}`;
+export const CONTAINERS_ATTACHMENT_DELETE = (attachment_id: string) =>
+  `/containers/attachments/${attachment_id}`;
 export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) =>
   `/containers/po-items/${sellercloud_po_id}`;
 export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
