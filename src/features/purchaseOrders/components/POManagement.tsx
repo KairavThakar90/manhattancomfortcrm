@@ -103,7 +103,7 @@ import {
 const PO_COLUMN_DEFS: ColumnDef[] = [
   { key: 'id', label: 'PO Number' },
   { key: 'orderId', label: 'Order Id' },
-  { key: 'channel_order_id', label: 'Channel Order ID' },
+  { key: 'channel_order_id', label: 'Channel ID' },
   { key: 'status', label: 'Status' },
   { key: 'delay_reason', label: 'Reason for Delayed' },
   { key: 'commentsCount', label: 'Comments' },
@@ -1548,6 +1548,7 @@ export default function POManagement({
     'PO Title',
     'Channel Order ID',
     'Vendor',
+    'Customer Name',
     'Warehouse',
     'Status Code',
     'Receiving Status',
@@ -1557,7 +1558,6 @@ export default function POManagement({
     'Invoice Date',
     'Lead Time (days)',
     'Total Amount',
-    'Currency',
     'Comments',
   ];
 
@@ -1568,10 +1568,7 @@ export default function POManagement({
     'Qty Ordered',
     'Qty Received',
     'Qty in Container',
-    'Unit Price',
-    'Cases Ordered',
     'Units per Case',
-    'Case Price',
     'Item Expected Delivery',
     'Item Comments',
   ];
@@ -2958,7 +2955,7 @@ Supply Chain CRM Coordinator`;
         ),
       },
       {
-        header: 'Channel Order ID',
+        header: 'Channel ID',
         accessor: 'channel_order_id',
         headerClassName: 'px-6 py-4',
         className: 'px-6 py-4',
