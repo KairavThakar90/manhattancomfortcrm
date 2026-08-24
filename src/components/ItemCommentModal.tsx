@@ -836,7 +836,8 @@ export default function ItemCommentModal({
                     return (
                       <div key={idx} className="group/att relative w-max">
                         <a
-                          href={isOptimistic ? '#' : fileObj.fileUrl}
+                          href={isOptimistic ? undefined : fileObj.fileUrl}
+                          download={fileObj.fileName || 'Document'}
                           target={isOptimistic ? undefined : '_blank'}
                           rel="noreferrer"
                           className={`flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors ${isOptimistic ? 'pointer-events-none opacity-70' : 'hover:bg-slate-100'}`}
@@ -844,7 +845,7 @@ export default function ItemCommentModal({
                           <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
                             <Paperclip className="h-4 w-4" />
                           </div>
-                          <div className="flex flex-col">
+                          <div className="flex min-w-0 flex-col">
                             <span className="text-[11px] font-bold">
                               Attachment
                             </span>
@@ -852,6 +853,11 @@ export default function ItemCommentModal({
                               {fileObj.fileName || 'Document'}
                             </span>
                           </div>
+                          {!isOptimistic && (
+                            <div className="ml-2 flex rounded-full bg-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-300 hover:text-slate-700">
+                              <Download className="h-3 w-3" />
+                            </div>
+                          )}
                         </a>
                         {isOptimistic && (
                           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
@@ -864,10 +870,10 @@ export default function ItemCommentModal({
                             onClick={() =>
                               handleDeleteAttachment(node.id, fileObj.id)
                             }
-                            className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-500 hover:text-white"
+                            className="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                             title="Delete attachment"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-2.5 w-2.5" />
                           </button>
                         )}
                       </div>

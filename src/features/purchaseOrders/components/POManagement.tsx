@@ -5255,8 +5255,12 @@ Supply Chain CRM Coordinator`;
                                                     <a
                                                       href={
                                                         isOptimistic
-                                                          ? '#'
+                                                          ? undefined
                                                           : fileObj.fileUrl
+                                                      }
+                                                      download={
+                                                        fileObj.fileName ||
+                                                        'Document'
                                                       }
                                                       target={
                                                         isOptimistic
@@ -5269,7 +5273,7 @@ Supply Chain CRM Coordinator`;
                                                       <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
                                                         <Paperclip className="h-4 w-4" />
                                                       </div>
-                                                      <div className="flex flex-col">
+                                                      <div className="flex min-w-0 flex-col">
                                                         <span className="text-[11px] font-bold">
                                                           Attachment
                                                         </span>
@@ -5278,6 +5282,11 @@ Supply Chain CRM Coordinator`;
                                                             'Document'}
                                                         </span>
                                                       </div>
+                                                      {!isOptimistic && (
+                                                        <div className="ml-2 flex rounded-full bg-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-300 hover:text-slate-700">
+                                                          <Download className="h-3 w-3" />
+                                                        </div>
+                                                      )}
                                                     </a>
                                                     {isOptimistic && (
                                                       <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-800/40 backdrop-blur-[1px]">
@@ -5295,10 +5304,10 @@ Supply Chain CRM Coordinator`;
                                                               fileObj.id,
                                                             )
                                                           }
-                                                          className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-500 hover:text-white"
+                                                          className="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                                                           title="Delete attachment"
                                                         >
-                                                          <Trash className="h-3 w-3" />
+                                                          <Trash className="h-2.5 w-2.5" />
                                                         </button>
                                                       )}
                                                   </div>
@@ -5337,8 +5346,7 @@ Supply Chain CRM Coordinator`;
                                             </button>
                                           )}
                                         {isMe &&
-                                          editingCommentId !== node.id &&
-                                          !node.fileUrl && (
+                                          editingCommentId !== node.id && (
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -5346,6 +5354,7 @@ Supply Chain CRM Coordinator`;
                                                 setEditingCommentText(
                                                   node.message,
                                                 );
+                                                setEditingCommentFiles([]);
                                               }}
                                               className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                                             >
