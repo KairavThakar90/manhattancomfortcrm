@@ -131,8 +131,16 @@ export default function POManagementPage() {
     setCurrentPage(1);
   };
   const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const handleDateToChange = (val) => {
+    setDateTo(val);
+    setCurrentPage(1);
+  };
   const handleDateFromChange = (val) => {
     setDateFrom(val);
+    if (val && dateTo && new Date(val) > new Date(dateTo)) {
+      setDateTo('');
+    }
     setCurrentPage(1);
   };
 
@@ -153,6 +161,7 @@ export default function POManagementPage() {
         customerFilter,
         channelFilter,
         dateFrom,
+        dateTo,
         userRole,
         sortConfig,
         activeSubTab,
@@ -178,6 +187,9 @@ export default function POManagementPage() {
         if (completionFilter === 'closed') params.is_completed = true;
         if (dateFrom) {
           params.date_from = dateFrom;
+        }
+        if (dateTo) {
+          params.date_to = dateTo;
         }
 
         if (sortConfig.key && sortConfig.direction) {
@@ -530,6 +542,7 @@ export default function POManagementPage() {
     customerFilter,
     channelFilter,
     dateFrom,
+    dateTo,
     userRole,
     refreshTrigger,
     sortConfig,
@@ -673,6 +686,8 @@ export default function POManagementPage() {
         onChannelFilterChange={handleChannelFilterChange}
         dateFrom={dateFrom}
         onDateFromChange={handleDateFromChange}
+        dateTo={dateTo}
+        onDateToChange={handleDateToChange}
         sortConfig={sortConfig}
         onSortChange={(key, direction) => setSortConfig({ key, direction })}
         activeSubTab={activeSubTab}

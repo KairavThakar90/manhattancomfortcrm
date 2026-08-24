@@ -815,6 +815,8 @@ interface POManagementProps {
   onChannelFilterChange?: (val: string) => void;
   dateFrom?: string;
   onDateFromChange?: (val: string) => void;
+  dateTo?: string;
+  onDateToChange?: (val: string) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
   sortConfig?: { key: string | null; direction: 'asc' | 'desc' | null };
@@ -963,6 +965,8 @@ export default function POManagement({
   onChannelFilterChange: propOnChannelFilterChange,
   dateFrom: propDateFrom,
   onDateFromChange: propOnDateFromChange,
+  dateTo: propDateTo,
+  onDateToChange: propOnDateToChange,
   pageSize: propPageSize,
   onPageSizeChange: propOnPageSizeChange,
   sortConfig: propSortConfig,
@@ -1479,6 +1483,10 @@ export default function POManagement({
   const setDateFrom = propOnDateFromChange
     ? propOnDateFromChange
     : setLocalDateFrom;
+
+  const [localDateTo, setLocalDateTo] = useState('');
+  const dateTo = propDateTo !== undefined ? propDateTo : localDateTo;
+  const setDateTo = propOnDateToChange ? propOnDateToChange : setLocalDateTo;
 
   const channelFilter =
     propChannelFilter !== undefined ? propChannelFilter : localChannelFilter;
@@ -4280,15 +4288,28 @@ Supply Chain CRM Coordinator`;
                   Order Date:
                 </span>
               </div>
-              <DateFilterInput
-                value={dateFrom || ''}
-                onChange={(val) => {
-                  setDateFrom(val);
-                  handlePageChange(1);
-                }}
-                title="Order Date Filter"
-                mode="month"
-              />
+              <div className="flex items-center gap-1">
+                <DateFilterInput
+                  value={dateFrom || ''}
+                  onChange={(val) => {
+                    setDateFrom(val);
+                    handlePageChange(1);
+                  }}
+                  title="Order Date From"
+                  mode="date"
+                />
+                <span className="text-mc-gray-soft font-bold">-</span>
+                <DateFilterInput
+                  value={dateTo || ''}
+                  onChange={(val) => {
+                    setDateTo(val);
+                    handlePageChange(1);
+                  }}
+                  title="Order Date To"
+                  mode="date"
+                  minDate={dateFrom}
+                />
+              </div>
             </div>
           )}
           {activeSubTab === 'grid' && (

@@ -95,8 +95,10 @@ export default function DateFilterInput({
   className = '',
   disabled = false,
   mode = 'date', // 'date' | 'month'
+  minDate = null,
 }) {
   const selected = parseDateOnly(value, mode);
+  const minDateParsed = minDate ? parseDateOnly(minDate, mode) : null;
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() =>
     startOfMonth(selected || new Date()),
@@ -373,25 +375,37 @@ export default function DateFilterInput({
                   const inMonth = day.getMonth() === viewMonth.getMonth();
                   const isSelected = sameDay(day, selected);
                   const isToday = sameDay(day, today);
+                  const isBeforeMin = minDateParsed && day < minDateParsed;
+                  const isDayDisabled = isBeforeMin;
 
                   return (
                     <button
                       key={formatDateOnly(day)}
                       type="button"
+                      disabled={isDayDisabled}
                       onClick={() => {
                         onChange(formatDateOnly(day, mode));
                         setOpen(false);
                       }}
                       className={[
                         'h-8 w-8 rounded-md text-xs transition',
-                        inMonth ? 'text-mc-black' : 'text-mc-gray-soft/50',
-                        isSelected
+                        isDayDisabled
+                          ? 'cursor-not-allowed bg-slate-50 opacity-30'
+                          : '',
+                        !isDayDisabled && inMonth
+                          ? 'text-mc-black'
+                          : 'text-mc-gray-soft/50',
+                        !isDayDisabled && isSelected
                           ? 'bg-mc-gold text-mc-black hover:bg-mc-gold/80 font-bold hover:shadow-sm'
-                          : 'hover:bg-mc-beige-light',
-                        !isSelected && isToday
+                          : !isDayDisabled
+                            ? 'hover:bg-mc-beige-light'
+                            : '',
+                        !isSelected && isToday && !isDayDisabled
                           ? 'ring-mc-beige-dark font-bold ring-1 ring-inset'
                           : '',
-                      ].join(' ')}
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                     >
                       {day.getDate()}
                     </button>
