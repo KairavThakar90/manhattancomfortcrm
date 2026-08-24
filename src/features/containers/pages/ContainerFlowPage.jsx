@@ -487,8 +487,8 @@ export default function ContainerFlowPage() {
       };
       if (receiveDateFrom) params.receive_date_from = receiveDateFrom;
       if (receiveDateTo) params.receive_date_to = receiveDateTo;
-      if (etaFrom) params.eta_delivery_from = etaFrom;
-      if (etaTo) params.eta_delivery_to = etaTo;
+      if (etaFrom) params.eta_from = etaFrom;
+      if (etaTo) params.eta_to = etaTo;
       if (warehouseFilter && warehouseFilter !== 'all') {
         params.sellercloud_warehouse_id = warehouseFilter;
       }
