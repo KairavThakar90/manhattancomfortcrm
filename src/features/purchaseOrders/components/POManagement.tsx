@@ -403,6 +403,9 @@ const VendorStatusDropdown = ({
     'SHIPPED',
   ];
 
+  const displayStatus =
+    !currentStatus || currentStatus === 'N/A' ? 'NOT_STARTED' : currentStatus;
+
   return (
     <>
       <button
@@ -410,7 +413,7 @@ const VendorStatusDropdown = ({
         onClick={toggleDropdown}
         className="hover:border-mc-gold focus:border-mc-gold flex w-full cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition-colors outline-none focus:outline-none"
       >
-        <span className="truncate">{currentStatus.replace(/_/g, ' ')}</span>
+        <span className="truncate">{displayStatus.replace(/_/g, ' ')}</span>
         <ChevronDown
           className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
@@ -439,7 +442,7 @@ const VendorStatusDropdown = ({
                       ? 'cursor-not-allowed text-slate-400 opacity-50'
                       : ''
                   } ${
-                    !isDisabled && currentStatus === s
+                    !isDisabled && displayStatus === s
                       ? 'text-mc-black bg-slate-100/50 font-bold'
                       : !isDisabled
                         ? 'font-medium text-slate-700 hover:bg-slate-50'
@@ -1005,7 +1008,8 @@ export default function POManagement({
 
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
-  const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
+  const [localStatusFilter, setLocalStatusFilter] =
+    useState<string>('NOT_STARTED');
   const [localCompletionFilter, setLocalCompletionFilter] =
     useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
