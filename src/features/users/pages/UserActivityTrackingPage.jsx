@@ -42,7 +42,6 @@ export default function UserActivityTrackingPage() {
   }, []);
 
   // ── Filters ──────────────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState('');
   const [userDropOpen, setUserDropOpen] = useState(false);
   const userDropRef = useRef(null);
@@ -70,7 +69,6 @@ export default function UserActivityTrackingPage() {
       const data = await getUserActivities({
         page: currentPage,
         size: pageSize,
-        search: searchQuery || undefined,
         user_id: forcedUserId || undefined,
       });
 
@@ -93,7 +91,7 @@ export default function UserActivityTrackingPage() {
       setLoading(false);
       setHasLoadedInitial(true);
     }
-  }, [user, isAdminOrOffice, currentPage, pageSize, searchQuery, userFilter]);
+  }, [user, isAdminOrOffice, currentPage, pageSize, userFilter]);
 
   // Fetch when dependencies change
   useEffect(() => {
@@ -232,32 +230,6 @@ export default function UserActivityTrackingPage() {
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
         {/* ── Filter Bar ────────────────────────────────────────────── */}
         <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-wrap items-center gap-3 rounded-xl border p-3 shadow-none">
-          {/* Search */}
-          <div className="relative min-w-0 flex-1">
-            <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search by user, action, description…"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-8 pl-9 text-sm transition focus:outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setCurrentPage(1);
-                }}
-                className="text-mc-gray-soft hover:text-mc-black absolute top-2.5 right-3"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-
           {/* User dropdown - only visible to admin/office */}
           {isAdminOrOffice && (
             <div className="flex items-center gap-2">
@@ -334,8 +306,8 @@ export default function UserActivityTrackingPage() {
               tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
               trClassName="transition bg-mc-white hover:bg-mc-beige-light/30"
               emptyMessage={
-                searchQuery || userFilter
-                  ? 'No activities matched your search or filters.'
+                userFilter
+                  ? 'No activities matched your filters.'
                   : 'No activity records found.'
               }
               pagination={
