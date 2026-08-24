@@ -221,7 +221,10 @@ export default function ContainerFlowPage() {
   });
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
   const [totalListCount, setTotalListCount] = useState(0);
-  const [dateFrom, setDateFrom] = useState('');
+  const [receiveDateFrom, setReceiveDateFrom] = useState('');
+  const [receiveDateTo, setReceiveDateTo] = useState('');
+  const [etaFrom, setEtaFrom] = useState('');
+  const [etaTo, setEtaTo] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('all');
 
   const containerTableRef = useRef(null);
@@ -482,9 +485,10 @@ export default function ContainerFlowPage() {
         page_size: listPageSize,
         search: listSearchQuery,
       };
-      if (dateFrom) {
-        params.date_from = dateFrom;
-      }
+      if (receiveDateFrom) params.receive_date_from = receiveDateFrom;
+      if (receiveDateTo) params.receive_date_to = receiveDateTo;
+      if (etaFrom) params.eta_delivery_from = etaFrom;
+      if (etaTo) params.eta_delivery_to = etaTo;
       if (warehouseFilter && warehouseFilter !== 'all') {
         params.sellercloud_warehouse_id = warehouseFilter;
       }
@@ -528,7 +532,10 @@ export default function ContainerFlowPage() {
     listPage,
     listPageSize,
     listSearchQuery,
-    dateFrom,
+    receiveDateFrom,
+    receiveDateTo,
+    etaFrom,
+    etaTo,
     warehouseFilter,
     listSortConfig,
   ]);
@@ -1725,7 +1732,7 @@ export default function ContainerFlowPage() {
                   </div>
                 </div>
               )}
-              {/* Order Date Filter - inline */}
+              {/* Receipt Date Range Picker */}
               <div className="flex flex-shrink-0 items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="text-mc-gray-soft h-3.5 w-3.5" />
@@ -1733,14 +1740,66 @@ export default function ContainerFlowPage() {
                     Received Date:
                   </span>
                 </div>
-                <DateFilterInput
-                  value={dateFrom || ''}
-                  onChange={(val) => {
-                    setDateFrom(val);
-                    setListPage(1);
-                  }}
-                  title="Received Date Filter"
-                />
+                <div className="flex items-center gap-1">
+                  <DateFilterInput
+                    value={receiveDateFrom || ''}
+                    onChange={(val) => {
+                      setReceiveDateFrom(val);
+                      if (
+                        val &&
+                        receiveDateTo &&
+                        new Date(val) > new Date(receiveDateTo)
+                      ) {
+                        setReceiveDateTo('');
+                      }
+                      setListPage(1);
+                    }}
+                    title="Received Date From"
+                  />
+                  <span className="text-mc-gray-soft font-bold">-</span>
+                  <DateFilterInput
+                    value={receiveDateTo || ''}
+                    onChange={(val) => {
+                      setReceiveDateTo(val);
+                      setListPage(1);
+                    }}
+                    minDate={receiveDateFrom}
+                    title="Received Date To"
+                  />
+                </div>
+              </div>
+
+              {/* ETA Date Range Picker */}
+              <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
+                    ETA:
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <DateFilterInput
+                    value={etaFrom || ''}
+                    onChange={(val) => {
+                      setEtaFrom(val);
+                      if (val && etaTo && new Date(val) > new Date(etaTo)) {
+                        setEtaTo('');
+                      }
+                      setListPage(1);
+                    }}
+                    title="ETA From"
+                  />
+                  <span className="text-mc-gray-soft font-bold">-</span>
+                  <DateFilterInput
+                    value={etaTo || ''}
+                    onChange={(val) => {
+                      setEtaTo(val);
+                      setListPage(1);
+                    }}
+                    minDate={etaFrom}
+                    title="ETA To"
+                  />
+                </div>
               </div>
               <ColumnsDropdown
                 columns={CONTAINER_COLUMN_DEFS}
