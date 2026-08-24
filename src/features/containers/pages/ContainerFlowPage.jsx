@@ -1683,9 +1683,9 @@ export default function ContainerFlowPage() {
 
         {/* Content */}
         <div className="relative flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
-          <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col justify-between gap-3 rounded-xl border p-4 shadow-none md:flex-row md:items-center">
+          <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none">
+            {/* Search bar */}
             <div className="flex w-full items-center gap-3">
-              {/* Search bar */}
               <div className="relative flex-1">
                 <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
                 <input
@@ -1710,6 +1710,10 @@ export default function ContainerFlowPage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Filters (New Line) */}
+            <div className="flex w-full flex-wrap items-center gap-3">
               {/* Warehouse Filter - hidden for warehouse role */}
               {!isWarehouse && (
                 <div className="flex flex-shrink-0 items-center gap-2">
