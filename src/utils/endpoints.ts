@@ -196,3 +196,15 @@ export const WAREHOUSES_BY_ID = (id: string) => `/warehouses/${id}`;
 export const CONTAINER_ITEMS_IMPORT = (id: string) => `/containers/${id}/items`;
 export const CONTAINER_IMPORT_PREVIEW = '/containers/import/preview';
 export const CONTAINER_VALIDATE_ITEMS_BULK = '/containers/validate-items-bulk';
+
+// ------------------------------------------
+// Tracker Logistics Endpoints
+// ------------------------------------------
+export const TRACKER_LOGISTICS_LIST = '/tracker-logistics';
+export const TRACKER_LOGISTICS_BY_ID = (id: string) =>
+  `/tracker-logistics/${id}`;
+export const TRACKER_LOGISTICS_CREATE = '/tracker-logistics';
+export const TRACKER_LOGISTICS_UPDATE = (id: string) =>
+  `/tracker-logistics/${id}`;
+export const TRACKER_LOGISTICS_DELETE = (id: string) =>
+  `/tracker-logistics/${id}`;

@@ -10,6 +10,7 @@ import {
   Package,
   UserCog,
   Activity,
+  Truck,
 } from 'lucide-react';
 
 export const navItems = [
@@ -89,6 +90,13 @@ export const navItems = [
     label: 'User Management',
     icon: UserCog,
     roles: ['Administrator'],
+  },
+  {
+    id: 'tracker-logistics',
+    path: '/tracker-logistics',
+    label: 'Tracker Logistics',
+    icon: Truck,
+    roles: ['Administrator', 'Office'],
   },
   // {
   //   id: 'user-activities',

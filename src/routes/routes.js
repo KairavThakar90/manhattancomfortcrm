@@ -22,6 +22,9 @@ const UserManagementPage = lazy(
 const UserActivityTrackingPage = lazy(
   () => import('../features/users/pages/UserActivityTrackingPage'),
 );
+const TrackerLogisticsPage = lazy(
+  () => import('../features/trackerLogistics/pages/TrackerLogisticsPage'),
+);
 
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },
@@ -50,5 +53,9 @@ export const appRoutes = [
   {
     path: '/user-activities',
     element: React.createElement(UserActivityTrackingPage),
+  },
+  {
+    path: '/tracker-logistics',
+    element: React.createElement(TrackerLogisticsPage),
   },
 ];
