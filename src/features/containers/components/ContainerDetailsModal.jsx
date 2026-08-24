@@ -336,8 +336,6 @@ export default function ContainerDetailsModal({
     itemsPage * itemsPageSize,
   );
 
-  console.log('container.name', container.name);
-
   return createPortal(
     <>
       <div
