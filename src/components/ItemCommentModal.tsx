@@ -108,6 +108,9 @@ export default function ItemCommentModal({
   const [newCommentFiles, setNewCommentFiles] = useState<File[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    '' | 'Compressing...' | 'Uploading...'
+  >('');
   const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -308,7 +311,7 @@ export default function ItemCommentModal({
     }
   };
 
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeItem?.id) return;
     if (!newCommentText.trim() && newCommentFiles.length === 0) return;
@@ -349,39 +352,28 @@ export default function ItemCommentModal({
     setReplyToUser(null);
     setReplyToText(null);
 
-    // Build optimistic comment immediately
-    const currentUserName = currentUser
-      ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ||
-        currentUser.username ||
-        currentUser.email
-      : 'You';
-    const optimisticComment: any = {
-      id: `ITEMCOM-OPT-${Date.now()}`,
-      itemId: activeItem.id,
-      user: currentUserName,
-      userId: currentUser?.id,
-      message: messageText,
-      timestamp: 'Just now',
-      rawTimestamp: new Date().toISOString(),
-      parentId: replyId,
-      files: newCommentFiles.map((file) => ({
-        fileUrl: URL.createObjectURL(file),
-        fileName: file.name,
-        fileType: file.type,
-      })),
-      fileUrl:
-        newCommentFiles.length > 0
-          ? URL.createObjectURL(newCommentFiles[0])
-          : null,
-      fileName: newCommentFiles.length > 0 ? newCommentFiles[0].name : null,
-      fileType: newCommentFiles.length > 0 ? newCommentFiles[0].type : null,
-      children: [],
-    };
-    setFetchedComments((prev) => [...prev, optimisticComment]);
-    setNewCommentText('');
-    setNewCommentFiles([]);
-    setTaggedUserMap({});
-    setShowMentionDropdown(false);
+    setUploadStatus('Compressing...');
+    if (newCommentFiles.length > 0 || newCommentText.trim()) {
+      setIsPostingComment(true);
+    }
+
+    const finalFilesToUpload: File[] = [];
+    for (const raw of newCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
+    }
+    // Update local state so we don't re-compress on failure
+    setNewCommentFiles(finalFilesToUpload);
+
+    setUploadStatus('Uploading...');
+
+    // We do NOT add the optimistic comment to the state immediately when files are present
+    // because we don't want the UI to display the compressed file as uploaded before API succeeds.
 
     const replyIdToSend = replyId;
     postItemComment(
@@ -389,9 +381,10 @@ export default function ItemCommentModal({
       messageText,
       taggedUserIds,
       replyIdToSend,
-      newCommentFiles.length > 0 ? newCommentFiles : undefined,
+      finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
     )
       .then(() => {
+        setUploadStatus('');
         setNewCommentText('');
         setNewCommentFiles([]);
         setShowMentionDropdown(false);
@@ -421,17 +414,17 @@ export default function ItemCommentModal({
       .catch((err) => {
         console.error(err);
         toast.error('Failed to post comment.');
+        setUploadStatus('');
       })
       .finally(() => setIsPostingComment(false));
   };
 
-  const handleUpdateSubmit = (commentId: string) => {
+  const handleUpdateSubmit = async (commentId: string) => {
     if (
       (!editingCommentText.trim() && editingCommentFiles.length === 0) ||
       !activeItem?.id
     )
       return;
-    const filesToUpload = editingCommentFiles;
     const words = editingCommentText.trim().split(/\s+/);
     const taggedUserIds = words
       .filter((w) => w.startsWith('@'))
@@ -449,22 +442,42 @@ export default function ItemCommentModal({
       })
       .filter(Boolean);
 
-    setFetchedComments((prev) =>
-      prev.map((c) =>
-        c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
-      ),
-    );
-    setEditingCommentId(null);
-    setEditingCommentText('');
-    setEditingCommentFiles([]);
+    setUploadStatus('Compressing...');
+    setIsPostingComment(true);
+
+    const finalFilesToUpload: File[] = [];
+    for (const raw of editingCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
+    }
+    setEditingCommentFiles(finalFilesToUpload);
+
+    setUploadStatus('Uploading...');
 
     updateItemComment(
       commentId,
       editingCommentText.trim(),
       taggedUserIds,
-      filesToUpload.length > 0 ? filesToUpload : undefined,
+      finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
     )
       .then(() => {
+        setUploadStatus('');
+        setFetchedComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId
+              ? { ...c, message: editingCommentText.trim() }
+              : c,
+          ),
+        );
+        setEditingCommentId(null);
+        setEditingCommentText('');
+        setEditingCommentFiles([]);
+
         toast.success('Comment updated successfully');
         onAddActivity(
           `Updated an item comment for ${activeItem.sku}`,
@@ -482,6 +495,10 @@ export default function ItemCommentModal({
       .catch((err) => {
         console.error(err);
         toast.error('Failed to update comment.');
+      })
+      .finally(() => {
+        setUploadStatus('');
+        setIsPostingComment(false);
       });
   };
 
@@ -689,10 +706,9 @@ export default function ItemCommentModal({
                     className="hidden"
                     multiple
                     accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       if (!e.target.files?.length) return;
                       const processedFiles: File[] = [];
-                      setIsCompressing(true);
 
                       for (const file of Array.from(e.target.files)) {
                         if (
@@ -711,14 +727,13 @@ export default function ItemCommentModal({
                           );
                           continue;
                         }
-                        processedFiles.push(await compressImageIfNeeded(file));
+                        processedFiles.push(file);
                       }
 
                       setEditingCommentFiles((files) => [
                         ...files,
                         ...processedFiles,
                       ]);
-                      setIsCompressing(false);
                       e.target.value = '';
                     }}
                   />
@@ -738,9 +753,10 @@ export default function ItemCommentModal({
                   <button
                     type="button"
                     onClick={() => handleUpdateSubmit(node.id)}
-                    className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
+                    disabled={isPostingComment}
+                    className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black disabled:opacity-50"
                   >
-                    Save
+                    {isPostingComment && uploadStatus ? uploadStatus : 'Save'}
                   </button>
                 </div>
               </div>
@@ -1224,12 +1240,10 @@ export default function ItemCommentModal({
                     className="hidden"
                     multiple
                     accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                    onChange={async (e) => {
+                    onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
                         const selectedFiles = Array.from(e.target.files);
                         const processedFiles: File[] = [];
-
-                        setIsCompressing(true);
 
                         for (const file of selectedFiles) {
                           const isAllowedExt = file.name.match(
@@ -1243,7 +1257,7 @@ export default function ItemCommentModal({
                             continue;
                           }
 
-                          const maxSizeInBytes = 5 * 1024 * 1024;
+                          const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
                           if (file.size > maxSizeInBytes) {
                             toast.error(
                               `File ${file.name} exceeds the 5MB limits. Please upload a smaller file.`,
@@ -1251,12 +1265,8 @@ export default function ItemCommentModal({
                             continue;
                           }
 
-                          const compressedFile =
-                            await compressImageIfNeeded(file);
-                          processedFiles.push(compressedFile);
+                          processedFiles.push(file);
                         }
-
-                        setIsCompressing(false);
 
                         if (processedFiles.length > 0) {
                           setNewCommentFiles((prev) => [

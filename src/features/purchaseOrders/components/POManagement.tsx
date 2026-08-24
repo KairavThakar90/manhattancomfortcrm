@@ -1734,6 +1734,9 @@ export default function POManagement({
   const [newCommentFiles, setNewCommentFiles] = useState<File[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    '' | 'Compressing...' | 'Uploading...'
+  >('');
   const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -2375,7 +2378,7 @@ Supply Chain CRM Coordinator`;
     }
   };
 
-  const handleUpdateSubmit = (commentId: string) => {
+  const handleUpdateSubmit = async (commentId: string) => {
     if (
       (!editingCommentText.trim() && editingCommentFiles.length === 0) ||
       !selectedPO
@@ -2400,32 +2403,43 @@ Supply Chain CRM Coordinator`;
       })
       .filter(Boolean);
 
-    const filesToUpload = editingCommentFiles;
+    setUploadStatus('Compressing...');
+    setIsPostingComment(true);
 
-    // Optimistic UI update
-    setFetchedComments((prev) =>
-      prev.map((c) =>
-        c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
-      ),
-    );
-    setEditingCommentId(null);
-    setEditingCommentText('');
-    setEditingCommentFiles([]);
+    const finalFilesToUpload: File[] = [];
+    for (const raw of editingCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
+    }
+    setEditingCommentFiles(finalFilesToUpload);
+
+    setUploadStatus('Uploading...');
 
     if (commentScope === 'sku' && selectedSkuId) {
-      setFetchedSkuComments((prev) =>
-        prev.map((c) =>
-          c.id === commentId ? { ...c, message: editingCommentText.trim() } : c,
-        ),
-      );
-
       updateItemComment(
         commentId,
         editingCommentText.trim(),
         taggedUserIds,
-        filesToUpload.length > 0 ? filesToUpload : undefined,
+        finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
       )
         .then(() => {
+          setUploadStatus('');
+          setFetchedSkuComments((prev) =>
+            prev.map((c) =>
+              c.id === commentId
+                ? { ...c, message: editingCommentText.trim() }
+                : c,
+            ),
+          );
+          setEditingCommentId(null);
+          setEditingCommentText('');
+          setEditingCommentFiles([]);
+
           onAddActivity(
             `Updated comment on SKU (${selectedSkuId})`,
             'Vendor Comment',
@@ -2441,10 +2455,12 @@ Supply Chain CRM Coordinator`;
         })
         .catch((err) => {
           console.error('Failed to update SKU comment', err);
+          setUploadStatus('');
           toast.error('Network sync error: Comment may not have saved.', {
             autoClose: 2000,
           });
-        });
+        })
+        .finally(() => setIsPostingComment(false));
       return;
     }
 
@@ -2452,9 +2468,21 @@ Supply Chain CRM Coordinator`;
       commentId,
       editingCommentText.trim(),
       taggedUserIds,
-      filesToUpload.length > 0 ? filesToUpload : undefined,
+      finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
     )
       .then(() => {
+        setUploadStatus('');
+        setFetchedComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId
+              ? { ...c, message: editingCommentText.trim() }
+              : c,
+          ),
+        );
+        setEditingCommentId(null);
+        setEditingCommentText('');
+        setEditingCommentFiles([]);
+
         // Re-fetch invisibly to sync real DB record (attachments in particular)
         const targetId = selectedPO.id.replace(/^PO-/i, '');
         return getPurchaseOrderById(targetId);
@@ -2474,10 +2502,12 @@ Supply Chain CRM Coordinator`;
       })
       .catch((err) => {
         console.error('Failed to update PO comment', err);
+        setUploadStatus('');
         toast.error('Network sync error: Comment may not have saved.', {
           autoClose: 2000,
         });
-      });
+      })
+      .finally(() => setIsPostingComment(false));
   };
 
   // Delete a discussion comment (PO-level or SKU-level)
@@ -2597,7 +2627,7 @@ Supply Chain CRM Coordinator`;
   };
 
   // Add a discussion comment
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPO || (!newCommentText.trim() && newCommentFiles.length === 0))
       return;
@@ -2633,47 +2663,27 @@ Supply Chain CRM Coordinator`;
     }
 
     // All validation passed — now commit state changes
-    if (newCommentFiles.length > 0) {
-      setIsPostingComment(true);
+    setUploadStatus('Compressing...');
+    setIsPostingComment(true);
+
+    const finalFilesToUpload: File[] = [];
+    for (const raw of newCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
     }
+    setNewCommentFiles(finalFilesToUpload);
 
-    // Optimistic UI update immediately
-    const optimisticComment: any = {
-      id: `COM-OPT-${Date.now()}`,
-      poId: selectedPO.id,
-      user:
-        userRole === 'Vendor'
-          ? selectedPO.vendorName
-          : currentUser
-            ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() ||
-              currentUser.username ||
-              currentUser.email
-            : 'You',
-      role: userRole,
-      message: messageText,
-      timestamp: new Date().toISOString().slice(0, 10),
-      rawTimestamp: new Date().toISOString(),
-      parentId: replyToCommentId,
-      files: newCommentFiles.map((file) => ({
-        fileUrl: URL.createObjectURL(file),
-        fileName: file.name,
-        fileType: file.type,
-      })),
-      fileUrl:
-        newCommentFiles.length > 0
-          ? URL.createObjectURL(newCommentFiles[0])
-          : null,
-      fileName: newCommentFiles.length > 0 ? newCommentFiles[0].name : null,
-      fileType: newCommentFiles.length > 0 ? newCommentFiles[0].type : null,
-    };
+    setUploadStatus('Uploading...');
 
+    // No optimistic append for attachments (UI will say Compressing/Uploading)
     const replyId = replyToCommentId;
-    setReplyToCommentId(null);
-    setReplyToUser(null);
-    setReplyToText(null);
 
     if (commentScope === 'sku' && selectedSkuId) {
-      setFetchedSkuComments((prev) => [...prev, optimisticComment]);
       setTimeout(() => setNewCommentText(''), 0);
       setNewCommentFiles([]);
       setShowMentionDropdown(false);
@@ -2683,9 +2693,16 @@ Supply Chain CRM Coordinator`;
         messageText,
         taggedUserIds,
         replyId,
-        filesToUpload.length > 0 ? filesToUpload : undefined,
+        finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
       )
         .then(() => {
+          setUploadStatus('');
+          setReplyToCommentId(null);
+          setReplyToUser(null);
+          setReplyToText(null);
+          setNewCommentText('');
+          setNewCommentFiles([]);
+          setShowMentionDropdown(false);
           onAddActivity(
             `Added discussion comment on SKU (${selectedSkuId})`,
             'Vendor Comment',
@@ -2702,21 +2719,16 @@ Supply Chain CRM Coordinator`;
         })
         .catch((err) => {
           console.error('Failed to save comment to server:', err);
+          setUploadStatus('');
           toast.error('Network sync error: Comment may not have saved.', {
             autoClose: 2000,
           });
         })
         .finally(() => {
-          if (filesToUpload.length > 0) setIsPostingComment(false);
+          setIsPostingComment(false);
         });
       return;
     }
-
-    onAddComment(optimisticComment);
-    setFetchedComments((prev) => [...prev, optimisticComment]);
-    setTimeout(() => setNewCommentText(''), 0);
-    setNewCommentFiles([]);
-    setShowMentionDropdown(false);
 
     // Fire-and-forget background sync (No UI locks!)
     const targetId = selectedPO.id.replace(/^PO-/i, '');
@@ -2726,9 +2738,17 @@ Supply Chain CRM Coordinator`;
       messageText,
       taggedUserIds,
       replyId,
-      filesToUpload.length > 0 ? filesToUpload : undefined,
+      finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
     )
       .then(() => {
+        setUploadStatus('');
+        setReplyToCommentId(null);
+        setReplyToUser(null);
+        setReplyToText(null);
+        setNewCommentText('');
+        setNewCommentFiles([]);
+        setShowMentionDropdown(false);
+
         onAddActivity(
           `Added discussion comment on ${selectedPO.id}`,
           'Vendor Comment',
@@ -5057,12 +5077,11 @@ Supply Chain CRM Coordinator`;
                                               className="hidden"
                                               multiple
                                               accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                                              onChange={async (e) => {
+                                              onChange={(e) => {
                                                 if (!e.target.files?.length)
                                                   return;
                                                 const processedFiles: File[] =
                                                   [];
-                                                setIsCompressing(true);
 
                                                 for (const file of Array.from(
                                                   e.target.files,
@@ -5086,11 +5105,7 @@ Supply Chain CRM Coordinator`;
                                                     );
                                                     continue;
                                                   }
-                                                  processedFiles.push(
-                                                    await compressImageIfNeeded(
-                                                      file,
-                                                    ),
-                                                  );
+                                                  processedFiles.push(file);
                                                 }
 
                                                 setEditingCommentFiles(
@@ -5099,7 +5114,6 @@ Supply Chain CRM Coordinator`;
                                                     ...processedFiles,
                                                   ],
                                                 );
-                                                setIsCompressing(false);
                                                 e.target.value = '';
                                               }}
                                             />
@@ -5121,9 +5135,12 @@ Supply Chain CRM Coordinator`;
                                               onClick={() =>
                                                 handleUpdateSubmit(node.id)
                                               }
-                                              className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
+                                              disabled={isPostingComment}
+                                              className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black disabled:opacity-50"
                                             >
-                                              Save
+                                              {isPostingComment && uploadStatus
+                                                ? uploadStatus
+                                                : 'Save'}
                                             </button>
                                           </div>
                                         </div>
@@ -5661,12 +5678,8 @@ Supply Chain CRM Coordinator`;
                                     continue;
                                   }
 
-                                  const compressedFile =
-                                    await compressImageIfNeeded(file);
-                                  processedFiles.push(compressedFile);
+                                  processedFiles.push(file);
                                 }
-
-                                setIsCompressing(false);
 
                                 if (processedFiles.length > 0) {
                                   setNewCommentFiles((prev) => [
@@ -5690,7 +5703,14 @@ Supply Chain CRM Coordinator`;
                           className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {isPostingComment ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>
+                                {uploadStatus
+                                  ? uploadStatus.replace('...', '')
+                                  : 'Posting'}
+                              </span>
+                            </>
                           ) : (
                             <>
                               <Send className="h-3.5 w-3.5" />

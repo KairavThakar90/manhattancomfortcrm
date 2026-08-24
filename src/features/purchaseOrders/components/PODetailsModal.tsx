@@ -263,6 +263,9 @@ export function PODetailsModal(props) {
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentFiles, setNewCommentFiles] = useState<File[]>([]);
   const [isPostingComment, setIsPostingComment] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    '' | 'Compressing...' | 'Uploading...'
+  >('');
   const [isCompressing, setIsCompressing] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
 
@@ -465,40 +468,29 @@ export function PODetailsModal(props) {
       return;
     }
 
+    setUploadStatus('Compressing...');
     setIsPostingComment(true);
+
+    const finalFilesToUpload: File[] = [];
+    for (const raw of newCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
+    }
+    setNewCommentFiles(finalFilesToUpload);
+
+    setUploadStatus('Uploading...');
+
     setReplyToCommentId(null);
     setReplyToUser(null);
     setReplyToText(null);
-    setNewCommentText('');
-    setNewCommentFiles([]);
-    setShowMentionDropdown(false);
 
-    // Optimistic append so the message shows up immediately instead of
-    // waiting on the round-trip (mirrors POManagement's behavior).
-    const optimisticComment = {
-      id: `TEMP-${Math.random().toString(36).slice(2)}`,
-      poId: selectedPO.id,
-      user:
-        (currentUser &&
-          `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim()) ||
-        currentUser?.username ||
-        'You',
-      userId: currentUser?.id || null,
-      role: userRole || 'Administrator',
-      message: messageText,
-      files: filesToUpload.map((file) => ({
-        fileUrl: URL.createObjectURL(file),
-        fileName: file.name,
-        fileType: file.type,
-      })),
-      fileUrl:
-        filesToUpload.length > 0 ? URL.createObjectURL(filesToUpload[0]) : null,
-      fileName: filesToUpload.length > 0 ? filesToUpload[0].name : null,
-      fileType: filesToUpload.length > 0 ? filesToUpload[0].type : null,
-      timestamp: new Date().toISOString().slice(0, 10),
-      rawTimestamp: new Date().toISOString(),
-      parentId: replyId,
-    };
+    // We don't do optimistic appends for files to show proper status flow
+    // (Selected -> Compressing -> Uploading -> Uploaded)
 
     if (commentScope === 'sku' && selectedSkuId) {
       setFetchedSkuComments?.((prev: any[]) => [
@@ -510,9 +502,13 @@ export function PODetailsModal(props) {
         messageText,
         taggedUserIds,
         replyId,
-        filesToUpload.length > 0 ? filesToUpload : undefined,
+        finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
       )
         .then(() => {
+          setUploadStatus('');
+          setNewCommentText('');
+          setNewCommentFiles([]);
+          setShowMentionDropdown(false);
           onAddActivity?.(
             `Added discussion comment on SKU (${selectedSkuId})`,
             'Vendor Comment',
@@ -521,6 +517,7 @@ export function PODetailsModal(props) {
         })
         .catch((err: any) => {
           console.error('Failed to save comment to server:', err);
+          setUploadStatus('');
           toast.error(`Failed to post comment: ${describeError(err)}`, {
             autoClose: 4000,
           });
@@ -529,17 +526,19 @@ export function PODetailsModal(props) {
       return;
     }
 
-    setFetchedComments?.((prev: any[]) => [...(prev || []), optimisticComment]);
-
     const targetId = String(selectedPO.id).replace(/^PO-/i, '');
     postPOComment(
       targetId,
       messageText,
       taggedUserIds,
       replyId,
-      filesToUpload.length > 0 ? filesToUpload : undefined,
+      finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
     )
       .then(() => {
+        setUploadStatus('');
+        setNewCommentText('');
+        setNewCommentFiles([]);
+        setShowMentionDropdown(false);
         onAddActivity?.(
           `Added discussion comment on ${selectedPO.id}`,
           'Vendor Comment',
@@ -557,6 +556,7 @@ export function PODetailsModal(props) {
       })
       .catch((err: any) => {
         console.error('Failed to save comment to server:', err);
+        setUploadStatus('');
         toast.error(`Failed to post comment: ${describeError(err)}`, {
           autoClose: 4000,
         });
@@ -570,14 +570,32 @@ export function PODetailsModal(props) {
       !selectedPO
     )
       return;
-    const filesToUpload = editingCommentFiles;
+
+    setUploadStatus('Compressing...');
+    setIsPostingComment(true);
+
+    const finalFilesToUpload: File[] = [];
+    for (const raw of editingCommentFiles) {
+      if ((raw as any).isCompressed) {
+        finalFilesToUpload.push(raw);
+      } else {
+        const c = await compressImageIfNeeded(raw);
+        (c as any).isCompressed = true;
+        finalFilesToUpload.push(c);
+      }
+    }
+    setEditingCommentFiles(finalFilesToUpload);
+
+    setUploadStatus('Uploading...');
+
     try {
       await updatePOComment(
         commentId,
         editingCommentText.trim(),
         undefined,
-        filesToUpload.length > 0 ? filesToUpload : undefined,
+        finalFilesToUpload.length > 0 ? finalFilesToUpload : undefined,
       );
+      setUploadStatus('');
       setEditingCommentId(null);
       setEditingCommentFiles([]);
       const targetId = String(selectedPO.id).replace(/^PO-/i, '');
@@ -589,7 +607,10 @@ export function PODetailsModal(props) {
       toast.success('Comment updated successfully!');
     } catch (err) {
       console.error('Failed to update comment:', err);
+      setUploadStatus('');
       toast.error('Failed to update comment.');
+    } finally {
+      setIsPostingComment(false);
     }
   };
 
@@ -1562,11 +1583,7 @@ export function PODetailsModal(props) {
                                                     );
                                                     continue;
                                                   }
-                                                  processedFiles.push(
-                                                    await compressImageIfNeeded(
-                                                      file,
-                                                    ),
-                                                  );
+                                                  processedFiles.push(file);
                                                 }
 
                                                 setEditingCommentFiles(
@@ -1575,7 +1592,6 @@ export function PODetailsModal(props) {
                                                     ...processedFiles,
                                                   ],
                                                 );
-                                                setIsCompressing(false);
                                                 e.target.value = '';
                                               }}
                                             />
@@ -1597,9 +1613,12 @@ export function PODetailsModal(props) {
                                               onClick={() =>
                                                 handleUpdateSubmit(node.id)
                                               }
-                                              className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
+                                              disabled={isPostingComment}
+                                              className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black disabled:opacity-50"
                                             >
-                                              Save
+                                              {isPostingComment && uploadStatus
+                                                ? uploadStatus
+                                                : 'Save'}
                                             </button>
                                           </div>
                                         </div>
@@ -2138,13 +2157,8 @@ export function PODetailsModal(props) {
                                     );
                                     continue;
                                   }
-
-                                  const compressedFile =
-                                    await compressImageIfNeeded(file);
-                                  processedFiles.push(compressedFile);
+                                  processedFiles.push(file);
                                 }
-
-                                setIsCompressing(false);
 
                                 if (processedFiles.length > 0) {
                                   setNewCommentFiles((prev) => [
@@ -2168,7 +2182,14 @@ export function PODetailsModal(props) {
                           className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {isPostingComment ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>
+                                {uploadStatus
+                                  ? uploadStatus.replace('...', '')
+                                  : 'Posting'}
+                              </span>
+                            </>
                           ) : (
                             <>
                               <Send className="h-3.5 w-3.5" />
