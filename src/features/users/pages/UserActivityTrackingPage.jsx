@@ -16,6 +16,31 @@ import DataTable from '../../../components/common/DataTable';
 import TableLoader from '../../../components/common/TableLoader';
 import { CRMContext } from '../../../context/CRMContext';
 
+const ExpandableText = ({ text = '', limit = 60 }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!text || text === '-') {
+    return <span className="text-mc-black text-xs font-medium">-</span>;
+  }
+
+  if (text.length <= limit) {
+    return <span className="text-mc-black text-xs font-medium">{text}</span>;
+  }
+
+  return (
+    <div className="text-mc-black text-xs font-medium">
+      {expanded ? text : `${text.slice(0, limit)}... `}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="text-mc-gold ml-1 font-bold whitespace-nowrap hover:underline"
+      >
+        {expanded ? 'Show Less' : 'Show More'}
+      </button>
+    </div>
+  );
+};
+
 export default function UserActivityTrackingPage() {
   const { userRole, user } = useContext(CRMContext);
 
@@ -144,8 +169,9 @@ export default function UserActivityTrackingPage() {
     {
       accessor: 'created_at',
       header: 'Time',
-      headerClassName: 'px-6 py-3 bg-transparent text-left w-[16%]',
-      className: 'px-6 py-3 w-[16%]',
+      headerClassName:
+        'px-6 py-3 bg-transparent text-left w-44 whitespace-nowrap',
+      className: 'px-6 py-3 w-44 align-top',
       render: (row) => (
         <span className="text-mc-gray-soft font-mono text-xs">
           {fmtTime(row.created_at)}
@@ -157,8 +183,8 @@ export default function UserActivityTrackingPage() {
           {
             accessor: 'user',
             header: 'User',
-            headerClassName: 'px-6 py-3 bg-transparent text-left w-[20%]',
-            className: 'px-6 py-3 w-[20%]',
+            headerClassName: 'px-6 py-3 bg-transparent text-left w-56',
+            className: 'px-6 py-3 w-56 align-top',
             render: (row) => {
               const userName = row.user_name || row.user?.full_name || 'System';
               return (
@@ -176,8 +202,8 @@ export default function UserActivityTrackingPage() {
     {
       accessor: 'action',
       header: 'Action',
-      headerClassName: 'px-6 py-3 bg-transparent text-left w-[14%]',
-      className: 'px-6 py-3 w-[14%]',
+      headerClassName: 'px-6 py-3 bg-transparent text-left w-24',
+      className: 'px-6 py-3 w-24 align-top',
       render: (row) => (
         <span className="bg-mc-beige-light text-mc-gold inline-block rounded px-2 py-1 text-[10px] font-bold tracking-wider uppercase">
           {row.action || '-'}
@@ -187,12 +213,10 @@ export default function UserActivityTrackingPage() {
     {
       accessor: 'human_readable_message',
       header: 'Details',
-      headerClassName: 'px-6 py-3 bg-transparent text-left',
-      className: 'px-6 py-3',
+      headerClassName: 'px-6 py-3 bg-transparent text-left min-w-[300px]',
+      className: 'px-6 py-3 align-top',
       render: (row) => (
-        <span className="text-mc-black text-xs font-medium">
-          {row.human_readable_message || '-'}
-        </span>
+        <ExpandableText text={row.human_readable_message || '-'} limit={60} />
       ),
     },
   ];
