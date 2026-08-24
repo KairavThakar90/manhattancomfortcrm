@@ -608,6 +608,142 @@ const StatusFilterDropdown = ({
   );
 };
 
+const ApprovedStatusFilterDropdown = ({
+  currentStatus,
+  onChange,
+}: {
+  currentStatus: string;
+  onChange: (status: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number;
+    width: number;
+    bottom: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    bottom: 'auto',
+  });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 160;
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
+      setCoords({
+        top,
+        left: rect.left,
+        width: rect.width,
+        bottom,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const statuses = [
+    { value: 'all', label: 'All Approved Status' },
+    { value: 'ontime', label: 'On Time' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'delayed', label: 'Delayed' },
+  ];
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-full cursor-pointer items-center justify-between rounded-lg border p-2 text-xs transition-colors focus:ring-1 focus:outline-none"
+      >
+        <span className="truncate">
+          {statuses.find((s) => s.value === currentStatus)?.label || 'All'}
+        </span>
+        {currentStatus !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange('all');
+              setIsOpen(false);
+            }}
+          />
+        ) : (
+          <ChevronDown
+            className={`text-mc-gray-soft h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-md border border-slate-200 bg-white text-xs shadow-lg"
+          >
+            {statuses.map((s) => (
+              <button
+                key={s.value}
+                className={`w-full px-3 py-2 text-left transition-colors ${
+                  currentStatus === s.value
+                    ? 'text-mc-black bg-slate-100/50 font-bold'
+                    : 'font-medium text-slate-700 hover:bg-slate-50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onChange(s.value);
+                  setIsOpen(false);
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
+
 const CompletionFilterDropdown = ({
   currentStatus,
   onChange,
@@ -807,6 +943,8 @@ interface POManagementProps {
   onSearchChange?: (val: string) => void;
   statusFilter?: string;
   onStatusFilterChange?: (val: string) => void;
+  approvedStatusFilter?: string;
+  onApprovedStatusFilterChange?: (val: string) => void;
   completionFilter?: string;
   onCompletionFilterChange?: (val: string) => void;
   vendorFilter?: string;
@@ -957,6 +1095,8 @@ export default function POManagement({
   onSearchChange: propOnSearchChange,
   statusFilter: propStatusFilter,
   onStatusFilterChange: propOnStatusFilterChange,
+  approvedStatusFilter: propApprovedStatusFilter,
+  onApprovedStatusFilterChange: propOnApprovedStatusFilterChange,
   completionFilter: propCompletionFilter,
   onCompletionFilterChange: propOnCompletionFilterChange,
   vendorFilter: propVendorFilter,
@@ -1008,6 +1148,8 @@ export default function POManagement({
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
+  const [localApprovedStatusFilter, setLocalApprovedStatusFilter] =
+    useState<string>('all');
   const [localCompletionFilter, setLocalCompletionFilter] =
     useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
@@ -1465,6 +1607,14 @@ export default function POManagement({
   const setStatusFilter = propOnStatusFilterChange
     ? propOnStatusFilterChange
     : setLocalStatusFilter;
+
+  const approvedStatusFilter =
+    propApprovedStatusFilter !== undefined
+      ? propApprovedStatusFilter
+      : localApprovedStatusFilter;
+  const setApprovedStatusFilter = propOnApprovedStatusFilterChange
+    ? propOnApprovedStatusFilterChange
+    : setLocalApprovedStatusFilter;
 
   const completionFilter =
     propCompletionFilter !== undefined
@@ -1972,6 +2122,8 @@ export default function POManagement({
         search: searchQuery || undefined,
         date_from: dateFrom || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
+        approved_status:
+          approvedStatusFilter !== 'all' ? approvedStatusFilter : undefined,
       };
 
       const blob = await exportPurchaseOrdersCSV(payload);
@@ -4176,6 +4328,22 @@ Supply Chain CRM Coordinator`;
                 </div>
               </div>
             </>
+          )}
+          {activeSubTab !== 'kanban' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
+                  Approved Status:
+                </span>
+              </div>
+              <div className="w-44">
+                <ApprovedStatusFilterDropdown
+                  currentStatus={approvedStatusFilter}
+                  onChange={setApprovedStatusFilter}
+                />
+              </div>
+            </div>
           )}
           {userRole !== 'Vendor' && (
             <div className="flex items-center gap-2">

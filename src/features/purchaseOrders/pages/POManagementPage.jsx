@@ -50,6 +50,7 @@ export default function POManagementPage() {
     return '';
   });
   const [statusFilter, setStatusFilter] = useState('all');
+  const [approvedStatusFilter, setApprovedStatusFilter] = useState('all');
   const [completionFilter, setCompletionFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [customerFilter, setCustomerFilter] = useState('all');
@@ -114,6 +115,10 @@ export default function POManagementPage() {
     setStatusFilter(val);
     setCurrentPage(1);
   };
+  const handleApprovedStatusFilterChange = (val) => {
+    setApprovedStatusFilter(val);
+    setCurrentPage(1);
+  };
   const handleCompletionFilterChange = (val) => {
     setCompletionFilter(val);
     setCurrentPage(1);
@@ -156,6 +161,7 @@ export default function POManagementPage() {
         pageSize,
         searchQuery,
         statusFilter,
+        approvedStatusFilter,
         completionFilter,
         vendorFilter,
         customerFilter,
@@ -183,6 +189,8 @@ export default function POManagementPage() {
         };
         if (searchQuery) params.search = searchQuery;
         if (statusFilter !== 'all') params.status = statusFilter;
+        if (approvedStatusFilter !== 'all')
+          params.approved_status = approvedStatusFilter;
         if (completionFilter === 'open') params.is_completed = false;
         if (completionFilter === 'closed') params.is_completed = true;
         if (dateFrom) {
@@ -537,6 +545,7 @@ export default function POManagementPage() {
     pageSize,
     searchQuery,
     statusFilter,
+    approvedStatusFilter,
     completionFilter,
     vendorFilter,
     customerFilter,
@@ -676,6 +685,8 @@ export default function POManagementPage() {
         onSearchChange={handleQueryChange}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
+        approvedStatusFilter={approvedStatusFilter}
+        onApprovedStatusFilterChange={handleApprovedStatusFilterChange}
         completionFilter={completionFilter}
         onCompletionFilterChange={handleCompletionFilterChange}
         vendorFilter={vendorFilter}

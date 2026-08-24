@@ -101,6 +101,7 @@ export async function getPurchaseOrders(params?: {
   vendor_id?: string;
   status_label?: string;
   status?: string;
+  approved_status?: string;
   ordering?: string;
   date_from?: string;
   is_completed?: boolean;
