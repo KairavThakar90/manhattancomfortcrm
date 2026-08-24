@@ -49,7 +49,7 @@ export default function POManagementPage() {
     if (poId) return poId.replace(/^PO-/i, '');
     return '';
   });
-  const [statusFilter, setStatusFilter] = useState('NOT_STARTED');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [completionFilter, setCompletionFilter] = useState('all');
   const [vendorFilter, setVendorFilter] = useState('all');
   const [customerFilter, setCustomerFilter] = useState('all');

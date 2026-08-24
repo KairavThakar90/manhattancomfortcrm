@@ -113,7 +113,6 @@ const PO_COLUMN_DEFS: ColumnDef[] = [
   { key: 'warehouseName', label: 'Warehouse' },
   { key: 'items', label: 'PO Items' },
   { key: 'orderedQty', label: 'Ordered / Received Qty' },
-  { key: 'invoiceDetails', label: 'PO Approved Date' },
   { key: 'invoiceDelayStatus', label: 'Approved PO' },
   { key: 'expected_delivery_date', label: 'ETA Delivery' },
   { key: 'containerIds', label: 'Containers' },
@@ -1008,8 +1007,7 @@ export default function POManagement({
 
   // Filtering and Searching
   const [localSearchQuery, setLocalSearchQuery] = useState('');
-  const [localStatusFilter, setLocalStatusFilter] =
-    useState<string>('NOT_STARTED');
+  const [localStatusFilter, setLocalStatusFilter] = useState<string>('all');
   const [localCompletionFilter, setLocalCompletionFilter] =
     useState<string>('all');
   const [localVendorFilter, setLocalVendorFilter] = useState<string>('all');
@@ -3251,46 +3249,6 @@ Supply Chain CRM Coordinator`;
             </>
           );
         },
-      },
-      {
-        header: (
-          <div
-            className="flex items-center gap-1"
-            onClick={() => handleSort('invoiceDate')}
-          >
-            <div className="flex flex-col">
-              <span>PO Approved Date</span>
-              <span className="text-[9px] text-slate-400 normal-case">
-                (YYYY-MM-DD)
-              </span>
-            </div>
-            <span className="group-hover:text-mc-black text-mc-gray-soft">
-              {activeSortConfig.key === 'invoiceDate' ? (
-                activeSortConfig.direction === 'asc' ? (
-                  <ArrowUp className="h-3 w-3" />
-                ) : (
-                  <ArrowDown className="h-3 w-3" />
-                )
-              ) : (
-                <ArrowUpDown className="h-3 w-3 opacity-50 outline-hidden" />
-              )}
-            </span>
-          </div>
-        ),
-        accessor: 'invoiceDetails',
-        headerClassName:
-          'px-6 py-4  cursor-pointer select-none group hover:text-mc-black transition-colors',
-        className: 'px-6 py-4',
-        render: (po: any) =>
-          po.invoiceDetails?.date ? (
-            <span className="text-[11px] font-bold text-slate-700">
-              {po.invoiceDetails.date}
-            </span>
-          ) : (
-            <span className="rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] text-slate-500">
-              N/A
-            </span>
-          ),
       },
       {
         header: (
