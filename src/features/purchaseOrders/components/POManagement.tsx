@@ -5524,9 +5524,9 @@ Supply Chain CRM Coordinator`;
                                         if (input) input.value = '';
                                       }
                                     }}
-                                    className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                                    className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:border-red-200 hover:text-red-500"
                                   >
-                                    <X className="h-3 w-3" />
+                                    <X className="h-3.5 w-3.5" />
                                   </button>
                                   {file.type.startsWith('image/') ? (
                                     <div className="bg-mc-gray-dark relative flex h-24 w-full items-center justify-center overflow-hidden rounded-lg">
