@@ -112,6 +112,8 @@ export async function getUserActivities(params?: {
   page?: number;
   size?: number;
   page_size?: number;
+  search?: string;
+  user_id?: string;
 }): Promise<any> {
   const { data } = await apiClient.get(ACTIVITIES_LIST, { params });
   return data;

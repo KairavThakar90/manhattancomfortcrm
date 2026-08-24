@@ -48,7 +48,8 @@ export default function MainLayout() {
   useEffect(() => {
     if (
       userRole === 'Vendor' &&
-      !location.pathname.startsWith('/purchase-orders')
+      !location.pathname.startsWith('/purchase-orders') &&
+      !location.pathname.startsWith('/user-activities')
     ) {
       navigate('/purchase-orders', { replace: true });
     }
@@ -58,7 +59,8 @@ export default function MainLayout() {
   useEffect(() => {
     if (
       (userRole || '').toLowerCase() === 'warehouse' &&
-      !location.pathname.startsWith('/container-flow')
+      !location.pathname.startsWith('/container-flow') &&
+      !location.pathname.startsWith('/user-activities')
     ) {
       navigate('/container-flow', { replace: true });
     }

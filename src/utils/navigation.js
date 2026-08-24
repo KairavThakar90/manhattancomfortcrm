@@ -91,20 +91,19 @@ export const navItems = [
     icon: UserCog,
     roles: ['Administrator'],
   },
-  {
-    id: 'tracker-logistics',
-    path: '/tracker-logistics',
-    label: 'Tracker Logistics',
-    icon: Truck,
-    roles: ['Administrator', 'Office'],
-  },
   // {
-  //   id: 'user-activities',
-  //   path: '/user-activities',
-  //   label: 'Activity Tracking',
-  //   icon: Activity,
-  //   roles: ['Administrator'],
+  //   id: 'tracker-logistics',
+  //   path: '/tracker-logistics',
+  //   label: 'Tracker Logistics',
+  //   icon: Truck,
+  //   roles: ['Administrator', 'Office'],
   // },
+  {
+    id: 'user-activities',
+    path: '/user-activities',
+    label: 'Activity Tracking',
+    icon: Activity,
+  },
 ];
 
 // Key-value pair map of navigation paths by ID
