@@ -39,9 +39,8 @@ export function useColumnVisibility(
     return map;
   }, [allColumns]);
 
-  const [visibility, setVisibility] = useState<Record<string, boolean>>(
-    defaultVisibility,
-  );
+  const [visibility, setVisibility] =
+    useState<Record<string, boolean>>(defaultVisibility);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -51,8 +50,7 @@ export function useColumnVisibility(
       .then((prefs) => {
         if (cancelled) return;
         const saved = prefs?.[PREF_FIELD[module]] as
-          | Record<string, boolean>
-          | undefined;
+          Record<string, boolean> | undefined;
         if (saved && typeof saved === 'object') {
           setVisibility({ ...defaultVisibility, ...saved });
         }

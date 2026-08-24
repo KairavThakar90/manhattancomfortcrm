@@ -5114,6 +5114,7 @@ Supply Chain CRM Coordinator`;
                                                     ...processedFiles,
                                                   ],
                                                 );
+                                                setIsCompressing(false);
                                                 e.target.value = '';
                                               }}
                                             />
@@ -5688,6 +5689,7 @@ Supply Chain CRM Coordinator`;
                                   ]);
                                 }
 
+                                setIsCompressing(false);
                                 e.target.value = '';
                               }
                             }}

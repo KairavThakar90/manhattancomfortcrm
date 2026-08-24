@@ -1592,6 +1592,7 @@ export function PODetailsModal(props) {
                                                     ...processedFiles,
                                                   ],
                                                 );
+                                                setIsCompressing(false);
                                                 e.target.value = '';
                                               }}
                                             />
@@ -2167,6 +2168,7 @@ export function PODetailsModal(props) {
                                   ]);
                                 }
 
+                                setIsCompressing(false);
                                 e.target.value = '';
                               }
                             }}

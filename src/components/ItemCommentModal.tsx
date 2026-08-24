@@ -710,6 +710,8 @@ export default function ItemCommentModal({
                       if (!e.target.files?.length) return;
                       const processedFiles: File[] = [];
 
+                      setIsCompressing(true);
+
                       for (const file of Array.from(e.target.files)) {
                         if (
                           !file.name.match(
@@ -734,6 +736,7 @@ export default function ItemCommentModal({
                         ...files,
                         ...processedFiles,
                       ]);
+                      setIsCompressing(false);
                       e.target.value = '';
                     }}
                   />
@@ -1245,6 +1248,8 @@ export default function ItemCommentModal({
                         const selectedFiles = Array.from(e.target.files);
                         const processedFiles: File[] = [];
 
+                        setIsCompressing(true);
+
                         for (const file of selectedFiles) {
                           const isAllowedExt = file.name.match(
                             /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
@@ -1275,6 +1280,7 @@ export default function ItemCommentModal({
                           ]);
                         }
 
+                        setIsCompressing(false);
                         e.target.value = '';
                       }
                     }}
