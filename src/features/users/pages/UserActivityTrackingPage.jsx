@@ -24,12 +24,18 @@ const ExpandableText = ({ text = '', limit = 60 }) => {
   }
 
   if (text.length <= limit) {
-    return <span className="text-mc-black text-xs font-medium">{text}</span>;
+    return (
+      <span className="text-mc-black block w-full text-xs font-medium break-words whitespace-normal">
+        {text}
+      </span>
+    );
   }
 
   return (
-    <div className="text-mc-black flex flex-col items-start text-xs font-medium">
-      <span>{expanded ? text : `${text.slice(0, limit)}...`}</span>
+    <div className="text-mc-black flex w-full max-w-full flex-col items-start text-xs font-medium">
+      <span className="block w-full break-words whitespace-normal">
+        {expanded ? text : `${text.slice(0, limit)}...`}
+      </span>
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -170,10 +176,10 @@ export default function UserActivityTrackingPage() {
       accessor: 'created_at',
       header: 'Time',
       headerClassName:
-        'px-6 py-3 bg-transparent text-left w-44 whitespace-nowrap',
-      className: 'px-6 py-3 w-44 align-top',
+        'px-6 py-3 bg-transparent text-left w-[15%] whitespace-nowrap',
+      className: 'px-6 py-3 w-[15%] align-top',
       render: (row) => (
-        <span className="text-mc-gray-soft font-mono text-xs">
+        <span className="text-mc-gray-soft font-mono text-xs whitespace-nowrap">
           {fmtTime(row.created_at)}
         </span>
       ),
@@ -183,8 +189,8 @@ export default function UserActivityTrackingPage() {
           {
             accessor: 'user',
             header: 'User',
-            headerClassName: 'px-6 py-3 bg-transparent text-left w-56',
-            className: 'px-6 py-3 w-56 align-top',
+            headerClassName: 'px-6 py-3 bg-transparent text-left w-[20%]',
+            className: 'px-6 py-3 w-[20%] align-top',
             render: (row) => {
               const userName = row.user_name || row.user?.full_name || 'System';
               return (
@@ -200,21 +206,10 @@ export default function UserActivityTrackingPage() {
         ]
       : []),
     {
-      accessor: 'action',
-      header: 'Action',
-      headerClassName: 'px-6 py-3 bg-transparent text-left w-24',
-      className: 'px-6 py-3 w-24 align-top',
-      render: (row) => (
-        <span className="bg-mc-beige-light text-mc-gold inline-block rounded px-2 py-1 text-[10px] font-bold tracking-wider uppercase">
-          {row.action || '-'}
-        </span>
-      ),
-    },
-    {
       accessor: 'human_readable_message',
       header: 'Details',
-      headerClassName: 'px-6 py-3 bg-transparent text-left min-w-[300px]',
-      className: 'px-6 py-3 align-top',
+      headerClassName: 'px-6 py-3 bg-transparent text-left w-[65%]',
+      className: 'px-6 py-3 w-[65%] align-top',
       render: (row) => (
         <ExpandableText text={row.human_readable_message || '-'} limit={60} />
       ),
@@ -326,7 +321,7 @@ export default function UserActivityTrackingPage() {
               containerClassName="flex-1 flex flex-col min-h-0 w-full relative"
               tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
               theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest text-[10px] font-extrabold sticky top-0 z-10"
-              tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
+              tableClassName="w-full table-fixed text-left text-xs border-collapse"
               tbodyClassName="divide-y divide-mc-beige-dark/40 bg-mc-white"
               trClassName="transition bg-mc-white hover:bg-mc-beige-light/30"
               emptyMessage={
