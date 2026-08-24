@@ -126,12 +126,19 @@ export default function UserActivityTrackingPage() {
     setCurrentPage(1);
   };
 
-  // ── Timezone helper ──────────────────────────────────────────────────
-  const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const fmtTime = (ts) => {
     if (!ts) return '-';
-    const m = moment.utc(ts).tz(userTz);
-    return m.isValid() ? m.format('YYYY/MM/DD hh:mm A') : '-';
+    try {
+      // Detect the browser's IANA timezone (e.g. "Asia/Kolkata", "America/New_York")
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      // Parse backend value as UTC, then convert to user's local timezone
+      const m = moment.utc(ts).tz(userTz);
+      if (!m.isValid()) return 'N/A';
+      // Format: "YYYY/MM/DD hh:mm A"
+      return m.format('YYYY/MM/DD hh:mm A');
+    } catch {
+      return 'N/A';
+    }
   };
 
   // ── Table columns ────────────────────────────────────────────────────
