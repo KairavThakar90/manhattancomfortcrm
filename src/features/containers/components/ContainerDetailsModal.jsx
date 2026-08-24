@@ -151,7 +151,8 @@ export default function ContainerDetailsModal({
         unloaded_by: container.unloaded_by || '',
         country_of_origin: container.country_of_origin || '',
         unload_cost: container.unload_cost || '',
-        container_cost_drayage: container.container_cost_drayage || '',
+        container_shipping_cost: container.container_shipping_cost || '',
+        drayage_cost: container.drayage_cost || '',
         customs_duty_misc: container.customs_duty_misc || '',
         per_diem: container.per_diem || '',
         factory_credit_needed: container.factory_credit_needed || '',
@@ -231,7 +232,8 @@ export default function ContainerDetailsModal({
       payload.name = pName;
       [
         'unload_cost',
-        'container_cost_drayage',
+        'container_shipping_cost',
+        'drayage_cost',
         'customs_duty_misc',
         'per_diem',
       ].forEach((k) => {
@@ -972,7 +974,7 @@ export default function ContainerDetailsModal({
                           </div>
                           <div>
                             <label className="mb-1 block text-xs font-semibold text-slate-700">
-                              Container Cost Drayage
+                              Container Shipping Costs
                             </label>
                             <div className="relative">
                               <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
@@ -982,12 +984,34 @@ export default function ContainerDetailsModal({
                                 type="number"
                                 className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
                                 value={
-                                  trackingData.container_cost_drayage || ''
+                                  trackingData.container_shipping_cost || ''
                                 }
                                 placeholder="0.00"
                                 onChange={(e) =>
                                   handleTrackingChange(
-                                    'container_cost_drayage',
+                                    'container_shipping_cost',
+                                    e.target.value,
+                                  )
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-slate-700">
+                              Drayage
+                            </label>
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                $
+                              </span>
+                              <input
+                                type="number"
+                                className="focus:border-mc-black focus:ring-mc-black w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pr-3 pl-7 text-sm transition-colors focus:ring-1 focus:outline-none"
+                                value={trackingData.drayage_cost || ''}
+                                placeholder="0.00"
+                                onChange={(e) =>
+                                  handleTrackingChange(
+                                    'drayage_cost',
                                     e.target.value,
                                   )
                                 }
@@ -1391,7 +1415,8 @@ export default function ContainerDetailsModal({
                 container.unloaded_by ||
                 container.country_of_origin ||
                 container.unload_cost ||
-                container.container_cost_drayage ||
+                container.container_shipping_cost ||
+                container.drayage_cost ||
                 container.customs_duty_misc ||
                 container.per_diem ||
                 container.factory_credit_needed ||
