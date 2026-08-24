@@ -28,12 +28,12 @@ const ExpandableText = ({ text = '', limit = 60 }) => {
   }
 
   return (
-    <div className="text-mc-black text-xs font-medium">
-      {expanded ? text : `${text.slice(0, limit)}... `}
+    <div className="text-mc-black flex flex-col items-start text-xs font-medium">
+      <span>{expanded ? text : `${text.slice(0, limit)}...`}</span>
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="text-mc-gold ml-1 font-bold whitespace-nowrap hover:underline"
+        className="text-mc-gold mt-1 font-bold whitespace-nowrap hover:underline"
       >
         {expanded ? 'Show Less' : 'Show More'}
       </button>
