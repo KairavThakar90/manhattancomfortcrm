@@ -29,6 +29,7 @@ import ChangePasswordModal from '../components/ChangePasswordModal';
 import Pagination from '../../../components/common/Pagination';
 import TableLoader from '../../../components/common/TableLoader';
 import DataTable from '../../../components/common/DataTable';
+import moment from 'moment-timezone';
 
 export default function UserManagementPage() {
   const dispatch = useDispatch();
@@ -235,7 +236,7 @@ export default function UserManagementPage() {
           <div className="flex max-w-max flex-col gap-0.5">
             <span>Last Login</span>
             <span className="text-[9px] font-medium tracking-wide text-slate-400 opacity-80">
-              (YYYY/MM/DD)
+              (YYYY/MM/DD HH:MM)
             </span>
           </div>
         ),
@@ -245,17 +246,14 @@ export default function UserManagementPage() {
         render: (u) => {
           if (!u.last_login) return '-';
           try {
-            const d = new Date(u.last_login);
-            if (isNaN(d.getTime())) return 'N/A';
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            const time = d.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
-            return `${year}/${month}/${day} ${time}`;
-          } catch (e) {
+            // Detect the browser's IANA timezone (e.g. "Asia/Kolkata", "America/New_York")
+            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            // Parse backend value as UTC, then convert to user's local timezone
+            const m = moment.utc(u.last_login).tz(userTz);
+            if (!m.isValid()) return 'N/A';
+            // Format: "24 Aug 2026, 03:30 PM IST"
+            return m.format('YYYY/MM/DD hh:mm A');
+          } catch {
             return 'N/A';
           }
         },
