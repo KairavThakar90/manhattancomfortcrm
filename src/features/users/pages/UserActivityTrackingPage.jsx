@@ -229,9 +229,9 @@ export default function UserActivityTrackingPage() {
       {/* ── Content ─────────────────────────────────────────────────── */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
         {/* ── Filter Bar ────────────────────────────────────────────── */}
-        <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-wrap items-center gap-3 rounded-xl border p-3 shadow-none">
-          {/* User dropdown - only visible to admin/office */}
-          {isAdminOrOffice && (
+        {isAdminOrOffice && (
+          <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-wrap items-center gap-3 rounded-xl border p-3 shadow-none">
+            {/* User dropdown - only visible to admin/office */}
             <div className="flex items-center gap-2">
               <User className="text-mc-gray-soft h-4 w-4 shrink-0" />
               <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
@@ -280,8 +280,8 @@ export default function UserActivityTrackingPage() {
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Table ─────────────────────────────────────────────────── */}
         <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-none">

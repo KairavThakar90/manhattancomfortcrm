@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export default function Pagination({
   currentPage,
@@ -8,6 +9,19 @@ export default function Pagination({
   onPageSizeChange,
   hidePageSizeSelector = false,
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const normalizedCurrentPage = Math.min(currentPage, totalPages);
 
@@ -42,15 +56,41 @@ export default function Pagination({
       {!hidePageSizeSelector && (
         <div className="order-1 flex flex-1 items-center justify-center gap-2 sm:order-2">
           <span className="text-slate-500">Show</span>
-          <select
-            value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="focus:border-mc-black focus:ring-mc-black cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition focus:ring-1 focus:outline-hidden"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-          </select>
+
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className={`border-mc-beige-dark bg-mc-white hover:border-mc-gold text-mc-black flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${isOpen ? 'border-mc-gold' : ''}`}
+            >
+              <span>{pageSize}</span>
+              <ChevronDown
+                className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {isOpen && (
+              <div className="border-mc-beige-dark bg-mc-white animate-scaleUp absolute bottom-full left-0 z-50 mb-1 min-w-full rounded-lg border p-1 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+                {[5, 10, 25].map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      onPageSizeChange(opt);
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full flex-col items-start rounded-md px-3 py-1.5 text-xs transition ${
+                      pageSize === opt
+                        ? 'bg-mc-beige-light text-mc-black font-bold'
+                        : 'text-mc-black hover:bg-mc-beige-light/50 font-medium'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <span className="font-medium text-slate-500">entries per page</span>
         </div>
       )}
