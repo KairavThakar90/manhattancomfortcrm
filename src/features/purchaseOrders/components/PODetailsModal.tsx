@@ -449,7 +449,7 @@ export function PODetailsModal(props) {
     err?.message ||
     'Comment may not have saved.';
 
-  const handlePostComment = (e: any) => {
+  const handlePostComment = async (e: any) => {
     e.preventDefault();
     if (!selectedPO || (!newCommentText.trim() && newCommentFiles.length === 0))
       return;
