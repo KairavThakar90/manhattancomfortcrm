@@ -161,7 +161,6 @@ function validateForm(form) {
   } else if (!isValidEmail(form.email)) {
     errors.email = 'Enter a valid email address.';
   }
-  if (!form.status) errors.status = 'Status is required.';
   return errors;
 }
 
@@ -177,17 +176,6 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
-  const statusRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (statusRef.current && !statusRef.current.contains(e.target))
-        setStatusOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const set = (field, val) => {
     setForm((f) => ({ ...f, [field]: val }));
@@ -319,65 +307,6 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
               <CCEmailInput
                 value={form.cc_emails}
                 onChange={(v) => set('cc_emails', v)}
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="text-mc-black mb-1.5 block text-xs font-bold">
-                Status <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative" ref={statusRef}>
-                <button
-                  type="button"
-                  onClick={() => setStatusOpen((o) => !o)}
-                  className={`border-mc-beige-dark bg-mc-white hover:border-mc-gold flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${errors.status ? 'border-rose-400' : ''} ${statusOpen ? 'border-mc-gold' : ''}`}
-                >
-                  <span>{form.status || 'Select status'}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-slate-400 transition-transform ${statusOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-                {statusOpen && (
-                  <div className="border-mc-beige-dark bg-mc-white animate-scaleUp absolute top-full left-0 z-50 mt-1 w-full rounded-xl border p-1.5 shadow-lg">
-                    {STATUS_OPTIONS.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => {
-                          set('status', s);
-                          setStatusOpen(false);
-                        }}
-                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${form.status === s ? 'bg-mc-beige-light text-mc-black font-bold' : 'text-mc-black hover:bg-mc-beige-light/50'}`}
-                      >
-                        {s}
-                        {form.status === s && <Check className="h-3.5 w-3.5" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {errors.status && (
-                <p className="mt-1 text-[11px] text-rose-500">
-                  {errors.status}
-                </p>
-              )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="text-mc-black mb-1.5 block text-xs font-bold">
-                Description / Notes
-                <span className="text-mc-gray-soft ml-1 font-normal">
-                  (optional)
-                </span>
-              </label>
-              <textarea
-                value={form.description}
-                onChange={(e) => set('description', e.target.value)}
-                rows={3}
-                placeholder="Any relevant notes or description…"
-                className="border-mc-beige-dark bg-mc-white focus:border-mc-black custom-scrollbar w-full resize-none rounded-lg border px-3 py-2 text-sm transition focus:outline-none"
               />
             </div>
           </div>
