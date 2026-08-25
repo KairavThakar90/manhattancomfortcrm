@@ -15,6 +15,7 @@ import {
   Mail,
   FileText,
   Download,
+  Upload,
   CheckCircle2,
   MessageSquare,
   Tag,
@@ -992,10 +993,10 @@ export function PODetailsModal(props) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleExportPO(selectedPO)}
-                      className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
+                      className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-bold shadow-sm transition"
                     >
-                      <Download className="h-3.5 w-3.5" />
-                      Export
+                      <Upload className="h-4 w-4" />
+                      Export File
                     </button>
 
                     {selectedPO.sellercloud_link && !isVendor && (
@@ -1003,9 +1004,9 @@ export function PODetailsModal(props) {
                         onClick={() =>
                           window.open(selectedPO.sellercloud_link, '_blank')
                         }
-                        className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
+                        className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-bold shadow-sm transition"
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-4 w-4" />
                         Open in Sellercloud
                       </button>
                     )}

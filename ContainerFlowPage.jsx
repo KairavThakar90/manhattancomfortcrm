@@ -1537,7 +1537,7 @@ export default function ContainerFlowPage() {
               className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-gray-soft flex items-center gap-1.5 rounded-lg border bg-transparent px-3 py-1.5 text-xs font-bold transition"
             >
               <Upload className="h-3.5 w-3.5" />
-              <span>Export CSV</span>
+              <span>Export File</span>
             </button>
             {!isWarehouse && (
               <button

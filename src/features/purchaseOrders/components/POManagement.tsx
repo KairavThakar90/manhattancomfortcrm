@@ -4689,8 +4689,8 @@ Supply Chain CRM Coordinator`;
                       onClick={() => handleExportPO(selectedPO)}
                       className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"
                     >
-                      <Download className="h-3.5 w-3.5" />
-                      Export
+                      <Upload className="h-3.5 w-3.5" />
+                      Export File
                     </button>
 
                     {selectedPO.sellercloud_link && !isVendor && (
@@ -6276,7 +6276,7 @@ Supply Chain CRM Coordinator`;
             >
               <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
                 <h3 className="font-display text-base font-bold text-slate-900">
-                  Export CSV
+                  Export File
                 </h3>
                 <button
                   onClick={() => setShowExportModal(false)}

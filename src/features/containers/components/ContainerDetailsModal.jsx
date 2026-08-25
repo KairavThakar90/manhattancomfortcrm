@@ -460,40 +460,33 @@ export default function ContainerDetailsModal({
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-6">
             {activeTab === 'details' && (
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-                <div className="mb-8 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-3">
-                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
-                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <Calendar className="text-mc-black h-3.5 w-3.5" />
+                <div className="mb-4 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-6">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs md:col-span-2">
+                    <span className="block text-[10px] font-medium text-slate-400">
                       Arrival Date
-                    </p>
-                    <p className="text-base font-bold text-slate-800">
+                    </span>
+                    <strong className="mt-1 block font-mono text-sm font-bold text-slate-800">
                       {container.arrivalDate || 'Pending'}
-                    </p>
+                    </strong>
                   </div>
 
-                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
-                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <Package className="text-mc-black h-3.5 w-3.5" />
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs md:col-span-2">
+                    <span className="block text-[10px] font-medium text-slate-400">
                       Total Item
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-bold text-slate-800">
-                        {totalItems}
-                      </span>
-                      <span className="text-sm font-medium text-slate-500">
-                        units
-                      </span>
-                    </div>
+                    </span>
+                    <strong className="mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold text-slate-800">
+                      {totalItems}{' '}
+                      <span className="font-medium text-slate-500">units</span>
+                    </strong>
                   </div>
 
-                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-xs">
-                    <p className="mb-2 flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                      <CheckCircle2 className="text-mc-black h-3.5 w-3.5 flex-shrink-0" />
+                  <div className="border-mc-beige-dark bg-mc-white flex flex-col justify-center rounded-xl border p-3 shadow-xs md:col-span-2">
+                    <span className="mb-1 block text-[10px] font-medium text-slate-400">
                       Status
-                    </p>
-                    <div className="mt-1 inline-flex">
+                    </span>
+                    <div className="inline-flex">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
                       >
                         {container.is_received ? 'Received' : 'In Transit'}
                       </span>
@@ -501,12 +494,10 @@ export default function ContainerDetailsModal({
                   </div>
                 </div>
 
-                <div className="border-mc-beige-dark bg-mc-white mt-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
-                  <div className="flex shrink-0 items-center justify-between px-5 pt-5 pb-4">
-                    <h4 className="text-mc-black shrink-0 text-xs font-extrabold tracking-wider uppercase">
-                      Allocated Items
-                    </h4>
-                  </div>
+                <div className="border-mc-beige-dark bg-mc-white mt-3 flex min-h-0 flex-1 flex-col rounded-xl border p-4 shadow-sm">
+                  <h5 className="text-mc-black mb-3 shrink-0 text-xs font-extrabold tracking-wider uppercase">
+                    Allocated Items
+                  </h5>
 
                   {allItems.length > 0 || isLoading ? (
                     <>
@@ -516,8 +507,8 @@ export default function ContainerDetailsModal({
                           {
                             header: 'VENDOR NAME',
                             accessor: 'vendor_name',
-                            headerClassName: 'px-6 py-4 w-1/3 bg-transparent',
-                            className: 'px-6 py-4 max-w-[120px]',
+                            headerClassName: 'px-3 py-2 w-1/3 bg-transparent',
+                            className: 'px-3 py-2 max-w-[120px]',
                             render: (item) => (
                               <span className="block truncate font-mono font-bold text-slate-500">
                                 {item.vendor_name || 'N/A'}
@@ -527,9 +518,9 @@ export default function ContainerDetailsModal({
                           {
                             header: 'SKU',
                             accessor: 'sku',
-                            headerClassName: 'px-6 py-4 bg-transparent w-40',
+                            headerClassName: 'px-3 py-2 bg-transparent w-32',
                             className:
-                              'px-6 py-4 min-w-[140px] whitespace-nowrap',
+                              'px-3 py-2 min-w-[140px] whitespace-nowrap',
                             render: (item) => (
                               <div
                                 className="group flex cursor-pointer items-center gap-1.5"
@@ -557,8 +548,8 @@ export default function ContainerDetailsModal({
                             header: 'IMAGE',
                             accessor: 'image',
                             headerClassName:
-                              'px-3 py-4 bg-transparent w-16 text-center',
-                            className: 'px-3 py-4 w-16 text-center',
+                              'px-3 py-2 bg-transparent w-16 text-center',
+                            className: 'px-3 py-2 w-16 text-center',
                             render: (item) => {
                               const imageSrc =
                                 item.image_url ||
@@ -599,8 +590,8 @@ export default function ContainerDetailsModal({
                           {
                             header: 'PRODUCT NAME',
                             accessor: 'product_name',
-                            headerClassName: 'px-6 py-4 bg-transparent',
-                            className: 'px-6 py-4 max-w-[150px]',
+                            headerClassName: 'px-3 py-2 bg-transparent',
+                            className: 'px-3 py-2 max-w-[150px]',
                             render: (item) => {
                               const name =
                                 item.product_name || item.name || '-';
@@ -626,9 +617,9 @@ export default function ContainerDetailsModal({
                             header: 'QTY ASSIGNED',
                             accessor: 'qty',
                             headerClassName:
-                              'px-6 py-4 text-right w-32 bg-transparent',
+                              'px-3 py-2 text-right w-32 bg-transparent',
                             className:
-                              'px-6 py-4 text-right font-mono font-medium',
+                              'px-3 py-2 text-right font-mono font-medium',
                             render: (item) =>
                               item.qty_in_container || item.qty || 0,
                           },
@@ -637,11 +628,14 @@ export default function ContainerDetailsModal({
                         keyField="product_name"
                         defaultThClassName="px-6 py-3 bg-transparent"
                         theadClassName="bg-mc-beige-light border-b border-mc-beige-dark text-mc-black uppercase tracking-widest font-extrabold text-[10px] sticky top-0 z-10"
-                        tableClassName="w-full text-left text-xs border-collapse"
+                        tableClassName="w-full min-w-max whitespace-nowrap text-left text-xs border-collapse"
                         tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
-                        trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
-                        containerClassName="overflow-x-auto overflow-y-auto flex-1 min-h-0 rounded-lg"
-                        tableWrapperClassName=""
+                        trClassName={() =>
+                          'transition bg-mc-white hover:bg-mc-beige-light/30'
+                        }
+                        containerClassName="flex-1 flex flex-col min-h-0 rounded-xl border border-mc-beige-dark bg-mc-white w-full overflow-hidden"
+                        tableWrapperClassName="overflow-auto flex-1 custom-scrollbar scroll-smooth"
+                        hidePagination={true}
                       />
                       {totalItems > 5 && (
                         <div className="border-mc-beige-dark bg-mc-white mt-3 rounded-xl border p-1 shadow-sm">
