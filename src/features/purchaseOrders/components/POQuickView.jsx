@@ -77,7 +77,7 @@ export default function POQuickView({ poId, onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl"
+        className="relative flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -285,16 +285,6 @@ export default function POQuickView({ poId, onClose }) {
               )}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex shrink-0 items-center justify-end border-t border-slate-100 bg-slate-50 px-5 py-3">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-          >
-            Close
-          </button>
         </div>
       </div>
 

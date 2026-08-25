@@ -29,6 +29,7 @@ import Pagination from '../../../components/common/Pagination';
 import DateFilterInput from '../../../components/common/DateFilterInput';
 import Select from 'react-select';
 import countryList from 'react-select-country-list';
+import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
 export default function ContainerDetailsModal({
   container,
@@ -50,6 +51,7 @@ export default function ContainerDetailsModal({
   const [activitiesPageSize, setActivitiesPageSize] = useState(10);
   const [activitiesTotal, setActivitiesTotal] = useState(0);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
   const countryOptions = useMemo(() => countryList().getData(), []);
 
   const reactSelectStyles = {
@@ -343,7 +345,7 @@ export default function ContainerDetailsModal({
         onClick={onClose}
       >
         <div
-          className="animate-in fade-in zoom-in-95 flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl duration-200"
+          className="animate-in fade-in zoom-in-95 flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
@@ -552,6 +554,49 @@ export default function ContainerDetailsModal({
                             ),
                           },
                           {
+                            header: 'IMAGE',
+                            accessor: 'image',
+                            headerClassName:
+                              'px-3 py-4 bg-transparent w-16 text-center',
+                            className: 'px-3 py-4 w-16 text-center',
+                            render: (item) => {
+                              const imageSrc =
+                                item.image_url ||
+                                item.imageUrl ||
+                                item.image ||
+                                item.imageSource ||
+                                item.product_image ||
+                                null;
+
+                              if (imageSrc) {
+                                return (
+                                  <div
+                                    className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPreviewImage(imageSrc);
+                                    }}
+                                    title="Click to view full image"
+                                  >
+                                    <img
+                                      src={imageSrc}
+                                      alt={item.sku || 'Product Image'}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div
+                                  className="bg-mc-beige-light text-mc-gray-soft mx-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded"
+                                  title="No image available"
+                                >
+                                  <Package className="h-4 w-4" />
+                                </div>
+                              );
+                            },
+                          },
+                          {
                             header: 'PRODUCT NAME',
                             accessor: 'product_name',
                             headerClassName: 'px-6 py-4 bg-transparent',
@@ -563,30 +608,11 @@ export default function ContainerDetailsModal({
                                 name.length > 25
                                   ? name.substring(0, 25) + '...'
                                   : name;
-                              const imageSrc =
-                                item.image_url ||
-                                item.imageUrl ||
-                                item.image ||
-                                item.imageSource ||
-                                item.product_image ||
-                                null;
+
                               return (
                                 <div className="flex items-center gap-3">
-                                  {imageSrc ? (
-                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded border border-slate-200">
-                                      <img
-                                        src={imageSrc}
-                                        alt=""
-                                        className="h-full w-full object-cover"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="bg-mc-beige-light text-mc-gray-soft flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
-                                      <Package className="h-4 w-4" />
-                                    </div>
-                                  )}
                                   <span
-                                    className="cursor-pointer font-medium text-slate-800"
+                                    className="font-medium text-slate-800"
                                     data-tooltip-id="sku-tooltip"
                                     data-tooltip-content={name}
                                   >
@@ -1396,18 +1422,18 @@ export default function ContainerDetailsModal({
               )}
           </div>
 
-          {/* Modal Footer */}
-          <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
-            <button
-              onClick={onClose}
-              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
-            >
-              {activeTab === 'comments' ? 'Cancel' : 'Close View'}
-            </button>
-            {activeTab === 'comments' && (
+          {/* Modal Footer (Only for Tracking Details) */}
+          {activeTab === 'comments' && (
+            <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 px-6 py-4">
+              <button
+                onClick={onClose}
+                className="cursor-pointer rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleSaveTracking}
-                className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 flex cursor-pointer items-center justify-center rounded-lg px-6 py-2.5 text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
+                className="bg-mc-gold text-mc-black hover:bg-mc-gold/80 flex cursor-pointer items-center justify-center rounded-lg px-6 py-2 text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
                 disabled={isSaving}
               >
                 {isSaving ? (
@@ -1426,11 +1452,11 @@ export default function ContainerDetailsModal({
                 container.factory_credit_needed ||
                 container.receiving_closure_notes ||
                 trackingData.attachment
-                  ? 'Update'
+                  ? 'Update Tracking'
                   : 'Save Changes'}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1481,6 +1507,13 @@ export default function ContainerDetailsModal({
           padding: '8px 12px',
         }}
       />
+      {previewImage && (
+        <ImagePreviewModal
+          isOpen={true}
+          imageSrc={previewImage}
+          onClose={() => setPreviewImage(null)}
+        />
+      )}
     </>,
     document.body,
   );

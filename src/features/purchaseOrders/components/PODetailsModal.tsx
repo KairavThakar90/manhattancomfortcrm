@@ -40,6 +40,7 @@ import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
 import { exportPurchaseOrderCSV } from '../services/purchaseOrder.service';
 import { toast } from 'react-toastify';
+import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
 // Local copy of the inline qty editor used inside POManagement's item table so this
 // modal does not depend on a non-existent shared ./InlineQtyEditor module.
@@ -965,7 +966,7 @@ export function PODetailsModal(props) {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-5xl'} animate-scaleUp flex h-[85vh] max-h-[85vh] w-full flex-col overflow-hidden`}
+              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'max-w-xl' : 'max-w-4xl'} animate-scaleUp flex h-[80vh] max-h-[80vh] w-full flex-col overflow-hidden`}
             >
               {/* Header */}
               {!isCommentOnlyView && (
@@ -2265,6 +2266,12 @@ export function PODetailsModal(props) {
         selectedPO={selectedPO}
         onAddActivity={onAddActivity}
         highlightedCommentId={highlightedCommentId}
+      />
+
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        imageSrc={previewImage}
+        onClose={() => setPreviewImage(null)}
       />
     </>
   );

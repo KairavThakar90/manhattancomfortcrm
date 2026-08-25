@@ -100,6 +100,7 @@ import {
   useColumnVisibility,
   ColumnDef,
 } from '../../../hooks/useColumnVisibility';
+import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
 const PO_COLUMN_DEFS: ColumnDef[] = [
   { key: 'id', label: 'PO Number' },
@@ -6516,36 +6517,12 @@ Supply Chain CRM Coordinator`;
         }}
       />
 
-      {/* Full Screen Image Preview Lightbox */}
-      {previewImage &&
-        createPortal(
-          <div
-            className="animate-fadeIn fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8"
-            onClick={() => setPreviewImage(null)}
-          >
-            <button
-              className="fixed top-4 right-4 z-[10000] rounded-full bg-black/50 p-2 text-white/70 backdrop-blur-md transition hover:bg-black/80 hover:text-white md:top-6 md:right-6"
-              onClick={() => setPreviewImage(null)}
-            >
-              <X className="h-6 w-6 md:h-8 md:w-8" />
-            </button>
-            <div className="relative flex max-h-full max-w-5xl flex-col items-center">
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="animate-zoomIn max-h-[80vh] max-w-full rounded-lg object-contain shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <div className="mt-4 flex flex-col items-center gap-2 px-2 text-center">
-                <p className="rounded-full bg-black/40 px-3 py-1.5 text-[11px] font-medium text-white/90 drop-shadow-md md:px-4 md:py-2 md:text-sm">
-                  💡 Right-Click (or long-press) the image and select{' '}
-                  <strong>"Save Image As..."</strong> to download.
-                </p>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        imageSrc={previewImage}
+        onClose={() => setPreviewImage(null)}
+      />
     </div>
   );
 }
