@@ -529,8 +529,6 @@ export default function TrackerLogisticsPage() {
 
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -582,32 +580,10 @@ export default function TrackerLogisticsPage() {
     if (tableRef.current) tableRef.current.scrollTop = 0;
   }, [page, pageSize]);
 
-  const filtered = useMemo(() => {
-    let list = records;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.name?.toLowerCase().includes(q) ||
-          r.primary_email?.toLowerCase().includes(q) ||
-          (Array.isArray(r.cc_email)
-            ? r.cc_email
-            : r.cc_email
-              ? String(r.cc_email)
-                  .split(',')
-                  .map((e) => e.trim())
-                  .filter(Boolean)
-              : []
-          ).some((e) => e.toLowerCase().includes(q)),
-      );
-    }
-    return list;
-  }, [records, searchQuery]);
-
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
+    return records.slice(start, start + pageSize);
+  }, [records, page, pageSize]);
 
   const formatDate = (d) => {
     if (!d) return '—';
@@ -826,40 +802,6 @@ export default function TrackerLogisticsPage() {
 
       {/* Content */}
       <div className="flex min-h-0 w-full flex-1 flex-col gap-4 p-4">
-        {/* Filters Bar */}
-        <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none md:flex-row md:items-center">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="text-mc-gray-soft absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search logistics by name or email..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1);
-              }}
-              className="border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-8 pl-9 text-sm transition focus:outline-none"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setPage(1);
-                }}
-                className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-0.5 transition"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-          {/* Record count */}
-          <div className="text-mc-gray-soft text-xs whitespace-nowrap">
-            <span className="text-mc-black font-bold">{filtered.length}</span>{' '}
-            record{filtered.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
         {/* Table */}
         <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-none">
           {loading && <TableLoader message="Loading records…" />}
@@ -875,15 +817,13 @@ export default function TrackerLogisticsPage() {
             tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
             trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
             emptyMessage={
-              searchQuery
-                ? 'No records matched your search or filters.'
-                : 'No Tracker Logistics records yet. Click "Add Tracker Logistics" to create one.'
+              'No Tracker Logistics records yet. Click "Add Tracker Logistics" to create one.'
             }
             pagination={
-              filtered.length > pageSize ? (
+              records.length > pageSize ? (
                 <Pagination
                   currentPage={page}
-                  totalCount={filtered.length}
+                  totalCount={records.length}
                   pageSize={pageSize}
                   onPageChange={setPage}
                   onPageSizeChange={(s) => {
