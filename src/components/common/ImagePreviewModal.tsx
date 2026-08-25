@@ -23,18 +23,18 @@ export default function ImagePreviewModal({
     return createPortal(
       <div className="fixed inset-0 z-[99999]" onClick={onClose}>
         <div
-          className="absolute rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+          className="absolute rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl"
           style={{
             top: anchor.top,
             left: Math.min(
               Math.max(anchor.left, 8),
-              window.innerWidth - 216,
+              window.innerWidth - 280,
             ),
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
+            className="absolute -top-2.5 -right-2.5 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
             onClick={onClose}
           >
             <X className="h-4 w-4" />
@@ -42,7 +42,7 @@ export default function ImagePreviewModal({
           <img
             src={imageSrc}
             alt={altText}
-            className="max-h-[200px] max-w-[200px] rounded-xl object-contain"
+            className="max-h-[260px] max-w-[260px] rounded-xl object-contain"
           />
         </div>
       </div>,

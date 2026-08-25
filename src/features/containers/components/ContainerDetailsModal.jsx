@@ -1520,13 +1520,13 @@ export default function ContainerDetailsModal({
             }}
           >
             <div
-              className="absolute rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+              className="absolute rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl"
               style={{
                 top: previewAnchor?.top ?? '50%',
                 left: previewAnchor
                   ? Math.min(
                       Math.max(previewAnchor.left, 8),
-                      window.innerWidth - 216,
+                      window.innerWidth - 280,
                     )
                   : '50%',
                 transform: previewAnchor ? undefined : 'translate(-50%, -50%)',
@@ -1538,14 +1538,14 @@ export default function ContainerDetailsModal({
                   setPreviewImage(null);
                   setPreviewAnchor(null);
                 }}
-                className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
+                className="absolute -top-2.5 -right-2.5 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
               >
                 <X className="h-4 w-4" />
               </button>
               <img
                 src={previewImage}
                 alt="Preview"
-                className="max-h-[200px] max-w-[200px] rounded-xl object-contain"
+                className="max-h-[260px] max-w-[260px] rounded-xl object-contain"
               />
             </div>
           </div>,
