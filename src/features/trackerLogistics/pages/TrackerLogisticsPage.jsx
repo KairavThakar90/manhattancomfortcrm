@@ -15,7 +15,6 @@ import {
   AlertTriangle,
   X,
   Mail,
-  AtSign,
   FileText,
   CheckCircle2,
   XCircle,
@@ -37,31 +36,32 @@ import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
 import TableLoader from '../../../components/common/TableLoader';
 
-// ─── Email validation ────────────────────────────────────────────────────────
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+// ─── primary_email validation ────────────────────────────────────────────────────────
+const isValidEmail = (primary_email) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primary_email.trim());
 
 // ─── Status options ───────────────────────────────────────────────────────────
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Pending'];
 
-// ─── CC Email Tag Input ───────────────────────────────────────────────────────
+// ─── CC primary_email Tag Input ───────────────────────────────────────────────────────
 function CCEmailInput({ value = [], onChange }) {
   const [inputVal, setInputVal] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
   const addEmail = (raw) => {
-    const email = raw.trim().replace(/,+$/, '').trim();
-    if (!email) return;
-    if (!isValidEmail(email)) {
-      setError(`"${email}" is not a valid email address.`);
+    const primary_email = raw.trim().replace(/,+$/, '').trim();
+    if (!primary_email) return;
+    if (!isValidEmail(primary_email)) {
+      setError(`"${primary_email}" is not a valid primary_email address.`);
       return;
     }
-    const lower = email.toLowerCase();
+    const lower = primary_email.toLowerCase();
     if (value.map((e) => e.toLowerCase()).includes(lower)) {
-      setError(`"${email}" is already added.`);
+      setError(`"${primary_email}" is already added.`);
       return;
     }
-    onChange([...value, email]);
+    onChange([...value, primary_email]);
     setInputVal('');
     setError('');
   };
@@ -88,13 +88,12 @@ function CCEmailInput({ value = [], onChange }) {
         onClick={() => inputRef.current?.focus()}
         className="border-mc-beige-dark bg-mc-white focus-within:border-mc-black flex min-h-[42px] w-full cursor-text flex-wrap gap-1.5 rounded-lg border p-2 transition"
       >
-        {value.map((email, idx) => (
+        {value.map((primary_email, idx) => (
           <span
             key={idx}
             className="bg-mc-beige-light border-mc-beige-dark text-mc-black flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium"
           >
-            <AtSign className="h-2.5 w-2.5 opacity-50" />
-            {email}
+            {primary_email}
             <button
               type="button"
               onClick={() => removeEmail(idx)}
@@ -118,7 +117,9 @@ function CCEmailInput({ value = [], onChange }) {
             if (inputVal.trim()) addEmail(inputVal);
           }}
           placeholder={
-            value.length === 0 ? 'Type email and press Enter or comma…' : ''
+            value.length === 0
+              ? 'e.g. tracking@company.com... (Press Enter)'
+              : ''
           }
           className="min-w-[140px] flex-1 border-none bg-transparent text-xs outline-none"
         />
@@ -156,10 +157,10 @@ function StatusBadge({ status }) {
 function validateForm(form) {
   const errors = {};
   if (!form.name.trim()) errors.name = 'Name is required.';
-  if (!form.email.trim()) {
-    errors.email = 'Email is required.';
-  } else if (!isValidEmail(form.email)) {
-    errors.email = 'Enter a valid email address.';
+  if (!form.primary_email.trim()) {
+    errors.primary_email = 'primary_email is required.';
+  } else if (!isValidEmail(form.primary_email)) {
+    errors.primary_email = 'Enter a valid primary_email address.';
   }
   return errors;
 }
@@ -169,10 +170,15 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
   const isEdit = Boolean(record);
   const [form, setForm] = useState({
     name: record?.name ?? '',
-    email: record?.email ?? '',
-    cc_emails: record?.cc_emails ?? [],
-    description: record?.description ?? '',
-    status: record?.status ?? 'Active',
+    primary_email: record?.primary_email ?? '',
+    cc_email: Array.isArray(record?.cc_email)
+      ? record.cc_email
+      : record?.cc_email
+        ? String(record.cc_email)
+            .split(',')
+            .map((e) => e.trim())
+            .filter(Boolean)
+        : [],
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -193,10 +199,8 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
     try {
       const payload = {
         name: form.name.trim(),
-        email: form.email.trim(),
-        cc_emails: form.cc_emails,
-        description: form.description.trim(),
-        status: form.status,
+        primary_email: form.primary_email.trim(),
+        cc_email: form.cc_email.join(', '),
       };
       if (isEdit) {
         await updateTrackerLogistic(record.id, payload);
@@ -261,14 +265,14 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
           <div className="space-y-4 p-5">
             {/* Name */}
             <div>
-              <label className="text-mc-black mb-1.5 block text-xs font-bold">
+              <label className="text-mc-black mb-1.5 block text-sm font-bold">
                 Name <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="e.g. DHL Express"
+                placeholder="e.g. Global Freight Services"
                 className={`border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border px-3 py-2 text-sm transition focus:outline-none ${errors.name ? 'border-rose-400' : ''}`}
               />
               {errors.name && (
@@ -276,43 +280,45 @@ function TrackerLogisticModal({ record, onClose, onSuccess }) {
               )}
             </div>
 
-            {/* Email */}
+            {/* primary_email */}
             <div>
-              <label className="text-mc-black mb-1.5 block text-xs font-bold">
-                Email <span className="text-rose-500">*</span>
+              <label className="text-mc-black mb-1.5 block text-sm font-bold">
+                Primary Email <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <Mail className="text-mc-gray-soft absolute top-2.5 left-3 h-3.5 w-3.5" />
+                <Mail className="text-mc-gray-soft absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <input
                   type="email"
-                  value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
-                  placeholder="contact@example.com"
-                  className={`border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-3 pl-8 text-sm transition focus:outline-none ${errors.email ? 'border-rose-400' : ''}`}
+                  value={form.primary_email}
+                  onChange={(e) => set('primary_email', e.target.value)}
+                  placeholder="e.g. dispatch@company.com"
+                  className={`border-mc-beige-dark bg-mc-white focus:border-mc-black w-full rounded-lg border py-2 pr-3 pl-9 text-sm transition focus:outline-none ${errors.primary_email ? 'border-rose-400' : ''}`}
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-[11px] text-rose-500">{errors.email}</p>
+              {errors.primary_email && (
+                <p className="mt-1 text-[11px] text-rose-500">
+                  {errors.primary_email}
+                </p>
               )}
             </div>
 
             {/* CC Emails */}
             <div>
-              <label className="text-mc-black mb-1.5 block text-xs font-bold">
+              <label className="text-mc-black mb-1.5 block text-sm font-bold">
                 CC Emails
-                <span className="text-mc-gray-soft ml-1 font-normal">
+                <span className="text-mc-gray-soft ml-2 text-xs font-normal">
                   (optional, multiple)
                 </span>
               </label>
               <CCEmailInput
-                value={form.cc_emails}
-                onChange={(v) => set('cc_emails', v)}
+                value={form.cc_email}
+                onChange={(v) => set('cc_email', v)}
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="border-mc-beige-dark flex items-center justify-end gap-2 border-t px-5 py-4">
+          <div className="border-mc-beige-dark flex items-center justify-end gap-3 border-t px-5 py-4">
             <button
               type="button"
               onClick={onClose}
@@ -368,7 +374,7 @@ function ViewModal({ record, onClose, onEdit }) {
       onClick={onClose}
     >
       <div
-        className="border-mc-beige-dark bg-mc-white animate-scaleUp w-full max-w-lg overflow-hidden rounded-2xl border shadow-2xl"
+        className="border-mc-beige-dark bg-mc-white animate-scaleUp w-full max-w-2xl overflow-hidden rounded-2xl border shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -379,7 +385,6 @@ function ViewModal({ record, onClose, onEdit }) {
             </div>
             <div>
               <h3 className="text-mc-black text-sm font-bold">{record.name}</h3>
-              <StatusBadge status={record.status} />
             </div>
           </div>
           <button
@@ -395,32 +400,58 @@ function ViewModal({ record, onClose, onEdit }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="border-mc-beige-dark bg-mc-beige-light/30 rounded-lg border p-3">
               <p className="text-mc-gray-soft mb-1 text-[10px] font-medium tracking-wider uppercase">
-                Email
+                primary_email
               </p>
               <p className="text-mc-black text-xs font-semibold break-all">
-                {record.email || 'N/A'}
+                {record.primary_email || 'N/A'}
               </p>
             </div>
             <div className="border-mc-beige-dark bg-mc-beige-light/30 rounded-lg border p-3">
               <p className="text-mc-gray-soft mb-1 text-[10px] font-medium tracking-wider uppercase">
                 Status
               </p>
-              <StatusBadge status={record.status} />
             </div>
           </div>
 
           <div className="border-mc-beige-dark bg-mc-beige-light/30 rounded-lg border p-3">
             <p className="text-mc-gray-soft mb-2 text-[10px] font-medium tracking-wider uppercase">
-              CC Emails ({(record.cc_emails ?? []).length})
+              CC Emails (
+              {
+                (Array.isArray(record.cc_email)
+                  ? record.cc_email
+                  : record.cc_email
+                    ? String(record.cc_email)
+                        .split(',')
+                        .map((e) => e.trim())
+                        .filter(Boolean)
+                    : []
+                ).length
+              }
+              )
             </p>
-            {(record.cc_emails ?? []).length > 0 ? (
+            {(Array.isArray(record.cc_email)
+              ? record.cc_email
+              : record.cc_email
+                ? String(record.cc_email)
+                    .split(',')
+                    .map((e) => e.trim())
+                    .filter(Boolean)
+                : []
+            ).length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
-                {record.cc_emails.map((e, i) => (
+                {(Array.isArray(record.cc_email)
+                  ? record.cc_email
+                  : record.cc_email
+                    ? String(record.cc_email)
+                        .split(',')
+                        .map((e) => e.trim())
+                        .filter(Boolean)
+                    : []
+                ).map((e, i) => (
                   <span
                     key={i}
                     className="bg-mc-beige-light border-mc-beige-dark text-mc-black inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px]"
                   >
-                    <AtSign className="h-2.5 w-2.5 opacity-50" />
                     {e}
                   </span>
                 ))}
@@ -500,8 +531,6 @@ export default function TrackerLogisticsPage() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [statusDropOpen, setStatusDropOpen] = useState(false);
-  const statusDropRef = useRef(null);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -515,10 +544,7 @@ export default function TrackerLogisticsPage() {
   const tableRef = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => {
-      if (statusDropRef.current && !statusDropRef.current.contains(e.target))
-        setStatusDropOpen(false);
-    };
+    const handler = (e) => {};
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
@@ -563,16 +589,20 @@ export default function TrackerLogisticsPage() {
       list = list.filter(
         (r) =>
           r.name?.toLowerCase().includes(q) ||
-          r.email?.toLowerCase().includes(q) ||
-          r.description?.toLowerCase().includes(q) ||
-          (r.cc_emails ?? []).some((e) => e.toLowerCase().includes(q)),
+          r.primary_email?.toLowerCase().includes(q) ||
+          (Array.isArray(r.cc_email)
+            ? r.cc_email
+            : r.cc_email
+              ? String(r.cc_email)
+                  .split(',')
+                  .map((e) => e.trim())
+                  .filter(Boolean)
+              : []
+          ).some((e) => e.toLowerCase().includes(q)),
       );
     }
-    if (statusFilter) {
-      list = list.filter((r) => r.status === statusFilter);
-    }
     return list;
-  }, [records, searchQuery, statusFilter]);
+  }, [records, searchQuery]);
 
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -620,29 +650,52 @@ export default function TrackerLogisticsPage() {
         headerClassName: 'px-5 py-3 text-left w-[18%]',
         className: 'px-5 py-3 w-[18%] font-semibold text-mc-black text-sm',
         render: (r) => (
-          <div className="max-w-[180px] truncate font-semibold" title={r.name}>
-            {r.name || '—'}
+          <div className="group relative w-fit max-w-[180px]">
+            <div className="cursor-default truncate font-semibold">
+              {r.name || '—'}
+            </div>
+            {r.name && (
+              <div className="border-mc-beige-dark bg-mc-beige-light pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 rounded border px-3 py-1.5 text-xs font-bold whitespace-nowrap text-sky-800 opacity-0 shadow-sm transition-all group-hover:visible group-hover:opacity-100">
+                <div className="border-mc-beige-dark bg-mc-beige-light absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-r border-b" />
+                {r.name.toUpperCase()}
+              </div>
+            )}
           </div>
         ),
       },
       {
-        header: 'Email',
-        accessor: 'email',
+        header: 'Primary Email',
+        accessor: 'primary_email',
         headerClassName: 'px-5 py-3 text-left w-[20%]',
         className: 'px-5 py-3 w-[20%] text-mc-gray-soft text-sm',
         render: (r) => (
-          <div className="max-w-[200px] truncate" title={r.email}>
-            {r.email || '—'}
+          <div className="group relative w-fit max-w-[200px]">
+            <div className="cursor-default truncate">
+              {r.primary_email || '—'}
+            </div>
+            {r.primary_email && (
+              <div className="border-mc-beige-dark bg-mc-beige-light text-mc-black pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 rounded border px-3 py-1.5 text-xs font-semibold whitespace-nowrap opacity-0 shadow-sm transition-all group-hover:visible group-hover:opacity-100">
+                <div className="border-mc-beige-dark bg-mc-beige-light absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-r border-b" />
+                {r.primary_email}
+              </div>
+            )}
           </div>
         ),
       },
       {
         header: 'CC Emails',
-        accessor: 'cc_emails',
+        accessor: 'cc_email',
         headerClassName: 'px-5 py-3 text-left w-[25%]',
         className: 'px-5 py-3 w-[25%]',
         render: (r) => {
-          const cc = r.cc_emails ?? [];
+          const cc = Array.isArray(r.cc_email)
+            ? r.cc_email
+            : r.cc_email
+              ? String(r.cc_email)
+                  .split(',')
+                  .map((e) => e.trim())
+                  .filter(Boolean)
+              : [];
           if (!cc.length)
             return (
               <span className="text-mc-gray-soft text-xs italic">None</span>
@@ -656,25 +709,23 @@ export default function TrackerLogisticsPage() {
                   key={i}
                   className="bg-mc-beige-light border-mc-beige-dark text-mc-black inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[10px]"
                 >
-                  <AtSign className="h-2 w-2 opacity-50" />
                   {e}
                 </span>
               ))}
               {rest > 0 && (
-                <span className="text-mc-gray-soft text-[10px] italic">
-                  +{rest} more
-                </span>
+                <div className="group relative flex items-center">
+                  <span className="text-mc-gray-soft cursor-default text-[10px] italic">
+                    +{rest} more
+                  </span>
+                  <div className="border-mc-beige-dark bg-mc-beige-light pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 rounded border px-3 py-1.5 text-xs font-bold whitespace-nowrap text-sky-800 opacity-0 shadow-sm transition-all group-hover:visible group-hover:opacity-100">
+                    <div className="border-mc-beige-dark bg-mc-beige-light absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-r border-b" />
+                    {cc.slice(2).join(' / ').toUpperCase()}
+                  </div>
+                </div>
               )}
             </div>
           );
         },
-      },
-      {
-        header: 'Status',
-        accessor: 'status',
-        headerClassName: 'px-5 py-3 text-left w-[10%]',
-        className: 'px-5 py-3 w-[10%]',
-        render: (r) => <StatusBadge status={r.status} />,
       },
       {
         header: 'Created',
@@ -690,13 +741,6 @@ export default function TrackerLogisticsPage() {
         className: 'px-5 py-3 w-[15%] text-center',
         render: (r) => (
           <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setViewingRecord(r)}
-              className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
-              title="View Details"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
             <button
               onClick={() => handleEdit(r)}
               className="hover:bg-mc-beige-light hover:text-mc-gold rounded-md p-1.5 text-slate-400 transition"
@@ -750,7 +794,7 @@ export default function TrackerLogisticsPage() {
               Tracker Logistics
             </h1>
             <p className="text-mc-gray-soft text-xs font-medium">
-              Manage logistics contacts and email configurations
+              Manage logistics contacts and primary_email configurations
             </p>
           </div>
         </div>
@@ -786,10 +830,10 @@ export default function TrackerLogisticsPage() {
         <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none md:flex-row md:items-center">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
+            <Search className="text-mc-gray-soft absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by name, email, description…"
+              placeholder="Search logistics by name or email..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -803,56 +847,12 @@ export default function TrackerLogisticsPage() {
                   setSearchQuery('');
                   setPage(1);
                 }}
-                className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black absolute top-2.5 right-3 rounded-full p-0.5 transition"
+                className="text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-black absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-0.5 transition"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
-
-          {/* Status filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
-              Status:
-            </span>
-            <div className="relative w-36" ref={statusDropRef}>
-              <button
-                type="button"
-                onClick={() => setStatusDropOpen((o) => !o)}
-                className={`border-mc-beige-dark bg-mc-white hover:border-mc-gold flex w-full items-center justify-between rounded-lg border px-3 py-2 text-xs transition ${statusDropOpen ? 'border-mc-gold' : ''}`}
-              >
-                <span>{statusFilter || 'All Statuses'}</span>
-                <ChevronDown
-                  className={`h-3.5 w-3.5 text-slate-400 transition-transform ${statusDropOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {statusDropOpen && (
-                <div className="border-mc-beige-dark bg-mc-white animate-scaleUp absolute top-full left-0 z-50 mt-1 w-full rounded-xl border p-1 shadow-lg">
-                  {[
-                    { value: '', label: 'All Statuses' },
-                    ...STATUS_OPTIONS.map((s) => ({ value: s, label: s })),
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => {
-                        setStatusFilter(opt.value);
-                        setPage(1);
-                        setStatusDropOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition ${statusFilter === opt.value ? 'bg-mc-beige-light text-mc-black font-bold' : 'text-mc-black hover:bg-mc-beige-light/50'}`}
-                    >
-                      {opt.label}
-                      {statusFilter === opt.value && (
-                        <Check className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Record count */}
           <div className="text-mc-gray-soft text-xs whitespace-nowrap">
             <span className="text-mc-black font-bold">{filtered.length}</span>{' '}
@@ -875,7 +875,7 @@ export default function TrackerLogisticsPage() {
             tbodyClassName="divide-y divide-mc-beige-dark/40 text-mc-black"
             trClassName="hover:bg-mc-beige-light/30 bg-mc-white transition-colors"
             emptyMessage={
-              searchQuery || statusFilter
+              searchQuery
                 ? 'No records matched your search or filters.'
                 : 'No Tracker Logistics records yet. Click "Add Tracker Logistics" to create one.'
             }

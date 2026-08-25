@@ -14,10 +14,8 @@ import {
 export interface TrackerLogistic {
   id: string | number;
   name: string;
-  email: string;
-  cc_emails: string[];
-  description?: string;
-  status: string;
+  primary_email: string;
+  cc_email: string | string[]; // depending on how it's sent back
   created_at?: string;
   updated_at?: string;
   [key: string]: unknown;
@@ -25,18 +23,14 @@ export interface TrackerLogistic {
 
 export interface CreateTrackerLogisticPayload {
   name: string;
-  email: string;
-  cc_emails: string[];
-  description?: string;
-  status: string;
+  primary_email: string;
+  cc_email: string;
 }
 
 export interface UpdateTrackerLogisticPayload {
   name?: string;
-  email?: string;
-  cc_emails?: string[];
-  description?: string;
-  status?: string;
+  primary_email?: string;
+  cc_email?: string; // the backend explicitly wants a string
 }
 
 export interface TrackerLogisticsListResponse {

@@ -198,13 +198,19 @@ export const CONTAINER_IMPORT_PREVIEW = '/containers/import/preview';
 export const CONTAINER_VALIDATE_ITEMS_BULK = '/containers/validate-items-bulk';
 
 // ------------------------------------------
+// Logistics Endpoints
+// ------------------------------------------
+export const LOGISTICS_LIST = '/logistics';
+export const LOGISTICS_BY_ID = (id: string) => `/logistics/${id}`;
+export const LOGISTICS_CREATE = '/logistics';
+export const LOGISTICS_UPDATE = (id: string) => `/logistics/${id}`;
+export const LOGISTICS_DELETE = (id: string) => `/logistics/${id}`;
+
+// ------------------------------------------
 // Tracker Logistics Endpoints
 // ------------------------------------------
-export const TRACKER_LOGISTICS_LIST = '/tracker-logistics';
-export const TRACKER_LOGISTICS_BY_ID = (id: string) =>
-  `/tracker-logistics/${id}`;
-export const TRACKER_LOGISTICS_CREATE = '/tracker-logistics';
-export const TRACKER_LOGISTICS_UPDATE = (id: string) =>
-  `/tracker-logistics/${id}`;
-export const TRACKER_LOGISTICS_DELETE = (id: string) =>
-  `/tracker-logistics/${id}`;
+export const TRACKER_LOGISTICS_LIST = '/logistics';
+export const TRACKER_LOGISTICS_BY_ID = (id: string) => `/logistics/${id}`;
+export const TRACKER_LOGISTICS_CREATE = '/logistics';
+export const TRACKER_LOGISTICS_UPDATE = (id: string) => `/logistics/${id}`;
+export const TRACKER_LOGISTICS_DELETE = (id: string) => `/logistics/${id}`;
