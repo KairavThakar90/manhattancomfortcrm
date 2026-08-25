@@ -188,6 +188,9 @@ export default function POQuickView({ poId, onClose }) {
                     <table className="w-full text-xs">
                       <thead className="border-b border-slate-100 bg-slate-50">
                         <tr>
+                          <th className="w-16 px-3 py-2 text-center font-semibold text-slate-500">
+                            Image
+                          </th>
                           <th className="px-3 py-2 text-left font-semibold text-slate-500">
                             SKU
                           </th>
@@ -208,10 +211,49 @@ export default function POQuickView({ poId, onClose }) {
                             key={item.id || item.sku || i}
                             className="transition-colors hover:bg-slate-50/60"
                           >
-                            <td className="px-3 py-2 font-mono font-bold whitespace-nowrap text-slate-800">
+                            <td className="px-3 py-2 text-center align-middle">
+                              {(() => {
+                                const imageSrc =
+                                  item.image_url ||
+                                  item.imageUrl ||
+                                  item.image ||
+                                  item.imageSource ||
+                                  item.product_image ||
+                                  null;
+                                return imageSrc ? (
+                                  <div
+                                    className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(imageSrc, '_blank');
+                                    }}
+                                    title="Click to view full image"
+                                  >
+                                    <img
+                                      src={imageSrc}
+                                      alt=""
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="bg-mc-beige-light text-mc-gray-soft mx-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">
+                                    <Package className="h-4 w-4" />
+                                  </div>
+                                );
+                              })()}
+                            </td>
+                            <td className="px-3 py-2 align-middle font-mono font-bold whitespace-nowrap text-slate-800">
                               {item.sku || item.sellercloud_product_id || '—'}
                             </td>
-                            <td className="max-w-[200px] truncate px-3 py-2 text-slate-600">
+                            <td
+                              className="max-w-[200px] truncate px-3 py-2 align-middle text-slate-600"
+                              title={
+                                item.name ||
+                                item.item_name ||
+                                item.product_name ||
+                                '—'
+                              }
+                            >
                               {item.name ||
                                 item.item_name ||
                                 item.product_name ||

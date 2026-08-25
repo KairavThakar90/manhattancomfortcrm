@@ -29,6 +29,7 @@ import {
   Pencil,
   Trash,
   Copy,
+  Package,
 } from 'lucide-react';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import { getTagUsers } from '../../users/services/user.service';
@@ -650,6 +651,48 @@ export function PODetailsModal(props) {
 
   const poItemColumns = [
     {
+      header: 'Image',
+      accessor: 'image',
+      headerClassName: 'px-3 py-2 w-16 text-center',
+      className: 'px-3 py-2 w-16 text-center',
+      render: (item: any) => {
+        const imageSrc =
+          item.image_url ||
+          item.imageUrl ||
+          item.image ||
+          item.imageSource ||
+          item.product_image ||
+          null;
+
+        if (imageSrc) {
+          return (
+            <div
+              className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(imageSrc, '_blank');
+              }}
+              title="Click to view full image"
+            >
+              <img
+                src={imageSrc}
+                alt={item.sku || 'Product Image'}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          );
+        }
+        return (
+          <div
+            className="bg-mc-beige-light text-mc-gray-soft mx-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded"
+            title="No image available"
+          >
+            <Package className="h-4 w-4" />
+          </div>
+        );
+      },
+    },
+    {
       header: 'SKU',
       accessor: 'sku',
       headerClassName: 'px-3 py-2 w-40',
@@ -685,6 +728,7 @@ export function PODetailsModal(props) {
           item.product_name ||
           item.productName ||
           'Unknown Product';
+
         return (
           <span
             className="cursor-pointer font-medium text-slate-800"
