@@ -12,7 +12,6 @@ import {
   Container,
   Plus,
   Save,
-  AlertCircle,
   CheckCircle2,
   ArrowLeft,
   ArrowUp,
@@ -2097,36 +2096,6 @@ export default function ContainerFlowPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={
-            selectedItems.length === 0 ||
-            !estimatedArrivalDate ||
-            !selectedWarehouseId ||
-            isSaving
-          }
-          className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold shadow-none transition-colors ${
-            selectedItems.length === 0 ||
-            !estimatedArrivalDate ||
-            !selectedWarehouseId ||
-            isSaving
-              ? 'cursor-not-allowed bg-slate-400 text-white'
-              : 'bg-mc-gold text-mc-black hover:opacity-80'
-          }`}
-        >
-          {isSaving ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Save className="h-3.5 w-3.5" />
-          )}
-          {isSaving
-            ? isEditMode
-              ? 'Updating...'
-              : 'Creating...'
-            : isEditMode
-              ? 'Update Container'
-              : 'Create Container'}
-        </button>
       </div>
 
       {/* Visual Stepper */}
@@ -2355,33 +2324,44 @@ export default function ContainerFlowPage() {
 
                   {/* Scope dropdown items to the active tab po */}
                   {(() => {
+                    if (!activePOTab) return null;
                     const activeItemsToAdd = itemDropdownItems.filter(
                       (opt) => opt.bound_po_id == activePOTab,
                     );
-                    return activeItemsToAdd.length > 0 || loadingPOItems ? (
-                      <div className="relative z-[40] w-64">
-                        <InfiniteScrollDropdown
-                          value=""
-                          onChange={(val) => {
-                            if (val) handleAddItem(val);
-                          }}
-                          onSearch={(query) => setItemSearchQuery(query)}
-                          onLoadMore={() => {}}
-                          hasMore={false}
-                          isLoading={loadingPOItems}
-                          items={activeItemsToAdd}
-                          disabled={isEditMode || activeItemsToAdd.length === 0}
-                          placeholder={
-                            loadingPOItems
-                              ? 'Loading items...'
-                              : activeItemsToAdd.length === 0
-                                ? 'All items allocated'
-                                : '+ Add items'
-                          }
-                          searchPlaceholder="Search items..."
-                        />
+                    const allAllocated =
+                      !loadingPOItems && activeItemsToAdd.length === 0;
+                    return (
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="relative z-[40] w-64">
+                          <InfiniteScrollDropdown
+                            value=""
+                            onChange={(val) => {
+                              if (val) handleAddItem(val);
+                            }}
+                            onSearch={(query) => setItemSearchQuery(query)}
+                            onLoadMore={() => {}}
+                            hasMore={false}
+                            isLoading={loadingPOItems}
+                            items={activeItemsToAdd}
+                            disabled={isEditMode || allAllocated}
+                            placeholder={
+                              loadingPOItems
+                                ? 'Loading items...'
+                                : allAllocated
+                                  ? 'All items allocated'
+                                  : '+ Add items'
+                            }
+                            searchPlaceholder="Search items..."
+                          />
+                        </div>
+                        {allAllocated && (
+                          <span className="text-mc-gold flex items-center gap-1 text-[10px] font-semibold">
+                            <CheckCircle2 className="h-3 w-3" />
+                            All items from this PO have been added.
+                          </span>
+                        )}
                       </div>
-                    ) : null;
+                    );
                   })()}
                 </div>
 
@@ -2513,8 +2493,8 @@ export default function ContainerFlowPage() {
               </div>
 
               {/* Step 3: Container Details */}
-              <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-4 shadow-none md:col-span-1">
-                <div className="mb-4 flex items-center gap-2">
+              <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-5 shadow-none md:col-span-1">
+                <div className="mb-5 flex items-center gap-2">
                   <span className="bg-mc-beige-light text-mc-black flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                     3
                   </span>
@@ -2523,9 +2503,9 @@ export default function ContainerFlowPage() {
                   </h2>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-5">
                   <div>
-                    <div className="mb-1 flex items-center justify-between">
+                    <div className="mb-1.5 flex items-center justify-between">
                       <label className="text-mc-black block text-xs font-semibold">
                         Container Number
                       </label>
@@ -2594,15 +2574,15 @@ export default function ContainerFlowPage() {
                         searchPlaceholder="Search or create containers..."
                       />
                     )}
-                    <p className="text-mc-gray-soft mt-1 text-[10px] leading-snug">
+                    <p className="text-mc-gray-soft mt-1.5 text-[10px] leading-snug">
                       Note: Only use the container number as listed on{' '}
                       <span className="font-semibold">All Ways USA</span> for
                       ETA lookup to work correctly.
                     </p>
                   </div>
 
-                  <div className="mt-3">
-                    <label className="text-mc-black mb-1 block text-xs font-semibold">
+                  <div>
+                    <label className="text-mc-black mb-1.5 block text-xs font-semibold">
                       Estimated Arrival Date
                     </label>
                     <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
@@ -2629,28 +2609,36 @@ export default function ContainerFlowPage() {
                     </div>
                   </div>
 
-                  <div className="border-mc-beige-dark bg-mc-beige-light mt-3 rounded-lg border p-3">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="text-mc-gold mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <div>
-                        <h4 className="text-mc-black text-xs font-bold">
-                          PO Status
-                        </h4>
-                        <p className="text-mc-black text-opacity-80 mt-0.5 text-[10px]">
-                          Currently allocating items for{' '}
-                          <span className="font-mono font-bold">
-                            {selectedPOs
-                              .map(
-                                (po) =>
-                                  `PO-${String(po.sellercloud_po_id || po.order_number || po.id).replace(/^PO-/, '')}`,
-                              )
-                              .join(', ')}
-                          </span>
-                          .
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <button
+                    onClick={handleSave}
+                    disabled={
+                      selectedItems.length === 0 ||
+                      !estimatedArrivalDate ||
+                      !selectedWarehouseId ||
+                      isSaving
+                    }
+                    className={`mt-2 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold shadow-none transition-colors ${
+                      selectedItems.length === 0 ||
+                      !estimatedArrivalDate ||
+                      !selectedWarehouseId ||
+                      isSaving
+                        ? 'cursor-not-allowed bg-slate-400 text-white'
+                        : 'bg-mc-gold text-mc-black hover:opacity-80'
+                    }`}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5" />
+                    )}
+                    {isSaving
+                      ? isEditMode
+                        ? 'Updating...'
+                        : 'Creating...'
+                      : isEditMode
+                        ? 'Update Container'
+                        : 'Create Container'}
+                  </button>
                 </div>
               </div>
             </div>
