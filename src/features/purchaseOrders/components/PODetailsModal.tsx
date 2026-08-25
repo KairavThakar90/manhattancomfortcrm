@@ -697,9 +697,9 @@ export function PODetailsModal(props) {
               className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
-                setPreviewImage(imageSrc);
               }}
-              title="Click to view full image"
+              data-tooltip-id="image-preview-tooltip"
+              data-tooltip-content={imageSrc}
             >
               <img
                 src={imageSrc}
@@ -2269,10 +2269,21 @@ export function PODetailsModal(props) {
         highlightedCommentId={highlightedCommentId}
       />
 
-      <ImagePreviewModal
-        isOpen={!!previewImage}
-        imageSrc={previewImage}
-        onClose={() => setPreviewImage(null)}
+      <Tooltip
+        id="image-preview-tooltip"
+        openOnClick={true}
+        globalCloseEvents={{ clickOutsideAnchor: true, scroll: true }}
+        place="right"
+        className="z-[9999]! !rounded-xl !border !border-slate-200 !bg-white !p-1 !opacity-100 !shadow-2xl"
+        render={({ content }) =>
+          content ? (
+            <img
+              src={content as string}
+              alt="Preview"
+              className="max-h-[300px] max-w-[300px] rounded-lg object-contain"
+            />
+          ) : null
+        }
       />
     </>
   );
