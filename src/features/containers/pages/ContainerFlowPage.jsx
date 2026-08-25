@@ -2527,7 +2527,7 @@ export default function ContainerFlowPage() {
                   <div>
                     <div className="mb-1 flex items-center justify-between">
                       <label className="text-mc-black block text-xs font-semibold">
-                        Container Number / Name
+                        Container Number
                       </label>
                       {isEditMode && (
                         <button
@@ -2594,6 +2594,11 @@ export default function ContainerFlowPage() {
                         searchPlaceholder="Search or create containers..."
                       />
                     )}
+                    <p className="text-mc-gray-soft mt-1 text-[10px] leading-snug">
+                      Note: Only use the container number as listed on{' '}
+                      <span className="font-semibold">All Ways USA</span> for
+                      ETA lookup to work correctly.
+                    </p>
                   </div>
 
                   <div className="mt-3">
