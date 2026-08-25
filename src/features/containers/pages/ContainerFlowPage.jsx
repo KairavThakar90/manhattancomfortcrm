@@ -2587,12 +2587,36 @@ export default function ContainerFlowPage() {
                     </label>
                     <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
                       <input
-                        type="date"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="yyyy-mm-dd"
+                        maxLength={10}
                         value={estimatedArrivalDate}
-                        onChange={(e) =>
-                          setEstimatedArrivalDate(e.target.value)
-                        }
+                        onChange={(e) => {
+                          // Keep only digits, auto-insert dashes as yyyy-mm-dd
+                          const digits = e.target.value
+                            .replace(/[^0-9]/g, '')
+                            .slice(0, 8);
+                          let formatted = digits;
+                          if (digits.length > 4) {
+                            formatted = `${digits.slice(0, 4)}-${digits.slice(4)}`;
+                          }
+                          if (digits.length > 6) {
+                            formatted = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+                          }
+                          setEstimatedArrivalDate(formatted);
+                        }}
+                        onBlur={() => {
+                          if (
+                            estimatedArrivalDate &&
+                            !/^\d{4}-\d{2}-\d{2}$/.test(estimatedArrivalDate)
+                          ) {
+                            toast.error(
+                              'Please enter a valid date in yyyy-mm-dd format.',
+                            );
+                            setEstimatedArrivalDate('');
+                          }
+                        }}
                         className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 pr-8 text-sm font-medium outline-none ${
                           !estimatedArrivalDate
                             ? 'text-mc-gray-soft font-normal'
