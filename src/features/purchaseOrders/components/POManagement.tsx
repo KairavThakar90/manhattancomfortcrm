@@ -1901,6 +1901,10 @@ export default function POManagement({
   >('');
   const [commentError, setCommentError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewAnchor, setPreviewAnchor] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   useEffect(() => {
     // Reset typing state when opening drawer or changing scopes
@@ -3870,6 +3874,8 @@ Supply Chain CRM Coordinator`;
                 className="group/img relative mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors hover:border-slate-400"
                 onClick={(e) => {
                   e.stopPropagation();
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setPreviewAnchor({ top: rect.bottom + 6, left: rect.left });
                   setPreviewImage(imageSrc);
                 }}
               >
@@ -6523,15 +6529,31 @@ Supply Chain CRM Coordinator`;
       {previewImage &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center"
-            onClick={() => setPreviewImage(null)}
+            className="fixed inset-0 z-[9999]"
+            onClick={() => {
+              setPreviewImage(null);
+              setPreviewAnchor(null);
+            }}
           >
             <div
-              className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+              className="absolute rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+              style={{
+                top: previewAnchor?.top ?? '50%',
+                left: previewAnchor
+                  ? Math.min(
+                      Math.max(previewAnchor.left, 8),
+                      window.innerWidth - 216,
+                    )
+                  : '50%',
+                transform: previewAnchor ? undefined : 'translate(-50%, -50%)',
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => setPreviewImage(null)}
+                onClick={() => {
+                  setPreviewImage(null);
+                  setPreviewAnchor(null);
+                }}
                 className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
               >
                 <X className="h-4 w-4" />
@@ -6539,7 +6561,7 @@ Supply Chain CRM Coordinator`;
               <img
                 src={previewImage}
                 alt="Preview"
-                className="max-h-[400px] max-w-[400px] rounded-xl object-contain"
+                className="max-h-[200px] max-w-[200px] rounded-xl object-contain"
               />
             </div>
           </div>,

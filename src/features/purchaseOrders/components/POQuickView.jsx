@@ -14,6 +14,7 @@ export default function POQuickView({ poId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [previewAnchor, setPreviewAnchor] = useState(null);
 
   const [prevId, setPrevId] = useState(null);
 
@@ -230,6 +231,12 @@ export default function POQuickView({ poId, onClose }) {
                                     className="group/img hover:border-mc-gold relative mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      const rect =
+                                        e.currentTarget.getBoundingClientRect();
+                                      setPreviewAnchor({
+                                        top: rect.bottom + 6,
+                                        left: rect.left,
+                                      });
                                       setPreviewImage(imageSrc);
                                     }}
                                     title="Click to view full image"
@@ -295,7 +302,11 @@ export default function POQuickView({ poId, onClose }) {
       <ImagePreviewModal
         isOpen={!!previewImage}
         imageSrc={previewImage}
-        onClose={() => setPreviewImage(null)}
+        anchor={previewAnchor}
+        onClose={() => {
+          setPreviewImage(null);
+          setPreviewAnchor(null);
+        }}
       />
     </div>,
     document.body,
