@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Package, Loader2, ExternalLink } from 'lucide-react';
+import { X, Package, Loader2, ExternalLink, Eye } from 'lucide-react';
 import { getPurchaseOrderById } from '../services/purchaseOrder.service';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
@@ -227,7 +227,7 @@ export default function POQuickView({ poId, onClose }) {
                                   null;
                                 return imageSrc ? (
                                   <div
-                                    className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
+                                    className="group/img hover:border-mc-gold relative mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setPreviewImage(imageSrc);
@@ -239,6 +239,9 @@ export default function POQuickView({ poId, onClose }) {
                                       alt=""
                                       className="h-full w-full object-cover"
                                     />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover/img:bg-black/40 group-hover/img:opacity-100">
+                                      <Eye className="h-3.5 w-3.5 text-white" />
+                                    </div>
                                   </div>
                                 ) : (
                                   <div className="bg-mc-beige-light text-mc-gray-soft mx-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded">

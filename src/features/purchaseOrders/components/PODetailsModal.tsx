@@ -31,6 +31,7 @@ import {
   Trash,
   Copy,
   Package,
+  Eye,
 } from 'lucide-react';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import { getTagUsers } from '../../users/services/user.service';
@@ -694,7 +695,7 @@ export function PODetailsModal(props) {
         if (imageSrc) {
           return (
             <div
-              className="mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors hover:border-slate-400"
+              className="group/img relative mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors hover:border-slate-400"
               onClick={(e) => {
                 e.stopPropagation();
                 setPreviewImage(imageSrc);
@@ -705,6 +706,9 @@ export function PODetailsModal(props) {
                 alt={item.sku || 'Product Image'}
                 className="h-full w-full object-cover"
               />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover/img:bg-black/40 group-hover/img:opacity-100">
+                <Eye className="h-3.5 w-3.5 text-white" />
+              </div>
             </div>
           );
         }
