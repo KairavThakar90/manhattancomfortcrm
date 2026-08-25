@@ -3867,12 +3867,11 @@ Supply Chain CRM Coordinator`;
           if (imageSrc) {
             return (
               <div
-                className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
+                className="mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors hover:border-slate-400"
                 onClick={(e) => {
                   e.stopPropagation();
+                  setPreviewImage(imageSrc);
                 }}
-                data-tooltip-id="image-preview-tooltip"
-                data-tooltip-content={imageSrc}
               >
                 <img
                   src={imageSrc}
@@ -6517,40 +6516,32 @@ Supply Chain CRM Coordinator`;
         }}
       />
 
-      {/* Image Preview Tooltip */}
-      <Tooltip
-        id="image-preview-tooltip"
-        openOnClick={true}
-        clickable={true}
-        globalCloseEvents={{
-          clickOutsideAnchor: true,
-          scroll: true,
-          escape: true,
-        }}
-        place="right"
-        className="z-[9999]! !rounded-2xl !border !border-slate-200 !bg-white !p-2 !opacity-100 !shadow-2xl"
-        render={({ content }) =>
-          content ? (
+      {/* Image Preview Popup */}
+      {previewImage &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            onClick={() => setPreviewImage(null)}
+          >
             <div
-              className="relative cursor-pointer"
-              onClick={() => {
-                document.dispatchEvent(
-                  new MouseEvent('mousedown', { bubbles: true }),
-                );
-              }}
+              className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-slate-400 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-rose-500">
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow transition hover:bg-white hover:text-rose-500"
+              >
                 <X className="h-4 w-4" />
-              </div>
+              </button>
               <img
-                src={content as string}
+                src={previewImage}
                 alt="Preview"
-                className="max-h-[350px] max-w-[350px] rounded-xl object-contain"
+                className="max-h-[400px] max-w-[400px] rounded-xl object-contain"
               />
             </div>
-          ) : null
-        }
-      />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
