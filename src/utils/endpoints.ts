@@ -159,6 +159,8 @@ export const CONTAINERS_ATTACHMENT_DELETE = (attachment_id: string) =>
 export const CONTAINER_PO_ITEMS = (sellercloud_po_id: string) =>
   `/containers/po-items/${sellercloud_po_id}`;
 export const CONTAINER_DETAILS = (id: string) => `/containers/${id}/details`;
+export const CONTAINER_ETA_SEARCH = (containerNumber: string) =>
+  `/containers/allways/search/${containerNumber}`;
 export const CONTAINER_SYNC = '/purchase-orders/sync-containers';
 export const CONTAINERS_EXPORT_CSV = '/containers/export/csv';
 export const CONTAINER_ACTIVITIES = (id: string) =>

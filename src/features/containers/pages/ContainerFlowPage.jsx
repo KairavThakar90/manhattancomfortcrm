@@ -78,6 +78,7 @@ import {
   getContainerDetails,
   syncContainers,
   exportContainersCSV,
+  searchContainerETA,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
@@ -253,6 +254,8 @@ export default function ContainerFlowPage() {
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
   const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
+  const [isFetchingEta, setIsFetchingEta] = useState(false);
+  const lastEtaLookupRef = useRef('');
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
@@ -1058,6 +1061,39 @@ export default function ContainerFlowPage() {
     );
   };
 
+  const handleFetchContainerEta = useCallback(async (rawContainerNumber) => {
+    const containerNumber = (rawContainerNumber || '').trim();
+    if (!containerNumber) {
+      toast.error('Enter a container number first.');
+      return;
+    }
+    lastEtaLookupRef.current = containerNumber;
+
+    try {
+      setIsFetchingEta(true);
+      const data = await searchContainerETA(containerNumber);
+      const result = Array.isArray(data) ? data[0] : data?.data || data;
+      const rawEta =
+        result?.eta ||
+        result?.estimated_arrival_date ||
+        result?.arrivalDate ||
+        result?.eta_delivery_date;
+
+      if (rawEta && rawEta !== 'Pending' && rawEta !== 'N/A') {
+        setEstimatedArrivalDate(String(rawEta).split('T')[0]);
+        toast.success('Estimated Arrival Date auto-filled from container lookup.');
+      } else {
+        toast.info('No ETA found for this container number yet.');
+      }
+    } catch (error) {
+      console.error('Failed to fetch container ETA', error);
+      toast.error('Failed to fetch ETA for this container number.');
+      lastEtaLookupRef.current = '';
+    } finally {
+      setIsFetchingEta(false);
+    }
+  }, []);
+
   const handleSave = async () => {
     if (selectedPOIds.length === 0) {
       toast.error('Please select a Purchase Order first.');
@@ -1179,6 +1215,7 @@ export default function ContainerFlowPage() {
     setEstimatedArrivalDate('');
     setIsManualContainerEntry(true); // Default manual on create
     setSelectedItems([]);
+    lastEtaLookupRef.current = '';
     setShowList(false);
   };
 
@@ -2508,13 +2545,35 @@ export default function ContainerFlowPage() {
                       )}
                     </div>
                     {isManualContainerEntry ? (
-                      <input
-                        type="text"
-                        value={containerName}
-                        onChange={(e) => setContainerName(e.target.value)}
-                        placeholder="e.g. TCNU 1234567"
-                        className="focus:ring-mc-gold border-mc-beige-dark bg-mc-beige-light/30 text-mc-black w-full rounded-md border px-3 py-1.5 font-mono text-sm font-bold focus:ring-2 focus:outline-none"
-                      />
+                      <div className="flex items-stretch gap-1.5">
+                        <input
+                          type="text"
+                          value={containerName}
+                          onChange={(e) => setContainerName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleFetchContainerEta(containerName);
+                            }
+                          }}
+                          placeholder="e.g. TCLU1234567"
+                          className="focus:ring-mc-gold border-mc-beige-dark bg-mc-beige-light/30 text-mc-black w-full min-w-0 flex-1 rounded-md border px-3 py-1.5 font-mono text-sm font-bold focus:ring-2 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleFetchContainerEta(containerName)}
+                          disabled={isFetchingEta || !containerName.trim()}
+                          title="Fetch ETA for this container number"
+                          className="border-mc-beige-dark bg-mc-beige-light text-mc-black hover:bg-mc-beige-dark flex flex-shrink-0 items-center gap-1 rounded-md border px-2.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isFetchingEta ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <SearchIcon className="h-3.5 w-3.5" />
+                          )}
+                          <span>Get ETA</span>
+                        </button>
+                      </div>
                     ) : (
                       <InfiniteScrollDropdown
                         value={containerName}
@@ -2543,11 +2602,13 @@ export default function ContainerFlowPage() {
                     </label>
                     <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
                       <input
-                        type="text"
+                        type="date"
                         placeholder="yyyy-mm-dd"
                         value={estimatedArrivalDate}
-                        readOnly
-                        className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 text-sm font-medium outline-none ${
+                        onChange={(e) =>
+                          setEstimatedArrivalDate(e.target.value)
+                        }
+                        className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 pr-8 text-sm font-medium outline-none ${
                           !estimatedArrivalDate
                             ? 'text-mc-gray-soft font-normal'
                             : 'text-mc-black'
@@ -2559,15 +2620,6 @@ export default function ContainerFlowPage() {
                             ? 'text-mc-gray-soft'
                             : 'text-mc-black'
                         }`}
-                      />
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split('T')[0]}
-                        value={estimatedArrivalDate}
-                        onChange={(e) =>
-                          setEstimatedArrivalDate(e.target.value)
-                        }
-                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
                     </div>
                   </div>

@@ -7,6 +7,7 @@ import {
   CONTAINERS_DELETE,
   CONTAINERS_ATTACHMENT_DELETE,
   CONTAINER_DETAILS,
+  CONTAINER_ETA_SEARCH,
   CONTAINER_SYNC,
   CONTAINERS_EXPORT_CSV,
   CONTAINER_ACTIVITIES,
@@ -66,6 +67,13 @@ export async function deleteContainerAttachment(
 
 export async function getContainerDetails(id: string | number) {
   const { data } = await apiClient.get(CONTAINER_DETAILS(id.toString()));
+  return data;
+}
+
+export async function searchContainerETA(containerNumber: string) {
+  const { data } = await apiClient.get(
+    CONTAINER_ETA_SEARCH(containerNumber.trim()),
+  );
   return data;
 }
 
