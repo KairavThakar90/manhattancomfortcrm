@@ -926,8 +926,14 @@ export default function ContainerDetailsModal({
                           value={
                             countryOptions.find(
                               (c) =>
-                                c.label === trackingData.country_of_origin ||
-                                c.value === trackingData.country_of_origin,
+                                c.label?.toLowerCase() ===
+                                  (
+                                    trackingData.country_of_origin || ''
+                                  ).toLowerCase() ||
+                                c.value?.toLowerCase() ===
+                                  (
+                                    trackingData.country_of_origin || ''
+                                  ).toLowerCase(),
                             ) || null
                           }
                           onChange={(option) =>
