@@ -680,8 +680,8 @@ export function PODetailsModal(props) {
     {
       header: 'Image',
       accessor: 'image',
-      headerClassName: 'px-3 py-2 w-16 text-center',
-      className: 'px-3 py-2 w-16 text-center',
+      headerClassName: 'px-3 py-2 w-16 text-center pr-6',
+      className: 'px-3 py-2 w-16 text-center pr-6',
       render: (item: any) => {
         const imageSrc =
           item.image_url ||
@@ -723,8 +723,8 @@ export function PODetailsModal(props) {
     {
       header: 'Product Name',
       accessor: 'name',
-      headerClassName: 'px-3 py-2',
-      className: 'px-3 py-2 max-w-[150px]',
+      headerClassName: 'px-3 py-2 pl-6',
+      className: 'px-3 py-2 max-w-[150px] pl-6',
       render: (item: any) => {
         const productName =
           item.name ||
@@ -2272,16 +2272,34 @@ export function PODetailsModal(props) {
       <Tooltip
         id="image-preview-tooltip"
         openOnClick={true}
-        globalCloseEvents={{ clickOutsideAnchor: true, scroll: true }}
+        clickable={true}
+        globalCloseEvents={{
+          clickOutsideAnchor: true,
+          scroll: true,
+          escape: true,
+        }}
         place="right"
-        className="z-[9999]! !rounded-xl !border !border-slate-200 !bg-white !p-1 !opacity-100 !shadow-2xl"
+        className="z-[9999]! !rounded-2xl !border !border-slate-200 !bg-white !p-2 !opacity-100 !shadow-2xl"
         render={({ content }) =>
           content ? (
-            <img
-              src={content as string}
-              alt="Preview"
-              className="max-h-[300px] max-w-[300px] rounded-lg object-contain"
-            />
+            <div
+              className="relative cursor-pointer"
+              onClick={() => {
+                // Trigger global close
+                document.dispatchEvent(
+                  new MouseEvent('mousedown', { bubbles: true }),
+                );
+              }}
+            >
+              <div className="text-mc-gray-soft absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 shadow-sm backdrop-blur-sm transition-colors hover:bg-white hover:text-rose-500">
+                <X className="h-4 w-4" />
+              </div>
+              <img
+                src={content as string}
+                alt="Preview"
+                className="max-h-[350px] max-w-[350px] rounded-xl object-contain"
+              />
+            </div>
           ) : null
         }
       />
