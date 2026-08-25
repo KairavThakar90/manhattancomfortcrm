@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Package, Loader2, ExternalLink } from 'lucide-react';
 import { getPurchaseOrderById } from '../services/purchaseOrder.service';
+import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
 /**
  * POQuickView — Standalone modal that fetches a PO by its numeric ID
@@ -12,6 +13,7 @@ export default function POQuickView({ poId, onClose }) {
   const [po, setPo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const [prevId, setPrevId] = useState(null);
 
@@ -188,11 +190,11 @@ export default function POQuickView({ poId, onClose }) {
                     <table className="w-full text-xs">
                       <thead className="border-b border-slate-100 bg-slate-50">
                         <tr>
-                          <th className="w-16 px-3 py-2 text-center font-semibold text-slate-500">
-                            Image
-                          </th>
                           <th className="px-3 py-2 text-left font-semibold text-slate-500">
                             SKU
+                          </th>
+                          <th className="w-16 px-3 py-2 text-center font-semibold text-slate-500">
+                            Image
                           </th>
                           <th className="px-3 py-2 text-left font-semibold text-slate-500">
                             Description
@@ -211,6 +213,9 @@ export default function POQuickView({ poId, onClose }) {
                             key={item.id || item.sku || i}
                             className="transition-colors hover:bg-slate-50/60"
                           >
+                            <td className="px-3 py-2 align-middle font-mono font-bold whitespace-nowrap text-slate-800">
+                              {item.sku || item.sellercloud_product_id || '—'}
+                            </td>
                             <td className="px-3 py-2 text-center align-middle">
                               {(() => {
                                 const imageSrc =
@@ -225,7 +230,7 @@ export default function POQuickView({ poId, onClose }) {
                                     className="hover:border-mc-gold mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      window.open(imageSrc, '_blank');
+                                      setPreviewImage(imageSrc);
                                     }}
                                     title="Click to view full image"
                                   >
@@ -241,9 +246,6 @@ export default function POQuickView({ poId, onClose }) {
                                   </div>
                                 );
                               })()}
-                            </td>
-                            <td className="px-3 py-2 align-middle font-mono font-bold whitespace-nowrap text-slate-800">
-                              {item.sku || item.sellercloud_product_id || '—'}
                             </td>
                             <td
                               className="max-w-[200px] truncate px-3 py-2 align-middle text-slate-600"
@@ -295,6 +297,13 @@ export default function POQuickView({ poId, onClose }) {
           </button>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isOpen={!!previewImage}
+        imageSrc={previewImage}
+        onClose={() => setPreviewImage(null)}
+      />
     </div>,
     document.body,
   );
