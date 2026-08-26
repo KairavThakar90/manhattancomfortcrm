@@ -23,6 +23,7 @@ import {
   getContainerActivities,
   deleteContainerAttachment,
 } from '../services/container.service';
+import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import { Tooltip } from 'react-tooltip';
 import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
@@ -223,8 +224,24 @@ export default function ContainerDetailsModal({
 
     try {
       setIsSaving(true);
+
+      // Compress any image attachments before upload (skip files already
+      // compressed on a prior failed save attempt).
+      const compressedAttachments = [];
+      for (const raw of trackingData.attachmentsToUpload || []) {
+        if (raw.isCompressed) {
+          compressedAttachments.push(raw);
+        } else {
+          const c = await compressImageIfNeeded(raw);
+          c.isCompressed = true;
+          compressedAttachments.push(c);
+        }
+      }
+      handleTrackingChange('attachmentsToUpload', compressedAttachments);
+
       const payload = {
         ...trackingData,
+        attachmentsToUpload: compressedAttachments,
       };
       let pName =
         trackingData.container_name ||
@@ -1250,7 +1267,7 @@ export default function ContainerDetailsModal({
                                           href={att.file_url}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="absolute -right-1.5 -bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-indigo-500 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50"
+                                          className="text-mc-gold hover:border-mc-gold/40 hover:bg-mc-beige-light absolute -right-1.5 -bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-all"
                                         >
                                           {isImage ? (
                                             <Eye
