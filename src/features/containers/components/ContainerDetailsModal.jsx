@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Eye,
@@ -31,6 +31,256 @@ import DateFilterInput from '../../../components/common/DateFilterInput';
 import Select from 'react-select';
 import countryList from 'react-select-country-list';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
+import { getTagUsers } from '../../users/services/user.service';
+
+/**
+ * Textarea with lightweight "@name" tagging. Typing "@" opens a dropdown —
+ * the option list is only fetched the first time "@" is triggered (via
+ * `loadOptions`, e.g. calling the tag-users API with a role filter), not
+ * eagerly on mount. Selecting an option inserts "@Name " at the cursor.
+ * Purely a text-insertion helper — tagged names are not persisted as
+ * structured references, matching how this field is stored (plain text).
+ */
+function MentionTextarea({
+  value,
+  onChange,
+  loadOptions,
+  placeholder,
+  rows = 3,
+  className = '',
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+  const [atIndex, setAtIndex] = useState(-1);
+  const [highlightIndex, setHighlightIndex] = useState(0);
+  const [coords, setCoords] = useState({
+    top: 0,
+    bottom: 'auto',
+    left: 0,
+    width: 240,
+  });
+  const [options, setOptions] = useState([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const hasFetchedRef = useRef(false);
+  const textareaRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const DROPDOWN_MAX_HEIGHT = 240; // matches max-h-60 below
+
+  const computeCoords = () => {
+    if (!textareaRef.current) return null;
+    const rect = textareaRef.current.getBoundingClientRect();
+    // Keep the menu a compact, fixed-ish width instead of stretching to
+    // match a wide textarea, and keep it inside the viewport horizontally.
+    const width = Math.min(280, Math.max(rect.width, 220));
+    const left = Math.min(rect.left, window.innerWidth - width - 16);
+
+    // Flip to open above the field when there isn't enough room below
+    // (e.g. a field near the bottom of the modal) but there is above.
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openAbove =
+      spaceBelow < DROPDOWN_MAX_HEIGHT && rect.top > DROPDOWN_MAX_HEIGHT;
+
+    return openAbove
+      ? {
+          top: 'auto',
+          bottom: window.innerHeight - rect.top + 4,
+          left: Math.max(left, 8),
+          width,
+        }
+      : {
+          top: rect.bottom + 4,
+          bottom: 'auto',
+          left: Math.max(left, 8),
+          width,
+        };
+  };
+
+  useEffect(() => {
+    // Keep the dropdown anchored to the textarea whenever any ancestor
+    // scrolls or the window resizes — the modal body is scrollable and
+    // `scroll` doesn't bubble, so this must be a capturing listener.
+    if (!isOpen) return;
+    const reposition = () => {
+      const next = computeCoords();
+      if (next) setCoords(next);
+    };
+    document.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      document.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [isOpen]);
+
+  const filteredOptions = useMemo(() => {
+    const f = filter.toLowerCase();
+    const list = Array.isArray(options) ? options : [];
+    if (!f) return list.slice(0, 8);
+    return list
+      .filter((o) => (o.name || '').toLowerCase().includes(f))
+      .slice(0, 8);
+  }, [filter, options]);
+
+  const handleChange = (e) => {
+    const text = e.target.value;
+    const cursor = e.target.selectionStart;
+    onChange(text);
+
+    const textBeforeCursor = text.slice(0, cursor);
+    const lastAt = textBeforeCursor.lastIndexOf('@');
+    if (
+      lastAt !== -1 &&
+      (lastAt === 0 || /\s/.test(textBeforeCursor[lastAt - 1]))
+    ) {
+      const query = textBeforeCursor.slice(lastAt + 1);
+      if (!/\s/.test(query)) {
+        setAtIndex(lastAt);
+        setFilter(query);
+        setHighlightIndex(0);
+        const next = computeCoords();
+        if (next) setCoords(next);
+        setIsOpen(true);
+
+        // Only hit the API the first time "@" is triggered on this field.
+        if (!hasFetchedRef.current && !isLoadingOptions && loadOptions) {
+          hasFetchedRef.current = true;
+          setIsLoadingOptions(true);
+          loadOptions()
+            .then((list) => setOptions(Array.isArray(list) ? list : []))
+            .catch((err) => {
+              console.error('Failed to load @mention options', err);
+              hasFetchedRef.current = false; // allow retry on next "@"
+            })
+            .finally(() => setIsLoadingOptions(false));
+        }
+        return;
+      }
+    }
+    setIsOpen(false);
+  };
+
+  const insertMention = (option) => {
+    const cursor = textareaRef.current?.selectionStart ?? value.length;
+    const before = value.slice(0, atIndex);
+    const after = value.slice(cursor);
+    const tag = `@${(option.name || '').trim().replace(/\s+/g, '_')} `;
+    const nextValue = `${before}${tag}${after}`;
+    onChange(nextValue);
+    setIsOpen(false);
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        const pos = before.length + tag.length;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(pos, pos);
+      }
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if (!isOpen || filteredOptions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightIndex((i) => Math.min(i + 1, filteredOptions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      insertMention(filteredOptions[highlightIndex]);
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <textarea
+        ref={textareaRef}
+        rows={rows}
+        className={className}
+        value={value}
+        placeholder={placeholder}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+      />
+      {isOpen &&
+        (filteredOptions.length > 0 || isLoadingOptions) &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="border-mc-beige-dark bg-mc-white animate-fadeIn z-[9999] max-h-60 overflow-y-auto rounded-lg border shadow-lg"
+          >
+            {isLoadingOptions && filteredOptions.length === 0 ? (
+              <div className="text-mc-gray-soft flex items-center gap-2 px-3 py-2.5 text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading...
+              </div>
+            ) : (
+              filteredOptions.map((opt, idx) => {
+                const initial = (opt.name?.[0] || 'U').toUpperCase();
+                const isHighlighted = idx === highlightIndex;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      insertMention(opt);
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${
+                      isHighlighted
+                        ? 'bg-mc-gold/10 border-mc-gold border-l-2'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${
+                        isHighlighted
+                          ? 'bg-mc-gold text-white'
+                          : 'text-mc-black bg-slate-200'
+                      }`}
+                    >
+                      {initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-semibold text-slate-700">
+                        {opt.name}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
 
 export default function ContainerDetailsModal({
   container,
@@ -55,6 +305,21 @@ export default function ContainerDetailsModal({
   const [previewImage, setPreviewImage] = useState(null);
   const [previewAnchor, setPreviewAnchor] = useState(null);
   const countryOptions = useMemo(() => countryList().getData(), []);
+
+  // @mention sources: both fields pull from the single tag-users API
+  // (/auth/users/tag), but only when "@" is actually typed in that field —
+  // not eagerly on mount. Vendor Credit Needed scopes the call to
+  // role=vendor; Receiving Closure Notes leaves it unscoped.
+  const loadVendorMentionOptions = async () => {
+    const users = await getTagUsers({ role: 'vendor' });
+    // Trust the API's role=vendor filtering as-is — no client-side re-filter.
+    return Array.isArray(users) ? users : [];
+  };
+
+  const loadTeamMentionOptions = async () => {
+    const users = await getTagUsers();
+    return Array.isArray(users) ? users : [];
+  };
 
   const reactSelectStyles = {
     control: (base, state) => ({
@@ -1307,16 +1572,14 @@ export default function ContainerDetailsModal({
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
                           Vendor Credit Needed
                         </label>
-                        <textarea
+                        <MentionTextarea
                           rows={3}
                           className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.factory_credit_needed || ''}
-                          placeholder="e.g. Damaged panels"
-                          onChange={(e) =>
-                            handleTrackingChange(
-                              'factory_credit_needed',
-                              e.target.value,
-                            )
+                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
+                          loadOptions={loadVendorMentionOptions}
+                          onChange={(val) =>
+                            handleTrackingChange('factory_credit_needed', val)
                           }
                         />
                       </div>
@@ -1324,15 +1587,16 @@ export default function ContainerDetailsModal({
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
                           Receiving Closure Notes
                         </label>
-                        <textarea
+                        <MentionTextarea
                           rows={3}
                           className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
                           value={trackingData.receiving_closure_notes || ''}
-                          placeholder="e.g. Fully closed and processed"
-                          onChange={(e) =>
+                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
+                          loadOptions={loadTeamMentionOptions}
+                          onChange={(val) =>
                             handleTrackingChange(
                               'receiving_closure_notes',
-                              e.target.value,
+                              val,
                             )
                           }
                         />

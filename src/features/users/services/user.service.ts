@@ -89,21 +89,28 @@ export async function deleteUser(id: string): Promise<void> {
   await apiClient.delete(USERS_DELETE(id));
 }
 
-/** Fetch taggable users (names only) for @mention in comments */
-export async function getTagUsers(): Promise<any[]> {
-  const { data } = await apiClient.get<any[]>(USERS_TAG);
+/**
+ * Fetch taggable users for @mention in comments. `params.role` is sent as
+ * a query filter, but the endpoint may or may not honor it server-side —
+ * callers that need a guaranteed role scope should also filter client-side
+ * using the `role` field returned on each item (kept below, not stripped).
+ */
+export async function getTagUsers(params?: { role?: string }): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>(USERS_TAG, { params });
   if (!Array.isArray(data)) return [];
   return data
     .map((item) => {
-      // API may return plain strings or User objects — normalize to display name
-      if (typeof item === 'string') return { id: item, name: item };
+      // API may return plain strings, User objects, or Vendor objects
+      // (which use a plain `name` field) — normalize to a display name.
+      if (typeof item === 'string') return { id: item, name: item, role: '' };
       const name =
+        item.name ||
         item.full_name ||
         `${item.first_name || ''} ${item.last_name || ''}`.trim() ||
         item.username ||
         item.email ||
         '';
-      return { id: item.id || '', name };
+      return { id: item.id || '', name, role: item.role || item.user_role || '' };
     })
     .filter((u) => Boolean(u.name));
 }
