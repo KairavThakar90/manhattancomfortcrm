@@ -392,7 +392,9 @@ export default function ContainerDetailsModal({
   // not eagerly on mount. Vendor Credit Needed scopes the call to
   // role=vendor; Receiving Closure Notes leaves it unscoped.
   const loadVendorMentionOptions = async () => {
-    const users = await getTagUsers({ role: 'vendor' });
+    // TEMP: role=vendor filter disabled for testing — remove the comment
+    // to re-enable scoping this list to vendor-role users only.
+    const users = await getTagUsers(/* { role: 'vendor' } */);
     // Trust the API's role=vendor filtering as-is — no client-side re-filter.
     return Array.isArray(users) ? users : [];
   };
