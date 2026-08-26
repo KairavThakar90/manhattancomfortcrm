@@ -292,10 +292,10 @@ export default function ContainerDetailsModal({
       };
 
       await updateContainer(container.id, finalPayload, options);
-      toast.success('Tracking details updated successfully');
+      toast.success('Container details updated successfully');
       if (onRefresh) onRefresh();
     } catch (e) {
-      toast.error('Failed to update tracking details');
+      toast.error('Failed to update Container details');
       console.error(e);
     } finally {
       setIsSaving(false);
@@ -1455,8 +1455,8 @@ export default function ContainerDetailsModal({
                 container.factory_credit_needed ||
                 container.receiving_closure_notes ||
                 trackingData.attachment
-                  ? 'Update Tracking'
-                  : 'Save Changes'}
+                  ? 'Update Container'
+                  : 'Save Container'}
               </button>
             </div>
           )}
