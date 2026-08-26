@@ -401,9 +401,12 @@ export default function MainLayout() {
         {/* INTERNAL VIEWPORT PORTAL */}
         <div
           className={`min-h-0 flex-1 p-6 ${
-            ['/purchase-orders', '/containers', '/tracker-logistics'].includes(
-              location.pathname,
-            )
+            [
+              '/purchase-orders',
+              '/purchase-order-create',
+              '/containers',
+              '/tracker-logistics',
+            ].includes(location.pathname)
               ? 'flex flex-col overflow-hidden'
               : 'overflow-y-auto'
           }`}

@@ -25,6 +25,9 @@ const UserActivityTrackingPage = lazy(
 const TrackerLogisticsPage = lazy(
   () => import('../features/trackerLogistics/pages/TrackerLogisticsPage'),
 );
+const PurchaseOrderCreatePage = lazy(
+  () => import('../features/purchaseOrders/pages/PurchaseOrderCreatePage'),
+);
 
 export const appRoutes = [
   { path: '/dashboard', element: React.createElement(DashboardPage) },
@@ -57,5 +60,9 @@ export const appRoutes = [
   {
     path: '/tracker-logistics',
     element: React.createElement(TrackerLogisticsPage),
+  },
+  {
+    path: '/purchase-order-create',
+    element: React.createElement(PurchaseOrderCreatePage),
   },
 ];
