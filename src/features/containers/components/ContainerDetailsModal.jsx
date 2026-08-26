@@ -1249,6 +1249,8 @@ export default function ContainerDetailsModal({
                                   value={
                                     logisticsOptions.find(
                                       (o) =>
+                                        o.id ===
+                                          trackingData.logistics_company_id ||
                                         o.value === trackingData.trucker_email,
                                     ) || null
                                   }
