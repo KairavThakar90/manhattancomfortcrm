@@ -31,6 +31,7 @@ import DateFilterInput from '../../../components/common/DateFilterInput';
 import Select from 'react-select';
 import countryList from 'react-select-country-list';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
+import ItemImageThumbnail from '../../../components/common/ItemImageThumbnail';
 import { getTagUsers } from '../../users/services/user.service';
 import { getTrackerLogistics } from '../../trackerLogistics/services/trackerLogistics.service';
 
@@ -954,39 +955,21 @@ export default function ContainerDetailsModal({
                                 item.product_image ||
                                 null;
 
-                              if (imageSrc) {
-                                return (
-                                  <div
-                                    className="group/img relative mx-auto flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded border border-slate-200 transition-colors hover:border-slate-400"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const rect =
-                                        e.currentTarget.getBoundingClientRect();
-                                      setPreviewAnchor({
-                                        top: rect.bottom + 6,
-                                        left: rect.left,
-                                      });
-                                      setPreviewImage(imageSrc);
-                                    }}
-                                  >
-                                    <img
-                                      src={imageSrc}
-                                      alt={item.sku || 'Product Image'}
-                                      className="h-full w-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover/img:bg-black/40 group-hover/img:opacity-100">
-                                      <Eye className="h-3.5 w-3.5 text-white" />
-                                    </div>
-                                  </div>
-                                );
-                              }
                               return (
-                                <div
-                                  className="bg-mc-beige-light text-mc-gray-soft mx-auto flex h-8 w-8 flex-shrink-0 items-center justify-center rounded"
-                                  title="No image available"
-                                >
-                                  <Package className="h-4 w-4" />
-                                </div>
+                                <ItemImageThumbnail
+                                  src={imageSrc}
+                                  alt={item.sku || 'Product Image'}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rect =
+                                      e.currentTarget.getBoundingClientRect();
+                                    setPreviewAnchor({
+                                      top: rect.bottom + 6,
+                                      left: rect.left,
+                                    });
+                                    setPreviewImage(imageSrc);
+                                  }}
+                                />
                               );
                             },
                           },
