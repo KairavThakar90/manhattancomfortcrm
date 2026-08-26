@@ -420,6 +420,7 @@ export default function ContainerDetailsModal({
             .map((l) => ({
               value: l.name,
               label: l.name,
+              id: l.id,
             })),
         );
       })
@@ -540,11 +541,9 @@ export default function ContainerDetailsModal({
         factory_credit_needed: container.factory_credit_needed || '',
         receiving_closure_notes: container.receiving_closure_notes || '',
         trucker_email: container.trucker_email || '',
-        primary_email: container.primary_email || '',
-        trucker_cc_email: container.trucker_cc_email || '',
+        logistics_company_id: container.logistics_company_id || null,
         attachmentsToUpload: [],
         existingAttachments: atts,
-        deleted_attachments: [],
       });
     }
   }
@@ -653,11 +652,10 @@ export default function ContainerDetailsModal({
         ...restPayload
       } = payload;
 
-      // Send references for both tracking standard DRF many-to-many list expectations and custom manual flags
+      // Send references for standard DRF many-to-many list expectations
       restPayload.attachments = existingAttachments
         ? existingAttachments.map((a) => a.id)
         : [];
-      restPayload.removed_attachments = restPayload.deleted_attachments || [];
 
       // The API expects the JSON data as a stringified object under 'container_data'
       finalPayload.append('container_data', JSON.stringify(restPayload));
@@ -1252,12 +1250,16 @@ export default function ContainerDetailsModal({
                                         o.value === trackingData.trucker_email,
                                     ) || null
                                   }
-                                  onChange={(option) =>
+                                  onChange={(option) => {
                                     handleTrackingChange(
                                       'trucker_email',
                                       option ? option.value : '',
-                                    )
-                                  }
+                                    );
+                                    handleTrackingChange(
+                                      'logistics_company_id',
+                                      option ? option.id : null,
+                                    );
+                                  }}
                                   options={logisticsOptions}
                                   styles={reactSelectStyles}
                                   placeholder="Select tracker..."
