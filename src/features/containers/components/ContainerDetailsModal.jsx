@@ -346,17 +346,17 @@ export default function ContainerDetailsModal({
         onClick={onClose}
       >
         <div
-          className="animate-in fade-in zoom-in-95 flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl duration-200"
+          className="animate-in fade-in zoom-in-95 flex h-[900px] max-h-[95vh] w-[1400px] max-w-[95vw] flex-col overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-2.5">
             <div className="flex items-center gap-3">
-              <div className="bg-mc-beige-light text-mc-black flex h-10 w-10 items-center justify-center rounded-lg">
-                <Eye className="h-5 w-5" />
+              <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
+                <Eye className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-lg leading-tight font-bold text-slate-800">
+                <h3 className="text-sm leading-tight font-bold text-slate-800">
                   Container Details
                 </h3>
                 <div className="mt-1 flex items-center gap-2">
