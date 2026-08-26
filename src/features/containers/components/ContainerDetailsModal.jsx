@@ -32,6 +32,56 @@ import Select from 'react-select';
 import countryList from 'react-select-country-list';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 import { getTagUsers } from '../../users/services/user.service';
+import { getTrackerLogistics } from '../../trackerLogistics/services/trackerLogistics.service';
+
+// Mirrors the textarea's text box in a hidden div so we can measure where a
+// given character index actually renders (textareas have no native API for
+// this). Returns { top, left, height } relative to the textarea's own
+// content box (i.e. before adding its on-screen position / scroll offset).
+function getCaretCoordinates(textarea, position) {
+  const div = document.createElement('div');
+  const style = div.style;
+  const computed = window.getComputedStyle(textarea);
+
+  style.position = 'absolute';
+  style.visibility = 'hidden';
+  style.whiteSpace = 'pre-wrap';
+  style.overflowWrap = 'break-word';
+  style.top = '0';
+  style.left = '-9999px';
+
+  [
+    'boxSizing',
+    'width',
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'fontStyle',
+    'letterSpacing',
+    'lineHeight',
+    'textTransform',
+    'textIndent',
+    'textAlign',
+    'padding',
+    'border',
+  ].forEach((prop) => {
+    style[prop] = computed[prop];
+  });
+
+  div.textContent = textarea.value.substring(0, position);
+  const span = document.createElement('span');
+  span.textContent = textarea.value.substring(position) || '.';
+  div.appendChild(span);
+  document.body.appendChild(div);
+
+  const coords = {
+    top: span.offsetTop,
+    left: span.offsetLeft,
+    height: span.offsetHeight || parseInt(computed.lineHeight, 10) || 16,
+  };
+  document.body.removeChild(div);
+  return coords;
+}
 
 /**
  * Textarea with lightweight "@name" tagging. Typing "@" opens a dropdown —
@@ -81,39 +131,54 @@ function MentionTextarea({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const DROPDOWN_MAX_HEIGHT = 240; // matches max-h-60 below
+  // Remembers the caret's actual screen position so the post-render
+  // overflow check below can flip to "above" without re-measuring the
+  // caret (which would be needed again anyway, but keeps the two steps
+  // clearly separate: anchor first, correct for overflow second).
+  const anchorRef = useRef({ top: 0, bottom: 0 });
 
-  const computeCoords = () => {
-    if (!textareaRef.current) return null;
-    const rect = textareaRef.current.getBoundingClientRect();
-    // Keep the menu a compact, fixed-ish width instead of stretching to
-    // match a wide textarea, and keep it inside the viewport horizontally.
-    const width = Math.min(280, Math.max(rect.width, 220));
-    const left = Math.min(rect.left, window.innerWidth - width - 16);
+  const filteredOptions = useMemo(() => {
+    const f = filter.toLowerCase();
+    const list = Array.isArray(options) ? options : [];
+    if (!f) return list.slice(0, 8);
+    return list
+      .filter((o) => (o.name || '').toLowerCase().includes(f))
+      .slice(0, 8);
+  }, [filter, options]);
 
-    // Flip to open above the field when there isn't enough room below
-    // (e.g. a field near the bottom of the modal) but there is above.
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openAbove =
-      spaceBelow < DROPDOWN_MAX_HEIGHT && rect.top > DROPDOWN_MAX_HEIGHT;
+  // Anchors the dropdown to the "@" itself (where the mention started)
+  // rather than the whole textarea, so it opens right at the typed
+  // position — like the reference chat-style @mention UI. Always anchors
+  // below the caret first; the layout-effect below flips it above only if
+  // it actually turns out to overflow the viewport once rendered.
+  const computeCoords = (caretPos = atIndex) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return null;
+    const rect = textarea.getBoundingClientRect();
+    const width = Math.min(280, Math.max(rect.width * 0.6, 220));
 
-    return openAbove
-      ? {
-          top: 'auto',
-          bottom: window.innerHeight - rect.top + 4,
-          left: Math.max(left, 8),
-          width,
-        }
-      : {
-          top: rect.bottom + 4,
-          bottom: 'auto',
-          left: Math.max(left, 8),
-          width,
-        };
+    let caretTop = 0;
+    let caretLeft = 0;
+    let caretHeight = 18;
+    if (caretPos >= 0) {
+      const caret = getCaretCoordinates(textarea, caretPos);
+      caretTop = caret.top - textarea.scrollTop;
+      caretLeft = caret.left - textarea.scrollLeft;
+      caretHeight = caret.height;
+    }
+
+    const anchorTop = rect.top + caretTop;
+    const anchorBottom = anchorTop + caretHeight;
+    let left = rect.left + caretLeft;
+    left = Math.min(left, window.innerWidth - width - 16);
+    left = Math.max(left, 8);
+
+    anchorRef.current = { top: anchorTop, bottom: anchorBottom };
+    return { top: anchorBottom + 4, bottom: 'auto', left, width };
   };
 
   useEffect(() => {
-    // Keep the dropdown anchored to the textarea whenever any ancestor
+    // Keep the dropdown anchored to the caret whenever any ancestor
     // scrolls or the window resizes — the modal body is scrollable and
     // `scroll` doesn't bubble, so this must be a capturing listener.
     if (!isOpen) return;
@@ -127,16 +192,31 @@ function MentionTextarea({
       document.removeEventListener('scroll', reposition, true);
       window.removeEventListener('resize', reposition);
     };
-  }, [isOpen]);
+  }, [isOpen, atIndex]);
 
-  const filteredOptions = useMemo(() => {
-    const f = filter.toLowerCase();
-    const list = Array.isArray(options) ? options : [];
-    if (!f) return list.slice(0, 8);
-    return list
-      .filter((o) => (o.name || '').toLowerCase().includes(f))
-      .slice(0, 8);
-  }, [filter, options]);
+  useEffect(() => {
+    // After the dropdown actually renders, check whether it overflows the
+    // bottom of the viewport and only then flip it to open upward —
+    // avoids guessing a fixed height and flipping when it would have fit.
+    if (!isOpen || !dropdownRef.current) return;
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const overflowsBottom = rect.bottom > window.innerHeight - 8;
+    const isCurrentlyAbove = coords.top === 'auto';
+    if (overflowsBottom && !isCurrentlyAbove) {
+      const { top: anchorTop } = anchorRef.current;
+      if (anchorTop > rect.height) {
+        setCoords((prev) => ({
+          ...prev,
+          top: 'auto',
+          bottom: window.innerHeight - anchorTop + 4,
+        }));
+      }
+    } else if (!overflowsBottom && isCurrentlyAbove) {
+      const { bottom: anchorBottom } = anchorRef.current;
+      setCoords((prev) => ({ ...prev, top: anchorBottom + 4, bottom: 'auto' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, filteredOptions.length, isLoadingOptions]);
 
   const handleChange = (e) => {
     const text = e.target.value;
@@ -154,7 +234,7 @@ function MentionTextarea({
         setAtIndex(lastAt);
         setFilter(query);
         setHighlightIndex(0);
-        const next = computeCoords();
+        const next = computeCoords(lastAt);
         if (next) setCoords(next);
         setIsOpen(true);
 
@@ -320,6 +400,38 @@ export default function ContainerDetailsModal({
     const users = await getTagUsers();
     return Array.isArray(users) ? users : [];
   };
+
+  // Trucker Email dropdown: sourced from /logistics, showing each entry's
+  // name — and the selected option's value stored in trucker_email is
+  // also that name (not the underlying email address).
+  const [logisticsOptions, setLogisticsOptions] = useState([]);
+  const [isLoadingLogistics, setIsLoadingLogistics] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setIsLoadingLogistics(true);
+    getTrackerLogistics()
+      .then((list) => {
+        if (!active) return;
+        setLogisticsOptions(
+          (Array.isArray(list) ? list : [])
+            .filter((l) => l && l.name)
+            .map((l) => ({
+              value: l.name,
+              label: l.name,
+            })),
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to load tracker logistics list', err);
+      })
+      .finally(() => {
+        if (active) setIsLoadingLogistics(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const reactSelectStyles = {
     control: (base, state) => ({
@@ -1150,21 +1262,27 @@ export default function ContainerDetailsModal({
                                 Trucker Email
                               </label>
                               <div className="flex flex-wrap items-center gap-2">
-                                <input
-                                  type="email"
-                                  value={trackingData.trucker_email || ''}
-                                  onChange={(e) =>
+                                <Select
+                                  value={
+                                    logisticsOptions.find(
+                                      (o) =>
+                                        o.value === trackingData.trucker_email,
+                                    ) || null
+                                  }
+                                  onChange={(option) =>
                                     handleTrackingChange(
                                       'trucker_email',
-                                      e.target.value,
+                                      option ? option.value : '',
                                     )
                                   }
-                                  placeholder="e.g. manager@manhattancomfort.com"
-                                  className={`focus:ring-mc-black w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none ${
-                                    emailError
-                                      ? 'border-rose-500 bg-rose-50 focus:border-rose-500'
-                                      : 'focus:border-mc-black border-slate-200 bg-slate-50'
-                                  }`}
+                                  options={logisticsOptions}
+                                  styles={reactSelectStyles}
+                                  placeholder="Select tracker..."
+                                  isLoading={isLoadingLogistics}
+                                  isSearchable
+                                  isClearable
+                                  menuPortalTarget={document.body}
+                                  className="w-full"
                                 />
                               </div>
                               {emailError && (
