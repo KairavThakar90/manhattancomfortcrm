@@ -3189,7 +3189,7 @@ Supply Chain CRM Coordinator`;
           ]
         : []),
       {
-        header: 'Reason for Delayed',
+        header: 'Reason for Delay',
         accessor: 'delay_reason',
         headerClassName: 'px-6 py-4',
         className: 'px-6 py-4 min-w-[150px]',
@@ -4446,7 +4446,7 @@ Supply Chain CRM Coordinator`;
               <div className="flex items-center gap-1">
                 <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
                 <span className="text-mc-gray-soft text-xs font-bold">
-                  Channel:
+                  Channel Id:
                 </span>
               </div>
               <div className="w-40">
