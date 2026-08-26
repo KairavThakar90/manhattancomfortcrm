@@ -1482,6 +1482,44 @@ export default function ContainerDetailsModal({
                           </div>
                         </>
                       )}
+                      <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Vendor Credit Needed
+                          </label>
+                          <MentionTextarea
+                            rows={3}
+                            className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
+                            value={trackingData.factory_credit_needed || ''}
+                            placeholder="e.g. Damaged panels — type @ to tag a vendor"
+                            loadOptions={loadVendorMentionOptions}
+                            onChange={(val) =>
+                              handleTrackingChange(
+                                'factory_credit_needed',
+                                val,
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-slate-700">
+                            Receiving Closure Notes
+                          </label>
+                          <MentionTextarea
+                            rows={3}
+                            className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
+                            value={trackingData.receiving_closure_notes || ''}
+                            placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
+                            loadOptions={loadTeamMentionOptions}
+                            onChange={(val) =>
+                              handleTrackingChange(
+                                'receiving_closure_notes',
+                                val,
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
                       <div className="sm:col-span-2">
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
                           Attachment
@@ -1670,39 +1708,6 @@ export default function ContainerDetailsModal({
                             );
                           })()}
                         </div>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs font-semibold text-slate-700">
-                          Vendor Credit Needed
-                        </label>
-                        <MentionTextarea
-                          rows={3}
-                          className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.factory_credit_needed || ''}
-                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
-                          loadOptions={loadVendorMentionOptions}
-                          onChange={(val) =>
-                            handleTrackingChange('factory_credit_needed', val)
-                          }
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs font-semibold text-slate-700">
-                          Receiving Closure Notes
-                        </label>
-                        <MentionTextarea
-                          rows={3}
-                          className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
-                          value={trackingData.receiving_closure_notes || ''}
-                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
-                          loadOptions={loadTeamMentionOptions}
-                          onChange={(val) =>
-                            handleTrackingChange(
-                              'receiving_closure_notes',
-                              val,
-                            )
-                          }
-                        />
                       </div>
                     </div>
                   </div>
