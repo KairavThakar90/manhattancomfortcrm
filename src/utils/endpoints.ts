@@ -165,6 +165,13 @@ export const CONTAINER_SYNC = '/purchase-orders/sync-containers';
 export const CONTAINERS_EXPORT_CSV = '/containers/export/csv';
 export const CONTAINER_ACTIVITIES = (id: string) =>
   `/containers/${id}/activities`;
+export const CONTAINER_COMMENTS = (id: string) => `/containers/${id}/comments`;
+export const CONTAINER_COMMENT_UPDATE = (commentId: string) =>
+  `/containers/comments/${commentId}`;
+export const CONTAINER_COMMENT_DELETE = (commentId: string) =>
+  `/containers/comments/${commentId}`;
+export const CONTAINER_COMMENT_ATTACHMENT_DELETE = (attachmentId: string) =>
+  `/containers/comments/attachments/${attachmentId}`;
 
 // ------------------------------------------
 // PO Comment Endpoints

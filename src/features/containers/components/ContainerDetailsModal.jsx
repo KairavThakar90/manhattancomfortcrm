@@ -34,6 +34,7 @@ import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 import ItemImageThumbnail from '../../../components/common/ItemImageThumbnail';
 import { getTagUsers } from '../../users/services/user.service';
 import { getTrackerLogistics } from '../../trackerLogistics/services/trackerLogistics.service';
+import ContainerCommentSection from './ContainerCommentSection';
 
 // Mirrors the textarea's text box in a hidden div so we can measure where a
 // given character index actually renders (textareas have no native API for
@@ -1487,42 +1488,20 @@ export default function ContainerDetailsModal({
                         </>
                       )}
                       <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
-                        <div>
-                          <label className="mb-1 block text-xs font-semibold text-slate-700">
-                            Vendor Credit Needed
-                          </label>
-                          <MentionTextarea
-                            rows={3}
-                            className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
-                            value={trackingData.factory_credit_needed || ''}
-                            placeholder="e.g. Damaged panels — type @ to tag a vendor"
-                            loadOptions={loadVendorMentionOptions}
-                            onChange={(val) =>
-                              handleTrackingChange(
-                                'factory_credit_needed',
-                                val,
-                              )
-                            }
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-semibold text-slate-700">
-                            Receiving Closure Notes
-                          </label>
-                          <MentionTextarea
-                            rows={3}
-                            className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm transition-colors focus:ring-1 focus:outline-none"
-                            value={trackingData.receiving_closure_notes || ''}
-                            placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
-                            loadOptions={loadTeamMentionOptions}
-                            onChange={(val) =>
-                              handleTrackingChange(
-                                'receiving_closure_notes',
-                                val,
-                              )
-                            }
-                          />
-                        </div>
+                        <ContainerCommentSection
+                          containerId={container?.id}
+                          category="vendor_credit"
+                          title="Vendor Credit Needed"
+                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
+                          loadMentionOptions={loadVendorMentionOptions}
+                        />
+                        <ContainerCommentSection
+                          containerId={container?.id}
+                          category="receiving_closure"
+                          title="Receiving Closure Notes"
+                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
+                          loadMentionOptions={loadTeamMentionOptions}
+                        />
                       </div>
                       <div className="sm:col-span-2">
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
