@@ -1956,7 +1956,7 @@ export default function ContainerFlowPage() {
                         className="text-mc-black border-mc-beige-dark focus:ring-mc-gold accent-black"
                       />
                       <span className="text-mc-black group-hover:text-mc-gold text-sm font-medium transition-colors">
-                        Pending/In-Transit Only
+                        Pending/Pick up Only
                       </span>
                     </label>
                     <label className="group flex cursor-pointer items-center gap-2">

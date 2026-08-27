@@ -779,7 +779,7 @@ export default function ContainerDetailsModal({
                           : 'border-amber-200 bg-amber-50 text-amber-700'
                       }`}
                     >
-                      {container.is_received ? 'Received' : 'In Transit'}
+                      {container.is_received ? 'Received' : 'Pick up'}
                     </span>
                     {container.is_received &&
                       container.received_date &&
@@ -885,7 +885,7 @@ export default function ContainerDetailsModal({
                       <span
                         className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
                       >
-                        {container.is_received ? 'Received' : 'In Transit'}
+                        {container.is_received ? 'Received' : 'Pick up'}
                       </span>
                     </div>
                   </div>
