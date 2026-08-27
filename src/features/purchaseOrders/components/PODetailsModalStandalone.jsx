@@ -474,6 +474,7 @@ export default function PODetailsModalStandalone({ poId, onClose }) {
         patchPurchaseOrder={patchPurchaseOrder}
         updatePOComment={updatePOComment}
         updatePOLeadTime={handleUpdatePOLeadTime}
+        onUpdatePO={(updated) => setPo((prev) => ({ ...prev, ...updated }))}
         handleToggleComments={() => {}}
         handleMarkResolved={() => {}}
         handleDeleteComment={handleDeleteComment}

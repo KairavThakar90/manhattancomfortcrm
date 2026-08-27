@@ -30,6 +30,7 @@ import {
   Pencil,
   Trash,
   Copy,
+  RefreshCw,
 } from 'lucide-react';
 import ItemCommentModal from '../../../components/ItemCommentModal';
 import { getTagUsers } from '../../users/services/user.service';
@@ -38,7 +39,10 @@ import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
 import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import { setPurchaseOrdersList } from '../store/purchaseOrderSlice';
-import { exportPurchaseOrderCSV } from '../services/purchaseOrder.service';
+import {
+  exportPurchaseOrderCSV,
+  syncSinglePurchaseOrder,
+} from '../services/purchaseOrder.service';
 import { toast } from 'react-toastify';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 import ItemImageThumbnail from '../../../components/common/ItemImageThumbnail';
@@ -274,6 +278,49 @@ export function PODetailsModal(props) {
     '' | 'Compressing...' | 'Uploading...'
   >('');
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isSyncingSinglePO, setIsSyncingSinglePO] = useState(false);
+
+  const handleSyncSinglePO = async () => {
+    if (!selectedPO) return;
+    const scPoId =
+      selectedPO.sellercloud_po_id ||
+      String(selectedPO.id || '')
+        .replace(/^P[O0]-/i, '')
+        .trim();
+
+    if (!scPoId || scPoId === 'N/A') {
+      toast.error('Sellercloud PO ID not found.');
+      return;
+    }
+
+    if (isSyncingSinglePO) return;
+
+    setIsSyncingSinglePO(true);
+    try {
+      await syncSinglePurchaseOrder(scPoId);
+      if (getPurchaseOrderById) {
+        try {
+          const detailData = await getPurchaseOrderById(scPoId);
+          if (detailData && props.onUpdatePO) {
+            props.onUpdatePO(detailData);
+          }
+        } catch (fetchErr) {
+          console.warn('Failed to re-fetch PO details after sync:', fetchErr);
+        }
+      }
+      toast.success('Purchase Order synced successfully.');
+    } catch (err: any) {
+      console.error('Failed to sync single PO:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncingSinglePO(false);
+    }
+  };
   const [commentError, setCommentError] = useState<string | null>(null);
 
   // ---- @mention tagging (mirrors POManagement's mention engine) ----
@@ -981,6 +1028,18 @@ export function PODetailsModal(props) {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleSyncSinglePO}
+                      disabled={isSyncingSinglePO}
+                      className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-bold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Sync this Purchase Order"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${isSyncingSinglePO ? 'animate-spin text-mc-gold' : ''}`}
+                      />
+                      {isSyncingSinglePO ? 'Syncing...' : 'Sync PO'}
+                    </button>
+
                     <button
                       onClick={() => handleExportPO(selectedPO)}
                       className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-black text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-bold shadow-sm transition"

@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Package, Loader2, ExternalLink, Eye } from 'lucide-react';
-import { getPurchaseOrderById } from '../services/purchaseOrder.service';
+import { X, Package, Loader2, ExternalLink, Eye, RefreshCw } from 'lucide-react';
+import {
+  getPurchaseOrderById,
+  syncSinglePurchaseOrder,
+} from '../services/purchaseOrder.service';
+import { toast } from 'react-toastify';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 
 /**
@@ -32,6 +36,54 @@ export default function POQuickView({ poId, onClose }) {
     setPo(null);
     setError(null);
   }
+
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const fetchPODetails = () => {
+    if (!cleanId) return;
+    setLoading(true);
+    getPurchaseOrderById(cleanId)
+      .then((data) => {
+        if (data) {
+          setPo(data);
+        } else {
+          setError('Purchase order not found.');
+        }
+      })
+      .catch((err) => {
+        console.error('POQuickView fetch error:', err);
+        setError('Failed to load purchase order details.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  const handleSync = async (e) => {
+    e?.stopPropagation();
+    if (!cleanId || cleanId === 'N/A') {
+      toast.error('Sellercloud PO ID not found.');
+      return;
+    }
+    if (isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      await syncSinglePurchaseOrder(cleanId);
+      fetchPODetails();
+      toast.success('Purchase Order synced successfully.');
+    } catch (err) {
+      console.error('POQuickView sync error:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
     if (!cleanId) return;
@@ -99,6 +151,17 @@ export default function POQuickView({ poId, onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="text-mc-black hover:bg-mc-beige-light flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold shadow-xs transition disabled:cursor-not-allowed disabled:opacity-50"
+              title="Sync Purchase Order"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-mc-gold' : ''}`}
+              />
+              <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
+            </button>
             {po?.delta_sellercloud_link && (
               <a
                 href={po.delta_sellercloud_link}

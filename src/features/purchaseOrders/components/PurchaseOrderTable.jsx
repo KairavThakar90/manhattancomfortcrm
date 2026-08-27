@@ -13,6 +13,8 @@ import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import DateFilterInput from '../../../components/common/DateFilterInput';
+import { syncSinglePurchaseOrder } from '../services/purchaseOrder.service';
+import { toast } from 'react-toastify';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
@@ -64,6 +66,82 @@ export default function PurchaseOrderTable({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const [syncingPOIds, setSyncingPOIds] = useState(new Set());
+  const [manualPoInput, setManualPoInput] = useState('');
+  const [isSyncingManualPO, setIsSyncingManualPO] = useState(false);
+
+  const handleManualPOSync = async (e) => {
+    e?.preventDefault?.();
+    const cleanId = manualPoInput.trim().replace(/^P[O0]-/i, '');
+    if (!cleanId) {
+      toast.error('Please enter a valid PO number.');
+      return;
+    }
+
+    if (isSyncingManualPO) return;
+
+    setIsSyncingManualPO(true);
+    try {
+      await syncSinglePurchaseOrder(cleanId);
+      if (onRefresh) {
+        onRefresh();
+      }
+      toast.success('Purchase Order synced successfully.');
+      setManualPoInput('');
+      setShowSyncMenu(false);
+    } catch (err) {
+      console.error('Failed to sync PO by number:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncingManualPO(false);
+    }
+  };
+
+  const handleSyncSinglePO = async (po) => {
+    if (!po) return;
+    const scPoId =
+      po.sellercloud_po_id ||
+      String(po.id || '')
+        .replace(/^P[O0]-/i, '')
+        .trim();
+
+    if (!scPoId || scPoId === 'N/A') {
+      toast.error('Sellercloud PO ID not found.');
+      return;
+    }
+
+    const poKey = String(po.id || scPoId);
+    if (syncingPOIds.has(poKey)) return;
+
+    setSyncingPOIds((prev) => new Set(prev).add(poKey));
+    try {
+      await syncSinglePurchaseOrder(scPoId);
+      if (onRefresh) {
+        onRefresh();
+      }
+      toast.success('Purchase Order synced successfully.');
+    } catch (err) {
+      console.error('Failed to sync single PO:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setSyncingPOIds((prev) => {
+        const next = new Set(prev);
+        next.delete(poKey);
+        return next;
+      });
+    }
+  };
 
   const columns = [
     {
@@ -152,6 +230,43 @@ export default function PurchaseOrderTable({
         </span>
       ),
     },
+    {
+      header: 'Actions',
+      headerClassName: 'px-4 py-3 text-center',
+      className: 'px-4 py-3 text-center',
+      render: (po) => {
+        const poKey = String(
+          po.id ||
+            po.sellercloud_po_id ||
+            String(po.uuid || '').replace(/^P[O0]-/i, '') ||
+            '',
+        );
+        const isSyncingThisPO =
+          syncingPOIds.has(poKey) ||
+          (po.sellercloud_po_id &&
+            syncingPOIds.has(String(po.sellercloud_po_id))) ||
+          (po.id && syncingPOIds.has(String(po.id)));
+
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSyncSinglePO(po);
+              }}
+              disabled={isSyncingThisPO}
+              title={isSyncingThisPO ? 'Syncing...' : 'Sync Purchase Order'}
+              className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center justify-center rounded-md p-1.5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncingThisPO ? 'animate-spin text-mc-gold' : ''}`}
+              />
+            </button>
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -184,7 +299,7 @@ export default function PurchaseOrderTable({
               </button>
 
               {showSyncMenu && (
-                <div className="border-mc-beige-dark bg-mc-white animate-fadeIn absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border shadow-lg">
+                <div className="border-mc-beige-dark bg-mc-white animate-fadeIn absolute top-full right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border shadow-xl">
                   <div className="border-mc-beige-dark bg-mc-beige-light border-b px-3 py-2">
                     <span className="text-mc-gray-soft text-[10px] font-bold tracking-wider uppercase">
                       Select timeframe
@@ -209,6 +324,37 @@ export default function PurchaseOrderTable({
                         {opt.label}
                       </button>
                     ))}
+                  </div>
+
+                  {/* Manual PO Number Sync */}
+                  <div className="border-mc-beige-dark bg-mc-beige-light/50 border-t p-3">
+                    <span className="text-mc-gray-soft mb-1.5 block text-[10px] font-bold tracking-wider uppercase">
+                      Or Sync Specific PO
+                    </span>
+                    <form
+                      onSubmit={handleManualPOSync}
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Enter PO # (e.g. 104523)"
+                        value={manualPoInput}
+                        onChange={(e) => setManualPoInput(e.target.value)}
+                        className="focus:border-mc-gold focus:ring-mc-gold border-mc-beige-dark w-full rounded-lg border bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:ring-1 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!manualPoInput.trim() || isSyncingManualPO}
+                        className="bg-mc-black hover:bg-black flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isSyncingManualPO ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          'Sync'
+                        )}
+                      </button>
+                    </form>
                   </div>
                 </div>
               )}

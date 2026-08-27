@@ -64,6 +64,7 @@ import {
   postPOComment,
   getPurchaseOrderById,
   syncPurchaseOrders,
+  syncSinglePurchaseOrder,
   updatePOComment,
   deletePOComment,
   deletePOCommentAttachment,
@@ -1170,6 +1171,7 @@ export default function POManagement({
   const [detailedPOItems, setDetailedPOItems] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncingPOIds, setSyncingPOIds] = useState<Set<string>>(new Set());
   const [isCommentOnlyView, setIsCommentOnlyView] = useState(false);
   const [commentScope, setCommentScope] = useState<'po' | 'sku'>('po');
   const [selectedSkuId, setSelectedSkuId] = useState<string | null>(null);
@@ -1370,6 +1372,171 @@ export default function POManagement({
       toast.error('Failed to sync POs from SellerCloud.');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const [manualPoInput, setManualPoInput] = useState('');
+  const [isSyncingManualPO, setIsSyncingManualPO] = useState(false);
+
+  const handleManualPOSync = async (e?: React.FormEvent) => {
+    e?.preventDefault?.();
+    const cleanId = manualPoInput.trim().replace(/^P[O0]-/i, '');
+    if (!cleanId) {
+      toast.error('Please enter a valid PO number.');
+      return;
+    }
+
+    if (isSyncingManualPO) return;
+
+    setIsSyncingManualPO(true);
+    try {
+      await syncSinglePurchaseOrder(cleanId);
+
+      try {
+        const detailData = await getPurchaseOrderById(cleanId);
+        if (detailData) {
+          const calculatedOrderedQty = detailData.items
+            ? detailData.items.reduce(
+                (sum: number, i: any) =>
+                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                0,
+              )
+            : 0;
+          const calculatedReceivedQty = detailData.items
+            ? detailData.items.reduce(
+                (sum: number, i: any) =>
+                  sum +
+                  (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                0,
+              )
+            : 0;
+
+          const mappedPO = {
+            id: detailData.sellercloud_po_id
+              ? `PO-${detailData.sellercloud_po_id}`
+              : detailData.id,
+            ...detailData,
+            orderedQty: calculatedOrderedQty,
+            receivedQty: calculatedReceivedQty,
+          };
+          onUpdatePO(mappedPO);
+        }
+      } catch (fetchErr) {
+        console.warn(
+          'Could not re-fetch single PO details after sync:',
+          fetchErr,
+        );
+      }
+
+      if (onRefreshData) {
+        onRefreshData();
+      }
+
+      toast.success('Purchase Order synced successfully.');
+      onAddActivity?.(`Synced PO ${cleanId} from Sellercloud`, 'PO Updated');
+      setManualPoInput('');
+      setShowSyncMenu(false);
+    } catch (err: any) {
+      console.error('Failed to sync PO by number:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncingManualPO(false);
+    }
+  };
+
+  const handleSyncSinglePO = async (po: any) => {
+    if (!po) return;
+    const scPoId =
+      po.sellercloud_po_id ||
+      String(po.id || '')
+        .replace(/^P[O0]-/i, '')
+        .trim();
+
+    if (!scPoId || scPoId === 'N/A') {
+      toast.error('Sellercloud PO ID not found.');
+      return;
+    }
+
+    const poKey = String(po.id || scPoId);
+    if (syncingPOIds.has(poKey)) return;
+
+    setSyncingPOIds((prev) => new Set(prev).add(poKey));
+    try {
+      await syncSinglePurchaseOrder(scPoId);
+
+      // Re-fetch the updated single PO to refresh local and redux state
+      try {
+        const detailData = await getPurchaseOrderById(scPoId);
+        if (detailData) {
+          const calculatedOrderedQty = detailData.items
+            ? detailData.items.reduce(
+                (sum: number, i: any) =>
+                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
+                0,
+              )
+            : po.orderedQty;
+          const calculatedReceivedQty = detailData.items
+            ? detailData.items.reduce(
+                (sum: number, i: any) =>
+                  sum +
+                  (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
+                0,
+              )
+            : po.receivedQty;
+
+          const updatedPO = {
+            ...po,
+            ...detailData,
+            id: detailData.sellercloud_po_id
+              ? `PO-${detailData.sellercloud_po_id}`
+              : po.id,
+            orderedQty: calculatedOrderedQty ?? po.orderedQty,
+            receivedQty: calculatedReceivedQty ?? po.receivedQty,
+            status: detailData.status_label || detailData.status || po.status,
+            total_item_count:
+              detailData.total_item_count ??
+              (detailData.items ? detailData.items.length : po.total_item_count),
+            total_qty_ordered:
+              detailData.total_qty_ordered ?? calculatedOrderedQty,
+            total_qty_received:
+              detailData.total_qty_received ?? calculatedReceivedQty,
+            total_qty_remaining: detailData.total_qty_remaining,
+            commentsCount:
+              detailData.total_comments_count ??
+              detailData.commentsCount ??
+              po.commentsCount,
+          };
+          onUpdatePO(updatedPO);
+        }
+      } catch (fetchErr) {
+        console.warn('Failed to re-fetch single PO after sync:', fetchErr);
+      }
+
+      if (onRefreshData) {
+        onRefreshData();
+      }
+
+      toast.success('Purchase Order synced successfully.');
+      onAddActivity?.(`Synced PO ${po.id || scPoId} from Sellercloud`, 'PO Updated');
+    } catch (err: any) {
+      console.error('Failed to sync single PO:', err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        'Failed to sync Purchase Order.';
+      toast.error(errorMsg);
+    } finally {
+      setSyncingPOIds((prev) => {
+        const next = new Set(prev);
+        next.delete(poKey);
+        return next;
+      });
     }
   };
 
@@ -3680,21 +3847,52 @@ Supply Chain CRM Coordinator`;
       {
         header: 'Actions',
         accessor: 'actions',
-        headerClassName: 'px-6 py-4  text-center',
+        headerClassName: 'px-6 py-4 text-center',
         className: 'px-6 py-4 text-center',
-        render: (po: any) => (
-          <button
-            onClick={(e: any) => {
-              e.stopPropagation();
-              setIsCommentOnlyView(false);
-              onSelectPO(po.id);
-            }}
-            className="text-mc-black inline-flex items-center gap-1 rounded-md p-1 font-semibold hover:bg-slate-100"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            <span></span>
-          </button>
-        ),
+        render: (po: any) => {
+          const poKey = String(
+            po.id ||
+              po.sellercloud_po_id ||
+              String(po.uuid || '').replace(/^P[O0]-/i, '') ||
+              '',
+          );
+          const isSyncingThisPO =
+            syncingPOIds.has(poKey) ||
+            (po.sellercloud_po_id &&
+              syncingPOIds.has(String(po.sellercloud_po_id))) ||
+            (po.id && syncingPOIds.has(String(po.id)));
+
+          return (
+            <div className="flex items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  handleSyncSinglePO(po);
+                }}
+                disabled={isSyncingThisPO}
+                title={isSyncingThisPO ? 'Syncing...' : 'Sync Purchase Order'}
+                className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center justify-center rounded-md p-1.5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isSyncingThisPO ? 'animate-spin text-mc-gold' : ''}`}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  setIsCommentOnlyView(false);
+                  onSelectPO(po.id);
+                }}
+                title="View Details"
+                className="text-mc-black inline-flex items-center gap-1 rounded-md p-1.5 font-semibold hover:bg-slate-100"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        },
       },
     ],
     [
@@ -3705,6 +3903,8 @@ Supply Chain CRM Coordinator`;
       userRole,
       purchaseOrders,
       searchQuery,
+      syncingPOIds,
+      handleSyncSinglePO,
     ],
   );
 
@@ -4247,7 +4447,7 @@ Supply Chain CRM Coordinator`;
                   </button>
 
                   {showSyncMenu && (
-                    <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border bg-white shadow-lg">
+                    <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border bg-white shadow-xl">
                       <div className="border-mc-beige-dark border-b bg-slate-50 px-3 py-2">
                         <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                           Select timeframe
@@ -4278,6 +4478,37 @@ Supply Chain CRM Coordinator`;
                         >
                           Fetch All
                         </button>
+                      </div>
+
+                      {/* Manual PO Number Sync */}
+                      <div className="border-t border-slate-100 bg-slate-50/70 p-3">
+                        <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mb-1.5">
+                          Or Sync Specific PO
+                        </span>
+                        <form
+                          onSubmit={handleManualPOSync}
+                          className="flex items-center gap-1.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="text"
+                            placeholder="Enter PO # (e.g. 104523)"
+                            value={manualPoInput}
+                            onChange={(e) => setManualPoInput(e.target.value)}
+                            className="focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:ring-1 focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!manualPoInput.trim() || isSyncingManualPO}
+                            className="bg-mc-black hover:bg-black text-white flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isSyncingManualPO ? (
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                            ) : (
+                              'Sync'
+                            )}
+                          </button>
+                        </form>
                       </div>
                     </div>
                   )}
@@ -4578,6 +4809,30 @@ Supply Chain CRM Coordinator`;
                           <span className="font-mono text-xs font-bold text-slate-800">
                             {po.id}
                           </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSyncSinglePO(po);
+                            }}
+                            disabled={
+                              syncingPOIds.has(String(po.id || '')) ||
+                              (po.sellercloud_po_id &&
+                                syncingPOIds.has(String(po.sellercloud_po_id)))
+                            }
+                            title="Sync Purchase Order"
+                            className="text-mc-black hover:bg-slate-100 rounded-md p-1 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <RefreshCw
+                              className={`h-3.5 w-3.5 ${
+                                syncingPOIds.has(String(po.id || '')) ||
+                                (po.sellercloud_po_id &&
+                                  syncingPOIds.has(String(po.sellercloud_po_id)))
+                                  ? 'animate-spin text-mc-gold'
+                                  : ''
+                              }`}
+                            />
+                          </button>
                         </div>
 
                         <div>
@@ -4693,6 +4948,34 @@ Supply Chain CRM Coordinator`;
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleSyncSinglePO(selectedPO)}
+                      disabled={
+                        syncingPOIds.has(String(selectedPO.id || '')) ||
+                        (selectedPO.sellercloud_po_id &&
+                          syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
+                      }
+                      className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      title="Sync this Purchase Order"
+                    >
+                      <RefreshCw
+                        className={`h-3.5 w-3.5 ${
+                          syncingPOIds.has(String(selectedPO.id || '')) ||
+                          (selectedPO.sellercloud_po_id &&
+                            syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
+                            ? 'animate-spin text-mc-gold'
+                            : ''
+                        }`}
+                      />
+                      <span>
+                        {syncingPOIds.has(String(selectedPO.id || '')) ||
+                        (selectedPO.sellercloud_po_id &&
+                          syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
+                          ? 'Syncing...'
+                          : 'Sync PO'}
+                      </span>
+                    </button>
+
                     <button
                       onClick={() => handleExportPO(selectedPO)}
                       className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200"

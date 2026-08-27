@@ -17,6 +17,7 @@ import {
   PO_ITEM_COMMENT_DELETE,
   PO_ITEM_COMMENT_ATTACHMENT_DELETE,
   PO_SYNC,
+  PO_SYNC_SINGLE,
   PO_STATUS_UPDATE,
   PO_ITEM_QTY_UPDATE,
 } from '../../../utils/endpoints';
@@ -318,6 +319,20 @@ export async function syncPurchaseOrders(days: string = '25'): Promise<any> {
   const { data } = await apiClient.post(url, undefined, {
     timeout: 0,
   });
+  return data;
+}
+
+/** Sync a single purchase order by sellercloud_po_id */
+export async function syncSinglePurchaseOrder(
+  sellercloud_po_id: string | number,
+): Promise<any> {
+  const { data } = await apiClient.post(
+    PO_SYNC_SINGLE(sellercloud_po_id),
+    undefined,
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 
