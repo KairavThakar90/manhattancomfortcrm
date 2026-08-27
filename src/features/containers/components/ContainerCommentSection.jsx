@@ -736,9 +736,6 @@ export default function ContainerCommentSection({
       <div className="flex items-center justify-between border-b border-slate-200/70 bg-slate-100/70 px-4 py-2.5">
         <div className="flex items-center gap-2">
           <label className="text-xs font-bold text-slate-800">{title}</label>
-          <span className="bg-mc-gold/20 text-mc-black rounded-full px-2 py-0.5 text-[10px] font-extrabold">
-            {comments.length}
-          </span>
         </div>
       </div>
 
