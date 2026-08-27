@@ -52,7 +52,11 @@ function formatCommentDate(dateStr) {
 
 /**
  * ContainerCommentSection
- * 1-to-1 exact replica of Purchase Order Details Comment Flow design, layout, uploading flow, and delete confirmation modal.
+ * Features:
+ * - 1-to-1 exact replica of Purchase Order Details Comment Flow design
+ * - Same-position inline reply directly below the comment with file upload, @mention tags, preview, and post
+ * - Inline edit without scroll jumping
+ * - Full modal scroll and delete confirmation modals
  */
 export default function ContainerCommentSection({
   containerId,
@@ -67,23 +71,29 @@ export default function ContainerCommentSection({
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('');
 
-  // Input states
+  // Main comment input states (bottom input for root comments)
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentFiles, setNewCommentFiles] = useState([]);
-  const [replyToCommentId, setReplyToCommentId] = useState(null);
-  const [replyToUser, setReplyToUser] = useState(null);
-  const [replyToUserId, setReplyToUserId] = useState(null);
-  const [replyToText, setReplyToText] = useState(null);
   const [commentError, setCommentError] = useState('');
   const [isCompressing, setIsCompressing] = useState(false);
 
-  // Mention system states
+  // Mention system states (for bottom input)
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0);
   const [tagUsers, setTagUsers] = useState([]);
   const [taggedUserMap, setTaggedUserMap] = useState({});
   const [collapsedComments, setCollapsedComments] = useState({});
+
+  // Inline Reply states (same position directly under comment)
+  const [replyingCommentId, setReplyingCommentId] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyFiles, setReplyFiles] = useState([]);
+  const [replyTaggedUserMap, setReplyTaggedUserMap] = useState({});
+  const [replyError, setReplyError] = useState('');
+  const [showReplyMentionDropdown, setShowReplyMentionDropdown] = useState(false);
+  const [replyMentionQuery, setReplyMentionQuery] = useState('');
+  const [replyMentionHighlightIndex, setReplyMentionHighlightIndex] = useState(0);
 
   // Edit states
   const [editingCommentId, setEditingCommentId] = useState(null);
@@ -98,6 +108,7 @@ export default function ContainerCommentSection({
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const mainInputRef = useRef(null);
+  const inputContainerRef = useRef(null);
   const currentUserId = localStorage.getItem('userId');
   const currentUserRole = String(
     localStorage.getItem('userRole') || '',
@@ -138,12 +149,13 @@ export default function ContainerCommentSection({
   }, [containerId, category]);
 
   // Helper to extract tagged user IDs from text
-  const extractTaggedUserIds = (text) => {
+  const extractTaggedUserIds = (text, customMap = taggedUserMap) => {
     const words = (text || '').trim().split(/\s+/);
     return words
       .filter((w) => w.startsWith('@'))
       .map((w) => {
         const cleanW = w.replace(/[.,!?;:]+$/, '');
+        if (customMap[cleanW]) return customMap[cleanW];
         if (taggedUserMap[cleanW]) return taggedUserMap[cleanW];
         const found = tagUsers.find((u) => {
           const name = typeof u === 'string' ? u : u.name || '';
@@ -156,14 +168,15 @@ export default function ContainerCommentSection({
   };
 
   // Filter mention dropdown items
-  const getFilteredMentions = () => {
-    const q = mentionQuery.toLowerCase();
+  const getFilteredMentions = (query = mentionQuery) => {
+    const q = query.toLowerCase();
     return tagUsers.filter((u) => {
       const name = typeof u === 'string' ? u : u.name || '';
       return name.toLowerCase().includes(q);
     });
   };
 
+  // Main input mention handlers
   const handleSelectMention = (userObj) => {
     const name = typeof userObj === 'string' ? userObj : userObj.name || '';
     const userId = typeof userObj === 'string' ? userObj : userObj.id;
@@ -200,7 +213,7 @@ export default function ContainerCommentSection({
 
   const handleCommentKeyDown = (e) => {
     if (showMentionDropdown) {
-      const filtered = getFilteredMentions();
+      const filtered = getFilteredMentions(mentionQuery);
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setMentionHighlightIndex((prev) =>
@@ -234,18 +247,84 @@ export default function ContainerCommentSection({
     }
   };
 
-  // Submit comment with status flow: Compressing -> Uploading -> Complete
+  // Inline Reply mention handlers
+  const handleSelectReplyMention = (userObj) => {
+    const name = typeof userObj === 'string' ? userObj : userObj.name || '';
+    const userId = typeof userObj === 'string' ? userObj : userObj.id;
+    const tag = `@${name.trim().replace(/\s+/g, '_')}`;
+
+    const text = replyText;
+    const lastAt = text.lastIndexOf('@');
+    const newText = text.substring(0, lastAt) + tag + ' ';
+
+    setReplyText(newText);
+    setReplyTaggedUserMap((prev) => ({ ...prev, [tag]: userId }));
+    setShowReplyMentionDropdown(false);
+    setReplyMentionQuery('');
+    setReplyError('');
+  };
+
+  const handleReplyTextChange = (e) => {
+    const val = e.target.value;
+    setReplyText(val);
+    if (replyError) setReplyError('');
+
+    const lastAt = val.lastIndexOf('@');
+    if (lastAt !== -1) {
+      const textAfterAt = val.substring(lastAt + 1);
+      if (!textAfterAt.includes(' ')) {
+        setShowReplyMentionDropdown(true);
+        setReplyMentionQuery(textAfterAt);
+        setReplyMentionHighlightIndex(0);
+        return;
+      }
+    }
+    setShowReplyMentionDropdown(false);
+  };
+
+  const handleReplyKeyDown = (e, parentId, parentUserId) => {
+    if (showReplyMentionDropdown) {
+      const filtered = getFilteredMentions(replyMentionQuery);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setReplyMentionHighlightIndex((prev) =>
+          prev < filtered.length - 1 ? prev + 1 : 0,
+        );
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setReplyMentionHighlightIndex((prev) =>
+          prev > 0 ? prev - 1 : filtered.length - 1,
+        );
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (filtered[replyMentionHighlightIndex]) {
+          handleSelectReplyMention(filtered[replyMentionHighlightIndex]);
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        setShowReplyMentionDropdown(false);
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleReplySubmit(parentId, parentUserId);
+    }
+  };
+
+  // Submit main new comment (root)
   const handlePostComment = async (e) => {
     if (e) e.preventDefault();
     if (!newCommentText.trim() && newCommentFiles.length === 0) return;
 
     const extractedUserIds = extractTaggedUserIds(newCommentText);
-
-    // Combine any @tagged users from text + the replied user
     const finalTaggedUserIds = [...extractedUserIds];
-    if (replyToUserId && !finalTaggedUserIds.includes(replyToUserId)) {
-      finalTaggedUserIds.push(replyToUserId);
-    }
 
     // Strictly disallow comments without at least one @tagged user
     if (finalTaggedUserIds.length === 0) {
@@ -277,7 +356,7 @@ export default function ContainerCommentSection({
       await postContainerComment(containerId, {
         comment: newCommentText.trim(),
         category,
-        parent_id: replyToCommentId || null,
+        parent_id: null,
         tagged_user_ids: finalTaggedUserIds,
         files: finalFiles,
       });
@@ -286,10 +365,6 @@ export default function ContainerCommentSection({
       toast.success('Comment posted successfully');
       setNewCommentText('');
       setNewCommentFiles([]);
-      setReplyToCommentId(null);
-      setReplyToUser(null);
-      setReplyToUserId(null);
-      setReplyToText(null);
       setCommentError('');
 
       await fetchComments(true);
@@ -304,6 +379,80 @@ export default function ContainerCommentSection({
       console.error('Failed to post comment:', err);
       setUploadStatus('');
       toast.error(err?.response?.data?.message || 'Failed to post comment');
+    } finally {
+      setIsPostingComment(false);
+      setUploadStatus('');
+    }
+  };
+
+  // Submit inline reply directly at same position
+  const handleReplySubmit = async (parentId, parentUserId) => {
+    if (!replyText.trim() && replyFiles.length === 0) return;
+
+    const extractedUserIds = extractTaggedUserIds(replyText, replyTaggedUserMap);
+    const finalTaggedUserIds = [...extractedUserIds];
+    if (parentUserId && !finalTaggedUserIds.includes(parentUserId)) {
+      finalTaggedUserIds.push(parentUserId);
+    }
+
+    if (finalTaggedUserIds.length === 0) {
+      setReplyError(
+        replyFiles.length > 0 && !replyText.trim()
+          ? 'Please type a message with an @tag to send these attachments.'
+          : 'You must @ tag at least one user to post a reply.',
+      );
+      return;
+    }
+
+    const currentScrollTop = scrollContainerRef.current?.scrollTop;
+    setReplyError('');
+    setIsPostingComment(true);
+    setUploadStatus('Compressing...');
+
+    try {
+      const finalFiles = [];
+      for (const raw of replyFiles) {
+        if (raw.type?.startsWith('image/')) {
+          const comp = await compressImageIfNeeded(raw);
+          finalFiles.push(comp);
+        } else {
+          finalFiles.push(raw);
+        }
+      }
+
+      setUploadStatus('Uploading...');
+
+      await postContainerComment(containerId, {
+        comment: replyText.trim(),
+        category,
+        parent_id: parentId,
+        tagged_user_ids: finalTaggedUserIds,
+        files: finalFiles,
+      });
+
+      setUploadStatus('');
+      toast.success('Reply posted successfully');
+      setReplyingCommentId(null);
+      setReplyText('');
+      setReplyFiles([]);
+      setReplyTaggedUserMap({});
+      setReplyError('');
+
+      await fetchComments(true);
+
+      if (scrollContainerRef.current && currentScrollTop !== undefined) {
+        scrollContainerRef.current.scrollTop = currentScrollTop;
+      }
+
+      if (onActivityAdded) {
+        onActivityAdded(
+          `Replied to comment under ${title}`,
+          category === 'vendor_credit' ? 'Vendor Comment' : 'Internal Comment',
+        );
+      }
+    } catch (err) {
+      console.error('Failed to post reply:', err);
+      toast.error(err?.response?.data?.message || 'Failed to post reply');
     } finally {
       setIsPostingComment(false);
       setUploadStatus('');
@@ -352,39 +501,20 @@ export default function ContainerCommentSection({
     }
   };
 
-  const inputContainerRef = useRef(null);
-
-  // Reply handler with full modal auto-scroll to comment input & Comment button
-  const handleReplyClick = (node) => {
-    setReplyToCommentId(node.id);
-    setReplyToUser(node.user);
-    setReplyToUserId(node.userId);
-    setReplyToText(node.message);
-    setCommentError('');
-
-    setTimeout(() => {
-      // 1. Scroll internal messages stream
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-        });
-      }
-
-      // 2. Scroll the full modal window so the input form and Comment button are fully visible
-      if (inputContainerRef.current) {
-        inputContainerRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-          inline: 'nearest',
-        });
-      }
-
-      // 3. Focus the comment input
-      if (mainInputRef.current) {
-        mainInputRef.current.focus({ preventScroll: true });
-      }
-    }, 60);
+  // Open inline reply directly under node
+  const handleOpenInlineReply = (node) => {
+    if (replyingCommentId === node.id) {
+      setReplyingCommentId(null);
+      setReplyText('');
+      setReplyFiles([]);
+      setReplyError('');
+    } else {
+      setReplyingCommentId(node.id);
+      setReplyText('');
+      setReplyFiles([]);
+      setReplyError('');
+      setEditingCommentId(null);
+    }
   };
 
   // Delete Comment / Attachment Handlers
@@ -455,13 +585,14 @@ export default function ContainerCommentSection({
     return { rootNodes: roots };
   }, [comments]);
 
-  // Render recursive comment tree matching PODetailsModal
+  // Render recursive comment tree with inline same-position reply
   const renderCommentTree = (node, depth = 0) => {
     const isMe =
       (currentUserId && node.userId === currentUserId) ||
       currentUserRole === 'administrator' ||
       currentUserRole === 'office';
     const isCollapsed = collapsedComments[node.id];
+    const isReplyingThisNode = replyingCommentId === node.id;
 
     return (
       <div key={node.id} id={node.id} className="relative mb-3 flex scroll-mt-20 flex-col">
@@ -717,6 +848,7 @@ export default function ContainerCommentSection({
                     setEditingCommentId(node.id);
                     setEditingCommentText(node.message);
                     setEditingCommentFiles([]);
+                    setReplyingCommentId(null);
                   }}
                   className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
                 >
@@ -735,10 +867,14 @@ export default function ContainerCommentSection({
 
               <button
                 type="button"
-                onClick={() => handleReplyClick(node)}
-                className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
+                onClick={() => handleOpenInlineReply(node)}
+                className={`flex items-center gap-1.5 text-[11px] font-semibold transition ${
+                  isReplyingThisNode
+                    ? 'text-mc-black font-bold'
+                    : 'text-slate-500 hover:text-mc-black'
+                }`}
               >
-                <Reply className="h-3 w-3" /> Reply
+                <Reply className="h-3 w-3" /> {isReplyingThisNode ? 'Replying...' : 'Reply'}
               </button>
 
               {node.children.length > 0 && (
@@ -765,6 +901,246 @@ export default function ContainerCommentSection({
                 </button>
               )}
             </div>
+
+            {/* Same Position Inline Reply Form */}
+            {isReplyingThisNode && (
+              <div className="animate-fadeIn mt-3 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    <Reply className="text-mc-gold h-3.5 w-3.5" />
+                    <span>Replying to {node.user}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyingCommentId(null);
+                      setReplyText('');
+                      setReplyFiles([]);
+                      setReplyError('');
+                    }}
+                    className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {replyFiles.length > 0 && (
+                  <div className="custom-scrollbar flex w-full max-w-full gap-2 overflow-x-auto py-1">
+                    {replyFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-mc-black relative flex w-36 shrink-0 flex-col rounded-xl p-2 shadow-md"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newFiles = [...replyFiles];
+                            newFiles.splice(idx, 1);
+                            setReplyFiles(newFiles);
+                          }}
+                          className="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md hover:border-red-200 hover:text-red-500"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        {file.type?.startsWith('image/') ? (
+                          <div className="bg-mc-gray-dark relative flex h-20 w-full items-center justify-center overflow-hidden rounded-lg">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt="Preview"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="bg-mc-gray-dark flex h-20 w-full flex-col items-center justify-center rounded-lg">
+                            <Paperclip className="text-mc-gray-soft mb-1 h-5 w-5 text-slate-300" />
+                            <span className="bg-mc-gray-soft rounded px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow-xs">
+                              {file.name.split('.').pop()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="bg-mc-gray-dark text-mc-white mt-1.5 w-full truncate rounded-md px-1 text-center text-[10px] font-semibold text-white">
+                          {file.name}{' '}
+                          <span className="block text-[8px] font-normal text-white/50">
+                            ({(file.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="relative">
+                  {showReplyMentionDropdown && (
+                    <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
+                      <div className="max-h-48 overflow-y-auto py-1">
+                        {(() => {
+                          const filtered = getFilteredMentions(replyMentionQuery);
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="px-3 py-2 text-xs text-slate-400">
+                                No users found
+                              </div>
+                            );
+                          }
+                          return filtered.map((userObj, idx) => {
+                            const name =
+                              typeof userObj === 'string'
+                                ? userObj
+                                : userObj.name || '';
+                            const initial = (name[0] || 'U').toUpperCase();
+                            const isHighlighted =
+                              idx === replyMentionHighlightIndex;
+                            return (
+                              <button
+                                key={
+                                  typeof userObj === 'string'
+                                    ? userObj
+                                    : userObj.id || idx
+                                }
+                                type="button"
+                                onClick={() => handleSelectReplyMention(userObj)}
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${
+                                  isHighlighted
+                                    ? 'bg-mc-gold/10 border-mc-gold border-l-2'
+                                    : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <div
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${
+                                    isHighlighted
+                                      ? 'bg-mc-gold text-white'
+                                      : 'text-mc-black bg-slate-200'
+                                  }`}
+                                >
+                                  {initial}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate font-semibold text-slate-700">
+                                    {name}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  <textarea
+                    autoFocus
+                    rows={2}
+                    placeholder="Type a reply... (Use @ to tag)"
+                    value={replyText}
+                    onChange={handleReplyTextChange}
+                    onKeyDown={(e) => handleReplyKeyDown(e, node.id, node.userId)}
+                    className={`focus:border-mc-black w-full resize-none rounded-lg border ${
+                      replyError
+                        ? 'border-rose-500 bg-rose-50'
+                        : 'border-slate-300 bg-white'
+                    } p-2 pr-9 text-[13px] text-slate-800 transition focus:outline-hidden`}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document
+                        .getElementById(
+                          `container-comment-reply-attachment-${node.id}`,
+                        )
+                        ?.click()
+                    }
+                    className="absolute top-2 right-2 text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Attach file or image"
+                    disabled={isCompressing || isPostingComment}
+                  >
+                    {isCompressing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Paperclip className="h-4 w-4" />
+                    )}
+                  </button>
+
+                  <input
+                    id={`container-comment-reply-attachment-${node.id}`}
+                    type="file"
+                    className="hidden"
+                    multiple
+                    accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                    onChange={async (e) => {
+                      if (!e.target.files?.length) return;
+                      const processedFiles = [];
+                      setIsCompressing(true);
+                      for (const file of Array.from(e.target.files)) {
+                        if (
+                          !file.name.match(
+                            /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                          )
+                        ) {
+                          toast.error(`Invalid file type for ${file.name}`);
+                          continue;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error(`File ${file.name} exceeds 5MB limit`);
+                          continue;
+                        }
+                        processedFiles.push(file);
+                      }
+                      setReplyFiles((prev) => [...prev, ...processedFiles]);
+                      setReplyError('');
+                      setIsCompressing(false);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+
+                {replyError && (
+                  <p className="animate-fadeIn text-[11px] font-bold text-rose-500">
+                    {replyError}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyingCommentId(null);
+                      setReplyText('');
+                      setReplyFiles([]);
+                      setReplyError('');
+                    }}
+                    className="rounded px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={
+                      isPostingComment ||
+                      (!replyText.trim() && replyFiles.length === 0)
+                    }
+                    onClick={() => handleReplySubmit(node.id, node.userId)}
+                    className="bg-mc-black flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isPostingComment && replyingCommentId === node.id ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>
+                          {uploadStatus
+                            ? uploadStatus.replace('...', '')
+                            : 'Posting'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3 w-3" />
+                        <span>Reply</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -815,38 +1191,12 @@ export default function ContainerCommentSection({
         <div ref={messagesEndRef} className="h-1 shrink-0" />
       </div>
 
-      {/* Form Input Area (100% same to same as PODetailsModal) */}
+      {/* Main Comment Input Area (Bottom input for new comments) */}
       <form
         ref={inputContainerRef}
         onSubmit={handlePostComment}
         className="relative flex shrink-0 flex-col gap-2 border-t border-slate-200/70 bg-white p-3"
       >
-        {replyToUser && (
-          <div className="animate-fadeIn group border-mc-gold relative mb-1 flex items-start gap-2 rounded-lg border-l-4 bg-slate-50 py-2 pr-8 pl-3">
-            <Reply className="text-mc-gold mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <div className="min-w-0 flex-1">
-              <span className="text-mc-black block text-xs font-bold">
-                Replying to {replyToUser}
-              </span>
-              <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
-                {replyToText || 'Attachment'}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setReplyToCommentId(null);
-                setReplyToUser(null);
-                setReplyToUserId(null);
-                setReplyToText(null);
-              }}
-              className="absolute top-1.5 right-1.5 rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
-
         <div className="flex w-full items-end gap-3">
           <div className="min-w-0 flex-1 flex-col">
             {newCommentFiles.length > 0 && (
@@ -906,7 +1256,7 @@ export default function ContainerCommentSection({
                 <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
                   <div className="max-h-48 overflow-y-auto py-1">
                     {(() => {
-                      const filtered = getFilteredMentions();
+                      const filtered = getFilteredMentions(mentionQuery);
                       if (filtered.length === 0) {
                         return (
                           <div className="px-3 py-2 text-xs text-slate-400">
@@ -1047,7 +1397,7 @@ export default function ContainerCommentSection({
             }
             className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isPostingComment ? (
+            {isPostingComment && !replyingCommentId ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>
