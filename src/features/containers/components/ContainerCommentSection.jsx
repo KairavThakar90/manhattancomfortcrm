@@ -52,7 +52,7 @@ function formatCommentDate(dateStr) {
 
 /**
  * ContainerCommentSection
- * 1-to-1 exact replica of Purchase Order Details Comment Flow design, layout, and conditions.
+ * 1-to-1 exact replica of Purchase Order Details Comment Flow design, layout, uploading flow, and delete confirmation modal.
  */
 export default function ContainerCommentSection({
   containerId,
@@ -89,9 +89,9 @@ export default function ContainerCommentSection({
   const [editingCommentText, setEditingCommentText] = useState('');
   const [editingCommentFiles, setEditingCommentFiles] = useState([]);
 
-  // Preview & Delete modals
+  // Preview & Delete confirmation target
   const [previewImage, setPreviewImage] = useState(null);
-  const [commentToDelete, setCommentToDelete] = useState(null);
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -231,7 +231,7 @@ export default function ContainerCommentSection({
     }
   };
 
-  // Submit comment
+  // Submit comment with status flow: Compressing -> Uploading -> Complete
   const handlePostComment = async (e) => {
     if (e) e.preventDefault();
     if (!newCommentText.trim() && newCommentFiles.length === 0) return;
@@ -270,6 +270,7 @@ export default function ContainerCommentSection({
         files: finalFiles,
       });
 
+      setUploadStatus('');
       toast.success('Comment posted successfully');
       setNewCommentText('');
       setNewCommentFiles([]);
@@ -288,6 +289,7 @@ export default function ContainerCommentSection({
       }
     } catch (err) {
       console.error('Failed to post comment:', err);
+      setUploadStatus('');
       toast.error(err?.response?.data?.message || 'Failed to post comment');
     } finally {
       setIsPostingComment(false);
@@ -302,6 +304,7 @@ export default function ContainerCommentSection({
       return;
     }
 
+    setUploadStatus('Saving...');
     setIsPostingComment(true);
     try {
       const compressed = [];
@@ -318,7 +321,7 @@ export default function ContainerCommentSection({
         comment: editingCommentText,
         files: compressed,
       });
-      toast.success('Comment updated');
+      toast.success('Comment updated successfully');
       setEditingCommentId(null);
       setEditingCommentText('');
       setEditingCommentFiles([]);
@@ -328,35 +331,39 @@ export default function ContainerCommentSection({
       toast.error('Failed to update comment');
     } finally {
       setIsPostingComment(false);
+      setUploadStatus('');
     }
   };
 
-  // Delete Comment
-  const handleConfirmDeleteComment = async () => {
-    if (!commentToDelete) return;
+  // Delete Comment / Attachment Handlers
+  const handleDeleteComment = (commentId) => {
+    setDeleteCommentTarget({ type: 'comment', commentId });
+  };
+
+  const handleDeleteCommentAttachment = (commentId, attachmentId) => {
+    if (!attachmentId) return;
+    setDeleteCommentTarget({ type: 'attachment', commentId, attachmentId });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteCommentTarget) return;
+    const { type, commentId, attachmentId } = deleteCommentTarget;
     setIsDeleting(true);
     try {
-      await deleteContainerComment(commentToDelete.id);
-      toast.success('Comment deleted');
-      setCommentToDelete(null);
+      if (type === 'attachment') {
+        await deleteContainerCommentAttachment(attachmentId);
+        toast.success('Attachment deleted successfully');
+      } else {
+        await deleteContainerComment(commentId);
+        toast.success('Comment deleted successfully');
+      }
+      setDeleteCommentTarget(null);
       await fetchComments(true);
     } catch (err) {
-      console.error('Failed to delete comment:', err);
-      toast.error('Failed to delete comment');
+      console.error('Failed to delete:', err);
+      toast.error(err?.response?.data?.message || 'Failed to delete');
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  // Delete Attachment
-  const handleDeleteCommentAttachment = async (commentId, attachmentId) => {
-    try {
-      await deleteContainerCommentAttachment(attachmentId);
-      toast.success('Attachment removed');
-      await fetchComments(true);
-    } catch (err) {
-      console.error('Failed to delete attachment:', err);
-      toast.error('Failed to delete attachment');
     }
   };
 
@@ -654,7 +661,7 @@ export default function ContainerCommentSection({
               {isMe && editingCommentId !== node.id && (
                 <button
                   type="button"
-                  onClick={() => setCommentToDelete(node)}
+                  onClick={() => handleDeleteComment(node.id)}
                   className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
                 >
                   <Trash className="h-3 w-3" /> Delete
@@ -910,7 +917,7 @@ export default function ContainerCommentSection({
                 }
                 className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 title="Attach file or image"
-                disabled={isCompressing}
+                disabled={isCompressing || isPostingComment}
               >
                 {isCompressing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -999,18 +1006,24 @@ export default function ContainerCommentSection({
         onClose={() => setPreviewImage(null)}
       />
 
-      {/* Delete Confirmation Modal */}
-      {commentToDelete && (
-        <ConfirmDeleteModal
-          isOpen={Boolean(commentToDelete)}
-          title="Delete Comment"
-          message="Are you sure you want to permanently delete this comment and its attachments?"
-          confirmText="Delete"
-          isDeleting={isDeleting}
-          onConfirm={handleConfirmDeleteComment}
-          onClose={() => setCommentToDelete(null)}
-        />
-      )}
+      {/* Delete Confirmation Modal (matching PODetailsModal & ItemCommentModal) */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(deleteCommentTarget)}
+        title={
+          deleteCommentTarget?.type === 'attachment'
+            ? 'Delete Attachment'
+            : 'Delete Comment'
+        }
+        message={
+          deleteCommentTarget?.type === 'attachment'
+            ? "This can't be undone. Are you sure you want to delete this attachment?"
+            : "This can't be undone. Are you sure you want to delete this comment?"
+        }
+        confirmLabel="Delete"
+        isDeleting={isDeleting}
+        onCancel={() => !isDeleting && setDeleteCommentTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
