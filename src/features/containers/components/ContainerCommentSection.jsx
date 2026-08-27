@@ -1,20 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Send,
   Reply,
   Pencil,
-  Trash2,
+  Trash,
   Paperclip,
   X,
   Loader2,
   MessageSquare,
-  FileText,
   Download,
-  Eye,
-  RefreshCw,
   ChevronUp,
-  Check,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -55,608 +50,9 @@ function formatCommentDate(dateStr) {
   });
 }
 
-// Helper to mirror textarea coordinates for @mention caret positioning
-function getCaretCoordinates(textarea, position) {
-  const div = document.createElement('div');
-  const style = div.style;
-  const computed = window.getComputedStyle(textarea);
-
-  style.position = 'absolute';
-  style.visibility = 'hidden';
-  style.whiteSpace = 'pre-wrap';
-  style.overflowWrap = 'break-word';
-  style.top = '0';
-  style.left = '-9999px';
-
-  [
-    'boxSizing',
-    'width',
-    'fontFamily',
-    'fontSize',
-    'fontWeight',
-    'fontStyle',
-    'letterSpacing',
-    'textTransform',
-    'wordSpacing',
-    'textIndent',
-    'paddingTop',
-    'paddingRight',
-    'paddingBottom',
-    'paddingLeft',
-    'borderTopWidth',
-    'borderRightWidth',
-    'borderBottomWidth',
-    'borderLeftWidth',
-    'lineHeight',
-  ].forEach((prop) => {
-    style[prop] = computed[prop];
-  });
-
-  div.textContent = textarea.value.substring(0, position);
-  const span = document.createElement('span');
-  span.textContent = textarea.value.substring(position) || '.';
-  div.appendChild(span);
-
-  document.body.appendChild(div);
-  const coordinates = {
-    top: span.offsetTop + parseInt(computed.borderTopWidth || '0', 10),
-    left: span.offsetLeft + parseInt(computed.borderLeftWidth || '0', 10),
-    height: parseInt(computed.lineHeight || '18', 10),
-  };
-  document.body.removeChild(div);
-  return coordinates;
-}
-
-/**
- * Textarea with popup @mention support.
- */
-export function CommentMentionTextarea({
-  value,
-  onChange,
-  onMentionSelect,
-  onOptionsLoaded,
-  loadOptions,
-  placeholder,
-  rows = 2,
-  className = '',
-  hasError = false,
-  disabled = false,
-  onKeyDown,
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState('');
-  const [atIndex, setAtIndex] = useState(-1);
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const [coords, setCoords] = useState({
-    top: 0,
-    bottom: 'auto',
-    left: 0,
-    width: 240,
-  });
-  const [options, setOptions] = useState([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
-  const hasFetchedRef = useRef(false);
-  const textareaRef = useRef(null);
-  const wrapperRef = useRef(null);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(e.target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const anchorRef = useRef({ top: 0, bottom: 0 });
-
-  const filteredOptions = useMemo(() => {
-    const f = filter.toLowerCase();
-    const list = Array.isArray(options) ? options : [];
-    if (!f) return list.slice(0, 8);
-    return list
-      .filter((o) => (o.name || '').toLowerCase().includes(f))
-      .slice(0, 8);
-  }, [filter, options]);
-
-  const computeCoords = (caretPos = atIndex) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return null;
-    const rect = textarea.getBoundingClientRect();
-    const width = Math.min(280, Math.max(rect.width * 0.6, 220));
-
-    let caretTop = 0;
-    let caretLeft = 0;
-    let caretHeight = 18;
-    if (caretPos >= 0) {
-      const caret = getCaretCoordinates(textarea, caretPos);
-      caretTop = caret.top - textarea.scrollTop;
-      caretLeft = caret.left - textarea.scrollLeft;
-      caretHeight = caret.height;
-    }
-
-    const anchorTop = rect.top + caretTop;
-    const anchorBottom = anchorTop + caretHeight;
-    let left = rect.left + caretLeft;
-    left = Math.min(left, window.innerWidth - width - 16);
-    left = Math.max(left, 8);
-
-    anchorRef.current = { top: anchorTop, bottom: anchorBottom };
-    return { top: anchorBottom + 4, bottom: 'auto', left, width };
-  };
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const reposition = () => {
-      const next = computeCoords();
-      if (next) setCoords(next);
-    };
-    document.addEventListener('scroll', reposition, true);
-    window.addEventListener('resize', reposition);
-    return () => {
-      document.removeEventListener('scroll', reposition, true);
-      window.removeEventListener('resize', reposition);
-    };
-  }, [isOpen, atIndex]);
-
-  const handleChange = (e) => {
-    const text = e.target.value;
-    const cursor = e.target.selectionStart;
-    onChange(text);
-
-    const textBeforeCursor = text.slice(0, cursor);
-    const lastAt = textBeforeCursor.lastIndexOf('@');
-    if (
-      lastAt !== -1 &&
-      (lastAt === 0 || /\s/.test(textBeforeCursor[lastAt - 1]))
-    ) {
-      const query = textBeforeCursor.slice(lastAt + 1);
-      if (!/\s/.test(query)) {
-        setAtIndex(lastAt);
-        setFilter(query);
-        setHighlightIndex(0);
-        const next = computeCoords(lastAt);
-        if (next) setCoords(next);
-        setIsOpen(true);
-
-        if (!hasFetchedRef.current && !isLoadingOptions && loadOptions) {
-          hasFetchedRef.current = true;
-          setIsLoadingOptions(true);
-          loadOptions()
-            .then((list) => {
-              const safeList = Array.isArray(list) ? list : [];
-              setOptions(safeList);
-              if (onOptionsLoaded) onOptionsLoaded(safeList);
-            })
-            .catch((err) => {
-              console.error('Failed to load @mention options', err);
-              hasFetchedRef.current = false;
-            })
-            .finally(() => setIsLoadingOptions(false));
-        }
-        return;
-      }
-    }
-    setIsOpen(false);
-  };
-
-  const insertMention = (option) => {
-    const cursor = textareaRef.current?.selectionStart ?? value.length;
-    const before = value.slice(0, atIndex);
-    const after = value.slice(cursor);
-    const tag = `@${(option.name || '').trim().replace(/\s+/g, '_')} `;
-    const nextValue = `${before}${tag}${after}`;
-    onChange(nextValue);
-    if (onMentionSelect) {
-      onMentionSelect(option, tag.trim());
-    }
-    setIsOpen(false);
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        const pos = before.length + tag.length;
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(pos, pos);
-      }
-    });
-  };
-
-  const handleKey = (e) => {
-    if (isOpen && filteredOptions.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setHighlightIndex((i) => Math.min(i + 1, filteredOptions.length - 1));
-        return;
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightIndex((i) => Math.max(i - 1, 0));
-        return;
-      } else if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault();
-        insertMention(filteredOptions[highlightIndex]);
-        return;
-      } else if (e.key === 'Escape') {
-        setIsOpen(false);
-        return;
-      }
-    }
-    if (onKeyDown) onKeyDown(e);
-  };
-
-  const finalClassName = hasError
-    ? `${className} border-rose-500 bg-rose-50 focus:border-rose-600 focus:ring-rose-500/20`
-    : className;
-
-  return (
-    <div className="relative w-full" ref={wrapperRef}>
-      <textarea
-        ref={textareaRef}
-        rows={rows}
-        disabled={disabled}
-        className={finalClassName}
-        value={value}
-        placeholder={placeholder}
-        onChange={handleChange}
-        onKeyDown={handleKey}
-      />
-      {isOpen &&
-        (filteredOptions.length > 0 || isLoadingOptions) &&
-        createPortal(
-          <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              top: coords.top,
-              bottom: coords.bottom,
-              left: coords.left,
-              width: coords.width,
-            }}
-            className="border-mc-beige-dark bg-mc-white animate-fadeIn z-[99999] max-h-60 overflow-y-auto rounded-xl border p-1 shadow-2xl backdrop-blur-md"
-          >
-            {isLoadingOptions && filteredOptions.length === 0 ? (
-              <div className="text-mc-gray-soft flex items-center gap-2 px-3 py-2.5 text-xs">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading users...
-              </div>
-            ) : (
-              filteredOptions.map((opt, idx) => {
-                const initial = (opt.name?.[0] || 'U').toUpperCase();
-                const isHighlighted = idx === highlightIndex;
-                return (
-                  <button
-                    key={opt.id || idx}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      insertMention(opt);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs transition ${
-                      isHighlighted
-                        ? 'bg-mc-gold/15 text-mc-black font-bold'
-                        : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                        isHighlighted
-                          ? 'bg-mc-gold text-white'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {initial}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{opt.name}</div>
-                      {opt.role && (
-                        <div className="text-[10px] text-slate-400 capitalize">
-                          {opt.role}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>,
-          document.body,
-        )}
-    </div>
-  );
-}
-
-/**
- * Helper to render message text with highlighted @mentions.
- */
-function CommentTextRenderer({ text }) {
-  if (!text) return null;
-
-  const parts = text.split(/(@[a-zA-Z0-9_.-]+)/g);
-
-  return (
-    <span className="leading-relaxed whitespace-pre-wrap">
-      {parts.map((part, i) => {
-        if (part.startsWith('@')) {
-          return (
-            <span
-              key={i}
-              className="bg-mc-gold/15 text-mc-black inline-block rounded-md px-1.5 py-0.5 text-xs font-bold"
-            >
-              {part}
-            </span>
-          );
-        }
-        return part;
-      })}
-    </span>
-  );
-}
-
-/**
- * Single Comment Item Component matching PO Details comment card design.
- */
-function CommentItem({
-  comment,
-  currentUserId,
-  currentUserRole,
-  onReply,
-  onEdit,
-  onDelete,
-  onDeleteAttachment,
-  onPreviewImage,
-  replies = [],
-}) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(comment.comment || '');
-  const [editFiles, setEditFiles] = useState([]);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const isAuthor =
-    (currentUserId && comment.user_id === currentUserId) ||
-    currentUserRole === 'administrator' ||
-    currentUserRole === 'office';
-
-  const authorName = comment.user_name || 'User';
-  const initial = (authorName[0] || 'U').toUpperCase();
-  const attachments = Array.isArray(comment.attachments)
-    ? comment.attachments
-    : [];
-
-  const handleSaveEdit = async () => {
-    if (!editText.trim() && editFiles.length === 0) {
-      toast.error('Comment cannot be empty');
-      return;
-    }
-    setIsSavingEdit(true);
-    try {
-      await onEdit(comment.id, editText, editFiles);
-      setIsEditing(false);
-      setEditFiles([]);
-    } catch (err) {
-      console.error('Failed to update comment', err);
-    } finally {
-      setIsSavingEdit(false);
-    }
-  };
-
-  return (
-    <div className="group/item relative flex flex-col gap-2 rounded-xl border border-slate-100 bg-white p-3.5 shadow-xs transition-all hover:border-slate-200 hover:shadow-sm">
-      {/* Top Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-mc-gold/20 text-mc-black border-mc-gold/30 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold shadow-xs">
-            {initial}
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-800">
-                {authorName}
-              </span>
-              {comment.is_edited && (
-                <span className="text-[10px] text-slate-400 italic">
-                  (edited)
-                </span>
-              )}
-            </div>
-            <span className="text-[11px] text-slate-400">
-              {formatCommentDate(comment.created_at)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Message Body or Edit Mode */}
-      {isEditing ? (
-        <div className="mt-1 flex flex-col gap-2">
-          <textarea
-            rows={2}
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            className="focus:border-mc-black focus:ring-mc-black w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs transition-colors focus:ring-1 focus:outline-none"
-          />
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={isSavingEdit}
-              onClick={handleSaveEdit}
-              className="bg-mc-black text-white flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-bold transition hover:bg-black disabled:opacity-50"
-            >
-              {isSavingEdit ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Check className="h-3 w-3" />
-              )}
-              Save
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="text-xs text-slate-700">
-          <CommentTextRenderer text={comment.comment} />
-        </div>
-      )}
-
-      {/* Attachments */}
-      {attachments.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-2 pt-1">
-          {attachments.map((att) => {
-            const isImg =
-              att.content_type?.startsWith('image/') ||
-              att.file_url?.match(/\.(jpeg|jpg|png|gif|webp)(\?|$)/i);
-
-            return (
-              <div
-                key={att.id}
-                className="group/att border-mc-beige-dark/60 bg-mc-beige-light/40 relative flex items-center gap-2 overflow-hidden rounded-lg border p-1.5 text-xs shadow-2xs"
-              >
-                {isImg ? (
-                  <button
-                    type="button"
-                    onClick={() => onPreviewImage(att.file_url)}
-                    className="relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-md bg-slate-100"
-                  >
-                    <img
-                      src={att.file_url}
-                      alt={att.file_name || 'Attachment'}
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity hover:opacity-100">
-                      <Eye className="h-3.5 w-3.5 text-white" />
-                    </div>
-                  </button>
-                ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                )}
-
-                <div className="flex max-w-[130px] flex-col">
-                  <span
-                    className="truncate text-[11px] font-semibold text-slate-700"
-                    title={att.file_name}
-                  >
-                    {att.file_name || 'File'}
-                  </span>
-                  <a
-                    href={att.file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    download={att.file_name}
-                    className="text-mc-gold hover:text-mc-orange flex items-center gap-1 text-[10px] font-bold underline-offset-1 hover:underline"
-                  >
-                    <Download className="h-2.5 w-2.5" /> Download
-                  </a>
-                </div>
-
-                {isAuthor && (
-                  <button
-                    type="button"
-                    onClick={() => onDeleteAttachment(att.id)}
-                    className="flex h-5 w-5 items-center justify-center rounded text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
-                    title="Remove attachment"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Action Bar matching PO details comment action bar */}
-      {!isEditing && (
-        <div className="mt-1 flex items-center gap-4 border-t border-slate-100 pt-2 text-[11px] font-semibold text-slate-500">
-          <button
-            type="button"
-            onClick={() => onReply(comment)}
-            className="hover:text-mc-black flex items-center gap-1 transition"
-          >
-            <Reply className="h-3 w-3" /> Reply
-          </button>
-
-          {isAuthor && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditText(comment.comment || '');
-                  setIsEditing(true);
-                }}
-                className="hover:text-mc-black flex items-center gap-1 transition"
-              >
-                <Pencil className="h-3 w-3" /> Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(comment)}
-                className="flex items-center gap-1 transition hover:text-rose-500"
-              >
-                <Trash2 className="h-3 w-3" /> Delete
-              </button>
-            </>
-          )}
-
-          {replies.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hover:text-mc-black ml-auto flex items-center gap-1 text-slate-400 transition"
-            >
-              {isCollapsed ? (
-                <>
-                  <MessageSquare className="h-3 w-3" /> Expand {replies.length}{' '}
-                  replies
-                </>
-              ) : (
-                <>
-                  <ChevronUp className="h-3 w-3" /> Collapse
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Nested Replies */}
-      {!isCollapsed && replies.length > 0 && (
-        <div className="mt-2 ml-3 flex flex-col gap-2 border-l-2 border-slate-200/80 pl-3">
-          {replies.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              currentUserId={currentUserId}
-              currentUserRole={currentUserRole}
-              onReply={onReply}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onDeleteAttachment={onDeleteAttachment}
-              onPreviewImage={onPreviewImage}
-              replies={[]}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /**
  * ContainerCommentSection
- * Matches Purchase Order Details Comment Flow conditions, @tag validation, and rules.
+ * 1-to-1 exact replica of Purchase Order Details Comment Flow design, layout, and conditions.
  */
 export default function ContainerCommentSection({
   containerId,
@@ -668,28 +64,54 @@ export default function ContainerCommentSection({
 }) {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPostingComment, setIsPostingComment] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
-  // New comment input state
-  const [message, setMessage] = useState('');
-  const [taggedUserMap, setTaggedUserMap] = useState({});
-  const [tagUsers, setTagUsers] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [replyTo, setReplyTo] = useState(null);
+  // Input states
+  const [newCommentText, setNewCommentText] = useState('');
+  const [newCommentFiles, setNewCommentFiles] = useState([]);
+  const [replyToCommentId, setReplyToCommentId] = useState(null);
+  const [replyToUser, setReplyToUser] = useState(null);
+  const [replyToText, setReplyToText] = useState(null);
   const [commentError, setCommentError] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  // Modals & previews
+  // Mention system states
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionHighlightIndex, setMentionHighlightIndex] = useState(0);
+  const [tagUsers, setTagUsers] = useState([]);
+  const [taggedUserMap, setTaggedUserMap] = useState({});
+  const [collapsedComments, setCollapsedComments] = useState({});
+
+  // Edit states
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
+  const [editingCommentFiles, setEditingCommentFiles] = useState([]);
+
+  // Preview & Delete modals
   const [previewImage, setPreviewImage] = useState(null);
   const [commentToDelete, setCommentToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fileInputRef = useRef(null);
-  const commentsEndRef = useRef(null);
-
+  const messagesEndRef = useRef(null);
   const currentUserId = localStorage.getItem('userId');
   const currentUserRole = String(
     localStorage.getItem('userRole') || '',
   ).toLowerCase();
+
+  // Load mention candidates on mount
+  useEffect(() => {
+    if (loadMentionOptions) {
+      loadMentionOptions()
+        .then((users) => {
+          if (Array.isArray(users)) {
+            setTagUsers(users);
+          }
+        })
+        .catch((err) => console.error('Failed to load mention candidates:', err));
+    }
+  }, [loadMentionOptions]);
 
   // Fetch comments
   const fetchComments = async (silent = false) => {
@@ -712,24 +134,7 @@ export default function ContainerCommentSection({
     fetchComments();
   }, [containerId, category]);
 
-  // Group comments into root comments and their replies
-  const { rootComments, replyMap } = useMemo(() => {
-    const roots = [];
-    const map = {};
-
-    comments.forEach((c) => {
-      if (c.parent_id) {
-        if (!map[c.parent_id]) map[c.parent_id] = [];
-        map[c.parent_id].push(c);
-      } else {
-        roots.push(c);
-      }
-    });
-
-    return { rootComments: roots, replyMap: map };
-  }, [comments]);
-
-  // Extract @tagged user ids from a message matching PO details tagging engine
+  // Helper to extract tagged user IDs from text
   const extractTaggedUserIds = (text) => {
     const words = (text || '').trim().split(/\s+/);
     return words
@@ -747,92 +152,130 @@ export default function ContainerCommentSection({
       .filter(Boolean);
   };
 
-  // Handle @mention selection to record tagged user mapping
-  const handleMentionSelect = (userOption, tagText) => {
-    if (userOption?.id) {
-      const cleanTag =
-        tagText || `@${(userOption.name || '').trim().replace(/\s+/g, '_')}`;
-      setTaggedUserMap((prev) => ({
-        ...prev,
-        [cleanTag]: userOption.id,
-      }));
-    }
+  // Filter mention dropdown items
+  const getFilteredMentions = () => {
+    const q = mentionQuery.toLowerCase();
+    return tagUsers.filter((u) => {
+      const name = typeof u === 'string' ? u : u.name || '';
+      return name.toLowerCase().includes(q);
+    });
+  };
+
+  const handleSelectMention = (userObj) => {
+    const name = typeof userObj === 'string' ? userObj : userObj.name || '';
+    const userId = typeof userObj === 'string' ? userObj : userObj.id;
+    const tag = `@${name.trim().replace(/\s+/g, '_')}`;
+
+    const text = newCommentText;
+    const lastAt = text.lastIndexOf('@');
+    const newText = text.substring(0, lastAt) + tag + ' ';
+
+    setNewCommentText(newText);
+    setTaggedUserMap((prev) => ({ ...prev, [tag]: userId }));
+    setShowMentionDropdown(false);
+    setMentionQuery('');
     setCommentError('');
   };
 
-  // Handle file select with validation (Max 5MB)
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
+  const handleCommentTextChange = (e) => {
+    const val = e.target.value;
+    setNewCommentText(val);
+    if (commentError) setCommentError('');
 
-    const validFiles = [];
-    files.forEach((f) => {
-      const isAllowedExt = f.name.match(
-        /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
-      );
-      if (!isAllowedExt) {
-        toast.error(
-          `Invalid file type for ${f.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
+    const lastAt = val.lastIndexOf('@');
+    if (lastAt !== -1) {
+      const textAfterAt = val.substring(lastAt + 1);
+      if (!textAfterAt.includes(' ')) {
+        setShowMentionDropdown(true);
+        setMentionQuery(textAfterAt);
+        setMentionHighlightIndex(0);
+        return;
+      }
+    }
+    setShowMentionDropdown(false);
+  };
+
+  const handleCommentKeyDown = (e) => {
+    if (showMentionDropdown) {
+      const filtered = getFilteredMentions();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionHighlightIndex((prev) =>
+          prev < filtered.length - 1 ? prev + 1 : 0,
         );
         return;
       }
-      if (f.size > 5 * 1024 * 1024) {
-        toast.error(`File "${f.name}" exceeds 5MB limit`);
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionHighlightIndex((prev) =>
+          prev > 0 ? prev - 1 : filtered.length - 1,
+        );
         return;
       }
-      validFiles.push(f);
-    });
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (filtered[mentionHighlightIndex]) {
+          handleSelectMention(filtered[mentionHighlightIndex]);
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        setShowMentionDropdown(false);
+        return;
+      }
+    }
 
-    setSelectedFiles((prev) => [...prev, ...validFiles]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (commentError) setCommentError('');
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handlePostComment(e);
+    }
   };
 
-  const removeSelectedFile = (idx) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  // Post Comment with mandatory @tag validation matching PO Details rule
+  // Submit comment
   const handlePostComment = async (e) => {
     if (e) e.preventDefault();
-    if (!message.trim() && selectedFiles.length === 0) return;
+    if (!newCommentText.trim() && newCommentFiles.length === 0) return;
 
-    // Validate @tag requirement matching PO details
-    const taggedUserIds = extractTaggedUserIds(message);
+    const taggedUserIds = extractTaggedUserIds(newCommentText);
     if (taggedUserIds.length === 0) {
       setCommentError(
-        selectedFiles.length > 0 && !message.trim()
+        newCommentFiles.length > 0 && !newCommentText.trim()
           ? 'Please type a message with an @tag to send these attachments.'
           : 'You must @ tag at least one user to post a comment.',
       );
       return;
     }
 
-    setCommentError('');
-    setIsSubmitting(true);
+    setUploadStatus('Compressing...');
+    setIsPostingComment(true);
+
     try {
-      const compressedFiles = [];
-      for (const file of selectedFiles) {
-        if (file.type.startsWith('image/')) {
-          const comp = await compressImageIfNeeded(file);
-          compressedFiles.push(comp);
+      const finalFiles = [];
+      for (const raw of newCommentFiles) {
+        if (raw.type?.startsWith('image/')) {
+          const comp = await compressImageIfNeeded(raw);
+          finalFiles.push(comp);
         } else {
-          compressedFiles.push(file);
+          finalFiles.push(raw);
         }
       }
 
+      setUploadStatus('Uploading...');
+
       await postContainerComment(containerId, {
-        comment: message.trim(),
+        comment: newCommentText.trim(),
         category,
-        parent_id: replyTo?.id || null,
+        parent_id: replyToCommentId || null,
         tagged_user_ids: taggedUserIds,
-        files: compressedFiles,
+        files: finalFiles,
       });
 
       toast.success('Comment posted successfully');
-      setMessage('');
-      setSelectedFiles([]);
-      setReplyTo(null);
+      setNewCommentText('');
+      setNewCommentFiles([]);
+      setReplyToCommentId(null);
+      setReplyToUser(null);
+      setReplyToText(null);
       setCommentError('');
 
       await fetchComments(true);
@@ -847,28 +290,45 @@ export default function ContainerCommentSection({
       console.error('Failed to post comment:', err);
       toast.error(err?.response?.data?.message || 'Failed to post comment');
     } finally {
-      setIsSubmitting(false);
+      setIsPostingComment(false);
+      setUploadStatus('');
     }
   };
 
-  // Edit Comment
-  const handleEditComment = async (commentId, updatedText, newFiles = []) => {
-    const compressed = [];
-    for (const f of newFiles) {
-      if (f.type.startsWith('image/')) {
-        const c = await compressImageIfNeeded(f);
-        compressed.push(c);
-      } else {
-        compressed.push(f);
-      }
+  // Update Comment
+  const handleUpdateSubmit = async (commentId) => {
+    if (!editingCommentText.trim() && editingCommentFiles.length === 0) {
+      toast.error('Comment cannot be empty');
+      return;
     }
 
-    await updateContainerComment(commentId, {
-      comment: updatedText,
-      files: compressed,
-    });
-    toast.success('Comment updated');
-    await fetchComments(true);
+    setIsPostingComment(true);
+    try {
+      const compressed = [];
+      for (const f of editingCommentFiles) {
+        if (f.type?.startsWith('image/')) {
+          const c = await compressImageIfNeeded(f);
+          compressed.push(c);
+        } else {
+          compressed.push(f);
+        }
+      }
+
+      await updateContainerComment(commentId, {
+        comment: editingCommentText,
+        files: compressed,
+      });
+      toast.success('Comment updated');
+      setEditingCommentId(null);
+      setEditingCommentText('');
+      setEditingCommentFiles([]);
+      await fetchComments(true);
+    } catch (err) {
+      console.error('Failed to update comment:', err);
+      toast.error('Failed to update comment');
+    } finally {
+      setIsPostingComment(false);
+    }
   };
 
   // Delete Comment
@@ -889,7 +349,7 @@ export default function ContainerCommentSection({
   };
 
   // Delete Attachment
-  const handleDeleteAttachment = async (attachmentId) => {
+  const handleDeleteCommentAttachment = async (commentId, attachmentId) => {
     try {
       await deleteContainerCommentAttachment(attachmentId);
       toast.success('Attachment removed');
@@ -898,6 +358,356 @@ export default function ContainerCommentSection({
       console.error('Failed to delete attachment:', err);
       toast.error('Failed to delete attachment');
     }
+  };
+
+  // Build comment tree
+  const { rootNodes } = useMemo(() => {
+    const map = {};
+    const roots = [];
+
+    comments.forEach((c) => {
+      map[c.id] = {
+        id: c.id,
+        user: c.user_name || 'User',
+        role: c.user_role || '',
+        message: c.comment || '',
+        timestamp: formatCommentDate(c.created_at),
+        userId: c.user_id,
+        parent_id: c.parent_id,
+        is_edited: c.is_edited,
+        files: (c.attachments || []).map((att) => ({
+          id: att.id,
+          fileUrl: att.file_url,
+          fileName: att.file_name,
+          fileType: att.content_type,
+        })),
+        children: [],
+      };
+    });
+
+    comments.forEach((c) => {
+      if (c.parent_id && map[c.parent_id]) {
+        map[c.parent_id].children.push(map[c.id]);
+      } else if (!c.parent_id && map[c.id]) {
+        roots.push(map[c.id]);
+      }
+    });
+
+    return { rootNodes: roots };
+  }, [comments]);
+
+  // Render recursive comment tree matching PODetailsModal
+  const renderCommentTree = (node, depth = 0) => {
+    const isMe =
+      (currentUserId && node.userId === currentUserId) ||
+      currentUserRole === 'administrator' ||
+      currentUserRole === 'office';
+    const isCollapsed = collapsedComments[node.id];
+
+    return (
+      <div key={node.id} id={node.id} className="relative mb-3 flex scroll-mt-20 flex-col">
+        <div className="group relative flex items-start gap-3 transition-colors">
+          <div
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-xs font-bold shadow-sm ${
+              isMe ? 'bg-mc-black text-white' : 'bg-slate-50 text-slate-700'
+            }`}
+          >
+            {(node.user[0] || 'U').toUpperCase()}
+          </div>
+          <div
+            className={`flex min-w-0 flex-1 flex-col rounded-2xl border p-3 ${
+              isMe
+                ? 'border-slate-200 bg-slate-100/30 shadow-sm'
+                : 'border-slate-100/80 bg-white shadow-xs'
+            }`}
+          >
+            <div className="mb-1.5 flex flex-wrap items-center gap-2">
+              <span className="text-[13px] font-bold text-slate-800">
+                {node.user}
+              </span>
+              <span className="text-[10px] font-medium whitespace-nowrap text-slate-400">
+                {node.timestamp}
+              </span>
+              {node.is_edited && (
+                <span className="text-[10px] text-slate-400 italic">(edited)</span>
+              )}
+              {!isMe && node.role && (
+                <span className="rounded-sm border border-slate-100 bg-slate-50 px-1 py-0.5 text-[8px] font-bold text-slate-500 uppercase">
+                  {node.role}
+                </span>
+              )}
+            </div>
+
+            {editingCommentId === node.id ? (
+              <div className="mt-1 flex w-full flex-col gap-2">
+                {editingCommentFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editingCommentFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 text-[11px] text-slate-600"
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span className="max-w-40 truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingCommentFiles((files) =>
+                              files.filter((_, fileIndex) => fileIndex !== index),
+                            )
+                          }
+                          className="text-slate-400 hover:text-red-500"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="relative">
+                  <textarea
+                    value={editingCommentText}
+                    onChange={(e) => setEditingCommentText(e.target.value)}
+                    className="w-full rounded border border-slate-300 bg-white p-2 pr-9 text-[13px] text-slate-800 focus:border-indigo-400 focus:outline-hidden"
+                    rows={2}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document
+                        .getElementById(`container-comment-edit-attachment-${node.id}`)
+                        ?.click()
+                    }
+                    className="absolute top-2 right-2 text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Attach file or image"
+                    disabled={isCompressing}
+                  >
+                    {isCompressing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Paperclip className="h-4 w-4" />
+                    )}
+                  </button>
+                  <input
+                    id={`container-comment-edit-attachment-${node.id}`}
+                    type="file"
+                    className="hidden"
+                    multiple
+                    accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+                    onChange={async (e) => {
+                      if (!e.target.files?.length) return;
+                      const processedFiles = [];
+                      setIsCompressing(true);
+                      for (const file of Array.from(e.target.files)) {
+                        if (
+                          !file.name.match(
+                            /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                          )
+                        ) {
+                          toast.error(`Invalid file type for ${file.name}`);
+                          continue;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error(`File ${file.name} exceeds 5MB limit`);
+                          continue;
+                        }
+                        processedFiles.push(file);
+                      }
+                      setEditingCommentFiles((files) => [...files, ...processedFiles]);
+                      setIsCompressing(false);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCommentId(null);
+                      setEditingCommentText('');
+                      setEditingCommentFiles([]);
+                    }}
+                    className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSubmit(node.id)}
+                    disabled={isPostingComment}
+                    className="bg-mc-black rounded px-3 py-1 text-[11px] font-semibold text-white hover:bg-black disabled:opacity-50"
+                  >
+                    {isPostingComment && uploadStatus ? uploadStatus : 'Save'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[13px] leading-relaxed break-words whitespace-pre-wrap text-slate-600">
+                {node.message
+                  .split(/(@[\w.-]+)/g)
+                  .map((part, i) =>
+                    part.startsWith('@') ? (
+                      <span key={i} className="text-mc-black font-bold">
+                        {part}
+                      </span>
+                    ) : (
+                      part
+                    ),
+                  )}
+              </p>
+            )}
+
+            {/* Attachments Render matching PO Details */}
+            {node.files && node.files.length > 0 && (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {node.files.map((fileObj, idx) => {
+                  const isImage =
+                    fileObj.fileType?.startsWith('image/') ||
+                    fileObj.fileUrl?.match(/\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i) ||
+                    fileObj.fileUrl?.startsWith('blob:');
+
+                  if (isImage) {
+                    return (
+                      <div key={idx} className="group/att relative">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage(fileObj.fileUrl)}
+                          className="relative focus:outline-hidden"
+                        >
+                          <img
+                            src={fileObj.fileUrl}
+                            alt="Attachment"
+                            className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
+                          />
+                        </button>
+                        {isMe && fileObj.id && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteCommentAttachment(node.id, fileObj.id)
+                            }
+                            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-red-500"
+                            title="Delete attachment"
+                          >
+                            <Trash className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={idx} className="group/att relative w-max">
+                      <a
+                        href={fileObj.fileUrl}
+                        download={fileObj.fileName || 'Document'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex w-max items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 transition-colors hover:bg-slate-100"
+                      >
+                        <div className="rounded-full bg-slate-200 p-1.5 text-slate-500">
+                          <Paperclip className="h-4 w-4" />
+                        </div>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="text-[11px] font-bold">Attachment</span>
+                          <span className="max-w-[12rem] truncate text-[10px] text-slate-400">
+                            {fileObj.fileName || 'Document'}
+                          </span>
+                        </div>
+                        <div className="ml-2 flex rounded-full bg-slate-200 p-1.5 text-slate-500 transition-colors hover:bg-slate-300 hover:text-slate-700">
+                          <Download className="h-3 w-3" />
+                        </div>
+                      </a>
+                      {isMe && fileObj.id && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDeleteCommentAttachment(node.id, fileObj.id)
+                          }
+                          className="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                          title="Delete attachment"
+                        >
+                          <Trash className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Action Bar matching PO Details */}
+            <div className="mt-2 flex items-center gap-4">
+              {isMe && editingCommentId !== node.id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCommentId(node.id);
+                    setEditingCommentText(node.message);
+                    setEditingCommentFiles([]);
+                  }}
+                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
+                >
+                  <Pencil className="h-3 w-3" /> Edit
+                </button>
+              )}
+              {isMe && editingCommentId !== node.id && (
+                <button
+                  type="button"
+                  onClick={() => setCommentToDelete(node)}
+                  className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition hover:text-red-500"
+                >
+                  <Trash className="h-3 w-3" /> Delete
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyToCommentId(node.id);
+                  setReplyToUser(node.user);
+                  setReplyToText(node.message);
+                }}
+                className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
+              >
+                <Reply className="h-3 w-3" /> Reply
+              </button>
+
+              {node.children.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCollapsedComments((prev) => ({
+                      ...prev,
+                      [node.id]: !prev[node.id],
+                    }))
+                  }
+                  className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 transition"
+                >
+                  {isCollapsed ? (
+                    <>
+                      <MessageSquare className="h-3 w-3" /> Expand{' '}
+                      {node.children.length} replies
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-3 w-3" /> Collapse
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Nested Children */}
+        {!isCollapsed && node.children.length > 0 && (
+          <div className="relative mt-3 ml-4 flex flex-col border-l-[1.5px] border-slate-200/80 pl-4 sm:ml-6 sm:pl-6">
+            {node.children.map((child) => renderCommentTree(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -910,68 +720,56 @@ export default function ContainerCommentSection({
             {comments.length}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => fetchComments(false)}
-          disabled={isLoading}
-          className="flex h-6 w-6 items-center justify-center rounded text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 disabled:opacity-50"
-          title="Refresh comments"
-        >
-          <RefreshCw
-            className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`}
-          />
-        </button>
       </div>
 
-      {/* Comment Thread Stream */}
-      <div className="custom-scrollbar flex min-h-[300px] max-h-[460px] flex-1 flex-col gap-2.5 overflow-y-auto p-3.5">
+      {/* Messages Stream */}
+      <div className="custom-scrollbar flex min-h-[300px] max-h-[460px] flex-1 flex-col overflow-y-auto p-4">
         {isLoading && comments.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-8 text-slate-400">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
           </div>
-        ) : rootComments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center space-y-2 py-8 opacity-70">
-            <MessageSquare className="h-8 w-8 text-slate-400" />
-            <p className="font-mono text-xs font-medium text-slate-500">
-              No comment
-            </p>
-          </div>
         ) : (
-          rootComments.map((root) => (
-            <CommentItem
-              key={root.id}
-              comment={root}
-              currentUserId={currentUserId}
-              currentUserRole={currentUserRole}
-              onReply={(c) => setReplyTo(c)}
-              onEdit={handleEditComment}
-              onDelete={(c) => setCommentToDelete(c)}
-              onDeleteAttachment={handleDeleteAttachment}
-              onPreviewImage={(url) => setPreviewImage(url)}
-              replies={replyMap[root.id] || []}
-            />
-          ))
+          <>
+            {rootNodes.length > 0 ? (
+              <div className="flex flex-col">
+                {rootNodes.map((root) => renderCommentTree(root, 0))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center space-y-2 py-8 opacity-70">
+                <MessageSquare className="h-8 w-8 text-slate-400" />
+                <p className="font-mono text-xs font-medium text-slate-500">
+                  No comment
+                </p>
+              </div>
+            )}
+          </>
         )}
-        <div ref={commentsEndRef} />
+        <div ref={messagesEndRef} className="h-1 shrink-0" />
       </div>
 
-      {/* Input Box Footer (Matching PO Details Chat Box) */}
-      <div className="border-t border-slate-200/70 bg-white p-3">
-        {/* Replying Banner */}
-        {replyTo && (
-          <div className="animate-fadeIn group border-mc-gold relative mb-2 flex items-start gap-2 rounded-lg border-l-4 bg-slate-50 py-2 pr-8 pl-3">
+      {/* Form Input Area (100% same to same as PODetailsModal) */}
+      <form
+        onSubmit={handlePostComment}
+        className="relative flex shrink-0 flex-col gap-2 border-t border-slate-200/70 bg-white p-3"
+      >
+        {replyToUser && (
+          <div className="animate-fadeIn group border-mc-gold relative mb-1 flex items-start gap-2 rounded-lg border-l-4 bg-slate-50 py-2 pr-8 pl-3">
             <Reply className="text-mc-gold mt-0.5 h-3.5 w-3.5 shrink-0" />
             <div className="min-w-0 flex-1">
               <span className="text-mc-black block text-xs font-bold">
-                Replying to {replyTo.user_name || 'User'}
+                Replying to {replyToUser}
               </span>
               <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500 italic transition-all group-hover:line-clamp-2">
-                {replyTo.comment || 'Attachment'}
+                {replyToText || 'Attachment'}
               </p>
             </div>
             <button
               type="button"
-              onClick={() => setReplyTo(null)}
+              onClick={() => {
+                setReplyToCommentId(null);
+                setReplyToUser(null);
+                setReplyToText(null);
+              }}
               className="absolute top-1.5 right-1.5 rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
             >
               <X className="h-3.5 w-3.5" />
@@ -979,123 +777,222 @@ export default function ContainerCommentSection({
           </div>
         )}
 
-        {/* Selected Files Preview (Card Style from PO Details) */}
-        {selectedFiles.length > 0 && (
-          <div className="custom-scrollbar mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-2">
-            {selectedFiles.map((file, idx) => (
-              <div
-                key={idx}
-                className="bg-mc-black relative flex w-36 shrink-0 flex-col rounded-xl p-2 shadow-md"
-              >
-                <button
-                  type="button"
-                  onClick={() => removeSelectedFile(idx)}
-                  className="absolute -top-2 -right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:border-red-200 hover:text-red-500"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-                {file.type.startsWith('image/') ? (
-                  <div className="bg-mc-gray-dark relative flex h-20 w-full items-center justify-center overflow-hidden rounded-lg">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt="Preview"
-                      className="h-full w-full object-cover"
-                    />
+        <div className="flex w-full items-end gap-3">
+          <div className="min-w-0 flex-1 flex-col">
+            {newCommentFiles.length > 0 && (
+              <div className="custom-scrollbar mb-3 flex w-full max-w-full gap-2 overflow-x-auto pb-2">
+                {newCommentFiles.map((file, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-mc-black relative flex w-48 shrink-0 flex-col rounded-xl p-2 shadow-md"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newFiles = [...newCommentFiles];
+                        newFiles.splice(idx, 1);
+                        setNewCommentFiles(newFiles);
+                        if (newFiles.length === 0) {
+                          const input = document.getElementById(
+                            `comment-attachment-input-${category}`,
+                          );
+                          if (input) input.value = '';
+                        }
+                      }}
+                      className="absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:border-red-200 hover:text-red-500"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    {file.type?.startsWith('image/') ? (
+                      <div className="bg-mc-gray-dark relative flex h-24 w-full items-center justify-center overflow-hidden rounded-lg">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="Preview"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-mc-gray-dark flex h-24 w-full flex-col items-center justify-center rounded-lg">
+                        <Paperclip className="text-mc-gray-soft mb-1 h-6 w-6 text-slate-300" />
+                        <span className="bg-mc-gray-soft rounded px-2 py-0.5 text-[9px] font-bold tracking-wider text-white uppercase shadow-xs">
+                          {file.name.split('.').pop()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="bg-mc-gray-dark text-mc-white mt-2 w-full truncate rounded-md px-2 py-1 text-center text-[10px] font-semibold text-white">
+                      {file.name}{' '}
+                      <span className="block text-[9px] font-normal text-white/50">
+                        ({(file.size / 1024).toFixed(1)} KB)
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="bg-mc-gray-dark flex h-20 w-full flex-col items-center justify-center rounded-lg">
-                    <Paperclip className="text-mc-gray-soft mb-1 h-5 w-5 text-slate-300" />
-                    <span className="bg-mc-gray-soft rounded px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow-xs">
-                      {file.name.split('.').pop()}
-                    </span>
-                  </div>
-                )}
-                <div className="text-mc-white mt-1.5 w-full truncate rounded-md px-1 text-center text-[10px] font-semibold text-white">
-                  {file.name}{' '}
-                  <span className="block text-[8px] font-normal text-white/60">
-                    ({(file.size / 1024).toFixed(1)} KB)
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {/* Input Bar with integrated Paperclip inside textarea & Comment button */}
-        <div>
-          <div className="flex w-full items-end gap-2.5">
-            <div className="relative min-w-0 flex-1">
-              <CommentMentionTextarea
+            {/* Dropdown anchored to input row only */}
+            <div className="relative w-full">
+              {showMentionDropdown && (
+                <div className="animate-fadeIn absolute bottom-full left-0 z-50 mb-1 flex w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-xl">
+                  <div className="max-h-48 overflow-y-auto py-1">
+                    {(() => {
+                      const filtered = getFilteredMentions();
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="px-3 py-2 text-xs text-slate-400">
+                            No users found
+                          </div>
+                        );
+                      }
+                      return filtered.map((userObj, idx) => {
+                        const name =
+                          typeof userObj === 'string'
+                            ? userObj
+                            : userObj.name || '';
+                        const initial = (name[0] || 'U').toUpperCase();
+                        const isHighlighted = idx === mentionHighlightIndex;
+                        return (
+                          <button
+                            key={
+                              typeof userObj === 'string'
+                                ? userObj
+                                : userObj.id || idx
+                            }
+                            type="button"
+                            onClick={() => handleSelectMention(userObj)}
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition ${
+                              isHighlighted
+                                ? 'bg-mc-gold/10 border-mc-gold border-l-2'
+                                : 'hover:bg-slate-50'
+                            }`}
+                          >
+                            <div
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-bold ${
+                                isHighlighted
+                                  ? 'bg-mc-gold text-white'
+                                  : 'text-mc-black bg-slate-200'
+                              }`}
+                            >
+                              {initial}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-semibold text-slate-700">
+                                {name}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              <textarea
                 rows={2}
-                className="focus:border-mc-black w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden"
-                value={message}
-                hasError={Boolean(commentError)}
                 placeholder={placeholder}
-                loadOptions={loadMentionOptions}
-                onOptionsLoaded={(list) => setTagUsers(list)}
-                onMentionSelect={handleMentionSelect}
-                onChange={(val) => {
-                  setMessage(val);
-                  if (commentError) setCommentError('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handlePostComment();
-                  }
-                }}
+                value={newCommentText}
+                onChange={handleCommentTextChange}
+                onKeyDown={handleCommentKeyDown}
+                className={`focus:border-mc-black w-full resize-none rounded-lg border ${
+                  commentError
+                    ? 'border-rose-500 bg-rose-50'
+                    : 'border-slate-200 bg-slate-50'
+                } px-3 py-2 pr-10 text-[13px] transition focus:bg-white focus:outline-hidden`}
               />
-              <input
-                type="file"
-                multiple
-                ref={fileInputRef}
-                className="hidden"
-                accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
-                onChange={handleFileSelect}
-              />
+
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute top-[8px] right-2.5 p-1 font-bold text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() =>
+                  document
+                    .getElementById(`comment-attachment-input-${category}`)
+                    ?.click()
+                }
+                className="absolute top-[5px] right-2 p-1 font-bold text-slate-400 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 title="Attach file or image"
+                disabled={isCompressing}
               >
-                <Paperclip className="h-4 w-4" />
+                {isCompressing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Paperclip className="h-4 w-4" />
+                )}
               </button>
             </div>
 
-            <button
-              type="button"
-              disabled={
-                isSubmitting ||
-                (!message.trim() && selectedFiles.length === 0)
-              }
-              onClick={handlePostComment}
-              className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Posting...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Comment</span>
-                </>
-              )}
-            </button>
+            {commentError && (
+              <p className="animate-fadeIn mt-1 text-[11px] font-bold text-rose-500">
+                {commentError}
+              </p>
+            )}
+
+            <input
+              type="file"
+              id={`comment-attachment-input-${category}`}
+              className="hidden"
+              multiple
+              accept=".jpeg,.jpg,.png,.gif,.webp,.pdf,.doc,.docx,.csv,.xls,.xlsx"
+              onChange={async (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  const selectedFiles = Array.from(e.target.files);
+                  const processedFiles = [];
+                  setIsCompressing(true);
+
+                  for (const file of selectedFiles) {
+                    const isAllowedExt = file.name.match(
+                      /\.(jpeg|jpg|png|gif|webp|pdf|doc|docx|csv|xls|xlsx)$/i,
+                    );
+                    if (!isAllowedExt) {
+                      toast.error(
+                        `Invalid file type for ${file.name}. Only Images, PDFs, Word, Excel, and CSVs are allowed.`,
+                      );
+                      continue;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error(
+                        `File ${file.name} exceeds the 5MB limits. Please upload a smaller file.`,
+                      );
+                      continue;
+                    }
+                    processedFiles.push(file);
+                  }
+
+                  if (processedFiles.length > 0) {
+                    setNewCommentFiles((prev) => [...prev, ...processedFiles]);
+                  }
+                  setIsCompressing(false);
+                  e.target.value = '';
+                }
+              }}
+            />
           </div>
 
-          {/* Validation Error Message under input */}
-          {commentError && (
-            <p className="animate-fadeIn mt-1 text-[11px] font-bold text-rose-500">
-              {commentError}
-            </p>
-          )}
+          <button
+            type="submit"
+            disabled={
+              isPostingComment ||
+              (!newCommentText.trim() && newCommentFiles.length === 0)
+            }
+            className="bg-mc-black flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isPostingComment ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>
+                  {uploadStatus ? uploadStatus.replace('...', '') : 'Posting'}
+                </span>
+              </>
+            ) : (
+              <>
+                <Send className="h-3.5 w-3.5" />
+                <span>Comment</span>
+              </>
+            )}
+          </button>
         </div>
-      </div>
+      </form>
 
-      {/* Lightbox / Image Preview */}
+      {/* Lightbox / Image Preview Modal */}
       <ImagePreviewModal
         isOpen={Boolean(previewImage)}
         imageSrc={previewImage}
