@@ -1684,55 +1684,81 @@ export default function ContainerDetailsModal({
                         </div>
                       </div>
 
-                      {/* 2. Old / Legacy User Notes (Disabled - View Only for Historical Notes) */}
-                      <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
-                        <div className="relative">
-                          <div className="mb-1 flex items-center justify-between">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Vendor Credit Needed (Archived Notes)
-                            </label>
-                            <span className="rounded bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase">
-                              Read Only
-                            </span>
+                      {/* 2. Old / Legacy User Notes (Disabled - Only shown if historical notes exist) */}
+                      {(() => {
+                        const vCreditOld = String(
+                          trackingData.factory_credit_needed || '',
+                        ).trim();
+                        const rClosureOld = String(
+                          trackingData.receiving_closure_notes || '',
+                        ).trim();
+
+                        const hasVendorCredit =
+                          vCreditOld !== '' &&
+                          vCreditOld !== 'null' &&
+                          vCreditOld !== 'undefined';
+                        const hasReceivingClosure =
+                          rClosureOld !== '' &&
+                          rClosureOld !== 'null' &&
+                          rClosureOld !== 'undefined';
+
+                        if (!hasVendorCredit && !hasReceivingClosure) {
+                          return null;
+                        }
+
+                        return (
+                          <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
+                            {hasVendorCredit && (
+                              <div className="relative">
+                                <div className="mb-1 flex items-center justify-between">
+                                  <label className="block text-xs font-semibold text-slate-700">
+                                    Vendor Credit Needed (Archived Notes)
+                                  </label>
+                                  <span className="rounded bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase">
+                                    Read Only
+                                  </span>
+                                </div>
+                                <div className="relative">
+                                  <textarea
+                                    rows={3}
+                                    disabled
+                                    className="w-full resize-y rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 opacity-90 cursor-not-allowed focus:outline-none"
+                                    value={vCreditOld}
+                                    readOnly
+                                  />
+                                </div>
+                                <p className="mt-1 text-[11px] text-slate-400">
+                                  Historical view only. Use the comment box below for new updates.
+                                </p>
+                              </div>
+                            )}
+                            {hasReceivingClosure && (
+                              <div className="relative">
+                                <div className="mb-1 flex items-center justify-between">
+                                  <label className="block text-xs font-semibold text-slate-700">
+                                    Receiving Closure Notes (Archived Notes)
+                                  </label>
+                                  <span className="rounded bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase">
+                                    Read Only
+                                  </span>
+                                </div>
+                                <div className="relative">
+                                  <textarea
+                                    rows={3}
+                                    disabled
+                                    className="w-full resize-y rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 opacity-90 cursor-not-allowed focus:outline-none"
+                                    value={rClosureOld}
+                                    readOnly
+                                  />
+                                </div>
+                                <p className="mt-1 text-[11px] text-slate-400">
+                                  Historical view only. Use the comment box below for new updates.
+                                </p>
+                              </div>
+                            )}
                           </div>
-                          <div className="relative">
-                            <textarea
-                              rows={3}
-                              disabled
-                              className="w-full resize-y rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 opacity-90 cursor-not-allowed focus:outline-none"
-                              value={trackingData.factory_credit_needed || ''}
-                              placeholder="No previous notes recorded"
-                              readOnly
-                            />
-                          </div>
-                          <p className="mt-1 text-[11px] text-slate-400">
-                            Historical view only. Use the comment box below for new updates.
-                          </p>
-                        </div>
-                        <div className="relative">
-                          <div className="mb-1 flex items-center justify-between">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Receiving Closure Notes (Archived Notes)
-                            </label>
-                            <span className="rounded bg-slate-200/80 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase">
-                              Read Only
-                            </span>
-                          </div>
-                          <div className="relative">
-                            <textarea
-                              rows={3}
-                              disabled
-                              className="w-full resize-y rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 opacity-90 cursor-not-allowed focus:outline-none"
-                              value={trackingData.receiving_closure_notes || ''}
-                              placeholder="No previous notes recorded"
-                              readOnly
-                            />
-                          </div>
-                          <p className="mt-1 text-[11px] text-slate-400">
-                            Historical view only. Use the comment box below for new updates.
-                          </p>
-                        </div>
-                      </div>
+                        );
+                      })()}
 
                       {/* 3. New Vendor Credit Needed & Receiving Closure Notes (New Comments) */}
                       <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
