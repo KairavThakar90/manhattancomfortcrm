@@ -1392,44 +1392,113 @@ export default function POManagement({
     try {
       await syncSinglePurchaseOrder(cleanId);
 
-      try {
-        const detailData = await getPurchaseOrderById(cleanId);
-        if (detailData) {
-          const calculatedOrderedQty = detailData.items
-            ? detailData.items.reduce(
-                (sum: number, i: any) =>
-                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
-                0,
-              )
-            : 0;
-          const calculatedReceivedQty = detailData.items
-            ? detailData.items.reduce(
-                (sum: number, i: any) =>
-                  sum +
-                  (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
-                0,
-              )
-            : 0;
+      // Only call GET single PO API with no parameters
+      const detailData: any = await getPurchaseOrderById(cleanId);
+      if (detailData) {
+        const vendor = vendors.find((v: any) => v.id === detailData.vendor_id);
+        const vendorName =
+          detailData.vendor?.name ||
+          vendor?.name ||
+          detailData.vendor_name ||
+          'N/A';
 
-          const mappedPO = {
-            id: detailData.sellercloud_po_id
-              ? `PO-${detailData.sellercloud_po_id}`
-              : detailData.id,
-            ...detailData,
-            orderedQty: calculatedOrderedQty,
-            receivedQty: calculatedReceivedQty,
-          };
-          onUpdatePO(mappedPO);
+        const orderedQty = detailData.items
+          ? detailData.items.reduce(
+              (sum: number, item: any) =>
+                sum + (item.qty_ordered ?? item.qty ?? 0),
+              0,
+            )
+          : detailData.total_qty_ordered || 0;
+
+        const receivedQty = detailData.items
+          ? detailData.items.reduce(
+              (sum: number, item: any) =>
+                sum +
+                (item.qty_received ??
+                  item.receivedQty ??
+                  item.received_qty ??
+                  0),
+              0,
+            )
+          : detailData.total_qty_received || 0;
+
+        let eta = 'N/A';
+        const leadDays =
+          detailData.container_lead_time_days ||
+          detailData.containerLeadTimeDays;
+        if (detailData.invoice_date && leadDays) {
+          const invoiceDate = new Date(detailData.invoice_date);
+          invoiceDate.setDate(invoiceDate.getDate() + Number(leadDays));
+          eta = invoiceDate.toISOString().split('T')[0];
+        } else if (detailData.expected_delivery_date) {
+          eta = String(detailData.expected_delivery_date).split('T')[0];
         }
-      } catch (fetchErr) {
-        console.warn(
-          'Could not re-fetch single PO details after sync:',
-          fetchErr,
-        );
-      }
 
-      if (onRefreshData) {
-        onRefreshData();
+        const rawOrderDate = detailData.date_ordered || detailData.created_on;
+        const creationDate = rawOrderDate
+          ? String(rawOrderDate).split('T')[0]
+          : 'N/A';
+
+        const mappedPO: any = {
+          id: detailData.sellercloud_po_id
+            ? `PO-${detailData.sellercloud_po_id}`
+            : detailData.id || `PO-${cleanId}`,
+          uuid: detailData.id,
+          orderId: detailData.order_number || detailData.orderId || 'N/A',
+          channel_order_id: detailData.channel_order_id || 'N/A',
+          vendorId: detailData.vendor_id || 'N/A',
+          vendorName,
+          companyName:
+            detailData.company_name ||
+            detailData.company?.name ||
+            detailData.companyName ||
+            '-',
+          customer: detailData.customer || null,
+          customerName:
+            detailData.first_name || detailData.customerName || null,
+          warehouseName:
+            detailData.warehouse?.name ||
+            detailData.warehouse_name ||
+            detailData.warehouse ||
+            'N/A',
+          status: detailData.status_label || detailData.status || 'N/A',
+          productionStage: detailData.productionStage || 'Materials',
+          orderedQty,
+          receivedQty,
+          total_item_count:
+            detailData.total_item_count ??
+            (detailData.items ? detailData.items.length : 0),
+          total_qty_ordered: detailData.total_qty_ordered ?? orderedQty,
+          total_qty_received: detailData.total_qty_received ?? receivedQty,
+          total_qty_remaining: detailData.total_qty_remaining,
+          container: detailData.container || 'N/A',
+          containers: detailData.containers || [],
+          containerNames: detailData.container_names || [],
+          containerIds:
+            detailData.container_ids || detailData.container_names || [],
+          invoiceStatus:
+            detailData.invoice_status || detailData.invoiceStatus || 'Pending',
+          invoiceFile: detailData.invoiceFile || null,
+          invoiceDetails: detailData.invoiceDetails || null,
+          eta,
+          expected_delivery_date: eta,
+          creationDate,
+          containerLeadTimeDays: leadDays || null,
+          delayedDays: detailData.delayedDays || 0,
+          delay_reason: detailData.delay_reason || null,
+          skus: detailData.items ? detailData.items.map((i: any) => i.sku) : [],
+          items: detailData.items || [],
+          commentsCount:
+            detailData.total_comments_count ??
+            detailData.commentsCount ??
+            detailData.comments_count ??
+            0,
+          emailCount: detailData.emailCount || 0,
+          sellercloud_link: detailData.sellercloud_link || null,
+          delta_sellercloud_link: detailData.delta_sellercloud_link || null,
+        };
+
+        onUpdatePO(mappedPO);
       }
 
       toast.success('Purchase Order synced successfully.');
@@ -1469,60 +1538,92 @@ export default function POManagement({
     try {
       await syncSinglePurchaseOrder(scPoId);
 
-      // Re-fetch the updated single PO to refresh local and redux state
-      try {
-        const detailData = await getPurchaseOrderById(scPoId);
-        if (detailData) {
-          const calculatedOrderedQty = detailData.items
-            ? detailData.items.reduce(
-                (sum: number, i: any) =>
-                  sum + (i.qty_ordered ?? i.qty ?? i.orderedQty ?? 0),
-                0,
-              )
-            : po.orderedQty;
-          const calculatedReceivedQty = detailData.items
-            ? detailData.items.reduce(
-                (sum: number, i: any) =>
-                  sum +
-                  (i.qty_received ?? i.receivedQty ?? i.received_qty ?? 0),
-                0,
-              )
-            : po.receivedQty;
+      // Only call GET single PO API with no parameters
+      const detailData: any = await getPurchaseOrderById(scPoId);
+      if (detailData) {
+        const vendor = vendors.find(
+          (v: any) => v.id === detailData.vendor_id || v.id === po.vendorId,
+        );
+        const vendorName =
+          detailData.vendor?.name ||
+          vendor?.name ||
+          detailData.vendor_name ||
+          po.vendorName ||
+          'N/A';
 
-          const updatedPO = {
-            ...po,
-            ...detailData,
-            id: detailData.sellercloud_po_id
-              ? `PO-${detailData.sellercloud_po_id}`
-              : po.id,
-            orderedQty: calculatedOrderedQty ?? po.orderedQty,
-            receivedQty: calculatedReceivedQty ?? po.receivedQty,
-            status: detailData.status_label || detailData.status || po.status,
-            total_item_count:
-              detailData.total_item_count ??
-              (detailData.items ? detailData.items.length : po.total_item_count),
-            total_qty_ordered:
-              detailData.total_qty_ordered ?? calculatedOrderedQty,
-            total_qty_received:
-              detailData.total_qty_received ?? calculatedReceivedQty,
-            total_qty_remaining: detailData.total_qty_remaining,
-            commentsCount:
-              detailData.total_comments_count ??
-              detailData.commentsCount ??
-              po.commentsCount,
-          };
-          onUpdatePO(updatedPO);
+        const orderedQty = detailData.items
+          ? detailData.items.reduce(
+              (sum: number, item: any) =>
+                sum + (item.qty_ordered ?? item.qty ?? 0),
+              0,
+            )
+          : detailData.total_qty_ordered || po.orderedQty || 0;
+
+        const receivedQty = detailData.items
+          ? detailData.items.reduce(
+              (sum: number, item: any) =>
+                sum +
+                (item.qty_received ??
+                  item.receivedQty ??
+                  item.received_qty ??
+                  0),
+              0,
+            )
+          : detailData.total_qty_received || po.receivedQty || 0;
+
+        let eta = po.eta || 'N/A';
+        const leadDays =
+          detailData.container_lead_time_days ||
+          detailData.containerLeadTimeDays ||
+          po.containerLeadTimeDays;
+        if (detailData.invoice_date && leadDays) {
+          const invoiceDate = new Date(detailData.invoice_date);
+          invoiceDate.setDate(invoiceDate.getDate() + Number(leadDays));
+          eta = invoiceDate.toISOString().split('T')[0];
+        } else if (detailData.expected_delivery_date) {
+          eta = String(detailData.expected_delivery_date).split('T')[0];
         }
-      } catch (fetchErr) {
-        console.warn('Failed to re-fetch single PO after sync:', fetchErr);
-      }
 
-      if (onRefreshData) {
-        onRefreshData();
+        const rawOrderDate =
+          detailData.date_ordered ||
+          detailData.created_on ||
+          po.creationDate;
+        const creationDate = rawOrderDate
+          ? String(rawOrderDate).split('T')[0]
+          : po.creationDate || 'N/A';
+
+        const updatedPO = {
+          ...po,
+          ...detailData,
+          id: detailData.sellercloud_po_id
+            ? `PO-${detailData.sellercloud_po_id}`
+            : po.id,
+          vendorName,
+          orderedQty,
+          receivedQty,
+          status: detailData.status_label || detailData.status || po.status,
+          total_item_count:
+            detailData.total_item_count ??
+            (detailData.items ? detailData.items.length : po.total_item_count),
+          total_qty_ordered: detailData.total_qty_ordered ?? orderedQty,
+          total_qty_received: detailData.total_qty_received ?? receivedQty,
+          total_qty_remaining: detailData.total_qty_remaining,
+          commentsCount:
+            detailData.total_comments_count ??
+            detailData.commentsCount ??
+            po.commentsCount,
+          eta,
+          expected_delivery_date: eta,
+          creationDate,
+        };
+        onUpdatePO(updatedPO);
       }
 
       toast.success('Purchase Order synced successfully.');
-      onAddActivity?.(`Synced PO ${po.id || scPoId} from Sellercloud`, 'PO Updated');
+      onAddActivity?.(
+        `Synced PO ${po.id || scPoId} from Sellercloud`,
+        'PO Updated',
+      );
     } catch (err: any) {
       console.error('Failed to sync single PO:', err);
       const errorMsg =

@@ -13,7 +13,10 @@ import DataTable from '../../../components/common/DataTable';
 import Pagination from '../../../components/common/Pagination';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import DateFilterInput from '../../../components/common/DateFilterInput';
-import { syncSinglePurchaseOrder } from '../services/purchaseOrder.service';
+import {
+  getPurchaseOrderById,
+  syncSinglePurchaseOrder,
+} from '../services/purchaseOrder.service';
 import { toast } from 'react-toastify';
 
 const STATUS_OPTIONS = [
@@ -34,6 +37,7 @@ export default function PurchaseOrderTable({
   loading,
   error,
   purchaseOrders,
+  onUpdatePO,
   searchQuery,
   onSearchChange,
   statusFilter,
@@ -84,8 +88,10 @@ export default function PurchaseOrderTable({
     setIsSyncingManualPO(true);
     try {
       await syncSinglePurchaseOrder(cleanId);
-      if (onRefresh) {
-        onRefresh();
+      // Only call GET single PO API with no parameters
+      const detailData = await getPurchaseOrderById(cleanId);
+      if (detailData && onUpdatePO) {
+        onUpdatePO(detailData);
       }
       toast.success('Purchase Order synced successfully.');
       setManualPoInput('');
@@ -122,8 +128,10 @@ export default function PurchaseOrderTable({
     setSyncingPOIds((prev) => new Set(prev).add(poKey));
     try {
       await syncSinglePurchaseOrder(scPoId);
-      if (onRefresh) {
-        onRefresh();
+      // Only call GET single PO API with no parameters
+      const detailData = await getPurchaseOrderById(scPoId);
+      if (detailData && onUpdatePO) {
+        onUpdatePO({ ...po, ...detailData });
       }
       toast.success('Purchase Order synced successfully.');
     } catch (err) {

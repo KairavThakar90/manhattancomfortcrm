@@ -586,15 +586,39 @@ export default function POManagementPage() {
 
   const handlePOUpdateCascade = async (po) => {
     const exists = purchaseOrders.some(
-      (p) => p.id === po.id || p.uuid === po.uuid,
+      (p) =>
+        p.id === po.id ||
+        p.uuid === po.uuid ||
+        (p.sellercloud_po_id &&
+          po.sellercloud_po_id &&
+          p.sellercloud_po_id === po.sellercloud_po_id) ||
+        (p.id &&
+          po.sellercloud_po_id &&
+          p.id.replace(/^PO-/i, '') === String(po.sellercloud_po_id)),
     );
     if (exists) {
-      // Optimistic update of local state
-      const updated = purchaseOrders.map((p) => (p.id === po.id ? po : p));
+      // Update local state and Redux
+      const updated = purchaseOrders.map((p) =>
+        p.id === po.id ||
+        p.uuid === po.uuid ||
+        (p.sellercloud_po_id &&
+          po.sellercloud_po_id &&
+          p.sellercloud_po_id === po.sellercloud_po_id) ||
+        (p.id &&
+          po.sellercloud_po_id &&
+          p.id.replace(/^PO-/i, '') === String(po.sellercloud_po_id))
+          ? { ...p, ...po }
+          : p,
+      );
+      handleUpdatePOs(updated);
+      dispatch(setPurchaseOrdersList(updated));
+    } else if (po.uuid || po.sellercloud_po_id) {
+      // It is an existing PO synced or fetched from backend DB
+      const updated = [po, ...purchaseOrders];
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
     } else {
-      // Optimistic create UI state
+      // Optimistic create UI state for locally drafted PO
       const mockId = po.id || `PO-${Math.floor(10000 + Math.random() * 90000)}`;
       const newLocalPO = {
         ...po,

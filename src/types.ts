@@ -2,12 +2,27 @@ export type UserRole =
   'Administrator' | 'Purchasing' | 'Warehouse' | 'Finance' | 'Vendor';
 
 export type POShippingStatus =
-  'Production' | 'In Transit' | 'Port of Entry' | 'Delivered' | 'Delayed';
+  | 'Production'
+  | 'In Transit'
+  | 'Port of Entry'
+  | 'Delivered'
+  | 'Delayed'
+  | (string & {});
 
-export type InvoiceStatus = 'Pending' | 'Uploaded' | 'Approved' | 'Rejected';
+export type InvoiceStatus =
+  | 'Pending'
+  | 'Uploaded'
+  | 'Approved'
+  | 'Rejected'
+  | (string & {});
 
 export type ProductionStage =
-  'Materials' | 'Assembly' | 'Quality Check' | 'Packaging' | 'Ready to Ship';
+  | 'Materials'
+  | 'Assembly'
+  | 'Quality Check'
+  | 'Packaging'
+  | 'Ready to Ship'
+  | (string & {});
 
 export interface POItemContainer {
   id?: string;
@@ -44,18 +59,41 @@ export interface PurchaseOrder {
   id: string; // PO-10025
   uuid?: string;
   orderId?: string;
+  order_number?: string;
+  channel_order_id?: string;
+  sellercloud_po_id?: number | string;
   vendorId: string;
+  vendor_id?: string;
   vendorName: string;
+  vendor_name?: string;
+  companyName?: string;
+  company_name?: string;
+  warehouseName?: string;
+  warehouse_name?: string;
+  warehouse?: any;
   status: POShippingStatus;
+  status_label?: string;
   orderedQty: number;
   receivedQty: number;
+  total_qty_ordered?: number;
+  total_qty_received?: number;
+  total_qty_remaining?: number;
+  total_item_count?: number;
+  total_comments_count?: number;
   container: string;
+  containers?: any[];
   containerNames?: string[];
+  container_names?: string[];
+  container_ids?: any[];
   invoiceStatus: InvoiceStatus;
+  invoice_status?: InvoiceStatus;
+  invoice_date?: string;
   invoiceFile: string | null;
   invoiceDetails: InvoiceDetails | null;
   eta: string;
   expected_delivery_date?: string;
+  date_ordered?: string;
+  created_on?: string;
   creationDate: string;
   delayedDays: number;
   skus: string[];
@@ -65,10 +103,13 @@ export interface PurchaseOrder {
   delay_reason?: string;
   reason?: string;
   commentsCount: number;
+  comments_count?: number;
   emailCount: number;
   containerLeadTimeDays?: number | null;
+  container_lead_time_days?: number | null;
   sellercloud_link?: string | null;
   delta_sellercloud_link?: string | null;
+  [key: string]: any;
 }
 
 export interface Vendor {
