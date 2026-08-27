@@ -1487,22 +1487,7 @@ export default function ContainerDetailsModal({
                           </div>
                         </>
                       )}
-                      <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
-                        <ContainerCommentSection
-                          containerId={container?.id}
-                          category="vendor_credit"
-                          title="Vendor Credit Needed"
-                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
-                          loadMentionOptions={loadVendorMentionOptions}
-                        />
-                        <ContainerCommentSection
-                          containerId={container?.id}
-                          category="receiving_closure"
-                          title="Receiving Closure Notes"
-                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
-                          loadMentionOptions={loadTeamMentionOptions}
-                        />
-                      </div>
+                      {/* 1. Attachment Section (First) */}
                       <div className="sm:col-span-2">
                         <label className="mb-1 block text-xs font-semibold text-slate-700">
                           Attachment
@@ -1691,6 +1676,24 @@ export default function ContainerDetailsModal({
                             );
                           })()}
                         </div>
+                      </div>
+
+                      {/* 2. Vendor Credit Needed & Receiving Closure Notes (Same Row) */}
+                      <div className="grid grid-cols-1 gap-6 sm:col-span-2 sm:grid-cols-2">
+                        <ContainerCommentSection
+                          containerId={container?.id}
+                          category="vendor_credit"
+                          title="Vendor Credit Needed"
+                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
+                          loadMentionOptions={loadVendorMentionOptions}
+                        />
+                        <ContainerCommentSection
+                          containerId={container?.id}
+                          category="receiving_closure"
+                          title="Receiving Closure Notes"
+                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
+                          loadMentionOptions={loadTeamMentionOptions}
+                        />
                       </div>
                     </div>
                   </div>
