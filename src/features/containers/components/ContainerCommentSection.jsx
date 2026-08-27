@@ -96,6 +96,8 @@ export default function ContainerCommentSection({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const mainInputRef = useRef(null);
   const currentUserId = localStorage.getItem('userId');
   const currentUserRole = String(
     localStorage.getItem('userRole') || '',
@@ -315,6 +317,7 @@ export default function ContainerCommentSection({
       return;
     }
 
+    const currentScrollTop = scrollContainerRef.current?.scrollTop;
     setUploadStatus('Saving...');
     setIsPostingComment(true);
     try {
@@ -337,6 +340,9 @@ export default function ContainerCommentSection({
       setEditingCommentText('');
       setEditingCommentFiles([]);
       await fetchComments(true);
+      if (scrollContainerRef.current && currentScrollTop !== undefined) {
+        scrollContainerRef.current.scrollTop = currentScrollTop;
+      }
     } catch (err) {
       console.error('Failed to update comment:', err);
       toast.error('Failed to update comment');
@@ -344,6 +350,41 @@ export default function ContainerCommentSection({
       setIsPostingComment(false);
       setUploadStatus('');
     }
+  };
+
+  const inputContainerRef = useRef(null);
+
+  // Reply handler with full modal auto-scroll to comment input & Comment button
+  const handleReplyClick = (node) => {
+    setReplyToCommentId(node.id);
+    setReplyToUser(node.user);
+    setReplyToUserId(node.userId);
+    setReplyToText(node.message);
+    setCommentError('');
+
+    setTimeout(() => {
+      // 1. Scroll internal messages stream
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end',
+        });
+      }
+
+      // 2. Scroll the full modal window so the input form and Comment button are fully visible
+      if (inputContainerRef.current) {
+        inputContainerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end',
+          inline: 'nearest',
+        });
+      }
+
+      // 3. Focus the comment input
+      if (mainInputRef.current) {
+        mainInputRef.current.focus({ preventScroll: true });
+      }
+    }, 60);
   };
 
   // Delete Comment / Attachment Handlers
@@ -484,6 +525,19 @@ export default function ContainerCommentSection({
                 )}
                 <div className="relative">
                   <textarea
+                    ref={(el) => {
+                      if (
+                        el &&
+                        editingCommentId === node.id &&
+                        document.activeElement !== el
+                      ) {
+                        el.focus({ preventScroll: true });
+                        el.setSelectionRange(
+                          el.value.length,
+                          el.value.length,
+                        );
+                      }
+                    }}
                     value={editingCommentText}
                     onChange={(e) => setEditingCommentText(e.target.value)}
                     className="w-full rounded border border-slate-300 bg-white p-2 pr-9 text-[13px] text-slate-800 focus:border-indigo-400 focus:outline-hidden"
@@ -681,13 +735,7 @@ export default function ContainerCommentSection({
 
               <button
                 type="button"
-                onClick={() => {
-                  setReplyToCommentId(node.id);
-                  setReplyToUser(node.user);
-                  setReplyToUserId(node.userId);
-                  setReplyToText(node.message);
-                  setCommentError('');
-                }}
+                onClick={() => handleReplyClick(node)}
                 className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
               >
                 <Reply className="h-3 w-3" /> Reply
@@ -740,7 +788,10 @@ export default function ContainerCommentSection({
       </div>
 
       {/* Messages Stream */}
-      <div className="custom-scrollbar flex min-h-[300px] max-h-[460px] flex-1 flex-col overflow-y-auto p-4">
+      <div
+        ref={scrollContainerRef}
+        className="custom-scrollbar flex min-h-[300px] max-h-[460px] flex-1 flex-col overflow-y-auto p-4"
+      >
         {isLoading && comments.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-8 text-slate-400">
             <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
@@ -766,6 +817,7 @@ export default function ContainerCommentSection({
 
       {/* Form Input Area (100% same to same as PODetailsModal) */}
       <form
+        ref={inputContainerRef}
         onSubmit={handlePostComment}
         className="relative flex shrink-0 flex-col gap-2 border-t border-slate-200/70 bg-white p-3"
       >
@@ -907,6 +959,7 @@ export default function ContainerCommentSection({
               )}
 
               <textarea
+                ref={mainInputRef}
                 rows={2}
                 placeholder={placeholder}
                 value={newCommentText}
