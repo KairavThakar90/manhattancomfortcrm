@@ -1684,14 +1684,14 @@ export default function ContainerDetailsModal({
                           containerId={container?.id}
                           category="vendor_credit"
                           title="Vendor Credit Needed"
-                          placeholder="e.g. Damaged panels — type @ to tag a vendor"
+                          placeholder="Type a message... (Use @ to tag)"
                           loadMentionOptions={loadVendorMentionOptions}
                         />
                         <ContainerCommentSection
                           containerId={container?.id}
                           category="receiving_closure"
                           title="Receiving Closure Notes"
-                          placeholder="e.g. Fully closed and processed — type @ to tag a teammate"
+                          placeholder="Type a message... (Use @ to tag)"
                           loadMentionOptions={loadTeamMentionOptions}
                         />
                       </div>

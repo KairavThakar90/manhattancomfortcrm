@@ -72,6 +72,7 @@ export default function ContainerCommentSection({
   const [newCommentFiles, setNewCommentFiles] = useState([]);
   const [replyToCommentId, setReplyToCommentId] = useState(null);
   const [replyToUser, setReplyToUser] = useState(null);
+  const [replyToUserId, setReplyToUserId] = useState(null);
   const [replyToText, setReplyToText] = useState(null);
   const [commentError, setCommentError] = useState('');
   const [isCompressing, setIsCompressing] = useState(false);
@@ -236,8 +237,16 @@ export default function ContainerCommentSection({
     if (e) e.preventDefault();
     if (!newCommentText.trim() && newCommentFiles.length === 0) return;
 
-    const taggedUserIds = extractTaggedUserIds(newCommentText);
-    if (taggedUserIds.length === 0) {
+    const extractedUserIds = extractTaggedUserIds(newCommentText);
+
+    // Combine any @tagged users from text + the replied user
+    const finalTaggedUserIds = [...extractedUserIds];
+    if (replyToUserId && !finalTaggedUserIds.includes(replyToUserId)) {
+      finalTaggedUserIds.push(replyToUserId);
+    }
+
+    // Strictly disallow comments without at least one @tagged user
+    if (finalTaggedUserIds.length === 0) {
       setCommentError(
         newCommentFiles.length > 0 && !newCommentText.trim()
           ? 'Please type a message with an @tag to send these attachments.'
@@ -246,6 +255,7 @@ export default function ContainerCommentSection({
       return;
     }
 
+    setCommentError('');
     setUploadStatus('Compressing...');
     setIsPostingComment(true);
 
@@ -266,7 +276,7 @@ export default function ContainerCommentSection({
         comment: newCommentText.trim(),
         category,
         parent_id: replyToCommentId || null,
-        tagged_user_ids: taggedUserIds,
+        tagged_user_ids: finalTaggedUserIds,
         files: finalFiles,
       });
 
@@ -276,6 +286,7 @@ export default function ContainerCommentSection({
       setNewCommentFiles([]);
       setReplyToCommentId(null);
       setReplyToUser(null);
+      setReplyToUserId(null);
       setReplyToText(null);
       setCommentError('');
 
@@ -673,7 +684,9 @@ export default function ContainerCommentSection({
                 onClick={() => {
                   setReplyToCommentId(node.id);
                   setReplyToUser(node.user);
+                  setReplyToUserId(node.userId);
                   setReplyToText(node.message);
+                  setCommentError('');
                 }}
                 className="hover:text-mc-black flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 opacity-100 transition"
               >
@@ -775,6 +788,7 @@ export default function ContainerCommentSection({
               onClick={() => {
                 setReplyToCommentId(null);
                 setReplyToUser(null);
+                setReplyToUserId(null);
                 setReplyToText(null);
               }}
               className="absolute top-1.5 right-1.5 rounded p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
@@ -966,6 +980,7 @@ export default function ContainerCommentSection({
 
                   if (processedFiles.length > 0) {
                     setNewCommentFiles((prev) => [...prev, ...processedFiles]);
+                    setCommentError('');
                   }
                   setIsCompressing(false);
                   e.target.value = '';
