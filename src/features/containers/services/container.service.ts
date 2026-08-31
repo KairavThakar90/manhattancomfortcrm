@@ -81,15 +81,12 @@ export async function searchContainerETA(containerNumber: string) {
   return data;
 }
 
-export async function syncContainers(days: number = 30) {
+export async function syncContainers(days: string = '30') {
+  const url = days === 'all' ? CONTAINER_SYNC : `${CONTAINER_SYNC}?days=${days}`;
   // Pass timeout: 0 to disable the global timeout limit entirely for this sync operation
-  const { data } = await apiClient.post(
-    `${CONTAINER_SYNC}?days=${days}`,
-    undefined,
-    {
-      timeout: 0,
-    },
-  );
+  const { data } = await apiClient.post(url, undefined, {
+    timeout: 0,
+  });
   return data;
 }
 
