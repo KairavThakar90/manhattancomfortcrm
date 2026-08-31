@@ -283,7 +283,7 @@ export default function MainLayout() {
 
           <div className="flex items-center gap-4">
             {/* Notifications trigger with Red badge */}
-            <div className="relative">
+            <div className="relative hidden">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="border-mc-beige-dark text-mc-gray-soft hover:bg-mc-beige-light hover:text-mc-gold rounded-lg border p-2 shadow-2xs transition"
