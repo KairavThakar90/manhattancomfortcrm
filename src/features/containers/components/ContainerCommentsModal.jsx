@@ -44,7 +44,7 @@ export default function ContainerCommentsModal({ container, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-sm">
-      <div className="bg-mc-white flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl shadow-2xl">
+      <div className="bg-mc-white flex h-[80vh] max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-100 shadow-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5">
           <h3 className="text-mc-black text-base font-bold">
@@ -103,7 +103,7 @@ export default function ContainerCommentsModal({ container, onClose }) {
           </div>
 
           {/* Selected scope's comment thread */}
-          <div className="shrink-0">
+          <div className="min-h-0 flex-1">
             <ContainerCommentSection
               key={activeScope.category}
               containerId={container?.id}

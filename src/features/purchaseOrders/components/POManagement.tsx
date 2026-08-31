@@ -5025,7 +5025,7 @@ Supply Chain CRM Coordinator`;
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'h-[80vh] max-h-[80vh] max-w-xl w-full' : 'h-[900px] max-h-[95vh] w-[1400px] max-w-[95vw]'} animate-scaleUp flex flex-col overflow-hidden`}
+              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'h-[80vh] max-h-[80vh] max-w-xl w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' : 'h-[900px] max-h-[95vh] w-[1400px] max-w-[95vw]'} animate-scaleUp flex flex-col overflow-hidden`}
             >
               {/* Header */}
               {!isCommentOnlyView && (
