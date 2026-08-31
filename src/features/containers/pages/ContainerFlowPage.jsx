@@ -754,17 +754,49 @@ export default function ContainerFlowPage() {
             if (!rawPoId) return;
             const poId = rawPoId.toString().replace(/^PO-/, '');
 
+            // Sync this PO's quantities first — items are only fetched once
+            // sync-quantities responds with success (loadingPOItems stays
+            // true for the whole sequence, so the item list shows as
+            // loading throughout).
+            let syncSucceeded = false;
             try {
-              const data = await getContainerPOItems(poId);
-              let items = Array.isArray(data)
-                ? data
-                : data.results || data.data || data.items || [];
-              if (items.length === 0 && po.items) {
-                items = po.items;
+              const syncResult = await syncPOQuantities(poId);
+              syncSucceeded =
+                syncResult?.success === true ||
+                syncResult?.status === true ||
+                syncResult?.status === 'success';
+              if (!syncSucceeded) {
+                console.warn(
+                  `Quantity sync for PO ${poId} did not report success`,
+                  syncResult,
+                );
               }
-              const cloned = items.map((i) => ({ ...i, bound_po_id: rawPoId }));
-              allItems.push(...cloned);
-            } catch (e) {
+            } catch (syncErr) {
+              console.error(`Failed to sync quantities for PO ${poId}`, syncErr);
+            }
+
+            if (syncSucceeded) {
+              try {
+                const data = await getContainerPOItems(poId);
+                let items = Array.isArray(data)
+                  ? data
+                  : data.results || data.data || data.items || [];
+                if (items.length === 0 && po.items) {
+                  items = po.items;
+                }
+                const cloned = items.map((i) => ({ ...i, bound_po_id: rawPoId }));
+                allItems.push(...cloned);
+              } catch (e) {
+                const fallbackItems = po.items || [];
+                const cloned = fallbackItems.map((i) => ({
+                  ...i,
+                  bound_po_id: rawPoId,
+                }));
+                allItems.push(...cloned);
+              }
+            } else {
+              // Sync didn't succeed — don't call the items API, fall back
+              // to whatever item data the PO already carries (if any).
               const fallbackItems = po.items || [];
               const cloned = fallbackItems.map((i) => ({
                 ...i,
@@ -918,28 +950,6 @@ export default function ContainerFlowPage() {
 
   const handlePOChange = (selections) => {
     const ids = selections ? selections.map((s) => s.value) : [];
-
-    // Newly-selected PO(s) — trigger a background quantity sync for each,
-    // without blocking the UI or the rest of the selection flow.
-    const newlySelectedIds = ids.filter(
-      (id) => !selectedPOIds.map(String).includes(String(id)),
-    );
-    newlySelectedIds.forEach((id) => {
-      const po =
-        poList?.find((p) => String(p.id) === String(id)) ||
-        purchaseOrders?.find((p) => String(p.id) === String(id)) ||
-        cachedPOs[id];
-      const sellercloudPoId = po?.sellercloud_po_id || po?.id || id;
-      if (sellercloudPoId) {
-        syncPOQuantities(sellercloudPoId).catch((err) =>
-          console.error(
-            `Failed to sync quantities for PO ${sellercloudPoId}`,
-            err,
-          ),
-        );
-      }
-    });
-
     setSelectedPOIds(ids);
 
     if (ids.length > 0) {
