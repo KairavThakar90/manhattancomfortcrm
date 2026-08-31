@@ -52,7 +52,7 @@ import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfin
 import { getWarehouses } from '../../../services/warehouse.service';
 import {
   getPurchaseOrders,
-  assignPOWarehouse,
+  assignPOWarehouseBulk,
 } from '../../purchaseOrders/services/purchaseOrder.service';
 import { useCRM } from '../../../hooks/useCRM';
 import ColumnsDropdown from '../../../components/common/ColumnsDropdown';
@@ -1228,46 +1228,44 @@ export default function ContainerFlowPage() {
     if (!previewPayload) return;
     try {
       setIsSaving(true);
-      let createdContainer = null;
-      if (isEditMode && editingContainerId) {
-        await updateContainer(editingContainerId, previewPayload);
-        toast.success('Container updated successfully!');
-      } else {
-        createdContainer = await createContainer(previewPayload);
-        toast.success('Container created and items allocated successfully!');
-      }
 
-      // Assign the currently selected warehouse (selectedWarehouseId) to each
-      // PO in this container. Note: selectedWarehouseId is auto-synced to the
-      // ETA Warehouse in handleFetchContainerEta when they differ, so this
-      // always reflects the warehouse returned by the last ETA lookup unless
-      // the user picked a different one afterward.
-      const containerId =
-        createdContainer?.id ||
-        createdContainer?.container_id ||
-        createdContainer?.data?.id;
-      if (containerId && selectedWarehouseId && selectedPOIds.length > 0) {
-        const assignmentResults = await Promise.allSettled(
-          selectedPOIds.map((poId) =>
-            assignPOWarehouse(poId, selectedWarehouseId),
-          ),
-        );
-        const failedCount = assignmentResults.filter(
-          (r) => r.status === 'rejected',
-        ).length;
-        if (failedCount > 0) {
-          console.error(
-            `Failed to assign warehouse for ${failedCount} purchase order(s).`,
-          );
-          toast.error(
-            'Container created, but warehouse assignment failed for some purchase orders.',
-          );
+      // Assign the currently selected warehouse (selectedWarehouseId) to all
+      // POs in this container FIRST, before the container itself is
+      // created/updated. Note: selectedWarehouseId is auto-synced to the ETA
+      // Warehouse in handleFetchContainerEta when they differ, so this
+      // reflects the warehouse returned by the last ETA lookup unless the
+      // user picked a different one afterward.
+      if (!isEditMode && selectedWarehouseId && selectedPOs.length > 0) {
+        const poIdsForAssignment = selectedPOs
+          .map((po) =>
+            String(po.sellercloud_po_id || po.id || '').replace(
+              /^PO-/i,
+              '',
+            ),
+          )
+          .filter(Boolean);
+        if (poIdsForAssignment.length > 0) {
+          try {
+            await assignPOWarehouseBulk(poIdsForAssignment, selectedWarehouseId);
+          } catch (assignError) {
+            console.error('Failed to assign warehouse to purchase orders', assignError);
+            toast.error('Failed to assign warehouse to the selected purchase orders.');
+            return;
+          }
         }
-      } else if (containerId && !selectedWarehouseId) {
+      } else if (!isEditMode && !selectedWarehouseId) {
         // No warehouse selected by the user — skip warehouse assignment.
         console.info(
           'No warehouse selected; skipping PO warehouse assignment.',
         );
+      }
+
+      if (isEditMode && editingContainerId) {
+        await updateContainer(editingContainerId, previewPayload);
+        toast.success('Container updated successfully!');
+      } else {
+        await createContainer(previewPayload);
+        toast.success('Container created and items allocated successfully!');
       }
 
       // Refresh the API list

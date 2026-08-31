@@ -57,6 +57,7 @@ export const PO_ITEM_QTY_UPDATE = (id: string) =>
   `/purchase-orders/items/${id}/quantity`;
 export const PO_WAREHOUSE_ASSIGN = (poId: string, warehouseId: string) =>
   `/purchase-orders/${poId}/warehouse?warehouse_id=${warehouseId}`;
+export const PO_WAREHOUSE_BULK_ASSIGN = '/purchase-orders/bulk/warehouse';
 
 // ------------------------------------------
 // Company Endpoints

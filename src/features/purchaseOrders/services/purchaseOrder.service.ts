@@ -21,6 +21,7 @@ import {
   PO_STATUS_UPDATE,
   PO_ITEM_QTY_UPDATE,
   PO_WAREHOUSE_ASSIGN,
+  PO_WAREHOUSE_BULK_ASSIGN,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -213,6 +214,19 @@ export async function assignPOWarehouse(
   const { data } = await apiClient.patch(
     PO_WAREHOUSE_ASSIGN(cleanId, warehouseId),
   );
+  return data;
+}
+
+/** Assign a warehouse to multiple purchase orders in one call */
+export async function assignPOWarehouseBulk(
+  poIds: string[],
+  warehouseId: string,
+): Promise<any> {
+  const cleanIds = poIds.map((id) => String(id).replace(/^PO-/i, ''));
+  const { data } = await apiClient.patch(PO_WAREHOUSE_BULK_ASSIGN, {
+    po_ids: cleanIds,
+    warehouse_id: warehouseId,
+  });
   return data;
 }
 
