@@ -369,10 +369,20 @@ export default function ContainerDetailsModal({
   isLoading = false,
   onClose,
   onRefresh,
+  initialTab = 'details',
 }) {
   const [itemsPage, setItemsPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Keep the active tab in sync when the modal is reopened (e.g. re-opened
+  // via the table's Comments icon) with a different initialTab.
+  useEffect(() => {
+    if (container) {
+      setActiveTab(initialTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [container?.id, initialTab]);
   const [isSaving, setIsSaving] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});

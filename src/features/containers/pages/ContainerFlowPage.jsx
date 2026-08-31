@@ -33,6 +33,7 @@ import {
   FileSpreadsheet,
   Upload,
   ChevronDown,
+  MessageSquare,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
@@ -43,6 +44,7 @@ import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import Pagination from '../../../components/common/Pagination';
 import DataTable from '../../../components/common/DataTable';
 import ContainerDetailsModal from '../components/ContainerDetailsModal';
+import ContainerCommentsModal from '../components/ContainerCommentsModal';
 import ImportItemsModal from '../components/ImportItemsModal';
 import FullPageLoader from '../../../components/common/FullPageLoader';
 import TableLoader from '../../../components/common/TableLoader';
@@ -69,6 +71,7 @@ const CONTAINER_COLUMN_DEFS = [
   { key: 'arrivalDate', label: 'ETA (Delivery)' },
   { key: 'received_date', label: 'Received Date' },
   { key: 'date_emptied', label: 'Unloaded' },
+  { key: 'comments', label: 'Comments' },
   { key: 'actions', label: 'Actions', locked: true },
 ];
 import {
@@ -271,6 +274,13 @@ export default function ContainerFlowPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingContainerId, setEditingContainerId] = useState(null);
   const [viewingContainerDetails, setViewingContainerDetails] = useState(null);
+  // Which tab ContainerDetailsModal should open on — 'details' by default,
+  // 'comments' when opened via the table's Comments icon.
+  const [containerDetailsInitialTab, setContainerDetailsInitialTab] =
+    useState('details');
+  // Container the standalone Comments popup (ContainerCommentsModal) is
+  // currently open for — opened directly from the table's Comments icon.
+  const [commentsModalContainer, setCommentsModalContainer] = useState(null);
   const [isViewContainerLoading, setIsViewContainerLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1326,11 +1336,12 @@ export default function ContainerFlowPage() {
     }
   };
 
-  const handleViewContainer = async (container) => {
+  const handleViewContainer = async (container, tab = 'details') => {
     if (!container.id) {
       toast.error('Invalid container ID');
       return;
     }
+    setContainerDetailsInitialTab(tab);
 
     // Instantly pop open the modal using the basic data we already have from the table
     const initialMappedContainer = {
@@ -1367,6 +1378,14 @@ export default function ContainerFlowPage() {
     } finally {
       setIsViewContainerLoading(false);
     }
+  };
+
+  const handleViewContainerComments = (container) => {
+    if (!container?.id) {
+      toast.error('Invalid container ID');
+      return;
+    }
+    setCommentsModalContainer(container);
   };
 
   const handleEditContainer = async (container) => {
@@ -1663,6 +1682,43 @@ export default function ContainerFlowPage() {
             <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold tracking-wider text-amber-700 uppercase">
               No
             </span>
+          );
+        },
+      },
+      {
+        header: 'Comments',
+        accessor: 'comments',
+        headerClassName: 'px-4 py-3 text-center',
+        className: 'px-4 py-4 text-center',
+        render: (c) => {
+          const count =
+            parseInt(
+              c.total_comments_count ??
+                c.comments_count ??
+                c.commentsCount,
+              10,
+            ) || 0;
+          const hasComments = count > 0;
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewContainerComments(c);
+              }}
+              className={`relative inline-flex rounded-xl border p-2 transition ${
+                hasComments
+                  ? 'border-mc-gold/50 bg-mc-gold/10 text-mc-black hover:bg-mc-gold/20 hover:border-mc-gold'
+                  : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light/50 hover:text-mc-black text-slate-400'
+              }`}
+              title="View Comments"
+            >
+              <MessageSquare className="h-4 w-4" />
+              {hasComments && (
+                <span className="absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
+                  {count >= 1000 ? `${Math.floor(count / 1000)}K+` : count}
+                </span>
+              )}
+            </button>
           );
         },
       },
@@ -1986,14 +2042,26 @@ export default function ContainerFlowPage() {
         <ContainerDetailsModal
           container={viewingContainerDetails}
           onClose={() => setViewingContainerDetails(null)}
+          initialTab={containerDetailsInitialTab}
           onRefresh={() => {
             fetchContainerAPI(1, '', false);
             fetchTablePage();
             if (viewingContainerDetails?.id) {
-              handleViewContainer({ id: viewingContainerDetails.id });
+              handleViewContainer(
+                { id: viewingContainerDetails.id },
+                containerDetailsInitialTab,
+              );
             }
           }}
         />
+
+        {/* Standalone Container Comments Popup — must be inside this return block */}
+        {commentsModalContainer && (
+          <ContainerCommentsModal
+            container={commentsModalContainer}
+            onClose={() => setCommentsModalContainer(null)}
+          />
+        )}
 
         {/* Export CSV Modal */}
         {showExportModal && (
@@ -2140,11 +2208,15 @@ export default function ContainerFlowPage() {
           container={viewingContainerDetails}
           isLoading={isViewContainerLoading}
           onClose={() => setViewingContainerDetails(null)}
+          initialTab={containerDetailsInitialTab}
           onRefresh={() => {
             fetchContainerAPI(1, '', false);
             fetchTablePage();
             if (viewingContainerDetails?.id) {
-              handleViewContainer({ id: viewingContainerDetails.id });
+              handleViewContainer(
+                { id: viewingContainerDetails.id },
+                containerDetailsInitialTab,
+              );
             }
           }}
         />
@@ -2743,11 +2815,15 @@ export default function ContainerFlowPage() {
         container={viewingContainerDetails}
         isLoading={isViewContainerLoading}
         onClose={() => setViewingContainerDetails(null)}
+        initialTab={containerDetailsInitialTab}
         onRefresh={() => {
           fetchContainerAPI(1, '', false);
           fetchTablePage();
           if (viewingContainerDetails?.id) {
-            handleViewContainer({ id: viewingContainerDetails.id });
+            handleViewContainer(
+              { id: viewingContainerDetails.id },
+              containerDetailsInitialTab,
+            );
           }
         }}
       />
@@ -2872,6 +2948,14 @@ export default function ContainerFlowPage() {
         <PODetailsModalStandalone
           poId={quickViewPOId}
           onClose={() => setQuickViewPOId(null)}
+        />
+      )}
+
+      {/* Standalone Container Comments Popup (opened via the table's Comments icon) */}
+      {commentsModalContainer && (
+        <ContainerCommentsModal
+          container={commentsModalContainer}
+          onClose={() => setCommentsModalContainer(null)}
         />
       )}
     </div>
