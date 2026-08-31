@@ -315,7 +315,7 @@ export async function deletePOCommentAttachment(
 }
 
 export async function syncPurchaseOrders(days: string = '25'): Promise<any> {
-  const url = days === 'all' ? PO_SYNC : `${PO_SYNC}?days=${days}`;
+  const url = days === 'all' ? PO_SYNC : `${PO_SYNC}?Days=${days}`;
   const { data } = await apiClient.post(url, undefined, {
     timeout: 0,
   });

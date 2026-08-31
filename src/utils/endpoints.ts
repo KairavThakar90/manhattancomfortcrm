@@ -48,7 +48,7 @@ export const PO_FILTERS_ALL = '/purchase-orders/filters/all';
 export const PO_EXPORT_CSV = '/purchase-orders/export/csv';
 export const PO_EXPORT_SINGLE_CSV = (sellercloud_po_id: string) =>
   `/purchase-orders/${sellercloud_po_id}/export/csv`;
-export const PO_SYNC = '/purchase-orders/sync';
+export const PO_SYNC = '/purchase-orders/sync/optimized';
 export const PO_SYNC_SINGLE = (sellercloud_po_id: string | number) =>
   `/purchase-orders/${sellercloud_po_id}/sync-all`;
 export const PO_CHANNEL_ORDER_IDS = '/purchase-orders/channel-order-ids';
