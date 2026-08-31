@@ -256,9 +256,10 @@ export default function ContainerFlowPage() {
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
   const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
-  // Warehouse returned by the Get ETA API. Kept separate from the user's
-  // Warehouse dropdown selection (selectedWarehouseId) — it is informational
-  // only and must never overwrite the user's choice.
+  // Warehouse returned by the Get ETA API (/allways/search), stored as
+  // { id, name }. Tracked separately from selectedWarehouseId so we can
+  // compare the two — when they differ, selectedWarehouseId is updated to
+  // match the ETA Warehouse (see handleFetchContainerEta).
   const [etaWarehouse, setEtaWarehouse] = useState(null);
   const [isFetchingEta, setIsFetchingEta] = useState(false);
   // True once Get ETA successfully returns a date — the Estimated Arrival
@@ -1078,16 +1079,46 @@ export default function ContainerFlowPage() {
         result?.arrivalDate ||
         result?.eta_delivery_date;
 
-      // Store the warehouse returned by the ETA API separately. This is
-      // informational only — it must never overwrite the user's Warehouse
-      // dropdown selection (selectedWarehouseId).
-      const rawEtaWarehouse =
-        result?.warehouse ||
-        result?.eta_warehouse ||
-        result?.warehouse_name ||
-        result?.warehouse_id ||
-        null;
-      setEtaWarehouse(rawEtaWarehouse || null);
+      // Store the warehouse returned by the ETA API (/allways/search) as the
+      // "ETA Warehouse" — kept separate from the user's Warehouse dropdown
+      // state so we can compare and decide whether to update it.
+      const etaWarehouseId = result?.warehouse_id || null;
+      const etaWarehouseName = result?.warehouse_name || null;
+
+      if (etaWarehouseId || etaWarehouseName) {
+        setEtaWarehouse({ id: etaWarehouseId, name: etaWarehouseName });
+
+        // If the ETA Warehouse differs from the currently selected
+        // Warehouse, auto-update the Selected Warehouse to match the API
+        // response so the container is saved against the correct warehouse.
+        const warehouseChanged =
+          String(etaWarehouseId || '') !== String(selectedWarehouseId || '');
+
+        if (etaWarehouseId && warehouseChanged) {
+          setSelectedWarehouseId(etaWarehouseId);
+
+          // Make sure the dropdown has an entry to render the name for this
+          // warehouse, even if it wasn't already present in warehousesList.
+          setWarehousesList((prev) => {
+            const exists = prev.some(
+              (wh) => String(wh.id) === String(etaWarehouseId),
+            );
+            if (exists) return prev;
+            return [
+              ...prev,
+              { id: etaWarehouseId, name: etaWarehouseName || etaWarehouseId },
+            ];
+          });
+
+          toast.info(
+            `Warehouse updated to "${etaWarehouseName || etaWarehouseId}" based on container lookup.`,
+          );
+        }
+      } else {
+        // API did not return warehouse information — keep the current
+        // Selected Warehouse untouched and continue the flow normally.
+        setEtaWarehouse(null);
+      }
 
       if (rawEta && rawEta !== 'Pending' && rawEta !== 'N/A') {
         setEstimatedArrivalDate(String(rawEta).split('T')[0]);
@@ -1112,7 +1143,7 @@ export default function ContainerFlowPage() {
     } finally {
       setIsFetchingEta(false);
     }
-  }, []);
+  }, [selectedWarehouseId]);
 
   const handleSave = async () => {
     if (selectedPOIds.length === 0) {
@@ -1206,8 +1237,11 @@ export default function ContainerFlowPage() {
         toast.success('Container created and items allocated successfully!');
       }
 
-      // Assign the user-selected warehouse (selectedWarehouseId) to each PO
-      // in this container — never the warehouse returned by the ETA API.
+      // Assign the currently selected warehouse (selectedWarehouseId) to each
+      // PO in this container. Note: selectedWarehouseId is auto-synced to the
+      // ETA Warehouse in handleFetchContainerEta when they differ, so this
+      // always reflects the warehouse returned by the last ETA lookup unless
+      // the user picked a different one afterward.
       const containerId =
         createdContainer?.id ||
         createdContainer?.container_id ||
