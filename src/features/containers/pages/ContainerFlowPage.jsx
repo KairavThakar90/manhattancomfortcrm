@@ -343,9 +343,6 @@ export default function ContainerFlowPage() {
         setPoLoading(true);
         const data = await getPurchaseOrders({
           ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
-          ...(selectedWarehouseId
-            ? { sellercloud_warehouse_id: selectedWarehouseId }
-            : {}),
         });
         const results = Array.isArray(data) ? data : data.results || [];
         setPoList(results);
@@ -382,15 +379,7 @@ export default function ContainerFlowPage() {
     }
     // Only merge the full Redux cache if the user is not actively searching
     if (!poSearch && Array.isArray(purchaseOrders)) {
-      const reduxToAdd = purchaseOrders.filter((po) => {
-        if (!selectedWarehouseId) return true;
-        // if we have a warehouse, only add if the PO belongs to this warehouse
-        return (
-          String(po.sellercloud_warehouse_id) === String(selectedWarehouseId) ||
-          String(po.warehouse_id) === String(selectedWarehouseId)
-        );
-      });
-      rawList.push(...reduxToAdd);
+      rawList.push(...purchaseOrders);
     }
 
     // Ensure selected POs are always in the list
@@ -2197,30 +2186,28 @@ export default function ContainerFlowPage() {
               </div>
             </div>
 
-            {selectedWarehouseId && (
-              <div className="animate-in fade-in slide-in-from-top-2 md:slide-in-from-left-4 duration-300">
-                <label className="text-mc-black mb-1.5 block text-xs font-semibold">
-                  Select Purchase Orders
-                </label>
-                <div className="relative z-[40]">
-                  <InfiniteScrollDropdown
-                    isMulti
-                    value={selectedPOIds}
-                    onChange={(newVals) =>
-                      handlePOChange(newVals.map((val) => ({ value: val })))
-                    }
-                    onSearch={handlePoSearch}
-                    onLoadMore={() => {}}
-                    hasMore={false}
-                    isLoading={poLoading}
-                    items={poDropdownItems}
-                    disabled={isEditMode}
-                    placeholder="-- Choose Purchase Orders --"
-                    searchPlaceholder="Search POs..."
-                  />
-                </div>
+            <div className="animate-in fade-in slide-in-from-top-2 md:slide-in-from-left-4 duration-300">
+              <label className="text-mc-black mb-1.5 block text-xs font-semibold">
+                Select Purchase Orders
+              </label>
+              <div className="relative z-[40]">
+                <InfiniteScrollDropdown
+                  isMulti
+                  value={selectedPOIds}
+                  onChange={(newVals) =>
+                    handlePOChange(newVals.map((val) => ({ value: val })))
+                  }
+                  onSearch={handlePoSearch}
+                  onLoadMore={() => {}}
+                  hasMore={false}
+                  isLoading={poLoading}
+                  items={poDropdownItems}
+                  disabled={isEditMode}
+                  placeholder="-- Choose Purchase Orders --"
+                  searchPlaceholder="Search POs..."
+                />
               </div>
-            )}
+            </div>
           </div>
         </div>
 
