@@ -15,6 +15,7 @@ export default function InfiniteScrollDropdown({
   onChange,
   onSearch,
   onLoadMore,
+  onOpen,
   hasMore,
   isLoading,
   items, // array of { label, value, ...rest }
@@ -89,7 +90,11 @@ export default function InfiniteScrollDropdown({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const next = !isOpen;
+          setIsOpen(next);
+          if (next && onOpen) onOpen();
+        }}
         className={`focus:border-mc-gold focus:ring-mc-gold flex min-h-[38px] w-full items-center justify-between rounded-lg border px-3 py-1.5 text-sm transition-colors focus:ring-1 focus:outline-none ${disabled ? 'border-mc-beige-dark bg-mc-beige-light/30 text-mc-gray-soft cursor-not-allowed' : 'border-mc-beige-dark bg-mc-white hover:bg-mc-beige-light font-bold'}`}
       >
         <div className="flex flex-1 flex-wrap items-center gap-1 overflow-hidden pr-2">

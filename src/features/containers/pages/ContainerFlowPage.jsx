@@ -364,6 +364,7 @@ export default function ContainerFlowPage() {
       try {
         setPoLoading(true);
         const data = await getPurchaseOrders({
+          has_remaining_qty: true,
           ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
         });
         const results = Array.isArray(data) ? data : data.results || [];
@@ -2365,6 +2366,7 @@ export default function ContainerFlowPage() {
                     handlePOChange(newVals.map((val) => ({ value: val })))
                   }
                   onSearch={handlePoSearch}
+                  onOpen={() => fetchPOs(poSearch)}
                   onLoadMore={() => {}}
                   hasMore={false}
                   isLoading={poLoading}
