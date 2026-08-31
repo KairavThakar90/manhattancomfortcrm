@@ -1067,6 +1067,11 @@ export default function ContainerFlowPage() {
       toast.error('Enter a container number first.');
       return;
     }
+    // Guard against duplicate/overlapping calls (e.g. Enter pressed right
+    // after clicking Get ETA) firing two requests for the same lookup.
+    if (isFetchingEta) {
+      return;
+    }
     lastEtaLookupRef.current = containerNumber;
 
     try {
@@ -1143,7 +1148,7 @@ export default function ContainerFlowPage() {
     } finally {
       setIsFetchingEta(false);
     }
-  }, [selectedWarehouseId]);
+  }, [selectedWarehouseId, isFetchingEta]);
 
   const handleSave = async () => {
     if (selectedPOIds.length === 0) {
@@ -2621,7 +2626,9 @@ export default function ContainerFlowPage() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              handleFetchContainerEta(containerName);
+                              if (!isFetchingEta) {
+                                handleFetchContainerEta(containerName);
+                              }
                             }
                           }}
                           placeholder="e.g. TCLU1234567"
