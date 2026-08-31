@@ -913,6 +913,12 @@ export default function ContainerFlowPage() {
         received_date: formattedRecvDate,
         date_emptied: c.date_emptied,
         sellercloud_link: c.sellercloud_link || null,
+        comments_count:
+          c.comments_count ??
+          c.comment_count ??
+          c.total_comments_count ??
+          c.commentsCount ??
+          0,
       };
     });
   }, [reduxContainers]);
@@ -1577,7 +1583,10 @@ export default function ContainerFlowPage() {
         render: (c) => {
           const count =
             parseInt(
-              c.total_comments_count ?? c.comments_count ?? c.commentsCount,
+              c.comments_count ??
+                c.comment_count ??
+                c.total_comments_count ??
+                c.commentsCount,
               10,
             ) || 0;
           const hasComments = count > 0;
