@@ -18,6 +18,7 @@ import {
   PO_ITEM_COMMENT_ATTACHMENT_DELETE,
   PO_SYNC,
   PO_SYNC_SINGLE,
+  PO_SYNC_QUANTITIES,
   PO_STATUS_UPDATE,
   PO_ITEM_QTY_UPDATE,
   PO_WAREHOUSE_ASSIGN,
@@ -356,6 +357,20 @@ export async function syncSinglePurchaseOrder(
 ): Promise<any> {
   const { data } = await apiClient.post(
     PO_SYNC_SINGLE(sellercloud_po_id),
+    undefined,
+    {
+      timeout: 0,
+    },
+  );
+  return data;
+}
+
+/** Sync a single purchase order's quantities by sellercloud_po_id */
+export async function syncPOQuantities(
+  sellercloud_po_id: string | number,
+): Promise<any> {
+  const { data } = await apiClient.post(
+    PO_SYNC_QUANTITIES(sellercloud_po_id),
     undefined,
     {
       timeout: 0,

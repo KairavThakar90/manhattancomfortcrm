@@ -55,6 +55,7 @@ import { getWarehouses } from '../../../services/warehouse.service';
 import {
   getPurchaseOrders,
   assignPOWarehouseBulk,
+  syncPOQuantities,
 } from '../../purchaseOrders/services/purchaseOrder.service';
 import { useCRM } from '../../../hooks/useCRM';
 import ColumnsDropdown from '../../../components/common/ColumnsDropdown';
@@ -917,6 +918,28 @@ export default function ContainerFlowPage() {
 
   const handlePOChange = (selections) => {
     const ids = selections ? selections.map((s) => s.value) : [];
+
+    // Newly-selected PO(s) — trigger a background quantity sync for each,
+    // without blocking the UI or the rest of the selection flow.
+    const newlySelectedIds = ids.filter(
+      (id) => !selectedPOIds.map(String).includes(String(id)),
+    );
+    newlySelectedIds.forEach((id) => {
+      const po =
+        poList?.find((p) => String(p.id) === String(id)) ||
+        purchaseOrders?.find((p) => String(p.id) === String(id)) ||
+        cachedPOs[id];
+      const sellercloudPoId = po?.sellercloud_po_id || po?.id || id;
+      if (sellercloudPoId) {
+        syncPOQuantities(sellercloudPoId).catch((err) =>
+          console.error(
+            `Failed to sync quantities for PO ${sellercloudPoId}`,
+            err,
+          ),
+        );
+      }
+    });
+
     setSelectedPOIds(ids);
 
     if (ids.length > 0) {
