@@ -1749,9 +1749,9 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-center',
         render: (c) => {
           const hasDate =
-            c.received_date &&
-            c.received_date !== 'N/A' &&
-            c.received_date !== 'Pending';
+            c.date_emptied &&
+            c.date_emptied !== 'N/A' &&
+            c.date_emptied !== 'Pending';
           return hasDate ? (
             <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
               <CheckCircle2 className="h-3 w-3" /> Yes
