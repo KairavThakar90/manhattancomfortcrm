@@ -1135,11 +1135,6 @@ export default function ContainerFlowPage() {
         toast.info('No ETA found for this container number yet.');
       }
 
-      if (!rawEtaWarehouse) {
-        // ETA API returned no warehouse info — nothing to store, the user's
-        // own Warehouse dropdown selection remains untouched and in effect.
-        console.info('ETA lookup returned no warehouse information.');
-      }
     } catch (error) {
       console.error('Failed to fetch container ETA', error);
       toast.error('Failed to fetch ETA for this container number.');
@@ -2272,13 +2267,11 @@ export default function ContainerFlowPage() {
                   value={selectedWarehouseId}
                   onChange={(val) => {
                     if (val !== selectedWarehouseId) {
+                      // Changing the warehouse should not disturb the
+                      // already-selected POs, container name, allocated
+                      // items/quantities, or ETA — only the warehouse
+                      // itself updates.
                       setSelectedWarehouseId(val);
-                      setSelectedPOIds([]);
-                      setContainerName('');
-                      setOriginalContainerName('');
-                      setSelectedItems([]);
-                      setEstimatedArrivalDate('');
-                      setActivePOTab(null);
                     }
                   }}
                   onSearch={(q) => setWarehouseSearch(q)}
@@ -2677,78 +2670,37 @@ export default function ContainerFlowPage() {
                   </div>
 
                   <div>
-                    <div className="mb-1.5 flex items-center justify-between">
-                      <label className="text-mc-black block text-xs font-semibold">
-                        Estimated Arrival Date
-                      </label>
-                      {isEtaDateAutoFilled && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsEtaDateAutoFilled(false);
-                          }}
-                          className="text-mc-gold text-[10px] font-semibold hover:underline"
-                        >
-                          Edit manually
-                        </button>
-                      )}
-                    </div>
-                    <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="yyyy-mm-dd"
-                        maxLength={10}
-                        value={estimatedArrivalDate}
-                        disabled={isEtaDateAutoFilled}
-                        title={
-                          isEtaDateAutoFilled
-                            ? 'Date auto-filled from Get ETA. Click "Edit manually" to change it.'
-                            : undefined
-                        }
-                        onChange={(e) => {
-                          // Keep only digits, auto-insert dashes as yyyy-mm-dd
-                          const digits = e.target.value
-                            .replace(/[^0-9]/g, '')
-                            .slice(0, 8);
-                          let formatted = digits;
-                          if (digits.length > 4) {
-                            formatted = `${digits.slice(0, 4)}-${digits.slice(4)}`;
-                          }
-                          if (digits.length > 6) {
-                            formatted = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
-                          }
-                          setEstimatedArrivalDate(formatted);
-                        }}
-                        onBlur={() => {
-                          if (
-                            estimatedArrivalDate &&
-                            !/^\d{4}-\d{2}-\d{2}$/.test(estimatedArrivalDate)
-                          ) {
-                            toast.error(
-                              'Please enter a valid date in yyyy-mm-dd format.',
-                            );
-                            setEstimatedArrivalDate('');
-                          }
-                        }}
-                        className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 pr-8 text-sm font-medium outline-none ${
-                          !estimatedArrivalDate
-                            ? 'text-mc-gray-soft font-normal'
-                            : 'text-mc-black'
-                        } ${
-                          isEtaDateAutoFilled
-                            ? 'cursor-not-allowed opacity-70'
-                            : ''
-                        }`}
-                      />
-                      <Calendar
-                        className={`pointer-events-none absolute top-1/2 right-2.5 h-[15px] w-[15px] -translate-y-1/2 ${
-                          !estimatedArrivalDate
-                            ? 'text-mc-gray-soft'
-                            : 'text-mc-black'
-                        }`}
-                      />
-                    </div>
+                    <label className="text-mc-black mb-1.5 block text-xs font-semibold">
+                      Estimated Arrival Date
+                    </label>
+                    {isEtaDateAutoFilled ? (
+                      // Get ETA returned a date — show it locked, no manual editing.
+                      <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
+                        <input
+                          type="text"
+                          value={estimatedArrivalDate}
+                          disabled
+                          readOnly
+                          title="Date auto-filled from Get ETA."
+                          className="border-mc-beige-dark bg-mc-beige-light/30 text-mc-black w-full cursor-not-allowed rounded-md border px-3 py-1.5 pr-8 text-sm font-medium opacity-70 outline-none"
+                        />
+                        <Calendar className="text-mc-black pointer-events-none absolute top-1/2 right-2.5 h-[15px] w-[15px] -translate-y-1/2" />
+                      </div>
+                    ) : (
+                      // No ETA date returned — let the user pick one manually.
+                      <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
+                        <input
+                          type="date"
+                          value={estimatedArrivalDate}
+                          onChange={(e) => setEstimatedArrivalDate(e.target.value)}
+                          className={`border-mc-beige-dark bg-mc-beige-light/30 w-full rounded-md border px-3 py-1.5 pr-8 text-sm font-medium outline-none ${
+                            !estimatedArrivalDate
+                              ? 'text-mc-gray-soft font-normal'
+                              : 'text-mc-black'
+                          }`}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <button
