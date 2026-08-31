@@ -20,6 +20,7 @@ import {
   PO_SYNC_SINGLE,
   PO_STATUS_UPDATE,
   PO_ITEM_QTY_UPDATE,
+  PO_WAREHOUSE_ASSIGN,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -200,6 +201,18 @@ export async function updatePODelayReason(
   const { data } = await apiClient.patch(PO_STATUS_UPDATE(cleanId), {
     delay_reason: delayReason,
   });
+  return data;
+}
+
+/** Assign a warehouse to a purchase order (user-selected warehouse_uuid, not the ETA-returned warehouse) */
+export async function assignPOWarehouse(
+  poId: string,
+  warehouseId: string,
+): Promise<any> {
+  const cleanId = String(poId).replace(/^PO-/i, '');
+  const { data } = await apiClient.patch(
+    PO_WAREHOUSE_ASSIGN(cleanId, warehouseId),
+  );
   return data;
 }
 

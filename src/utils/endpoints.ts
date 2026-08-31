@@ -55,6 +55,8 @@ export const PO_CHANNEL_ORDER_IDS = '/purchase-orders/channel-order-ids';
 export const PO_STATUS_UPDATE = (id: string) => `/purchase-orders/${id}/status`;
 export const PO_ITEM_QTY_UPDATE = (id: string) =>
   `/purchase-orders/items/${id}/quantity`;
+export const PO_WAREHOUSE_ASSIGN = (poId: string, warehouseId: string) =>
+  `/purchase-orders/${poId}/warehouse?warehouse_id=${warehouseId}`;
 
 // ------------------------------------------
 // Company Endpoints

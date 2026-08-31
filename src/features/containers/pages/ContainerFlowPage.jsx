@@ -50,7 +50,10 @@ import SellerCloudSyncLoading from '../../../components/common/SellerCloudSyncLo
 import DateFilterInput from '../../../components/common/DateFilterInput';
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
 import { getWarehouses } from '../../../services/warehouse.service';
-import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
+import {
+  getPurchaseOrders,
+  assignPOWarehouse,
+} from '../../purchaseOrders/services/purchaseOrder.service';
 import { useCRM } from '../../../hooks/useCRM';
 import ColumnsDropdown from '../../../components/common/ColumnsDropdown';
 import { useColumnVisibility } from '../../../hooks/useColumnVisibility';
@@ -253,7 +256,15 @@ export default function ContainerFlowPage() {
   const [isManualContainerEntry, setIsManualContainerEntry] = useState(false);
   const [estimatedArrivalDate, setEstimatedArrivalDate] = useState('');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
+  // Warehouse returned by the Get ETA API. Kept separate from the user's
+  // Warehouse dropdown selection (selectedWarehouseId) — it is informational
+  // only and must never overwrite the user's choice.
+  const [etaWarehouse, setEtaWarehouse] = useState(null);
   const [isFetchingEta, setIsFetchingEta] = useState(false);
+  // True once Get ETA successfully returns a date — the Estimated Arrival
+  // Date field is locked to that value. False (manual entry enabled) when
+  // no ETA has been fetched yet, or the lookup failed / returned no date.
+  const [isEtaDateAutoFilled, setIsEtaDateAutoFilled] = useState(false);
   const lastEtaLookupRef = useRef('');
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -1067,16 +1078,37 @@ export default function ContainerFlowPage() {
         result?.arrivalDate ||
         result?.eta_delivery_date;
 
+      // Store the warehouse returned by the ETA API separately. This is
+      // informational only — it must never overwrite the user's Warehouse
+      // dropdown selection (selectedWarehouseId).
+      const rawEtaWarehouse =
+        result?.warehouse ||
+        result?.eta_warehouse ||
+        result?.warehouse_name ||
+        result?.warehouse_id ||
+        null;
+      setEtaWarehouse(rawEtaWarehouse || null);
+
       if (rawEta && rawEta !== 'Pending' && rawEta !== 'N/A') {
         setEstimatedArrivalDate(String(rawEta).split('T')[0]);
+        setIsEtaDateAutoFilled(true);
         toast.success('Estimated Arrival Date auto-filled from container lookup.');
       } else {
+        // No ETA returned — leave the field enabled for manual entry.
+        setIsEtaDateAutoFilled(false);
         toast.info('No ETA found for this container number yet.');
+      }
+
+      if (!rawEtaWarehouse) {
+        // ETA API returned no warehouse info — nothing to store, the user's
+        // own Warehouse dropdown selection remains untouched and in effect.
+        console.info('ETA lookup returned no warehouse information.');
       }
     } catch (error) {
       console.error('Failed to fetch container ETA', error);
       toast.error('Failed to fetch ETA for this container number.');
       lastEtaLookupRef.current = '';
+      setIsEtaDateAutoFilled(false);
     } finally {
       setIsFetchingEta(false);
     }
@@ -1165,12 +1197,43 @@ export default function ContainerFlowPage() {
     if (!previewPayload) return;
     try {
       setIsSaving(true);
+      let createdContainer = null;
       if (isEditMode && editingContainerId) {
         await updateContainer(editingContainerId, previewPayload);
         toast.success('Container updated successfully!');
       } else {
-        await createContainer(previewPayload);
+        createdContainer = await createContainer(previewPayload);
         toast.success('Container created and items allocated successfully!');
+      }
+
+      // Assign the user-selected warehouse (selectedWarehouseId) to each PO
+      // in this container — never the warehouse returned by the ETA API.
+      const containerId =
+        createdContainer?.id ||
+        createdContainer?.container_id ||
+        createdContainer?.data?.id;
+      if (containerId && selectedWarehouseId && selectedPOIds.length > 0) {
+        const assignmentResults = await Promise.allSettled(
+          selectedPOIds.map((poId) =>
+            assignPOWarehouse(poId, selectedWarehouseId),
+          ),
+        );
+        const failedCount = assignmentResults.filter(
+          (r) => r.status === 'rejected',
+        ).length;
+        if (failedCount > 0) {
+          console.error(
+            `Failed to assign warehouse for ${failedCount} purchase order(s).`,
+          );
+          toast.error(
+            'Container created, but warehouse assignment failed for some purchase orders.',
+          );
+        }
+      } else if (containerId && !selectedWarehouseId) {
+        // No warehouse selected by the user — skip warehouse assignment.
+        console.info(
+          'No warehouse selected; skipping PO warehouse assignment.',
+        );
       }
 
       // Refresh the API list
@@ -1181,6 +1244,8 @@ export default function ContainerFlowPage() {
       setContainerName('');
       setOriginalContainerName('');
       setSelectedWarehouseId('');
+      setEtaWarehouse(null);
+      setIsEtaDateAutoFilled(false);
       setEditingContainerId(null);
       setSelectedItems([]);
       setSelectedPOIds([]);
@@ -1200,7 +1265,9 @@ export default function ContainerFlowPage() {
     setContainerName('');
     setOriginalContainerName('');
     setSelectedWarehouseId('');
+    setEtaWarehouse(null);
     setEstimatedArrivalDate('');
+    setIsEtaDateAutoFilled(false);
     setIsManualContainerEntry(true); // Default manual on create
     setSelectedItems([]);
     lastEtaLookupRef.current = '';
@@ -2569,9 +2636,22 @@ export default function ContainerFlowPage() {
                   </div>
 
                   <div>
-                    <label className="text-mc-black mb-1.5 block text-xs font-semibold">
-                      Estimated Arrival Date
-                    </label>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <label className="text-mc-black block text-xs font-semibold">
+                        Estimated Arrival Date
+                      </label>
+                      {isEtaDateAutoFilled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEtaDateAutoFilled(false);
+                          }}
+                          className="text-mc-gold text-[10px] font-semibold hover:underline"
+                        >
+                          Edit manually
+                        </button>
+                      )}
+                    </div>
                     <div className="focus-within:ring-mc-gold relative rounded-md focus-within:ring-2">
                       <input
                         type="text"
@@ -2579,6 +2659,12 @@ export default function ContainerFlowPage() {
                         placeholder="yyyy-mm-dd"
                         maxLength={10}
                         value={estimatedArrivalDate}
+                        disabled={isEtaDateAutoFilled}
+                        title={
+                          isEtaDateAutoFilled
+                            ? 'Date auto-filled from Get ETA. Click "Edit manually" to change it.'
+                            : undefined
+                        }
                         onChange={(e) => {
                           // Keep only digits, auto-insert dashes as yyyy-mm-dd
                           const digits = e.target.value
@@ -2608,6 +2694,10 @@ export default function ContainerFlowPage() {
                           !estimatedArrivalDate
                             ? 'text-mc-gray-soft font-normal'
                             : 'text-mc-black'
+                        } ${
+                          isEtaDateAutoFilled
+                            ? 'cursor-not-allowed opacity-70'
+                            : ''
                         }`}
                       />
                       <Calendar
