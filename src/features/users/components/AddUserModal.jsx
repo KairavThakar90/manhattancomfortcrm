@@ -119,6 +119,19 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
   const vendorsLoading = useSelector((state) => state.vendors.loading);
   const countryOptions = useMemo(() => countryList().getData(), []);
 
+  // Backend values may come back as a full name, an ISO code, or in a
+  // different case (e.g. edited/created before this form existed) — match
+  // case-insensitively against both the label and the ISO code.
+  const findCountryOption = (value) => {
+    if (!value) return undefined;
+    const normalized = String(value).trim().toLowerCase();
+    return countryOptions.find(
+      (c) =>
+        c.label.toLowerCase() === normalized ||
+        c.value.toLowerCase() === normalized,
+    );
+  };
+
   const reactSelectStyles = {
     control: (base, state) => ({
       ...base,
@@ -187,7 +200,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
     role: user?.role || 'admin',
     vendorId: user?.vendor_id || '',
     warehouseId: user?.warehouse_id || '',
-    country: user?.country || 'USA',
+    country: user?.country || 'United States',
     phone: user?.phone || '',
     payment_terms: user?.payment_terms || 'Net 30',
     container_lead_time_days: user?.container_lead_time_days || 14,
@@ -489,11 +502,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                 </label>
 
                 <Select
-                  value={countryOptions.find(
-                    (c) =>
-                      c.label === formData.country ||
-                      c.value === formData.country,
-                  )}
+                  value={findCountryOption(formData.country)}
                   onChange={(option) =>
                     setFormData((p) => ({
                       ...p,
@@ -513,13 +522,12 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                   Phone
                 </label>
                 <PhoneInput
-                  key={formData.country}
+                  // Only remount to pick up the new dial code while the field
+                  // is still empty — once a number is typed, changing the
+                  // Country dropdown must not wipe it.
+                  key={formData.phone ? 'phone-set' : formData.country}
                   country={(
-                    countryOptions.find(
-                      (c) =>
-                        c.label === formData.country ||
-                        c.value === formData.country,
-                    )?.value || 'us'
+                    findCountryOption(formData.country)?.value || 'us'
                   ).toLowerCase()}
                   enableSearch
                   value={formData.phone}
