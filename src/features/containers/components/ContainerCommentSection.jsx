@@ -65,6 +65,7 @@ export default function ContainerCommentSection({
   placeholder = 'Type a message... (Use @ to tag)',
   loadMentionOptions,
   onActivityAdded,
+  onCountChange,
 }) {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +127,11 @@ export default function ContainerCommentSection({
         .catch((err) => console.error('Failed to load mention candidates:', err));
     }
   }, [loadMentionOptions]);
+
+  // Keep the parent (Discussion Scope badge/list) in sync with the live count
+  useEffect(() => {
+    if (onCountChange) onCountChange(comments.length);
+  }, [comments, onCountChange]);
 
   // Fetch comments
   const fetchComments = async (silent = false) => {

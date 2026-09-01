@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import ContainerCommentSection from './ContainerCommentSection';
 import { getTagUsers } from '../../users/services/user.service';
+import { getContainerComments } from '../services/container.service';
 
 // Discussion scopes available for a container — mirrors the PO "Discussion
 // Scope" dropdown pattern, but backed by the two fixed comment categories a
@@ -35,6 +36,24 @@ const SCOPES = [
 export default function ContainerCommentsModal({ container, onClose }) {
   const [scopeIndex, setScopeIndex] = useState(0);
   const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
+  const [scopeCounts, setScopeCounts] = useState({});
+
+  useEffect(() => {
+    if (!container?.id) return;
+    let cancelled = false;
+    Promise.all(
+      SCOPES.map((scope) =>
+        getContainerComments(container.id, scope.category)
+          .then((data) => [scope.category, Array.isArray(data) ? data.length : 0])
+          .catch(() => [scope.category, 0]),
+      ),
+    ).then((entries) => {
+      if (!cancelled) setScopeCounts(Object.fromEntries(entries));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [container?.id]);
 
   if (!container) return null;
 
@@ -70,7 +89,14 @@ export default function ContainerCommentsModal({ container, onClose }) {
                 onClick={() => setIsScopeDropdownOpen((prev) => !prev)}
                 className="focus:border-mc-black flex w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-2 text-xs font-semibold text-slate-700 focus:outline-hidden"
               >
-                <span className="truncate">{activeScope.label}</span>
+                <span className="flex items-center gap-2 truncate">
+                  {activeScope.label}
+                  {scopeCounts[activeScope.category] > 0 && (
+                    <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-200 px-1 text-[9px] font-bold text-slate-600">
+                      {scopeCounts[activeScope.category]}
+                    </span>
+                  )}
+                </span>
                 <ChevronDown
                   className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
                     isScopeDropdownOpen ? 'rotate-180' : ''
@@ -94,7 +120,14 @@ export default function ContainerCommentsModal({ container, onClose }) {
                         setIsScopeDropdownOpen(false);
                       }}
                     >
-                      {scope.label}
+                      <div className="flex w-full items-center justify-between">
+                        <span className="truncate">{scope.label}</span>
+                        {scopeCounts[scope.category] > 0 && (
+                          <span className="ml-2 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-slate-200 px-1 text-[9px] font-bold text-slate-600">
+                            {scopeCounts[scope.category]}
+                          </span>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -111,6 +144,13 @@ export default function ContainerCommentsModal({ container, onClose }) {
               title={activeScope.label}
               placeholder="Type a message... (Use @ to tag)"
               loadMentionOptions={activeScope.loadMentionOptions}
+              onCountChange={(count) =>
+                setScopeCounts((prev) =>
+                  prev[activeScope.category] === count
+                    ? prev
+                    : { ...prev, [activeScope.category]: count },
+                )
+              }
             />
           </div>
         </div>
