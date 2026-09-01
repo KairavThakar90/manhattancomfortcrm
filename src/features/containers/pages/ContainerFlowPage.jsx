@@ -14,6 +14,7 @@ import {
   Save,
   Check,
   CheckCircle2,
+  Info,
   ArrowLeft,
   ArrowUp,
   ArrowDown,
@@ -102,22 +103,37 @@ const CONTAINER_STAGE_MAP = {
   FULLY_RECEIVED: {
     label: 'Fully Received',
     badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    dotClass: 'bg-emerald-500',
+    textClass: 'text-emerald-700',
+    description: 'All items received in full.',
   },
   PARTIALLY_RECEIVED: {
     label: 'Partially Received',
     badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    dotClass: 'bg-amber-500',
+    textClass: 'text-amber-700',
+    description: 'Some items received, not all.',
   },
   UNLOADED_EMPTIED: {
     label: 'Unloaded/Emptied',
     badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
+    dotClass: 'bg-purple-500',
+    textClass: 'text-purple-700',
+    description: 'Container emptied, nothing received yet.',
   },
   PICKED_UP: {
     label: 'Picked Up',
     badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    dotClass: 'bg-blue-500',
+    textClass: 'text-blue-700',
+    description: 'Dropped off, not yet unloaded.',
   },
   IN_TRANSIT: {
     label: 'In Transit',
-    badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    badgeClass: 'border-slate-200 bg-slate-100 text-slate-600',
+    dotClass: 'bg-slate-400',
+    textClass: 'text-slate-600',
+    description: 'No activity recorded yet.',
   },
 };
 
@@ -1871,7 +1887,19 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
-        header: 'Status',
+        header: (
+          <div className="flex items-center justify-center gap-1">
+            <span>Status</span>
+            <div
+              data-tooltip-id="container-stage-tooltip"
+              data-tooltip-content="Status legend"
+              className="text-slate-400 hover:text-slate-600 flex cursor-pointer items-center justify-center outline-hidden transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info className="h-3.5 w-3.5" />
+            </div>
+          </div>
+        ),
         accessor: 'container_stage',
         headerClassName: 'px-4 py-3 select-none text-center',
         className: 'px-4 py-4 text-center',
@@ -2363,6 +2391,37 @@ export default function ContainerFlowPage() {
             />
           </div>
         </div>
+
+        <Tooltip
+          id="container-stage-tooltip"
+          positionStrategy="fixed"
+          place="top"
+          className="z-[100] max-w-md text-left leading-snug shadow-xl"
+          style={{
+            backgroundColor: '#F4EFE8',
+            color: '#151717',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            fontSize: '10.5px',
+          }}
+          render={() => (
+            <div className="flex flex-col gap-1">
+              {Object.values(CONTAINER_STAGE_MAP).map((s) => (
+                <div key={s.label} className="flex items-start gap-1.5">
+                  <span
+                    className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${s.dotClass}`}
+                  />
+                  <span>
+                    <span className={`font-bold ${s.textClass}`}>
+                      {s.label}:
+                    </span>{' '}
+                    {s.description}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        />
 
         <SellerCloudSyncLoading
           isOpen={isSyncing}

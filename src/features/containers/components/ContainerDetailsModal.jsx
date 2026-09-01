@@ -776,26 +776,31 @@ export default function ContainerDetailsModal({
       label: 'Fully Received',
       badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
       cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
+      description: 'All items received in full.',
     },
     PARTIALLY_RECEIVED: {
       label: 'Partially Received',
       badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
       cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+      description: 'Some items received, not all.',
     },
     UNLOADED_EMPTIED: {
       label: 'Unloaded/Emptied',
       badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
       cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
+      description: 'Container emptied, nothing received yet.',
     },
     PICKED_UP: {
       label: 'Picked Up',
       badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
       cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
+      description: 'Dropped off, not yet unloaded.',
     },
     IN_TRANSIT: {
       label: 'In Transit',
-      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
-      cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+      badgeClass: 'border-slate-200 bg-slate-100 text-slate-600',
+      cardClass: 'border border-slate-200 bg-slate-200 text-slate-600',
+      description: 'No activity recorded yet.',
     },
   };
 
@@ -887,7 +892,9 @@ export default function ContainerDetailsModal({
                     </span>
                     <span className="text-slate-300">•</span>
                     <span
-                      className={`rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${containerStage.badgeClass}`}
+                      className={`cursor-pointer rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${containerStage.badgeClass}`}
+                      data-tooltip-id="sku-tooltip"
+                      data-tooltip-content={containerStage.description}
                     >
                       {containerStage.label}
                     </span>
@@ -1039,7 +1046,9 @@ export default function ContainerDetailsModal({
                     </span>
                     <div className="inline-flex">
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${containerStage.cardClass}`}
+                        className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold ${containerStage.cardClass}`}
+                        data-tooltip-id="sku-tooltip"
+                        data-tooltip-content={containerStage.description}
                       >
                         {containerStage.label}
                       </span>
