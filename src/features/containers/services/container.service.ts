@@ -10,6 +10,7 @@ import {
   CONTAINER_ETA_SEARCH,
   CONTAINER_SYNC,
   CONTAINER_SYNC_SINGLE,
+  CONTAINER_WAREHOUSE_UPDATE,
   CONTAINERS_EXPORT_CSV,
   CONTAINER_ACTIVITIES,
   CONTAINER_COMMENTS,
@@ -100,6 +101,17 @@ export async function syncSingleContainer(containerId: string) {
       timeout: 0,
     },
   );
+  return data;
+}
+
+/** Update just the warehouse assigned to an existing container */
+export async function updateContainerWarehouse(
+  containerId: string,
+  warehouseId: number | string,
+) {
+  const { data } = await apiClient.put(CONTAINER_WAREHOUSE_UPDATE(containerId), {
+    warehouse_id: warehouseId,
+  });
   return data;
 }
 

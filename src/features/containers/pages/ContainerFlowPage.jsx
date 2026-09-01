@@ -56,7 +56,6 @@ import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfin
 import { getWarehouses } from '../../../services/warehouse.service';
 import {
   getPurchaseOrders,
-  assignPOWarehouseBulk,
   syncPOQuantities,
 } from '../../purchaseOrders/services/purchaseOrder.service';
 import { useCRM } from '../../../hooks/useCRM';
@@ -87,6 +86,7 @@ import {
   getContainerDetails,
   syncContainers,
   syncSingleContainer,
+  updateContainerWarehouse,
   exportContainersCSV,
   searchContainerETA,
 } from '../services/container.service';
@@ -1306,6 +1306,24 @@ export default function ContainerFlowPage() {
           toast.info(
             `Warehouse updated to "${etaWarehouseName || etaWarehouseId}" based on container lookup.`,
           );
+
+          // Editing an existing container — persist the new warehouse on
+          // the container itself so it's not lost if the user navigates
+          // away before saving the rest of the form.
+          if (isEditMode && editingContainerId) {
+            try {
+              await updateContainerWarehouse(
+                editingContainerId,
+                etaWarehouseId,
+              );
+            } catch (warehouseUpdateError) {
+              console.error(
+                'Failed to update container warehouse',
+                warehouseUpdateError,
+              );
+              toast.error('Failed to update the container warehouse.');
+            }
+          }
         }
       } else {
         // API did not return warehouse information — keep the current
@@ -1331,7 +1349,7 @@ export default function ContainerFlowPage() {
     } finally {
       setIsFetchingEta(false);
     }
-  }, [selectedWarehouseId, isFetchingEta]);
+  }, [selectedWarehouseId, isFetchingEta, isEditMode, editingContainerId]);
 
   const handleSave = async () => {
     if (selectedPOIds.length === 0) {
@@ -1416,37 +1434,6 @@ export default function ContainerFlowPage() {
     if (!previewPayload) return;
     try {
       setIsSaving(true);
-
-      // Assign the currently selected warehouse (selectedWarehouseId) to all
-      // POs in this container FIRST, before the container itself is
-      // created/updated. Note: selectedWarehouseId is auto-synced to the ETA
-      // Warehouse in handleFetchContainerEta when they differ, so this
-      // reflects the warehouse returned by the last ETA lookup unless the
-      // user picked a different one afterward.
-      if (!isEditMode && selectedWarehouseId && selectedPOs.length > 0) {
-        const poIdsForAssignment = selectedPOs
-          .map((po) =>
-            String(po.sellercloud_po_id || po.id || '').replace(
-              /^PO-/i,
-              '',
-            ),
-          )
-          .filter(Boolean);
-        if (poIdsForAssignment.length > 0) {
-          try {
-            await assignPOWarehouseBulk(poIdsForAssignment, selectedWarehouseId);
-          } catch (assignError) {
-            console.error('Failed to assign warehouse to purchase orders', assignError);
-            toast.error('Failed to assign warehouse to the selected purchase orders.');
-            return;
-          }
-        }
-      } else if (!isEditMode && !selectedWarehouseId) {
-        // No warehouse selected by the user — skip warehouse assignment.
-        console.info(
-          'No warehouse selected; skipping PO warehouse assignment.',
-        );
-      }
 
       if (isEditMode && editingContainerId) {
         await updateContainer(editingContainerId, previewPayload);

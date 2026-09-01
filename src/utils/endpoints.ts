@@ -171,6 +171,8 @@ export const CONTAINER_ETA_SEARCH = (containerNumber: string) =>
 export const CONTAINER_SYNC = '/purchase-orders/sync-containers';
 export const CONTAINER_SYNC_SINGLE = (container_id: string) =>
   `/containers/${container_id}/sync?sync_pos=true`;
+export const CONTAINER_WAREHOUSE_UPDATE = (container_id: string) =>
+  `/containers/${container_id}/warehouse`;
 export const CONTAINERS_EXPORT_CSV = '/containers/export/csv';
 export const CONTAINER_ACTIVITIES = (id: string) =>
   `/containers/${id}/activities`;
