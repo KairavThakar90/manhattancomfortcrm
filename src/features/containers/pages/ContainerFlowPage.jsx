@@ -514,6 +514,8 @@ export default function ContainerFlowPage() {
         else if (listSortConfig.key === 'received_date')
           sort_by = 'receive_date';
         else if (listSortConfig.key === 'is_received') sort_by = 'status';
+        else if (listSortConfig.key === 'date_emptied')
+          sort_by = 'date_emptied';
 
         if (sort_by) {
           params.sort_by = sort_by;
@@ -1743,9 +1745,27 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
-        header: 'Unloaded',
+        header: (
+          <div
+            className="flex cursor-pointer items-center justify-center gap-1"
+            onClick={() => handleListSort('date_emptied')}
+          >
+            <span>Unloaded</span>
+            <span className="group-hover:text-mc-black text-slate-400">
+              {listSortConfig.key === 'date_emptied' ? (
+                listSortConfig.direction === 'asc' ? (
+                  <ArrowUp className="h-3 w-3" />
+                ) : (
+                  <ArrowDown className="h-3 w-3" />
+                )
+              ) : (
+                <ArrowUpDown className="h-3 w-3 opacity-50 transition hover:opacity-100" />
+              )}
+            </span>
+          </div>
+        ),
         accessor: 'date_emptied',
-        headerClassName: 'px-4 py-3 select-none text-center',
+        headerClassName: 'px-4 py-3 select-none text-center group',
         className: 'px-4 py-4 text-center',
         render: (c) => {
           const hasDate =
