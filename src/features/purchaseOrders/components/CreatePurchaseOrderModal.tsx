@@ -148,33 +148,35 @@ export default function CreatePurchaseOrderModal({
     onClose();
   };
 
+  // TEMP: validation disabled for now — allow free navigation/submit
+  // without requiring these fields. Restore the checks below to re-enable.
   const validateGeneral = () => {
     const nextErrors: Record<string, string> = {};
-    if (!form.companyId) nextErrors.companyId = 'Company is required.';
-    if (!form.vendorId) nextErrors.vendorId = 'Vendor is required.';
-    if (!form.defaultWarehouseId)
-      nextErrors.defaultWarehouseId = 'Default warehouse is required.';
-    if (!form.expectedDeliveryDate)
-      nextErrors.expectedDeliveryDate = 'Expected delivery date is required.';
+    // if (!form.companyId) nextErrors.companyId = 'Company is required.';
+    // if (!form.vendorId) nextErrors.vendorId = 'Vendor is required.';
+    // if (!form.defaultWarehouseId)
+    //   nextErrors.defaultWarehouseId = 'Default warehouse is required.';
+    // if (!form.expectedDeliveryDate)
+    //   nextErrors.expectedDeliveryDate = 'Expected delivery date is required.';
     return nextErrors;
   };
 
   const validateProducts = () => {
     const nextErrors: Record<string, string> = {};
-    const hasValidProduct = products.some((p) => p.ProductID.trim());
-    if (!hasValidProduct) {
-      nextErrors.products = 'Add at least one product line item.';
-    } else {
-      products.forEach((p, i) => {
-        if (!p.ProductID.trim()) return;
-        const hasUnits = p.QtyUnitsOrdered && Number(p.QtyUnitsOrdered) > 0;
-        const hasCases = p.QtyCasesOrdered && Number(p.QtyCasesOrdered) > 0;
-        if (!hasUnits && !hasCases) {
-          nextErrors[`product-${i}-qty`] =
-            'Enter Qty Units Ordered or Qty Cases Ordered.';
-        }
-      });
-    }
+    // const hasValidProduct = products.some((p) => p.ProductID.trim());
+    // if (!hasValidProduct) {
+    //   nextErrors.products = 'Add at least one product line item.';
+    // } else {
+    //   products.forEach((p, i) => {
+    //     if (!p.ProductID.trim()) return;
+    //     const hasUnits = p.QtyUnitsOrdered && Number(p.QtyUnitsOrdered) > 0;
+    //     const hasCases = p.QtyCasesOrdered && Number(p.QtyCasesOrdered) > 0;
+    //     if (!hasUnits && !hasCases) {
+    //       nextErrors[`product-${i}-qty`] =
+    //         'Enter Qty Units Ordered or Qty Cases Ordered.';
+    //     }
+    //   });
+    // }
     return nextErrors;
   };
 
@@ -277,7 +279,7 @@ export default function CreatePurchaseOrderModal({
   };
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-mc-gold';
+    'w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 transition-colors hover:border-black focus:outline-hidden focus:ring-2 focus:ring-mc-gold';
   const labelClass = 'mb-1 block text-xs font-semibold text-slate-600';
   const errorClass = 'mt-1 text-[10px] font-semibold text-rose-500';
 
@@ -296,6 +298,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, FirstName: e.target.value }))
           }
+          placeholder="First name"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -308,6 +311,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, LastName: e.target.value }))
           }
+          placeholder="Last name"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -320,6 +324,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, MiddleName: e.target.value }))
           }
+          placeholder="Middle name"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -332,6 +337,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, Business: e.target.value }))
           }
+          placeholder="Business name"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -344,6 +350,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, Phone: e.target.value }))
           }
+          placeholder="Phone number"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -356,6 +363,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, Fax: e.target.value }))
           }
+          placeholder="Fax number"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -371,6 +379,7 @@ export default function CreatePurchaseOrderModal({
               AddressLine1: e.target.value,
             }))
           }
+          placeholder="Street address"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -386,6 +395,7 @@ export default function CreatePurchaseOrderModal({
               AddressLine2: e.target.value,
             }))
           }
+          placeholder="Apartment, suite, unit, etc. (optional)"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -398,6 +408,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, City: e.target.value }))
           }
+          placeholder="City"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -410,6 +421,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, State: e.target.value }))
           }
+          placeholder="State"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -422,6 +434,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, Region: e.target.value }))
           }
+          placeholder="Region"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -434,6 +447,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, ZipCode: e.target.value }))
           }
+          placeholder="Zip code"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -446,6 +460,7 @@ export default function CreatePurchaseOrderModal({
           onChange={(e) =>
             setAddress((prev) => ({ ...prev, Country: e.target.value }))
           }
+          placeholder="Country"
           className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
         />
       </div>
@@ -461,7 +476,7 @@ export default function CreatePurchaseOrderModal({
       onClick={handleClose}
     >
       <div
-        className="animate-scaleUp flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-slate-100 bg-white shadow-xl"
+        className="animate-scaleUp flex h-[92vh] w-full max-w-7xl flex-col rounded-2xl border border-slate-100 bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -524,17 +539,6 @@ export default function CreatePurchaseOrderModal({
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-4">
-            {stepIndex === 0 && (
-              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-                <p className="text-xs text-amber-800">
-                  This creates a live purchase order in SellerCloud. PO Type
-                  values shown are placeholders pending confirmation from the
-                  backend team.
-                </p>
-              </div>
-            )}
-
             {/* Step 1: General Info */}
             {currentStepKey === 'general' && (
               <div>
@@ -607,6 +611,7 @@ export default function CreatePurchaseOrderModal({
                       onChange={(e) =>
                         setField('expectedDeliveryDate', e.target.value)
                       }
+                      placeholder="Select expected delivery date"
                       className={`${inputClass} font-mono`}
                     />
                     {errors.expectedDeliveryDate && (
@@ -736,6 +741,7 @@ export default function CreatePurchaseOrderModal({
                                 e.target.value,
                               )
                             }
+                            placeholder="0"
                             className={inputClass}
                           />
                           {errors[`product-${i}-qty`] && (
@@ -754,6 +760,7 @@ export default function CreatePurchaseOrderModal({
                             onChange={(e) =>
                               setProductField(i, 'UnitPrice', e.target.value)
                             }
+                            placeholder="0.00"
                             className={inputClass}
                           />
                         </div>
@@ -772,6 +779,7 @@ export default function CreatePurchaseOrderModal({
                                 e.target.value,
                               )
                             }
+                            placeholder="0"
                             className={inputClass}
                           />
                         </div>
@@ -790,6 +798,7 @@ export default function CreatePurchaseOrderModal({
                                 e.target.value,
                               )
                             }
+                            placeholder="0"
                             className={inputClass}
                           />
                         </div>
@@ -803,6 +812,7 @@ export default function CreatePurchaseOrderModal({
                             onChange={(e) =>
                               setProductField(i, 'CasePrice', e.target.value)
                             }
+                            placeholder="0.00"
                             className={inputClass}
                           />
                         </div>
@@ -837,6 +847,7 @@ export default function CreatePurchaseOrderModal({
                             onChange={(e) =>
                               setProductField(i, 'DiscountValue', e.target.value)
                             }
+                            placeholder="0.00"
                             className={inputClass}
                           />
                         </div>

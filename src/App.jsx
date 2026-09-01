@@ -19,6 +19,7 @@ export default function App() {
         </Router>
       </ErrorBoundary>
       <ToastContainer
+        style={{ zIndex: 99999 }}
         position="top-right"
         autoClose={2000}
         hideProgressBar
