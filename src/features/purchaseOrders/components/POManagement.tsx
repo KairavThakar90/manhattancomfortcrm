@@ -4830,6 +4830,42 @@ Supply Chain CRM Coordinator`;
               </div>
             </div>
           )}
+          {(() => {
+            const hasActiveFilters =
+              !!searchQuery ||
+              (statusFilter && statusFilter !== 'all') ||
+              (approvedStatusFilter && approvedStatusFilter !== 'all') ||
+              (completionFilter && completionFilter !== 'all') ||
+              (vendorFilter && vendorFilter !== 'all') ||
+              (propCustomerFilter ?? localCustomerFilter) !== 'all' ||
+              (channelFilter && channelFilter !== 'all') ||
+              !!dateFrom ||
+              !!dateTo;
+            return (
+              <button
+                type="button"
+                disabled={!hasActiveFilters}
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setApprovedStatusFilter('all');
+                  setCompletionFilter('all');
+                  setVendorFilter('all');
+                  if (propOnCustomerFilterChange)
+                    propOnCustomerFilterChange('all');
+                  else setLocalCustomerFilter('all');
+                  setChannelFilter('all');
+                  setDateFrom('');
+                  setDateTo('');
+                  handlePageChange(1);
+                }}
+                className="border-mc-beige-dark flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold text-slate-500 transition hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-slate-500"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear All
+              </button>
+            );
+          })()}
         </div>
       </div>
 

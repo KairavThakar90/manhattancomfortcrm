@@ -2338,6 +2338,37 @@ export default function ContainerFlowPage() {
                   </div>
                 )}
               </div>
+
+              {(() => {
+                const hasActiveFilters =
+                  !!listSearchQuery ||
+                  (warehouseFilter && warehouseFilter !== 'all') ||
+                  !!receiveDateFrom ||
+                  !!receiveDateTo ||
+                  !!etaFrom ||
+                  !!etaTo ||
+                  (stageFilter && stageFilter !== 'all');
+                return (
+                  <button
+                    type="button"
+                    disabled={!hasActiveFilters}
+                    onClick={() => {
+                      setListSearchQuery('');
+                      setWarehouseFilter('all');
+                      setReceiveDateFrom('');
+                      setReceiveDateTo('');
+                      setEtaFrom('');
+                      setEtaTo('');
+                      setStageFilter('all');
+                      setListPage(1);
+                    }}
+                    className="border-mc-beige-dark flex flex-shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-bold text-slate-500 transition hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-slate-500"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Clear All
+                  </button>
+                );
+              })()}
             </div>
           </div>
           <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
