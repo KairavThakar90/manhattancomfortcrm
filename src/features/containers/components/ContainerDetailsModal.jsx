@@ -1054,12 +1054,12 @@ export default function ContainerDetailsModal({
                                 item.qty_received_container ?? 0;
                               const qtyAssigned =
                                 item.qty_in_container || item.qty || 0;
-                              const isOverReceived =
-                                qtyReceived > 0 && qtyReceived > qtyAssigned;
+                              const isUnderReceived =
+                                qtyReceived > 0 && qtyReceived < qtyAssigned;
                               return (
                                 <span
                                   className={
-                                    isOverReceived
+                                    isUnderReceived
                                       ? 'font-bold text-rose-600'
                                       : ''
                                   }
