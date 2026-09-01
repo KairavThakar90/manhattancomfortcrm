@@ -254,12 +254,12 @@ const ReasonCell = ({
       >
         <div className="min-w-0 flex-1">
           <span
-            className="block truncate text-[11px] text-slate-600"
+            className="block cursor-pointer truncate text-[11px] text-slate-600"
             data-tooltip-id={currentReason ? 'po-item-tooltip' : undefined}
             data-tooltip-content={
               currentReason
                 ? po.delay_reason_updated_by
-                  ? `${currentReason} — Reason by: ${po.delay_reason_updated_by}`
+                  ? `${currentReason} — Reported by: ${po.delay_reason_updated_by}`
                   : currentReason
                 : undefined
             }
@@ -267,7 +267,11 @@ const ReasonCell = ({
             {currentReason}
           </span>
           {currentReason && po.delay_reason_updated_by && (
-            <span className="block truncate text-[9px] text-slate-400 italic">
+            <span
+              className="block cursor-pointer truncate text-[9px] text-slate-400 italic"
+              data-tooltip-id="po-item-tooltip"
+              data-tooltip-content={`Reported By: ${po.delay_reason_updated_by}`}
+            >
               Reported By: {po.delay_reason_updated_by}
             </span>
           )}
