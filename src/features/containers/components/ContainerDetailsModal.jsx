@@ -768,40 +768,63 @@ export default function ContainerDetailsModal({
     0,
   );
 
-  const getContainerStage = () => {
-    if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
-      return {
-        label: 'Fully Received',
-        badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
-      };
-    }
-    if (totalQtyReceived > 0) {
-      return {
-        label: 'Partially Received',
-        badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
-        cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
-      };
-    }
-    if (container.date_emptied) {
-      return {
-        label: 'Unloaded/Emptied',
-        badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
-        cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
-      };
-    }
-    if (container.date_dropped_off) {
-      return {
-        label: 'Picked Up',
-        badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
-        cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
-      };
-    }
-    return {
+  // Backend enum values (when present on the container) map directly to a
+  // stage below — falls back to deriving the stage from dates/quantities
+  // when the backend hasn't sent a status yet.
+  const CONTAINER_STAGE_MAP = {
+    FULLY_RECEIVED: {
+      label: 'Fully Received',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
+    },
+    PARTIALLY_RECEIVED: {
+      label: 'Partially Received',
+      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+      cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+    },
+    UNLOADED_EMPTIED: {
+      label: 'Unloaded/Emptied',
+      badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
+      cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
+    },
+    PICKED_UP: {
+      label: 'Picked Up',
+      badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+      cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
+    },
+    IN_TRANSIT: {
       label: 'In Transit',
       badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
       cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
-    };
+    },
+  };
+
+  const getContainerStage = () => {
+    const backendStatus = String(
+      container.container_status ||
+        container.status ||
+        container.stage ||
+        '',
+    )
+      .trim()
+      .toUpperCase();
+    if (backendStatus && CONTAINER_STAGE_MAP[backendStatus]) {
+      return CONTAINER_STAGE_MAP[backendStatus];
+    }
+
+    if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
+      return CONTAINER_STAGE_MAP.FULLY_RECEIVED;
+    }
+    if (totalQtyReceived > 0) {
+      return CONTAINER_STAGE_MAP.PARTIALLY_RECEIVED;
+    }
+    if (container.date_emptied) {
+      return CONTAINER_STAGE_MAP.UNLOADED_EMPTIED;
+    }
+    if (container.date_dropped_off) {
+      return CONTAINER_STAGE_MAP.PICKED_UP;
+    }
+    return CONTAINER_STAGE_MAP.IN_TRANSIT;
   };
 
   const containerStage = getContainerStage();
@@ -868,49 +891,54 @@ export default function ContainerDetailsModal({
                     >
                       {containerStage.label}
                     </span>
+                  </span>
+                </div>
+                {(container.date_dropped_off ||
+                  container.date_emptied ||
+                  (container.is_received &&
+                    container.received_date &&
+                    container.received_date !== 'N/A')) && (
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                     {container.date_dropped_off && (
-                      <>
-                        <span className="text-slate-300">•</span>
-                        <span
-                          className="flex items-center gap-1 text-xs"
-                          title="Dropped Off"
-                        >
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>
-                            {String(container.date_dropped_off).split('T')[0]}
-                          </span>
+                      <span
+                        className="flex items-center gap-1 text-xs text-slate-500"
+                        title="Dropped Off"
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span className="text-slate-400">Dropped Off:</span>
+                        <span>
+                          {String(container.date_dropped_off).split('T')[0]}
                         </span>
-                      </>
+                      </span>
                     )}
                     {container.date_emptied && (
-                      <>
-                        <span className="text-slate-300">•</span>
-                        <span
-                          className="flex items-center gap-1 text-xs"
-                          title="Emptied"
-                        >
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>
-                            {String(container.date_emptied).split('T')[0]}
-                          </span>
+                      <span
+                        className="flex items-center gap-1 text-xs text-slate-500"
+                        title="Emptied"
+                      >
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span className="text-slate-400">Emptied:</span>
+                        <span>
+                          {String(container.date_emptied).split('T')[0]}
                         </span>
-                      </>
+                      </span>
                     )}
                     {container.is_received &&
                       container.received_date &&
                       container.received_date !== 'N/A' && (
-                        <>
-                          <span className="text-slate-300">•</span>
-                          <span className="flex items-center gap-1 text-xs">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {String(container.received_date).split('T')[0]}
-                            </span>
+                        <span
+                          className="flex items-center gap-1 text-xs text-slate-500"
+                          title="Received"
+                        >
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span className="text-slate-400">Received:</span>
+                          <span>
+                            {String(container.received_date).split('T')[0]}
                           </span>
-                        </>
+                        </span>
                       )}
-                  </span>
-                </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
