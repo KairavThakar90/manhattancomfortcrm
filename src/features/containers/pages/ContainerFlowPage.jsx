@@ -83,6 +83,7 @@ import {
   deleteContainer,
   getContainerDetails,
   syncContainers,
+  syncSingleContainer,
   exportContainersCSV,
   searchContainerETA,
 } from '../services/container.service';
@@ -293,6 +294,10 @@ export default function ContainerFlowPage() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const [syncingContainerIds, setSyncingContainerIds] = useState(new Set());
+  const [manualContainerInput, setManualContainerInput] = useState('');
+  const [isSyncingManualContainer, setIsSyncingManualContainer] =
+    useState(false);
   const syncMenuRef = useRef(null);
 
   useEffect(() => {
@@ -322,6 +327,54 @@ export default function ContainerFlowPage() {
       toast.error('Failed to sync containers from SellerCloud.');
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleSyncSingleContainer = async (container) => {
+    const containerId = container?.id;
+    if (!containerId) return;
+    setSyncingContainerIds((prev) => new Set(prev).add(containerId));
+    try {
+      await syncSingleContainer(containerId);
+      toast.success('Container synced successfully.');
+      fetchTablePage();
+    } catch (error) {
+      console.error('Failed to sync container:', error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        'Failed to sync container.';
+      toast.error(errorMsg);
+    } finally {
+      setSyncingContainerIds((prev) => {
+        const next = new Set(prev);
+        next.delete(containerId);
+        return next;
+      });
+    }
+  };
+
+  const handleManualContainerSync = async (e) => {
+    e?.preventDefault?.();
+    const value = manualContainerInput.trim();
+    if (!value || isSyncingManualContainer) return;
+
+    setIsSyncingManualContainer(true);
+    try {
+      await syncSingleContainer(value);
+      toast.success(`Container ${value} synced successfully.`);
+      setManualContainerInput('');
+      setShowSyncMenu(false);
+      fetchTablePage();
+    } catch (error) {
+      console.error('Failed to sync container:', error);
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        `Failed to sync container ${value}.`;
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncingManualContainer(false);
     }
   };
 
@@ -1788,20 +1841,36 @@ export default function ContainerFlowPage() {
         accessor: 'actions',
         headerClassName: 'px-6 py-3 text-right',
         className: 'px-6 py-4 text-right',
-        render: (c) => (
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={() => handleViewContainer(c)}
-              className="hover:text-mc-black inline-flex items-center text-slate-400 transition-colors"
-              title="View Details"
-            >
-              <Eye className="h-4 w-4" />
-            </button>
-          </div>
-        ),
+        render: (c) => {
+          const isSyncingThisContainer = syncingContainerIds.has(c.id);
+          return (
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSyncSingleContainer(c);
+                }}
+                disabled={isSyncingThisContainer}
+                className="text-mc-black inline-flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                title={isSyncingThisContainer ? 'Syncing...' : 'Sync Container'}
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isSyncingThisContainer ? 'text-mc-gold animate-spin' : ''}`}
+                />
+              </button>
+              <button
+                onClick={() => handleViewContainer(c)}
+                className="text-mc-black inline-flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-slate-100"
+                title="View Details"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        },
       },
     ],
-    [listSortConfig, handleListSort, listSearchQuery],
+    [listSortConfig, handleListSort, listSearchQuery, syncingContainerIds],
   );
 
   const visibleContainerColumns = useMemo(
@@ -1845,7 +1914,7 @@ export default function ContainerFlowPage() {
               </button>
 
               {showSyncMenu && (
-                <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border bg-white shadow-lg">
+                <div className="border-mc-beige-dark animate-fadeIn absolute top-full right-0 z-50 mt-2 w-72 overflow-hidden rounded-xl border bg-white shadow-lg">
                   <div className="border-mc-beige-dark border-b bg-slate-50 px-3 py-2">
                     <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                       Select timeframe
@@ -1876,6 +1945,42 @@ export default function ContainerFlowPage() {
                     >
                       Fetch All
                     </button>
+                  </div>
+
+                  {/* Manual Container Sync */}
+                  <div className="border-t border-slate-100 bg-slate-50/70 p-3">
+                    <span className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                      Or Sync Specific Container
+                    </span>
+                    <form
+                      onSubmit={handleManualContainerSync}
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Enter Container ID"
+                        value={manualContainerInput}
+                        onChange={(e) =>
+                          setManualContainerInput(e.target.value)
+                        }
+                        className="focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:ring-1 focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={
+                          !manualContainerInput.trim() ||
+                          isSyncingManualContainer
+                        }
+                        className="bg-mc-black flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isSyncingManualContainer ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : (
+                          'Sync'
+                        )}
+                      </button>
+                    </form>
                   </div>
                 </div>
               )}

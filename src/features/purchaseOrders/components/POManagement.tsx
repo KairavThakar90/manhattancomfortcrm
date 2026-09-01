@@ -3964,7 +3964,7 @@ Supply Chain CRM Coordinator`;
                 }}
                 disabled={isSyncingThisPO}
                 title={isSyncingThisPO ? 'Syncing...' : 'Sync Purchase Order'}
-                className="text-mc-black hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center justify-center rounded-md p-1.5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-mc-black inline-flex items-center justify-center rounded-md p-1.5 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${isSyncingThisPO ? 'animate-spin text-mc-gold' : ''}`}
@@ -3978,7 +3978,7 @@ Supply Chain CRM Coordinator`;
                   onSelectPO(po.id);
                 }}
                 title="View Details"
-                className="text-mc-black inline-flex items-center gap-1 rounded-md p-1.5 font-semibold hover:bg-slate-100"
+                className="text-mc-black inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold transition hover:bg-slate-100"
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>

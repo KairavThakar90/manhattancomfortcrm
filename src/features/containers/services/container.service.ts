@@ -9,6 +9,7 @@ import {
   CONTAINER_DETAILS,
   CONTAINER_ETA_SEARCH,
   CONTAINER_SYNC,
+  CONTAINER_SYNC_SINGLE,
   CONTAINERS_EXPORT_CSV,
   CONTAINER_ACTIVITIES,
   CONTAINER_COMMENTS,
@@ -87,6 +88,18 @@ export async function syncContainers(days: string = '30') {
   const { data } = await apiClient.post(url, undefined, {
     timeout: 0,
   });
+  return data;
+}
+
+/** Sync a single container by id (also re-syncs its linked POs) */
+export async function syncSingleContainer(containerId: string) {
+  const { data } = await apiClient.post(
+    CONTAINER_SYNC_SINGLE(containerId),
+    undefined,
+    {
+      timeout: 0,
+    },
+  );
   return data;
 }
 

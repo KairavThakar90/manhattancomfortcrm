@@ -17,12 +17,14 @@ import {
   Download,
   Clock,
   Info,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
   updateContainer,
   getContainerActivities,
   deleteContainerAttachment,
+  syncSingleContainer,
 } from '../services/container.service';
 import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import { Tooltip } from 'react-tooltip';
@@ -385,6 +387,7 @@ export default function ContainerDetailsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [container?.id, initialTab]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncingSingle, setIsSyncingSingle] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
   const [prevContainer, setPrevContainer] = useState(null);
@@ -803,6 +806,26 @@ export default function ContainerDetailsModal({
 
   const containerStage = getContainerStage();
 
+  const handleSyncSingleContainer = async () => {
+    if (!container?.id || isSyncingSingle) return;
+    setIsSyncingSingle(true);
+    try {
+      await syncSingleContainer(container.id);
+      toast.success('Container synced successfully.');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error('Failed to sync container:', err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        err?.message ||
+        'Failed to sync container.';
+      toast.error(errorMsg);
+    } finally {
+      setIsSyncingSingle(false);
+    }
+  };
+
   return createPortal(
     <>
       <div
@@ -891,6 +914,19 @@ export default function ContainerDetailsModal({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {localStorage.getItem('userRole') !== 'Vendor' && (
+                <button
+                  onClick={handleSyncSingleContainer}
+                  disabled={isSyncingSingle}
+                  className="text-mc-black mr-2 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  title="Sync this container"
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isSyncingSingle ? 'text-mc-gold animate-spin' : ''}`}
+                  />
+                  {isSyncingSingle ? 'Syncing...' : 'Sync Container'}
+                </button>
+              )}
               {container.sellercloud_link &&
                 localStorage.getItem('userRole') !== 'Vendor' && (
                   <button
