@@ -794,18 +794,14 @@ export default function ContainerDetailsModal({
                           ? 'border-purple-200 bg-purple-50 text-purple-700'
                           : container.date_dropped_off
                             ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : container.is_received
-                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                              : 'border-amber-200 bg-amber-50 text-amber-700'
+                            : 'border-amber-200 bg-amber-50 text-amber-700'
                       }`}
                     >
                       {container.date_emptied
                         ? 'Emptied'
                         : container.date_dropped_off
                           ? 'Picked Up'
-                          : container.is_received
-                            ? 'Received'
-                            : 'Pick up'}
+                          : 'Pick up'}
                     </span>
                     {container.is_received &&
                       container.received_date &&
