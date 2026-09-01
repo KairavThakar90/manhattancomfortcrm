@@ -1049,8 +1049,25 @@ export default function ContainerDetailsModal({
                               'px-3 py-2 text-right w-32 bg-transparent',
                             className:
                               'px-3 py-2 text-right font-mono font-medium',
-                            render: (item) =>
-                              item.qty_received_container ?? 0,
+                            render: (item) => {
+                              const qtyReceived =
+                                item.qty_received_container ?? 0;
+                              const qtyAssigned =
+                                item.qty_in_container || item.qty || 0;
+                              const isOverReceived =
+                                qtyReceived > 0 && qtyReceived > qtyAssigned;
+                              return (
+                                <span
+                                  className={
+                                    isOverReceived
+                                      ? 'font-bold text-rose-600'
+                                      : ''
+                                  }
+                                >
+                                  {qtyReceived}
+                                </span>
+                              );
+                            },
                           },
                         ]}
                         data={paginatedItems}
