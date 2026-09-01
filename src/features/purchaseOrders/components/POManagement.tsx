@@ -4650,8 +4650,8 @@ Supply Chain CRM Coordinator`;
       </div>
 
       <div className="border-mc-beige-dark bg-mc-white flex flex-shrink-0 flex-col gap-3 rounded-xl border p-4 shadow-none">
-        {/* Row 1: Search */}
-        <div className="flex w-full">
+        {/* Row 1: Search + Columns */}
+        <div className="flex w-full items-center gap-3">
           {activeSubTab === 'kanban' && (
             <div className="flex-1">
               <h3 className="font-display text-mc-black text-sm font-bold">
@@ -4660,7 +4660,7 @@ Supply Chain CRM Coordinator`;
             </div>
           )}
           {activeSubTab !== 'kanban' && (
-            <div className="relative w-full">
+            <div className="relative flex-1">
               <Search className="text-mc-gray-soft absolute top-2.5 left-3 h-4 w-4" />
               <input
                 type="text"
@@ -4677,6 +4677,17 @@ Supply Chain CRM Coordinator`;
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
+            </div>
+          )}
+          {activeSubTab === 'grid' && (
+            <div className="flex-shrink-0">
+              <ColumnsDropdown
+                columns={PO_COLUMN_DEFS}
+                isVisible={isPOColumnVisible}
+                onToggle={togglePOColumn}
+                onSave={savePOColumnVisibility}
+                saving={savingPOColumns}
+              />
             </div>
           )}
         </div>
@@ -4827,15 +4838,6 @@ Supply Chain CRM Coordinator`;
                 />
               </div>
             </div>
-          )}
-          {activeSubTab === 'grid' && (
-            <ColumnsDropdown
-              columns={PO_COLUMN_DEFS}
-              isVisible={isPOColumnVisible}
-              onToggle={togglePOColumn}
-              onSave={savePOColumnVisibility}
-              saving={savingPOColumns}
-            />
           )}
         </div>
       </div>

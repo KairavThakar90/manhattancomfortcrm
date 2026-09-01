@@ -1931,6 +1931,15 @@ export default function ContainerFlowPage() {
                   </button>
                 )}
               </div>
+              <div className="flex-shrink-0">
+                <ColumnsDropdown
+                  columns={CONTAINER_COLUMN_DEFS}
+                  isVisible={isContainerColumnVisible}
+                  onToggle={toggleContainerColumn}
+                  onSave={saveContainerColumnVisibility}
+                  saving={savingContainerColumns}
+                />
+              </div>
             </div>
 
             {/* Filters (New Line) */}
@@ -2026,13 +2035,6 @@ export default function ContainerFlowPage() {
                   />
                 </div>
               </div>
-              <ColumnsDropdown
-                columns={CONTAINER_COLUMN_DEFS}
-                isVisible={isContainerColumnVisible}
-                onToggle={toggleContainerColumn}
-                onSave={saveContainerColumnVisibility}
-                saving={savingContainerColumns}
-              />
             </div>
           </div>
           <div className="border-mc-beige-dark bg-mc-white relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-xs">
