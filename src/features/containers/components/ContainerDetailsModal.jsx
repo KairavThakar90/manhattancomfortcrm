@@ -1036,6 +1036,16 @@ export default function ContainerDetailsModal({
                             render: (item) =>
                               item.qty_in_container || item.qty || 0,
                           },
+                          {
+                            header: 'QTY RECEIVED',
+                            accessor: 'qty_received',
+                            headerClassName:
+                              'px-3 py-2 text-right w-32 bg-transparent',
+                            className:
+                              'px-3 py-2 text-right font-mono font-medium',
+                            render: (item) =>
+                              item.qty_received_container ?? 0,
+                          },
                         ]}
                         data={paginatedItems}
                         keyField="product_name"
