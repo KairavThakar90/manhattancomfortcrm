@@ -111,6 +111,7 @@ export async function getPurchaseOrders(params?: {
   is_completed?: boolean;
   has_remaining_qty?: boolean;
   warehouse_id?: string;
+  sellercloud_warehouse_id?: string | number;
 
   page?: number;
   page_size?: number;

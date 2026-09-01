@@ -491,11 +491,26 @@ export default function ContainerFlowPage() {
         setPoList([]);
         return;
       }
+      // The PO list filter expects the SellerCloud warehouse ID, not our
+      // internal warehouse UUID — look it up from the selected warehouse.
+      const selectedWarehouse = warehousesList.find(
+        (wh) => String(wh.id) === String(selectedWarehouseId),
+      );
+      const sellercloudWarehouseId =
+        selectedWarehouse?.sellercloud_warehouse_id;
+      if (!sellercloudWarehouseId) {
+        console.warn(
+          'Selected warehouse has no sellercloud_warehouse_id — skipping PO fetch.',
+          selectedWarehouse,
+        );
+        setPoList([]);
+        return;
+      }
       try {
         setPoLoading(true);
         const data = await getPurchaseOrders({
           has_remaining_qty: true,
-          warehouse_id: selectedWarehouseId,
+          sellercloud_warehouse_id: sellercloudWarehouseId,
           ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
         });
         const results = Array.isArray(data) ? data : data.results || [];
@@ -506,7 +521,7 @@ export default function ContainerFlowPage() {
         setPoLoading(false);
       }
     },
-    [selectedWarehouseId],
+    [selectedWarehouseId, warehousesList],
   );
 
   useEffect(() => {
@@ -525,15 +540,12 @@ export default function ContainerFlowPage() {
 
   const vendorsList = useSelector((state) => state.vendors?.list || []);
   const poDropdownItems = useMemo(() => {
-    // Show Redux data first, merge with API poList
+    // Only show what the warehouse-filtered API call actually returned —
+    // the unfiltered Redux PO cache must never be merged in here, or it
+    // defeats the warehouse filter.
     const rawList = [];
-    // Prioritize fresh API poList over Redux cache
     if (Array.isArray(poList)) {
       rawList.push(...poList);
-    }
-    // Only merge the full Redux cache if the user is not actively searching
-    if (!poSearch && Array.isArray(purchaseOrders)) {
-      rawList.push(...purchaseOrders);
     }
 
     // Ensure selected POs are always in the list
