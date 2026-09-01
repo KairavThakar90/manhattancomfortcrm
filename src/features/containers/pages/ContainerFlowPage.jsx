@@ -2285,7 +2285,9 @@ export default function ContainerFlowPage() {
                   className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-44 items-center justify-between rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
                 >
                   <span className="truncate">
-                    {stageFilter === 'all' ? 'All Statuses' : stageFilter}
+                    {stageFilter === 'all'
+                      ? 'All Statuses'
+                      : CONTAINER_STAGE_MAP[stageFilter]?.label || stageFilter}
                   </span>
                   {stageFilter !== 'all' ? (
                     <X
@@ -2307,20 +2309,23 @@ export default function ContainerFlowPage() {
                   <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 w-56 rounded-xl border p-2 shadow-lg">
                     <div className="max-h-60 space-y-0.5 overflow-y-auto">
                       {[
-                        'all',
-                        'In Transit',
-                        'Picked Up',
-                        'Emptied',
-                        'Partially Received',
-                        'Fully Received',
+                        { value: 'all', label: 'All Statuses' },
+                        { value: 'IN_TRANSIT', label: 'In Transit' },
+                        { value: 'PICKED_UP', label: 'Picked Up' },
+                        { value: 'UNLOADED_EMPTIED', label: 'Emptied' },
+                        {
+                          value: 'PARTIALLY_RECEIVED',
+                          label: 'Partially Received',
+                        },
+                        { value: 'FULLY_RECEIVED', label: 'Fully Received' },
                       ].map((opt) => {
-                        const isSelected = stageFilter === opt;
+                        const isSelected = stageFilter === opt.value;
                         return (
                           <button
-                            key={opt}
+                            key={opt.value}
                             type="button"
                             onClick={() => {
-                              setStageFilter(opt);
+                              setStageFilter(opt.value);
                               setShowStageMenu(false);
                               setListPage(1);
                             }}
@@ -2330,9 +2335,7 @@ export default function ContainerFlowPage() {
                                 : 'text-mc-black hover:bg-mc-beige-light/50'
                             }`}
                           >
-                            <span>
-                              {opt === 'all' ? 'All Statuses' : opt}
-                            </span>
+                            <span>{opt.label}</span>
                             {isSelected && (
                               <Check className="h-3.5 w-3.5" />
                             )}

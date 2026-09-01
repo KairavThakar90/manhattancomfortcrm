@@ -1004,7 +1004,7 @@ export default function ContainerDetailsModal({
             {activeTab === 'details' && (
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 <div className="mb-4 grid shrink-0 grid-cols-2 gap-4 md:grid-cols-6">
-                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs md:col-span-2">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                     <span className="block text-[10px] font-medium text-slate-400">
                       Arrival Date
                     </span>
@@ -1013,7 +1013,7 @@ export default function ContainerDetailsModal({
                     </strong>
                   </div>
 
-                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs md:col-span-2">
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
                     <span className="block text-[10px] font-medium text-slate-400">
                       Total Item
                     </span>
@@ -1023,7 +1023,7 @@ export default function ContainerDetailsModal({
                     </strong>
                   </div>
 
-                  <div className="border-mc-beige-dark bg-mc-white flex flex-col justify-center rounded-xl border p-3 shadow-xs md:col-span-2">
+                  <div className="border-mc-beige-dark bg-mc-white flex flex-col justify-center rounded-xl border p-3 shadow-xs">
                     <span className="mb-1 block text-[10px] font-medium text-slate-400">
                       Status
                     </span>
@@ -1036,6 +1036,38 @@ export default function ContainerDetailsModal({
                         {containerStageMeta ? containerStageMeta.label : 'N/A'}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                    <span className="block text-[10px] font-medium text-slate-400">
+                      Qty Assigned
+                    </span>
+                    <strong className="mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold text-slate-800">
+                      {container.total_qty_assigned ?? 0}{' '}
+                      <span className="font-medium text-slate-500">units</span>
+                    </strong>
+                  </div>
+
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                    <span className="block text-[10px] font-medium text-slate-400">
+                      Qty Received
+                    </span>
+                    <strong className="mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold text-slate-800">
+                      {container.total_qty_received ?? 0}{' '}
+                      <span className="font-medium text-slate-500">units</span>
+                    </strong>
+                  </div>
+
+                  <div className="border-mc-beige-dark bg-mc-white rounded-xl border p-3 shadow-xs">
+                    <span className="block text-[10px] font-medium text-slate-400">
+                      Qty Missing
+                    </span>
+                    <strong
+                      className={`mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold ${(container.total_qty_missing ?? 0) > 0 ? 'text-rose-600' : 'text-slate-800'}`}
+                    >
+                      {container.total_qty_missing ?? 0}{' '}
+                      <span className="font-medium text-slate-500">units</span>
+                    </strong>
                   </div>
                 </div>
 
