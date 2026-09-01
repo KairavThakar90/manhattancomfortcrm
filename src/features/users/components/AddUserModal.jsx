@@ -513,7 +513,15 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                   Phone
                 </label>
                 <PhoneInput
-                  country={'us'}
+                  key={formData.country}
+                  country={(
+                    countryOptions.find(
+                      (c) =>
+                        c.label === formData.country ||
+                        c.value === formData.country,
+                    )?.value || 'us'
+                  ).toLowerCase()}
+                  enableSearch
                   value={formData.phone}
                   onChange={(phone) => setFormData((p) => ({ ...p, phone }))}
                   inputStyle={{
