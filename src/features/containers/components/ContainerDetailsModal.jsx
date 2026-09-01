@@ -813,6 +813,17 @@ export default function ContainerDetailsModal({
   // Status now comes directly from the backend.
   const containerStageMeta = getContainerStageMeta(container);
 
+  // total_qty_assigned/total_qty_missing come from the container details
+  // API — fall back to the summary fields already available on the row
+  // (total_qty_in_container) or to a derived value so the cards still show
+  // something correct if the details response is slow/unavailable.
+  const qtyAssigned =
+    container.total_qty_assigned ?? container.total_qty_in_container ?? 0;
+  const qtyReceived = container.total_qty_received ?? 0;
+  const qtyMissing =
+    container.total_qty_missing ??
+    Math.max(0, qtyAssigned - qtyReceived);
+
   const handleSyncSingleContainer = async () => {
     if (!container?.id || isSyncingSingle) return;
     setIsSyncingSingle(true);
@@ -1043,7 +1054,7 @@ export default function ContainerDetailsModal({
                       Qty Assigned
                     </span>
                     <strong className="mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold text-slate-800">
-                      {container.total_qty_assigned ?? 0}{' '}
+                      {qtyAssigned}{' '}
                       <span className="font-medium text-slate-500">units</span>
                     </strong>
                   </div>
@@ -1053,7 +1064,7 @@ export default function ContainerDetailsModal({
                       Qty Received
                     </span>
                     <strong className="mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold text-slate-800">
-                      {container.total_qty_received ?? 0}{' '}
+                      {qtyReceived}{' '}
                       <span className="font-medium text-slate-500">units</span>
                     </strong>
                   </div>
@@ -1063,9 +1074,9 @@ export default function ContainerDetailsModal({
                       Qty Missing
                     </span>
                     <strong
-                      className={`mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold ${(container.total_qty_missing ?? 0) > 0 ? 'text-rose-600' : 'text-slate-800'}`}
+                      className={`mt-1 flex items-baseline gap-1.5 font-mono text-sm font-bold ${qtyMissing > 0 ? 'text-rose-600' : 'text-slate-800'}`}
                     >
-                      {container.total_qty_missing ?? 0}{' '}
+                      {qtyMissing}{' '}
                       <span className="font-medium text-slate-500">units</span>
                     </strong>
                   </div>
