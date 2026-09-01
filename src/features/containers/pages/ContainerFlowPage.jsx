@@ -485,10 +485,17 @@ export default function ContainerFlowPage() {
 
   const fetchPOs = useCallback(
     async (searchQuery = '') => {
+      // POs are warehouse-scoped — nothing to show until a warehouse is
+      // selected.
+      if (!selectedWarehouseId) {
+        setPoList([]);
+        return;
+      }
       try {
         setPoLoading(true);
         const data = await getPurchaseOrders({
           has_remaining_qty: true,
+          warehouse_id: selectedWarehouseId,
           ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
         });
         const results = Array.isArray(data) ? data : data.results || [];
@@ -2740,29 +2747,31 @@ export default function ContainerFlowPage() {
               </div>
             </div>
 
-            <div className="animate-in fade-in slide-in-from-top-2 md:slide-in-from-left-4 duration-300">
-              <label className="text-mc-black mb-1.5 block text-xs font-semibold">
-                Select Purchase Orders
-              </label>
-              <div className="relative z-[40]">
-                <InfiniteScrollDropdown
-                  isMulti
-                  value={selectedPOIds}
-                  onChange={(newVals) =>
-                    handlePOChange(newVals.map((val) => ({ value: val })))
-                  }
-                  onSearch={handlePoSearch}
-                  onOpen={() => fetchPOs(poSearch)}
-                  onLoadMore={() => {}}
-                  hasMore={false}
-                  isLoading={poLoading}
-                  items={poDropdownItems}
-                  disabled={isEditMode}
-                  placeholder="-- Choose Purchase Orders --"
-                  searchPlaceholder="Search POs..."
-                />
+            {selectedWarehouseId && (
+              <div className="animate-in fade-in slide-in-from-top-2 md:slide-in-from-left-4 duration-300">
+                <label className="text-mc-black mb-1.5 block text-xs font-semibold">
+                  Select Purchase Orders
+                </label>
+                <div className="relative z-[40]">
+                  <InfiniteScrollDropdown
+                    isMulti
+                    value={selectedPOIds}
+                    onChange={(newVals) =>
+                      handlePOChange(newVals.map((val) => ({ value: val })))
+                    }
+                    onSearch={handlePoSearch}
+                    onOpen={() => fetchPOs(poSearch)}
+                    onLoadMore={() => {}}
+                    hasMore={false}
+                    isLoading={poLoading}
+                    items={poDropdownItems}
+                    disabled={isEditMode}
+                    placeholder="-- Choose Purchase Orders --"
+                    searchPlaceholder="Search POs..."
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
