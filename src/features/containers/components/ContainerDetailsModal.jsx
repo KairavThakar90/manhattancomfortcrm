@@ -16,6 +16,7 @@ import {
   FileText,
   Download,
   Clock,
+  Info,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -751,6 +752,57 @@ export default function ContainerDetailsModal({
     itemsPage * itemsPageSize,
   );
 
+  // Status flow: Picked Up → Unloaded/Empty → Partially Received → Fully
+  // Received. Received progress is derived from the sum of each item's
+  // assigned vs received quantity; drop-off/empty progress comes from the
+  // container's own tracking dates.
+  const totalQtyAssigned = allItems.reduce(
+    (sum, item) => sum + (item.qty_in_container || item.qty || 0),
+    0,
+  );
+  const totalQtyReceived = allItems.reduce(
+    (sum, item) => sum + (item.qty_received_container ?? 0),
+    0,
+  );
+
+  const getContainerStage = () => {
+    if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
+      return {
+        label: 'Fully Received',
+        badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
+      };
+    }
+    if (totalQtyReceived > 0) {
+      return {
+        label: 'Partially Received',
+        badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+        cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+      };
+    }
+    if (container.date_emptied) {
+      return {
+        label: 'Unloaded/Empty',
+        badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
+        cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
+      };
+    }
+    if (container.date_dropped_off) {
+      return {
+        label: 'Picked Up',
+        badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+        cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
+      };
+    }
+    return {
+      label: 'Pick up',
+      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+      cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+    };
+  };
+
+  const containerStage = getContainerStage();
+
   return createPortal(
     <>
       <div
@@ -789,20 +841,38 @@ export default function ContainerDetailsModal({
                     </span>
                     <span className="text-slate-300">•</span>
                     <span
-                      className={`rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
-                        container.date_emptied
-                          ? 'border-purple-200 bg-purple-50 text-purple-700'
-                          : container.date_dropped_off
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-amber-200 bg-amber-50 text-amber-700'
-                      }`}
+                      className={`rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${containerStage.badgeClass}`}
                     >
-                      {container.date_emptied
-                        ? 'Emptied'
-                        : container.date_dropped_off
-                          ? 'Picked Up'
-                          : 'Pick up'}
+                      {containerStage.label}
                     </span>
+                    {container.date_dropped_off && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span
+                          className="flex items-center gap-1 text-xs"
+                          title="Dropped Off"
+                        >
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>
+                            {String(container.date_dropped_off).split('T')[0]}
+                          </span>
+                        </span>
+                      </>
+                    )}
+                    {container.date_emptied && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span
+                          className="flex items-center gap-1 text-xs"
+                          title="Emptied"
+                        >
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>
+                            {String(container.date_emptied).split('T')[0]}
+                          </span>
+                        </span>
+                      </>
+                    )}
                     {container.is_received &&
                       container.received_date &&
                       container.received_date !== 'N/A' && (
@@ -905,19 +975,9 @@ export default function ContainerDetailsModal({
                     </span>
                     <div className="inline-flex">
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                          container.date_emptied
-                            ? 'border border-purple-200 bg-purple-100 text-purple-700'
-                            : container.date_dropped_off
-                              ? 'border border-blue-200 bg-blue-100 text-blue-700'
-                              : 'border border-amber-200 bg-amber-100 text-amber-700'
-                        }`}
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${containerStage.cardClass}`}
                       >
-                        {container.date_emptied
-                          ? 'Emptied'
-                          : container.date_dropped_off
-                            ? 'Picked Up'
-                            : 'Pick up'}
+                        {containerStage.label}
                       </span>
                     </div>
                   </div>
