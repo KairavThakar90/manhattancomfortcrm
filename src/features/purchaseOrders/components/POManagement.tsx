@@ -3677,9 +3677,9 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-              className="text-mc-black hover:bg-mc-black border-mc-beige-dark bg-mc-beige-light ml-1 flex cursor-pointer items-center justify-center rounded-full border p-[1.5px] outline-hidden transition-colors hover:text-white"
+              className="text-slate-400 hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center outline-hidden transition-colors"
             >
-              <Info className="h-3 w-3" />
+              <Info className="h-3.5 w-3.5" />
             </div>
             <span className="group-hover:text-mc-black text-slate-400">
               {activeSortConfig.key === 'invoiceDelayStatus' ? (
@@ -3787,10 +3787,10 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
-              className="text-mc-black hover:bg-mc-black ml-1 flex cursor-pointer items-center justify-center rounded-full border border-slate-300 bg-slate-100 p-[1.5px] outline-hidden transition-colors hover:text-white"
+              className="text-slate-400 hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center outline-hidden transition-colors"
               onClick={(e: any) => e.stopPropagation()}
             >
-              <Info className="h-3 w-3" />
+              <Info className="h-3.5 w-3.5" />
             </div>
           </div>
         ),
