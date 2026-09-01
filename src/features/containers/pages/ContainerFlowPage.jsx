@@ -510,7 +510,7 @@ export default function ContainerFlowPage() {
         setPoLoading(true);
         const data = await getPurchaseOrders({
           has_remaining_qty: true,
-          sellercloud_warehouse_id: sellercloudWarehouseId,
+          warehouse_id: sellercloudWarehouseId,
           ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
         });
         const results = Array.isArray(data) ? data : data.results || [];
