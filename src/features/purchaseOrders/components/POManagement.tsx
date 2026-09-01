@@ -680,7 +680,7 @@ const ApprovedStatusFilterDropdown = ({
 
   const statuses = [
     { value: 'all', label: 'All Approved Status' },
-    { value: 'ontime', label: 'On Time' },
+    { value: 'ontime', label: 'Approved' },
     { value: 'pending', label: 'Pending' },
     { value: 'delayed', label: 'Delayed' },
   ];
@@ -3713,7 +3713,7 @@ Supply Chain CRM Coordinator`;
           if (invoiceDate)
             return (
               <span className="rounded-sm border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
-                On Time
+                Approved
               </span>
             );
           if (!createdOn || createdOn === 'N/A')
@@ -3749,10 +3749,10 @@ Supply Chain CRM Coordinator`;
               return (
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="rounded-sm border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-mono text-[10px] text-emerald-700">
-                    On Time
+                    Approved
                   </span>
                   <span className="font-mono text-[9px] whitespace-nowrap text-slate-500">
-                    Container On Time, Invoice Delayed
+                    Container Approved, Invoice Delayed
                   </span>
                 </div>
               );
