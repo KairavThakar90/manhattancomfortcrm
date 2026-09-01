@@ -1273,61 +1273,14 @@ export default function ContainerFlowPage() {
         result?.eta_delivery_date;
 
       // Store the warehouse returned by the ETA API (/allways/search) as the
-      // "ETA Warehouse" — kept separate from the user's Warehouse dropdown
-      // state so we can compare and decide whether to update it.
+      // "ETA Warehouse" for display only — the user's Warehouse dropdown
+      // selection is never changed automatically based on this lookup.
       const etaWarehouseId = result?.warehouse_id || null;
       const etaWarehouseName = result?.warehouse_name || null;
 
       if (etaWarehouseId || etaWarehouseName) {
         setEtaWarehouse({ id: etaWarehouseId, name: etaWarehouseName });
-
-        // If the ETA Warehouse differs from the currently selected
-        // Warehouse, auto-update the Selected Warehouse to match the API
-        // response so the container is saved against the correct warehouse.
-        const warehouseChanged =
-          String(etaWarehouseId || '') !== String(selectedWarehouseId || '');
-
-        if (etaWarehouseId && warehouseChanged) {
-          setSelectedWarehouseId(etaWarehouseId);
-
-          // Make sure the dropdown has an entry to render the name for this
-          // warehouse, even if it wasn't already present in warehousesList.
-          setWarehousesList((prev) => {
-            const exists = prev.some(
-              (wh) => String(wh.id) === String(etaWarehouseId),
-            );
-            if (exists) return prev;
-            return [
-              ...prev,
-              { id: etaWarehouseId, name: etaWarehouseName || etaWarehouseId },
-            ];
-          });
-
-          toast.info(
-            `Warehouse updated to "${etaWarehouseName || etaWarehouseId}" based on container lookup.`,
-          );
-
-          // Editing an existing container — persist the new warehouse on
-          // the container itself so it's not lost if the user navigates
-          // away before saving the rest of the form.
-          if (isEditMode && editingContainerId) {
-            try {
-              await updateContainerWarehouse(
-                editingContainerId,
-                etaWarehouseId,
-              );
-            } catch (warehouseUpdateError) {
-              console.error(
-                'Failed to update container warehouse',
-                warehouseUpdateError,
-              );
-              toast.error('Failed to update the container warehouse.');
-            }
-          }
-        }
       } else {
-        // API did not return warehouse information — keep the current
-        // Selected Warehouse untouched and continue the flow normally.
         setEtaWarehouse(null);
       }
 
@@ -1349,7 +1302,7 @@ export default function ContainerFlowPage() {
     } finally {
       setIsFetchingEta(false);
     }
-  }, [selectedWarehouseId, isFetchingEta, isEditMode, editingContainerId]);
+  }, [isFetchingEta]);
 
   const handleSave = async () => {
     if (selectedPOIds.length === 0) {
@@ -1439,8 +1392,41 @@ export default function ContainerFlowPage() {
         await updateContainer(editingContainerId, previewPayload);
         toast.success('Container updated successfully!');
       } else {
-        await createContainer(previewPayload);
+        const createdContainer = await createContainer(previewPayload);
         toast.success('Container created and items allocated successfully!');
+
+        // If the ETA lookup returned a different warehouse than the one the
+        // container was just created with, update the newly created
+        // container's warehouse to match it.
+        const newContainerId =
+          createdContainer?.id ||
+          createdContainer?.container_id ||
+          createdContainer?.data?.id ||
+          createdContainer?.data?.container_id ||
+          createdContainer?.container?.id ||
+          createdContainer?.data?.container?.id;
+        const etaWarehouseId = etaWarehouse?.id;
+
+        if (etaWarehouseId) {
+          if (!newContainerId) {
+            console.error(
+              'Could not determine the new container ID from the create response — skipping warehouse update.',
+              createdContainer,
+            );
+          } else if (
+            String(etaWarehouseId) !== String(selectedWarehouseId || '')
+          ) {
+            try {
+              await updateContainerWarehouse(newContainerId, etaWarehouseId);
+            } catch (warehouseUpdateError) {
+              console.error(
+                'Failed to update container warehouse',
+                warehouseUpdateError,
+              );
+              toast.error('Failed to update the container warehouse.');
+            }
+          }
+        }
       }
 
       // Refresh the API list
