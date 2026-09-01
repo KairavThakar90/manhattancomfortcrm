@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -9,6 +9,7 @@ import {
   Info,
   Copy,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -17,6 +18,81 @@ import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDro
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
 import CompanyDropdown from '../../../components/common/CompanyDropdown';
 import { createPurchaseOrder } from '../services/purchaseOrder.service';
+
+interface ThemedSelectOption {
+  value: number | string;
+  label: string;
+}
+
+// Themed replacement for a native <select> — matches the app's other
+// dropdown styling instead of the browser default control. These are short,
+// fixed option lists (PO Type, Discount Type), so no search box is needed.
+function ThemedSelect({
+  value,
+  onChange,
+  options,
+  className,
+}: {
+  value: number | string;
+  onChange: (value: number | string) => void;
+  options: ThemedSelectOption[];
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selected = options.find(
+    (opt) => String(opt.value) === String(value),
+  );
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`${className || ''} flex items-center justify-between text-left`}
+      >
+        <span className="truncate">{selected ? selected.label : ''}</span>
+        <ChevronDown
+          className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen && (
+        <div className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={`cursor-pointer rounded-md px-3 py-2 text-sm transition-colors ${
+                String(opt.value) === String(value)
+                  ? 'text-mc-black bg-slate-100 font-bold'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // SellerCloud PO type enum is not exposed by any lookup endpoint yet — these
 // values are placeholders pending backend confirmation of the real mapping.
@@ -279,7 +355,7 @@ export default function CreatePurchaseOrderModal({
   };
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 transition-colors hover:border-black focus:outline-hidden focus:ring-2 focus:ring-mc-gold';
+    'w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 transition-colors hover:border-black focus:border-black focus:outline-hidden focus:ring-0';
   const labelClass = 'mb-1 block text-xs font-semibold text-slate-600';
   const errorClass = 'mt-1 text-[10px] font-semibold text-rose-500';
 
@@ -573,19 +649,12 @@ export default function CreatePurchaseOrderModal({
                   </div>
                   <div>
                     <label className={labelClass}>PO Type</label>
-                    <select
+                    <ThemedSelect
                       value={form.poType}
-                      onChange={(e) =>
-                        setField('poType', Number(e.target.value))
-                      }
+                      onChange={(val) => setField('poType', Number(val))}
+                      options={PO_TYPE_OPTIONS}
                       className={inputClass}
-                    >
-                      {PO_TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
                   <div>
                     <label className={labelClass}>Default Warehouse *</label>
@@ -635,12 +704,12 @@ export default function CreatePurchaseOrderModal({
                   </div>
                   <div className="col-span-2">
                     <label className={labelClass}>Description</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={form.description}
                       onChange={(e) => setField('description', e.target.value)}
                       placeholder="Internal PO description"
-                      className={inputClass}
+                      className={`${inputClass} resize-none`}
                     />
                   </div>
                   <div className="col-span-2">
@@ -819,23 +888,14 @@ export default function CreatePurchaseOrderModal({
 
                         <div>
                           <label className={labelClass}>Discount Type</label>
-                          <select
+                          <ThemedSelect
                             value={p.DiscountType}
-                            onChange={(e) =>
-                              setProductField(
-                                i,
-                                'DiscountType',
-                                Number(e.target.value),
-                              )
+                            onChange={(val) =>
+                              setProductField(i, 'DiscountType', Number(val))
                             }
+                            options={DISCOUNT_TYPE_OPTIONS}
                             className={inputClass}
-                          >
-                            {DISCOUNT_TYPE_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         </div>
                         <div>
                           <label className={labelClass}>Discount Value</label>

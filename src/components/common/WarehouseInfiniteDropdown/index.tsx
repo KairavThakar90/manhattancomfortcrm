@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
 import { getWarehouses } from '../../../services/warehouse.service';
 
 interface WarehouseInfiniteDropdownProps {
@@ -20,8 +20,10 @@ export default function WarehouseInfiniteDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && warehouses.length === 0) {
@@ -53,18 +55,32 @@ export default function WarehouseInfiniteDropdown({
         !containerRef.current.contains(e.target as Node)
       ) {
         setIsOpen(false);
+        setSearchTerm('');
       }
     };
     document.addEventListener('mousedown', clickOutside);
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
   const handleSelect = (vendorId: string) => {
     onChange(vendorId);
     setIsOpen(false);
+    setSearchTerm('');
   };
 
-  const filteredWarehouses = warehouses;
+  const filteredWarehouses = !searchTerm
+    ? warehouses
+    : warehouses.filter((w) =>
+        (w.name || w.warehouse_name || '')
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()),
+      );
 
   const selectedOption = warehouses.find(
     (w) => String(w.sellercloud_warehouse_id || w.id) === String(value),
@@ -92,8 +108,21 @@ export default function WarehouseInfiniteDropdown({
       </button>
 
       {isOpen && (
-        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute left-0 z-50 mt-1 w-64 rounded-xl border p-2 shadow-lg">
-          <div className="custom-scrollbar max-h-48 space-y-0.5 overflow-y-auto scroll-smooth">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 flex max-h-80 w-full flex-col rounded-xl border p-2 shadow-lg">
+          <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
+            <div className="relative">
+              <Search className="absolute top-2 left-2.5 h-3.5 w-3.5 text-slate-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search warehouses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="focus:border-mc-black focus:ring-mc-black w-full rounded-md border border-slate-200 py-1.5 pr-2 pl-8 text-xs outline-hidden transition focus:ring-1"
+              />
+            </div>
+          </div>
+          <div className="custom-scrollbar max-h-56 flex-1 space-y-0.5 overflow-y-auto scroll-smooth">
             {showAllOption && (
               <button
                 type="button"
