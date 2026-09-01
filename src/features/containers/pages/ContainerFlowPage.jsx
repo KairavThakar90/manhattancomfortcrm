@@ -631,7 +631,7 @@ export default function ContainerFlowPage() {
         params.sellercloud_warehouse_id = warehouseFilter;
       }
       if (stageFilter && stageFilter !== 'all') {
-        params.container_status_label = stageFilter;
+        params.container_status = stageFilter;
       }
 
       if (listSortConfig.key) {
