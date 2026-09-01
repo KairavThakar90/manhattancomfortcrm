@@ -363,6 +363,7 @@ export default function POManagementPage() {
                 null,
               delayedDays: po.delayedDays || 0,
               delay_reason: po.delay_reason || po.reason || null,
+              delay_reason_updated_by: po.delay_reason_updated_by || null,
               skus: po.items ? po.items.map((item) => item.sku) : po.skus || [],
               items: po.items
                 ? po.items.map((item) => ({

@@ -252,12 +252,26 @@ const ReasonCell = ({
         className="group/reason flex max-w-[150px] items-center gap-1"
         onClick={(e) => e.stopPropagation()}
       >
-        <span
-          className="truncate text-[11px] text-slate-600"
-          title={currentReason}
-        >
-          {currentReason}
-        </span>
+        <div className="min-w-0 flex-1">
+          <span
+            className="block truncate text-[11px] text-slate-600"
+            data-tooltip-id={currentReason ? 'po-item-tooltip' : undefined}
+            data-tooltip-content={
+              currentReason
+                ? po.delay_reason_updated_by
+                  ? `${currentReason} — Reason by: ${po.delay_reason_updated_by}`
+                  : currentReason
+                : undefined
+            }
+          >
+            {currentReason}
+          </span>
+          {currentReason && po.delay_reason_updated_by && (
+            <span className="block truncate text-[9px] text-slate-400 italic">
+              Reported By: {po.delay_reason_updated_by}
+            </span>
+          )}
+        </div>
         {!currentReason ? (
           isDelayed ? (
             <button
@@ -3237,11 +3251,30 @@ Supply Chain CRM Coordinator`;
 
   const handleReasonUpdate = (poId: string, value: string) => {
     // Determine current status if we wanted to pass it, but endpoint permits omitting it for pure reason update.
+    let updatedByName = '';
+    try {
+      const stored = localStorage.getItem('user');
+      const currentUser = stored ? JSON.parse(stored) : null;
+      updatedByName =
+        currentUser?.full_name ||
+        currentUser?.name ||
+        currentUser?.email ||
+        '';
+    } catch {
+      // ignore
+    }
+
     updatePODelayReason(poId, value)
       .then(() => {
         const updatedPOs = purchaseOrders.map((p) =>
           p.id === poId || (p as any).uuid === poId
-            ? { ...p, delay_reason: value, reason: value }
+            ? {
+                ...p,
+                delay_reason: value,
+                reason: value,
+                delay_reason_updated_by:
+                  updatedByName || (p as any).delay_reason_updated_by,
+              }
             : p,
         );
         dispatch(setPurchaseOrdersList(updatedPOs));
