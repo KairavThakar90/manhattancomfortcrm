@@ -75,7 +75,7 @@ const CONTAINER_COLUMN_DEFS = [
   { key: 'arrivalDate', label: 'ETA (Delivery)' },
   { key: 'received_date', label: 'Received Date' },
   { key: 'date_emptied', label: 'Unloaded' },
-  { key: 'container_stage', label: 'Status' },
+  { key: 'container_status', label: 'Status' },
   { key: 'actions', label: 'Actions', locked: true },
 ];
 import {
@@ -92,13 +92,9 @@ import {
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
 
-// Status flow: In Transit → Picked Up → Unloaded/Emptied → Partially
-// Received → Fully Received. Mirrors the logic in ContainerDetailsModal so
-// the list and the detail view always agree on a container's stage.
-//
-// Backend enum values (when present on the container) map directly to a
-// stage below — falls back to deriving the stage from dates/quantities when
-// the backend hasn't sent a status yet.
+// Display-only color/description lookup for the backend's container_status
+// enum. The status itself is computed server-side — this only maps it to a
+// badge color and a short explainer shown in the header tooltip.
 const CONTAINER_STAGE_MAP = {
   FULLY_RECEIVED: {
     label: 'Fully Received',
@@ -115,7 +111,7 @@ const CONTAINER_STAGE_MAP = {
     description: 'Some items received, not all.',
   },
   UNLOADED_EMPTIED: {
-    label: 'Unloaded/Emptied',
+    label: 'Emptied',
     badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
     dotClass: 'bg-purple-500',
     textClass: 'text-purple-700',
@@ -137,32 +133,24 @@ const CONTAINER_STAGE_MAP = {
   },
 };
 
-function getContainerStage(container) {
-  const backendStatus = String(
-    container.container_status || container.status || container.stage || '',
-  )
+// container_status comes straight from the backend now — this just looks up
+// its display styling, falling back to a neutral badge with the raw value
+// for any status not in the map above.
+function getContainerStageMeta(container) {
+  const key = String(container.container_status || '')
     .trim()
     .toUpperCase();
-  if (backendStatus && CONTAINER_STAGE_MAP[backendStatus]) {
-    return CONTAINER_STAGE_MAP[backendStatus];
+  if (key && CONTAINER_STAGE_MAP[key]) {
+    return CONTAINER_STAGE_MAP[key];
   }
-
-  const totalQtyAssigned = container.total_qty_in_container || 0;
-  const totalQtyReceived = container.total_qty_received || 0;
-
-  if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
-    return CONTAINER_STAGE_MAP.FULLY_RECEIVED;
-  }
-  if (totalQtyReceived > 0) {
-    return CONTAINER_STAGE_MAP.PARTIALLY_RECEIVED;
-  }
-  if (container.date_emptied) {
-    return CONTAINER_STAGE_MAP.UNLOADED_EMPTIED;
-  }
-  if (container.date_dropped_off) {
-    return CONTAINER_STAGE_MAP.PICKED_UP;
-  }
-  return CONTAINER_STAGE_MAP.IN_TRANSIT;
+  if (!key) return null;
+  return {
+    label: key.replace(/_/g, ' '),
+    badgeClass: 'border-mc-beige-dark bg-mc-beige-light text-mc-black',
+    dotClass: 'bg-slate-400',
+    textClass: 'text-slate-600',
+    description: 'Status reported by SellerCloud.',
+  };
 }
 
 const CONTAINER_EXPORT_COLUMNS = [
@@ -642,6 +630,9 @@ export default function ContainerFlowPage() {
       if (warehouseFilter && warehouseFilter !== 'all') {
         params.sellercloud_warehouse_id = warehouseFilter;
       }
+      if (stageFilter && stageFilter !== 'all') {
+        params.container_status_label = stageFilter;
+      }
 
       if (listSortConfig.key) {
         let sort_by = '';
@@ -689,6 +680,7 @@ export default function ContainerFlowPage() {
     etaFrom,
     etaTo,
     warehouseFilter,
+    stageFilter,
     listSortConfig,
   ]);
 
@@ -1050,7 +1042,7 @@ export default function ContainerFlowPage() {
         received_date: formattedRecvDate,
         date_emptied: c.date_emptied,
         date_dropped_off: c.date_dropped_off,
-        container_status: c.container_status || c.status || c.stage || null,
+        container_status: c.container_status || null,
         sellercloud_link: c.sellercloud_link || null,
         comments_count:
           c.comments_count ??
@@ -1090,13 +1082,8 @@ export default function ContainerFlowPage() {
         return 0;
       });
     }
-    if (stageFilter !== 'all') {
-      sorted = sorted.filter(
-        (c) => getContainerStage(c).label === stageFilter,
-      );
-    }
     return sorted;
-  }, [allContainers, listSortConfig, stageFilter]);
+  }, [allContainers, listSortConfig]);
 
   const handlePOChange = (selections) => {
     const ids = selections ? selections.map((s) => s.value) : [];
@@ -1900,16 +1887,19 @@ export default function ContainerFlowPage() {
             </div>
           </div>
         ),
-        accessor: 'container_stage',
+        accessor: 'container_status',
         headerClassName: 'px-4 py-3 select-none text-center',
         className: 'px-4 py-4 text-center',
         render: (c) => {
-          const stage = getContainerStage(c);
+          const meta = getContainerStageMeta(c);
+          if (!meta) {
+            return <span className="text-slate-300">-</span>;
+          }
           return (
             <span
-              className={`rounded-sm border px-2 py-1 text-[10px] font-bold tracking-wider uppercase ${stage.badgeClass}`}
+              className={`rounded-sm border px-2 py-1 text-[10px] font-bold tracking-wider uppercase ${meta.badgeClass}`}
             >
-              {stage.label}
+              {meta.label}
             </span>
           );
         },
@@ -2304,6 +2294,7 @@ export default function ContainerFlowPage() {
                         e.stopPropagation();
                         setStageFilter('all');
                         setShowStageMenu(false);
+                        setListPage(1);
                       }}
                     />
                   ) : (
@@ -2319,7 +2310,7 @@ export default function ContainerFlowPage() {
                         'all',
                         'In Transit',
                         'Picked Up',
-                        'Unloaded/Emptied',
+                        'Emptied',
                         'Partially Received',
                         'Fully Received',
                       ].map((opt) => {
@@ -2331,6 +2322,7 @@ export default function ContainerFlowPage() {
                             onClick={() => {
                               setStageFilter(opt);
                               setShowStageMenu(false);
+                              setListPage(1);
                             }}
                             className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
                               isSelected

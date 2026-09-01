@@ -39,6 +39,61 @@ import { getTagUsers } from '../../users/services/user.service';
 import { getTrackerLogistics } from '../../trackerLogistics/services/trackerLogistics.service';
 import ContainerCommentSection from './ContainerCommentSection';
 
+// Display-only color/description lookup for the backend's container_status
+// enum. The status itself is computed server-side — this only maps it to a
+// badge color and a short explainer shown on hover.
+const CONTAINER_STAGE_MAP = {
+  FULLY_RECEIVED: {
+    label: 'Fully Received',
+    badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
+    description: 'All items received in full.',
+  },
+  PARTIALLY_RECEIVED: {
+    label: 'Partially Received',
+    badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
+    description: 'Some items received, not all.',
+  },
+  UNLOADED_EMPTIED: {
+    label: 'Emptied',
+    badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
+    cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
+    description: 'Container emptied, nothing received yet.',
+  },
+  PICKED_UP: {
+    label: 'Picked Up',
+    badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
+    description: 'Dropped off, not yet unloaded.',
+  },
+  IN_TRANSIT: {
+    label: 'In Transit',
+    badgeClass: 'border-slate-200 bg-slate-100 text-slate-600',
+    cardClass: 'border border-slate-200 bg-slate-200 text-slate-600',
+    description: 'No activity recorded yet.',
+  },
+};
+
+// container_status comes straight from the backend now — this just looks up
+// its display styling, falling back to a neutral badge with the raw value
+// for any status not in the map above.
+function getContainerStageMeta(container) {
+  const key = String(container.container_status || '')
+    .trim()
+    .toUpperCase();
+  if (key && CONTAINER_STAGE_MAP[key]) {
+    return CONTAINER_STAGE_MAP[key];
+  }
+  if (!key) return null;
+  return {
+    label: key.replace(/_/g, ' '),
+    badgeClass: 'border-mc-beige-dark bg-mc-beige-light text-mc-black',
+    cardClass: 'border border-mc-beige-dark bg-mc-beige-light text-mc-black',
+    description: 'Status reported by SellerCloud.',
+  };
+}
+
 // Mirrors the textarea's text box in a hidden div so we can measure where a
 // given character index actually renders (textareas have no native API for
 // this). Returns { top, left, height } relative to the textarea's own
@@ -755,84 +810,8 @@ export default function ContainerDetailsModal({
     itemsPage * itemsPageSize,
   );
 
-  // Status flow: Picked Up → Unloaded/Emptied → Partially Received → Fully
-  // Received. Received progress is derived from the sum of each item's
-  // assigned vs received quantity; drop-off/empty progress comes from the
-  // container's own tracking dates.
-  const totalQtyAssigned = allItems.reduce(
-    (sum, item) => sum + (item.qty_in_container || item.qty || 0),
-    0,
-  );
-  const totalQtyReceived = allItems.reduce(
-    (sum, item) => sum + (item.qty_received_container ?? 0),
-    0,
-  );
-
-  // Backend enum values (when present on the container) map directly to a
-  // stage below — falls back to deriving the stage from dates/quantities
-  // when the backend hasn't sent a status yet.
-  const CONTAINER_STAGE_MAP = {
-    FULLY_RECEIVED: {
-      label: 'Fully Received',
-      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-      cardClass: 'border border-emerald-200 bg-emerald-100 text-emerald-700',
-      description: 'All items received in full.',
-    },
-    PARTIALLY_RECEIVED: {
-      label: 'Partially Received',
-      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
-      cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
-      description: 'Some items received, not all.',
-    },
-    UNLOADED_EMPTIED: {
-      label: 'Unloaded/Emptied',
-      badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
-      cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
-      description: 'Container emptied, nothing received yet.',
-    },
-    PICKED_UP: {
-      label: 'Picked Up',
-      badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
-      cardClass: 'border border-blue-200 bg-blue-100 text-blue-700',
-      description: 'Dropped off, not yet unloaded.',
-    },
-    IN_TRANSIT: {
-      label: 'In Transit',
-      badgeClass: 'border-slate-200 bg-slate-100 text-slate-600',
-      cardClass: 'border border-slate-200 bg-slate-200 text-slate-600',
-      description: 'No activity recorded yet.',
-    },
-  };
-
-  const getContainerStage = () => {
-    const backendStatus = String(
-      container.container_status ||
-        container.status ||
-        container.stage ||
-        '',
-    )
-      .trim()
-      .toUpperCase();
-    if (backendStatus && CONTAINER_STAGE_MAP[backendStatus]) {
-      return CONTAINER_STAGE_MAP[backendStatus];
-    }
-
-    if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
-      return CONTAINER_STAGE_MAP.FULLY_RECEIVED;
-    }
-    if (totalQtyReceived > 0) {
-      return CONTAINER_STAGE_MAP.PARTIALLY_RECEIVED;
-    }
-    if (container.date_emptied) {
-      return CONTAINER_STAGE_MAP.UNLOADED_EMPTIED;
-    }
-    if (container.date_dropped_off) {
-      return CONTAINER_STAGE_MAP.PICKED_UP;
-    }
-    return CONTAINER_STAGE_MAP.IN_TRANSIT;
-  };
-
-  const containerStage = getContainerStage();
+  // Status now comes directly from the backend.
+  const containerStageMeta = getContainerStageMeta(container);
 
   const handleSyncSingleContainer = async () => {
     if (!container?.id || isSyncingSingle) return;
@@ -890,14 +869,18 @@ export default function ContainerDetailsModal({
                         ? ` (${container.name || container.container_name || container.container_number})`
                         : ''}
                     </span>
-                    <span className="text-slate-300">•</span>
-                    <span
-                      className={`cursor-pointer rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${containerStage.badgeClass}`}
-                      data-tooltip-id="sku-tooltip"
-                      data-tooltip-content={containerStage.description}
-                    >
-                      {containerStage.label}
-                    </span>
+                    {containerStageMeta && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span
+                          className={`cursor-pointer rounded-sm border px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${containerStageMeta.badgeClass}`}
+                          data-tooltip-id="sku-tooltip"
+                          data-tooltip-content={containerStageMeta.description}
+                        >
+                          {containerStageMeta.label}
+                        </span>
+                      </>
+                    )}
                   </span>
                 </div>
                 {(container.date_dropped_off ||
@@ -1046,11 +1029,11 @@ export default function ContainerDetailsModal({
                     </span>
                     <div className="inline-flex">
                       <span
-                        className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold ${containerStage.cardClass}`}
+                        className={`cursor-pointer rounded-md px-2 py-0.5 text-[10px] font-bold ${containerStageMeta ? containerStageMeta.cardClass : 'border border-slate-200 bg-slate-100 text-slate-600'}`}
                         data-tooltip-id="sku-tooltip"
-                        data-tooltip-content={containerStage.description}
+                        data-tooltip-content={containerStageMeta?.description}
                       >
-                        {containerStage.label}
+                        {containerStageMeta ? containerStageMeta.label : 'N/A'}
                       </span>
                     </div>
                   </div>
