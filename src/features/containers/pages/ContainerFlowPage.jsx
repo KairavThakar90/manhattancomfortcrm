@@ -12,6 +12,7 @@ import {
   Container,
   Plus,
   Save,
+  Check,
   CheckCircle2,
   ArrowLeft,
   ArrowUp,
@@ -73,6 +74,7 @@ const CONTAINER_COLUMN_DEFS = [
   { key: 'arrivalDate', label: 'ETA (Delivery)' },
   { key: 'received_date', label: 'Received Date' },
   { key: 'date_emptied', label: 'Unloaded' },
+  { key: 'container_stage', label: 'Status' },
   { key: 'actions', label: 'Actions', locked: true },
 ];
 import {
@@ -88,6 +90,43 @@ import {
   searchContainerETA,
 } from '../services/container.service';
 import { setContainersList } from '../store/containerSlice';
+
+// Status flow: Picked Up → Unloaded/Emptied → Partially Received → Fully
+// Received. Mirrors the logic in ContainerDetailsModal so the list and the
+// detail view always agree on a container's stage.
+function getContainerStage(container) {
+  const totalQtyAssigned = container.total_qty_in_container || 0;
+  const totalQtyReceived = container.total_qty_received || 0;
+
+  if (totalQtyAssigned > 0 && totalQtyReceived >= totalQtyAssigned) {
+    return {
+      label: 'Fully Received',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (totalQtyReceived > 0) {
+    return {
+      label: 'Partially Received',
+      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    };
+  }
+  if (container.date_emptied) {
+    return {
+      label: 'Unloaded/Emptied',
+      badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
+    };
+  }
+  if (container.date_dropped_off) {
+    return {
+      label: 'Picked Up',
+      badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    };
+  }
+  return {
+    label: 'In Transit',
+    badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+  };
+}
 
 const CONTAINER_EXPORT_COLUMNS = [
   'container_name',
@@ -234,6 +273,7 @@ export default function ContainerFlowPage() {
   const [etaFrom, setEtaFrom] = useState('');
   const [etaTo, setEtaTo] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('all');
+  const [stageFilter, setStageFilter] = useState('all');
 
   const containerTableRef = useRef(null);
 
@@ -294,6 +334,8 @@ export default function ContainerFlowPage() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const [showStageMenu, setShowStageMenu] = useState(false);
+  const stageMenuRef = useRef(null);
   const [syncingContainerIds, setSyncingContainerIds] = useState(new Set());
   const [manualContainerInput, setManualContainerInput] = useState('');
   const [isSyncingManualContainer, setIsSyncingManualContainer] =
@@ -304,6 +346,9 @@ export default function ContainerFlowPage() {
     const clickOutside = (e) => {
       if (syncMenuRef.current && !syncMenuRef.current.contains(e.target)) {
         setShowSyncMenu(false);
+      }
+      if (stageMenuRef.current && !stageMenuRef.current.contains(e.target)) {
+        setShowStageMenu(false);
       }
     };
     document.addEventListener('mousedown', clickOutside);
@@ -967,6 +1012,7 @@ export default function ContainerFlowPage() {
         is_received: !!c.is_received,
         received_date: formattedRecvDate,
         date_emptied: c.date_emptied,
+        date_dropped_off: c.date_dropped_off,
         sellercloud_link: c.sellercloud_link || null,
         comments_count:
           c.comments_count ??
@@ -1006,8 +1052,13 @@ export default function ContainerFlowPage() {
         return 0;
       });
     }
+    if (stageFilter !== 'all') {
+      sorted = sorted.filter(
+        (c) => getContainerStage(c).label === stageFilter,
+      );
+    }
     return sorted;
-  }, [allContainers, listSortConfig]);
+  }, [allContainers, listSortConfig, stageFilter]);
 
   const handlePOChange = (selections) => {
     const ids = selections ? selections.map((s) => s.value) : [];
@@ -1798,6 +1849,22 @@ export default function ContainerFlowPage() {
         className: 'px-4 py-4 text-slate-600 font-medium text-xs',
       },
       {
+        header: 'Status',
+        accessor: 'container_stage',
+        headerClassName: 'px-4 py-3 select-none text-center',
+        className: 'px-4 py-4 text-center',
+        render: (c) => {
+          const stage = getContainerStage(c);
+          return (
+            <span
+              className={`rounded-sm border px-2 py-1 text-[10px] font-bold tracking-wider uppercase ${stage.badgeClass}`}
+            >
+              {stage.label}
+            </span>
+          );
+        },
+      },
+      {
         header: (
           <div
             className="flex cursor-pointer items-center justify-center gap-1"
@@ -2159,6 +2226,80 @@ export default function ContainerFlowPage() {
                     title="ETA To"
                   />
                 </div>
+              </div>
+
+              {/* Status (container stage) Filter */}
+              <div
+                className="relative flex flex-shrink-0 items-center gap-2"
+                ref={stageMenuRef}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                  <span className="text-mc-gray-soft text-xs font-bold whitespace-nowrap">
+                    Status:
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowStageMenu((prev) => !prev)}
+                  className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-44 items-center justify-between rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
+                >
+                  <span className="truncate">
+                    {stageFilter === 'all' ? 'All Statuses' : stageFilter}
+                  </span>
+                  {stageFilter !== 'all' ? (
+                    <X
+                      className="h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-colors hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStageFilter('all');
+                        setShowStageMenu(false);
+                      }}
+                    />
+                  ) : (
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-transform ${showStageMenu ? 'rotate-180' : ''}`}
+                    />
+                  )}
+                </button>
+                {showStageMenu && (
+                  <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 w-56 rounded-xl border p-2 shadow-lg">
+                    <div className="max-h-60 space-y-0.5 overflow-y-auto">
+                      {[
+                        'all',
+                        'In Transit',
+                        'Picked Up',
+                        'Unloaded/Emptied',
+                        'Partially Received',
+                        'Fully Received',
+                      ].map((opt) => {
+                        const isSelected = stageFilter === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => {
+                              setStageFilter(opt);
+                              setShowStageMenu(false);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-xs transition ${
+                              isSelected
+                                ? 'bg-mc-beige-light text-mc-black font-bold'
+                                : 'text-mc-black hover:bg-mc-beige-light/50'
+                            }`}
+                          >
+                            <span>
+                              {opt === 'all' ? 'All Statuses' : opt}
+                            </span>
+                            {isSelected && (
+                              <Check className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

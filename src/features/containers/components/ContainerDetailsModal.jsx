@@ -755,7 +755,7 @@ export default function ContainerDetailsModal({
     itemsPage * itemsPageSize,
   );
 
-  // Status flow: Picked Up → Unloaded/Empty → Partially Received → Fully
+  // Status flow: Picked Up → Unloaded/Emptied → Partially Received → Fully
   // Received. Received progress is derived from the sum of each item's
   // assigned vs received quantity; drop-off/empty progress comes from the
   // container's own tracking dates.
@@ -785,7 +785,7 @@ export default function ContainerDetailsModal({
     }
     if (container.date_emptied) {
       return {
-        label: 'Unloaded/Empty',
+        label: 'Unloaded/Emptied',
         badgeClass: 'border-purple-200 bg-purple-50 text-purple-700',
         cardClass: 'border border-purple-200 bg-purple-100 text-purple-700',
       };
@@ -798,7 +798,7 @@ export default function ContainerDetailsModal({
       };
     }
     return {
-      label: 'Pick up',
+      label: 'In Transit',
       badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
       cardClass: 'border border-amber-200 bg-amber-100 text-amber-700',
     };

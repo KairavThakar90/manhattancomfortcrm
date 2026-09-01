@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Check, Loader2, X } from 'lucide-react';
 import { getWarehouses } from '../../../services/warehouse.service';
 
 interface WarehouseInfiniteDropdownProps {
@@ -104,7 +104,17 @@ export default function WarehouseInfiniteDropdown({
         className={`${className} flex items-center justify-between text-left`}
       >
         <span className="truncate">{displayLabel}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        {value && value !== 'all' ? (
+          <X
+            className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelect(showAllOption ? 'all' : '');
+            }}
+          />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+        )}
       </button>
 
       {isOpen && (
