@@ -905,9 +905,19 @@ export default function ContainerDetailsModal({
                     </span>
                     <div className="inline-flex">
                       <span
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${container.is_received ? 'border border-emerald-200 bg-emerald-100 text-emerald-700' : 'border border-amber-200 bg-amber-100 text-amber-700'}`}
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
+                          container.date_emptied
+                            ? 'border border-purple-200 bg-purple-100 text-purple-700'
+                            : container.date_dropped_off
+                              ? 'border border-blue-200 bg-blue-100 text-blue-700'
+                              : 'border border-amber-200 bg-amber-100 text-amber-700'
+                        }`}
                       >
-                        {container.is_received ? 'Received' : 'Pick up'}
+                        {container.date_emptied
+                          ? 'Emptied'
+                          : container.date_dropped_off
+                            ? 'Picked Up'
+                            : 'Pick up'}
                       </span>
                     </div>
                   </div>
