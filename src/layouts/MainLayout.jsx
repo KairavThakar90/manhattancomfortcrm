@@ -403,7 +403,6 @@ export default function MainLayout() {
           className={`min-h-0 flex-1 p-6 ${
             [
               '/purchase-orders',
-              '/purchase-order-create',
               '/containers',
               '/tracker-logistics',
             ].includes(location.pathname)

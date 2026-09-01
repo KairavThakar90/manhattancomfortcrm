@@ -11,7 +11,6 @@ import {
   UserCog,
   Activity,
   Truck,
-  PackagePlus,
 } from 'lucide-react';
 
 export const navItems = [
@@ -30,13 +29,6 @@ export const navItems = [
     icon: FileSpreadsheet,
     roles: ['Administrator', 'Purchasing', 'Finance', 'Vendor'],
   },
-  // {
-  //   id: 'purchase-order-create',
-  //   path: '/purchase-order-create',
-  //   label: 'Purchase Order',
-  //   icon: PackagePlus,
-  //   roles: ['Administrator', 'Purchasing', 'Finance'],
-  // },
   {
     id: 'container-flow',
     path: '/container-flow',
