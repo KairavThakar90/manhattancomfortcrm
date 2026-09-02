@@ -111,27 +111,29 @@ export default function CreatePurchaseOrderModal({
     onClose();
   };
 
+  // TEMP: validation disabled for now — allow free navigation/submit
+  // without requiring these fields. Restore the checks below to re-enable.
   const validateGeneral = () => {
     const nextErrors: Record<string, string> = {};
-    if (!form.vendorId) nextErrors.vendorId = 'Vendor is required.';
-    if (!form.purchaseTitle.trim())
-      nextErrors.purchaseTitle = 'Purchase title is required.';
+    // if (!form.vendorId) nextErrors.vendorId = 'Vendor is required.';
+    // if (!form.purchaseTitle.trim())
+    //   nextErrors.purchaseTitle = 'Purchase title is required.';
     return nextErrors;
   };
 
   const validateItems = () => {
     const nextErrors: Record<string, string> = {};
-    const hasValidItem = items.some((it) => it.sku.trim());
-    if (!hasValidItem) {
-      nextErrors.items = 'Add at least one item line.';
-    } else {
-      items.forEach((it, i) => {
-        if (!it.sku.trim()) return;
-        if (!it.qty_ordered || Number(it.qty_ordered) <= 0) {
-          nextErrors[`item-${i}-qty`] = 'Enter a quantity greater than 0.';
-        }
-      });
-    }
+    // const hasValidItem = items.some((it) => it.sku.trim());
+    // if (!hasValidItem) {
+    //   nextErrors.items = 'Add at least one item line.';
+    // } else {
+    //   items.forEach((it, i) => {
+    //     if (!it.sku.trim()) return;
+    //     if (!it.qty_ordered || Number(it.qty_ordered) <= 0) {
+    //       nextErrors[`item-${i}-qty`] = 'Enter a quantity greater than 0.';
+    //     }
+    //   });
+    // }
     return nextErrors;
   };
 
