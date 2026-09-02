@@ -24,6 +24,7 @@ import FullPageLoader from '../components/common/FullPageLoader';
 export default function MainLayout() {
   const {
     userRole,
+    userRoleLabel,
     user,
     notifications,
     handleTriggerSync,
@@ -48,6 +49,14 @@ export default function MainLayout() {
     // Hide Dashboard entirely while impersonating another user — it
     // surfaces company-wide executive data unrelated to that session.
     if (tab.id === 'dashboard' && isImpersonating()) return false;
+    // Office is a copy of Administrator everywhere else, but User
+    // Management stays admin-only — office accounts never manage users.
+    if (
+      tab.id === 'user-management' &&
+      String(userRoleLabel || '').toLowerCase() === 'office'
+    ) {
+      return false;
+    }
     if (!tab.roles) return true; // no restriction = visible to all
     const normalizedRole = (userRole || '').toLowerCase();
     return tab.roles.some((r) => r.toLowerCase() === normalizedRole);
@@ -74,6 +83,17 @@ export default function MainLayout() {
       navigate('/container-flow', { replace: true });
     }
   }, [userRole, location.pathname, navigate]);
+
+  // Office is a copy of Administrator everywhere else, but User Management
+  // stays admin-only — keep office accounts out even via a direct URL.
+  useEffect(() => {
+    if (
+      String(userRoleLabel || '').toLowerCase() === 'office' &&
+      location.pathname.startsWith('/user-management')
+    ) {
+      navigate('/purchase-orders', { replace: true });
+    }
+  }, [userRoleLabel, location.pathname, navigate]);
 
   // Never let an impersonated session sit on the Dashboard — it surfaces
   // company-wide executive data unrelated to "logged in as this user".
@@ -261,7 +281,7 @@ export default function MainLayout() {
                 <div className="bg-mc-gold text-mc-white flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-bold uppercase shadow-xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
-                    : userRole.slice(0, 1)}
+                    : userRoleLabel.slice(0, 1)}
                 </div>
                 <div className="min-w-0 text-xs">
                   <span
@@ -272,9 +292,9 @@ export default function MainLayout() {
                   </span>
                   <span
                     className="text-mc-gray-soft block truncate text-[10px]"
-                    title={user?.email || userRole}
+                    title={user?.email || userRoleLabel}
                   >
-                    {user?.email || userRole}
+                    {user?.email || userRoleLabel}
                   </span>
                 </div>
               </div>
@@ -388,10 +408,10 @@ export default function MainLayout() {
                 <div className="bg-mc-gold text-mc-white flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold uppercase shadow-xs">
                   {user?.full_name
                     ? user.full_name.slice(0, 1)
-                    : userRole.slice(0, 1)}
+                    : userRoleLabel.slice(0, 1)}
                 </div>
                 <span className="text-[11px] font-bold text-slate-800">
-                  {user?.full_name || userRole}
+                  {user?.full_name || userRoleLabel}
                 </span>
               </button>
 
@@ -407,7 +427,7 @@ export default function MainLayout() {
                         {user.email}
                       </p>
                       <span className="bg-mc-beige-light text-mc-gold mt-1 inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase">
-                        {userRole}
+                        {userRoleLabel}
                       </span>
                     </div>
                   )}

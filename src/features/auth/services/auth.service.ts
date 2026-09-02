@@ -55,7 +55,22 @@ export function mapBackendRole(backendRole?: string): UserRole {
   if (roleLower === 'vendor' || roleLower === 'supplier') {
     return 'Vendor';
   }
-  return 'Administrator'; // Default fallback
+  // 'office' is intentionally a full copy of Administrator access-wise —
+  // only its display label differs (see getRoleLabel below).
+  return 'Administrator'; // Default fallback (also covers 'office')
+}
+
+/**
+ * Human-facing role label for the profile badge/menu. Distinct from
+ * `mapBackendRole` because 'office' users get full Administrator-level
+ * access but should still see "Office" as their displayed role.
+ */
+export function getRoleLabel(backendRole?: string): string {
+  const roleLower = (backendRole || '').toLowerCase().trim();
+  if (roleLower === 'office') {
+    return 'Office';
+  }
+  return mapBackendRole(backendRole);
 }
 
 /**
@@ -90,6 +105,7 @@ export async function login(
     localStorage.setItem('user', JSON.stringify(data.user));
     const mappedRole = mapBackendRole(data.user.role);
     localStorage.setItem('userRole', mappedRole);
+    localStorage.setItem('userRoleLabel', getRoleLabel(data.user.role));
   }
 
   return data;
@@ -125,6 +141,7 @@ export async function verify2FA(
     localStorage.setItem('user', JSON.stringify(data.user));
     const mappedRole = mapBackendRole(data.user.role);
     localStorage.setItem('userRole', mappedRole);
+    localStorage.setItem('userRoleLabel', getRoleLabel(data.user.role));
   }
 
   return data;
@@ -164,6 +181,7 @@ export async function refreshToken(): Promise<LoginResponse> {
     localStorage.setItem('user', JSON.stringify(data.user));
     const mappedRole = mapBackendRole(data.user.role);
     localStorage.setItem('userRole', mappedRole);
+    localStorage.setItem('userRoleLabel', getRoleLabel(data.user.role));
   }
 
   return data;
@@ -219,6 +237,9 @@ export async function impersonateUser(
         localStorage.setItem('admin_refresh_token', adminRefreshToken);
       if (adminUser) localStorage.setItem('admin_user', adminUser);
       if (adminRole) localStorage.setItem('admin_userRole', adminRole);
+      const adminRoleLabel = localStorage.getItem('userRoleLabel');
+      if (adminRoleLabel)
+        localStorage.setItem('admin_userRoleLabel', adminRoleLabel);
     }
     localStorage.setItem('token', token);
   }
@@ -232,6 +253,7 @@ export async function impersonateUser(
   if (effectiveUser) {
     localStorage.setItem('user', JSON.stringify(effectiveUser));
     localStorage.setItem('userRole', mapBackendRole(effectiveUser.role));
+    localStorage.setItem('userRoleLabel', getRoleLabel(effectiveUser.role));
     data.user = effectiveUser;
   }
 
@@ -258,6 +280,7 @@ export async function restoreAdminSession(): Promise<void> {
   const adminRefreshToken = localStorage.getItem('admin_refresh_token');
   const adminUser = localStorage.getItem('admin_user');
   const adminRole = localStorage.getItem('admin_userRole');
+  const adminRoleLabel = localStorage.getItem('admin_userRoleLabel');
 
   const restoreLocalAdminSession = () => {
     localStorage.setItem('token', adminToken);
@@ -265,6 +288,7 @@ export async function restoreAdminSession(): Promise<void> {
       localStorage.setItem('refresh_token', adminRefreshToken);
     if (adminUser) localStorage.setItem('user', adminUser);
     if (adminRole) localStorage.setItem('userRole', adminRole);
+    if (adminRoleLabel) localStorage.setItem('userRoleLabel', adminRoleLabel);
   };
 
   try {
@@ -283,9 +307,12 @@ export async function restoreAdminSession(): Promise<void> {
     if (data?.user) {
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('userRole', mapBackendRole(data.user.role));
+      localStorage.setItem('userRoleLabel', getRoleLabel(data.user.role));
     } else if (adminUser) {
       localStorage.setItem('user', adminUser);
       if (adminRole) localStorage.setItem('userRole', adminRole);
+      if (adminRoleLabel)
+        localStorage.setItem('userRoleLabel', adminRoleLabel);
     }
   } catch (err) {
     console.error(
@@ -298,6 +325,7 @@ export async function restoreAdminSession(): Promise<void> {
     localStorage.removeItem('admin_refresh_token');
     localStorage.removeItem('admin_user');
     localStorage.removeItem('admin_userRole');
+    localStorage.removeItem('admin_userRoleLabel');
   }
 }
 
@@ -332,6 +360,7 @@ export async function loginWithGoogle(
     localStorage.setItem('user', JSON.stringify(data.user));
     const mappedRole = mapBackendRole(data.user.role);
     localStorage.setItem('userRole', mappedRole);
+    localStorage.setItem('userRoleLabel', getRoleLabel(data.user.role));
   }
 
   return data;

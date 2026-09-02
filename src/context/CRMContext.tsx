@@ -27,6 +27,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     return (localStorage.getItem('userRole') as UserRole) || 'Administrator';
   });
 
+  // Display-only role label (e.g. 'Office' for office users, who otherwise
+  // carry full Administrator-level access via `userRole`).
+  const [userRoleLabel, setUserRoleLabel] = useState<string>(() => {
+    return localStorage.getItem('userRoleLabel') || '';
+  });
+
   const [user, setUser] = useState<any>(() => {
     try {
       const stored = localStorage.getItem('user');
@@ -44,6 +50,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       if (storedRole) {
         setUserRole(storedRole as UserRole);
       }
+      const storedRoleLabel = localStorage.getItem('userRoleLabel');
+      setUserRoleLabel(storedRoleLabel || '');
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
@@ -54,6 +62,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       }
     } else {
       setUserRole('Administrator');
+      setUserRoleLabel('');
       setUser(null);
     }
   }, [isAuthenticated]);
@@ -61,6 +70,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem('userRole', userRole);
   }, [userRole]);
+
+  useEffect(() => {
+    if (userRoleLabel) {
+      localStorage.setItem('userRoleLabel', userRoleLabel);
+    }
+  }, [userRoleLabel]);
 
   useEffect(() => {
     if (user) {
@@ -264,6 +279,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticated,
         userRole,
         setUserRole,
+        userRoleLabel: userRoleLabel || userRole,
+        setUserRoleLabel,
         user,
         setUser,
         purchaseOrders,

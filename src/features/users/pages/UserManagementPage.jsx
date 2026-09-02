@@ -200,8 +200,11 @@ export default function UserManagementPage() {
     );
   }, []);
 
-  const userColumns = useMemo(
-    () => [
+  const userColumns = useMemo(() => {
+    const isViewerAdmin =
+      String(userRole || '').toLowerCase() === 'administrator';
+
+    const columns = [
       {
         header: 'Name',
         accessor: 'name',
@@ -294,57 +297,6 @@ export default function UserManagementPage() {
         },
       },
       {
-        header: 'Access',
-        accessor: 'login_as',
-        headerClassName: 'px-6 py-3 bg-transparent text-center w-[10%]',
-        className: 'px-6 py-3 w-[10%] text-center',
-        render: (u) => {
-          const isAdmin =
-            String(userRole || '').toLowerCase() === 'administrator';
-          const isSelf =
-            currentUser?.id && String(currentUser.id) === String(u.id);
-          // Never show "Login" for another administrator's row — only
-          // non-admin accounts can be logged into this way. Row data uses
-          // the raw backend role value ('admin'), unlike the current
-          // viewer's role which is already mapped to 'Administrator'.
-          const targetIsAdmin = String(u.role || '').toLowerCase() === 'admin';
-          if (!isAdmin || isSelf || targetIsAdmin) return null;
-          return (
-            <button
-              onClick={() => handleLoginAsUser(u)}
-              disabled={loginAsLoadingId === u.id}
-              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-50"
-              title={`Log in as this user`}
-            >
-              {loginAsLoadingId === u.id ? (
-                <svg
-                  className="h-3.5 w-3.5 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                  />
-                </svg>
-              ) : (
-                <LogIn className="h-3.5 w-3.5" />
-              )}
-              Login
-            </button>
-          );
-        },
-      },
-      {
         header: 'Actions',
         accessor: 'actions',
         headerClassName: 'px-6 py-3 bg-transparent text-center w-[13%]',
@@ -400,19 +352,74 @@ export default function UserManagementPage() {
           </div>
         ),
       },
-    ],
-    [
-      currentUser,
-      userRole,
-      handleDeleteUser,
-      handleEditUser,
-      editLoadingId,
-      handleLoginAsUser,
-      loginAsLoadingId,
-      searchQuery,
-      renderHighlightedText,
-    ],
-  );
+    ];
+
+    // Only admins see the "Access" (Login as) column — non-admin viewers
+    // never get this control, so don't render an empty column for them.
+    if (isViewerAdmin) {
+      columns.splice(columns.length - 1, 0, {
+        header: 'Access',
+        accessor: 'login_as',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[10%]',
+        className: 'px-6 py-3 w-[10%] text-center',
+        render: (u) => {
+          const isSelf =
+            currentUser?.id && String(currentUser.id) === String(u.id);
+          // Never show "Login" for another administrator's row — only
+          // non-admin accounts can be logged into this way. Row data uses
+          // the raw backend role value ('admin'), unlike the current
+          // viewer's role which is already mapped to 'Administrator'.
+          const targetIsAdmin = String(u.role || '').toLowerCase() === 'admin';
+          if (isSelf || targetIsAdmin) return null;
+          return (
+            <button
+              onClick={() => handleLoginAsUser(u)}
+              disabled={loginAsLoadingId === u.id}
+              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-50"
+              title={`Log in as this user`}
+            >
+              {loginAsLoadingId === u.id ? (
+                <svg
+                  className="h-3.5 w-3.5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+              ) : (
+                <LogIn className="h-3.5 w-3.5" />
+              )}
+              Login
+            </button>
+          );
+        },
+      });
+    }
+
+    return columns;
+  }, [
+    currentUser,
+    userRole,
+    handleDeleteUser,
+    handleEditUser,
+    editLoadingId,
+    handleLoginAsUser,
+    loginAsLoadingId,
+    searchQuery,
+    renderHighlightedText,
+  ]);
 
   return (
     <div className="animate-in fade-in bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
