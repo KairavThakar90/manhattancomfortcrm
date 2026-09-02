@@ -1607,9 +1607,7 @@ export default function POManagement({
         }
 
         const rawOrderDate =
-          detailData.date_ordered ||
-          detailData.created_on ||
-          po.creationDate;
+          detailData.date_ordered || detailData.created_on || po.creationDate;
         const creationDate = rawOrderDate
           ? String(rawOrderDate).split('T')[0]
           : po.creationDate || 'N/A';
@@ -1980,7 +1978,7 @@ export default function POManagement({
   const CREATE_PO_ALLOWED_EMAILS = [
     'sanjay.storetransform@gmail.com',
     'projectmanager663@gmail.com',
-    'ravistoretransform@gmail.com'
+    'ravistoretransform@gmail.com',
   ];
   const canCreatePO = (() => {
     try {
@@ -3266,10 +3264,7 @@ Supply Chain CRM Coordinator`;
       const stored = localStorage.getItem('user');
       const currentUser = stored ? JSON.parse(stored) : null;
       updatedByName =
-        currentUser?.full_name ||
-        currentUser?.name ||
-        currentUser?.email ||
-        '';
+        currentUser?.full_name || currentUser?.name || currentUser?.email || '';
     } catch {
       // ignore
     }
@@ -3683,7 +3678,7 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the 10-day formula. Please compare it with the Created Date to determine the result."
-              className="text-slate-400 hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center outline-hidden transition-colors"
+              className="hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center text-slate-400 outline-hidden transition-colors"
             >
               <Info className="h-3.5 w-3.5" />
             </div>
@@ -3793,7 +3788,7 @@ Supply Chain CRM Coordinator`;
             <div
               data-tooltip-id="po-metrics-tooltip"
               data-tooltip-content="This is based on the formula calculated using the Lead Days available after the Invoice Date."
-              className="text-slate-400 hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center outline-hidden transition-colors"
+              className="hover:text-mc-black ml-1 flex cursor-pointer items-center justify-center text-slate-400 outline-hidden transition-colors"
               onClick={(e: any) => e.stopPropagation()}
             >
               <Info className="h-3.5 w-3.5" />
@@ -3973,7 +3968,7 @@ Supply Chain CRM Coordinator`;
                 className="text-mc-black inline-flex items-center justify-center rounded-md p-1.5 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw
-                  className={`h-3.5 w-3.5 ${isSyncingThisPO ? 'animate-spin text-mc-gold' : ''}`}
+                  className={`h-3.5 w-3.5 ${isSyncingThisPO ? 'text-mc-gold animate-spin' : ''}`}
                 />
               </button>
               <button
@@ -4580,7 +4575,7 @@ Supply Chain CRM Coordinator`;
 
                       {/* Manual PO Number Sync */}
                       <div className="border-t border-slate-100 bg-slate-50/70 p-3">
-                        <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mb-1.5">
+                        <span className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                           Or Sync Specific PO
                         </span>
                         <form
@@ -4597,8 +4592,10 @@ Supply Chain CRM Coordinator`;
                           />
                           <button
                             type="submit"
-                            disabled={!manualPoInput.trim() || isSyncingManualPO}
-                            className="bg-mc-black hover:bg-black text-white flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={
+                              !manualPoInput.trim() || isSyncingManualPO
+                            }
+                            className="bg-mc-black flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {isSyncingManualPO ? (
                               <RefreshCw className="h-3 w-3 animate-spin" />
@@ -4957,14 +4954,16 @@ Supply Chain CRM Coordinator`;
                                 syncingPOIds.has(String(po.sellercloud_po_id)))
                             }
                             title="Sync Purchase Order"
-                            className="text-mc-black hover:bg-slate-100 rounded-md p-1 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                            className="text-mc-black rounded-md p-1 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <RefreshCw
                               className={`h-3.5 w-3.5 ${
                                 syncingPOIds.has(String(po.id || '')) ||
                                 (po.sellercloud_po_id &&
-                                  syncingPOIds.has(String(po.sellercloud_po_id)))
-                                  ? 'animate-spin text-mc-gold'
+                                  syncingPOIds.has(
+                                    String(po.sellercloud_po_id),
+                                  ))
+                                  ? 'text-mc-gold animate-spin'
                                   : ''
                               }`}
                             />
@@ -5066,8 +5065,8 @@ Supply Chain CRM Coordinator`;
                 Comment not available
               </h4>
               <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
-                This comment could not be found. It may have been deleted by
-                the user who posted it.
+                This comment could not be found. It may have been deleted by the
+                user who posted it.
               </p>
               <div className="mt-4 flex justify-end">
                 <button
@@ -5094,7 +5093,7 @@ Supply Chain CRM Coordinator`;
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'h-[80vh] max-h-[80vh] max-w-xl w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' : 'h-[900px] max-h-[95vh] w-[1400px] max-w-[95vw]'} animate-scaleUp flex flex-col overflow-hidden`}
+              className={`rounded-2xl border border-slate-100 bg-white shadow-xl ${isCommentOnlyView ? 'h-[80vh] max-h-[80vh] w-full max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl' : 'h-[900px] max-h-[95vh] w-[1400px] max-w-[95vw]'} animate-scaleUp flex flex-col overflow-hidden`}
             >
               {/* Header */}
               {!isCommentOnlyView && (
@@ -5123,7 +5122,9 @@ Supply Chain CRM Coordinator`;
                       disabled={
                         syncingPOIds.has(String(selectedPO.id || '')) ||
                         (selectedPO.sellercloud_po_id &&
-                          syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
+                          syncingPOIds.has(
+                            String(selectedPO.sellercloud_po_id),
+                          ))
                       }
                       className="text-mc-black mr-2 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-bold shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                       title="Sync this Purchase Order"
@@ -5132,15 +5133,19 @@ Supply Chain CRM Coordinator`;
                         className={`h-3.5 w-3.5 ${
                           syncingPOIds.has(String(selectedPO.id || '')) ||
                           (selectedPO.sellercloud_po_id &&
-                            syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
-                            ? 'animate-spin text-mc-gold'
+                            syncingPOIds.has(
+                              String(selectedPO.sellercloud_po_id),
+                            ))
+                            ? 'text-mc-gold animate-spin'
                             : ''
                         }`}
                       />
                       <span>
                         {syncingPOIds.has(String(selectedPO.id || '')) ||
                         (selectedPO.sellercloud_po_id &&
-                          syncingPOIds.has(String(selectedPO.sellercloud_po_id)))
+                          syncingPOIds.has(
+                            String(selectedPO.sellercloud_po_id),
+                          ))
                           ? 'Syncing...'
                           : 'Sync PO'}
                       </span>
@@ -5628,11 +5633,13 @@ Supply Chain CRM Coordinator`;
                                       String(node.userId) ===
                                         String(currentUser.id))));
 
-                              // Edit/Delete access: the comment's own
-                              // author, or an administrator managing all
-                              // comments. Other users only ever see their
-                              // own comments' controls. Reply stays open to
-                              // everyone.
+                              // Delete (and attachment-delete) access: the
+                              // comment's own author, or an administrator
+                              // managing all comments. Edit is stricter —
+                              // only the author may edit their own comment,
+                              // admin included (see the Edit button below,
+                              // gated on `isMe` directly). Reply stays open
+                              // to everyone.
                               const canManageComment =
                                 isMe ||
                                 String(userRole).toLowerCase() ===
@@ -6031,7 +6038,11 @@ Supply Chain CRM Coordinator`;
                                               Download
                                             </button>
                                           )}
-                                        {canManageComment &&
+                                        {/* Edit is restricted to the
+                                            comment's own author, even for
+                                            administrators — only Delete
+                                            extends to "manage all". */}
+                                        {isMe &&
                                           editingCommentId !== node.id && (
                                             <button
                                               type="button"
@@ -6650,6 +6661,7 @@ Supply Chain CRM Coordinator`;
                     isLoading={false}
                     onSearch={() => {}}
                     onLoadMore={() => {}}
+                    onOpen={() => {}}
                     placeholder="Select Filter"
                     searchPlaceholder="Search filters..."
                   />

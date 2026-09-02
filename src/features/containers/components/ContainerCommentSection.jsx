@@ -678,9 +678,10 @@ export default function ContainerCommentSection({
         (currentUserName &&
           String(node.user || '').trim().toLowerCase() === currentUserName),
     );
-    // Edit/Delete access: the comment's own author, or an administrator
-    // managing all comments. Other users only ever see their own comments'
-    // controls.
+    // Delete (and attachment-delete) access: the comment's own author, or
+    // an administrator managing all comments. Edit is stricter — only the
+    // author may edit their own comment, admin included (see the Edit
+    // button below, gated on `isMe` directly).
     const canManageComment = isMe || currentUserRole === 'administrator';
     const isCollapsed = collapsedComments[node.id];
     const isReplyingThisNode = replyingCommentId === node.id;
@@ -942,7 +943,9 @@ export default function ContainerCommentSection({
 
             {/* Action Bar matching PO Details */}
             <div className="mt-2 flex items-center gap-4">
-              {canManageComment && editingCommentId !== node.id && (
+              {/* Edit is restricted to the comment's own author, even for
+                  administrators — only Delete extends to "manage all". */}
+              {isMe && editingCommentId !== node.id && (
                 <button
                   type="button"
                   onClick={() => {

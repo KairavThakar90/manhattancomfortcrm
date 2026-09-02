@@ -1543,6 +1543,18 @@ export function PODetailsModal(props) {
                                       String(node.userId) ===
                                         String(currentUser.id))));
 
+                              // Delete (and attachment-delete) access: the
+                              // comment's own author, or an administrator
+                              // managing all comments. Edit is stricter —
+                              // only the author may edit their own comment,
+                              // admin included (see the Edit button below,
+                              // gated on `isMe` directly). Reply stays open
+                              // to everyone.
+                              const canManageComment =
+                                isMe ||
+                                String(userRole).toLowerCase() ===
+                                  'administrator';
+
                               const isCollapsed =
                                 collapsedComments[node.id] || false;
 
@@ -1817,7 +1829,7 @@ export function PODetailsModal(props) {
                                                           </div>
                                                         )}
                                                       </button>
-                                                      {isMe &&
+                                                      {canManageComment &&
                                                         !isOptimistic &&
                                                         fileObj.id &&
                                                         handleDeleteCommentAttachment && (
@@ -1885,7 +1897,7 @@ export function PODetailsModal(props) {
                                                         <Loader2 className="h-4 w-4 animate-spin text-white" />
                                                       </div>
                                                     )}
-                                                    {isMe &&
+                                                    {canManageComment &&
                                                       !isOptimistic &&
                                                       fileObj.id &&
                                                       handleDeleteCommentAttachment && (
@@ -1955,7 +1967,7 @@ export function PODetailsModal(props) {
                                               Edit
                                             </button>
                                           )}
-                                        {isMe &&
+                                        {canManageComment &&
                                           editingCommentId !== node.id &&
                                           handleDeleteComment && (
                                             <button

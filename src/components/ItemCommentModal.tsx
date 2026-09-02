@@ -99,7 +99,7 @@ export default function ItemCommentModal({
   onAddActivity,
   highlightedCommentId,
 }: ItemCommentModalProps) {
-  const { user: currentUser } = useCRM();
+  const { user: currentUser, userRole } = useCRM();
   const [tagUsers, setTagUsers] = useState<any[]>([]);
 
   const [isLoadingComments, setIsLoadingComments] = useState(false);
@@ -612,6 +612,13 @@ export default function ItemCommentModal({
       (currentUser &&
         isMeStr === String(currentUser.email || '').toLowerCase()) ||
       isMeStr === 'sourcing lead (you)';
+    // Delete (and attachment-delete) access: the comment's own author, or
+    // an administrator managing all comments. Edit is stricter — only the
+    // author may edit their own comment, admin included (see the Edit
+    // button below, gated on `isMe` directly). Reply stays open to
+    // everyone.
+    const canManageComment =
+      isMe || String(userRole).toLowerCase() === 'administrator';
     const isCollapsed = collapsedComments[node.id] || false;
 
     return (
@@ -836,7 +843,7 @@ export default function ItemCommentModal({
                               </div>
                             )}
                           </button>
-                          {isMe && !isOptimistic && fileObj.id && (
+                          {canManageComment && !isOptimistic && fileObj.id && (
                             <button
                               type="button"
                               onClick={() =>
@@ -883,7 +890,7 @@ export default function ItemCommentModal({
                             <Loader2 className="h-4 w-4 animate-spin text-white" />
                           </div>
                         )}
-                        {isMe && !isOptimistic && fileObj.id && (
+                        {canManageComment && !isOptimistic && fileObj.id && (
                           <button
                             type="button"
                             onClick={() =>
@@ -934,7 +941,7 @@ export default function ItemCommentModal({
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
               )}
-              {isMe && editingCommentId !== node.id && (
+              {canManageComment && editingCommentId !== node.id && (
                 <button
                   type="button"
                   onClick={() => handleDeleteComment(node.id)}
