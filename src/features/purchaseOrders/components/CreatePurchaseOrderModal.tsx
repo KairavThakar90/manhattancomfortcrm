@@ -38,11 +38,13 @@ function ThemedSelect({
   onChange,
   options,
   className,
+  disabled = false,
 }: {
   value: number | string;
   onChange: (value: number | string) => void;
   options: ThemedSelectOption[];
   className?: string;
+  disabled?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,15 +68,18 @@ function ThemedSelect({
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`${className || ''} flex items-center justify-between text-left`}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        className={`${className || ''} flex items-center justify-between text-left ${
+          disabled ? 'cursor-not-allowed opacity-60' : ''
+        }`}
       >
         <span className="truncate">{selected ? selected.label : ''}</span>
         <ChevronDown
           className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
           {options.map((opt) => (
             <div
@@ -455,6 +460,7 @@ export default function CreatePurchaseOrderModal({
                       showAllOption={false}
                       placeholder="Select company"
                       className={inputClass}
+                      disabled
                     />
                     {errors.companyId && (
                       <p className={errorClass}>{errors.companyId}</p>
@@ -479,6 +485,7 @@ export default function CreatePurchaseOrderModal({
                       onChange={(val) => setField('poType', Number(val))}
                       options={PO_TYPE_OPTIONS}
                       className={inputClass}
+                      disabled
                     />
                   </div>
                   <div>
@@ -488,6 +495,7 @@ export default function CreatePurchaseOrderModal({
                       onChange={(val) => setField('defaultWarehouseId', val)}
                       placeholder="Select warehouse"
                       className={inputClass}
+                      disabled
                     />
                     {errors.defaultWarehouseId && (
                       <p className={errorClass}>{errors.defaultWarehouseId}</p>

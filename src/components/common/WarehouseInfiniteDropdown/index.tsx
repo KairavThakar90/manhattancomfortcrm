@@ -8,6 +8,7 @@ interface WarehouseInfiniteDropdownProps {
   placeholder?: string;
   showAllOption?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function WarehouseInfiniteDropdown({
@@ -16,6 +17,7 @@ export default function WarehouseInfiniteDropdown({
   placeholder = 'Select Warehouse',
   showAllOption = false,
   className = '',
+  disabled = false,
 }: WarehouseInfiniteDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -25,11 +27,15 @@ export default function WarehouseInfiniteDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch on first open, or immediately if we already have a value to
+  // resolve to a name (e.g. when the field is disabled and never opened).
   useEffect(() => {
-    if (isOpen && warehouses.length === 0) {
+    const needsFetch = isOpen || (value && value !== 'all');
+    if (needsFetch && warehouses.length === 0) {
       fetchWarehouses();
     }
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, value]);
 
   const fetchWarehouses = async () => {
     try {
@@ -93,18 +99,21 @@ export default function WarehouseInfiniteDropdown({
     displayLabel =
       selectedOption.name || selectedOption.warehouse_name || selectedOption.id;
   } else if (value && value !== 'all') {
-    displayLabel = value; // Fallback
+    displayLabel = loading ? 'Loading...' : value; // Fallback
   }
 
   return (
     <div className="relative inline-block w-full" ref={containerRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`${className} flex items-center justify-between text-left`}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`${className} flex items-center justify-between text-left ${
+          disabled ? 'cursor-not-allowed opacity-60' : ''
+        }`}
       >
         <span className="truncate">{displayLabel}</span>
-        {value && value !== 'all' ? (
+        {!disabled && value && value !== 'all' ? (
           <X
             className="h-4 w-4 shrink-0 text-slate-400 transition-colors hover:text-red-500"
             onClick={(e) => {
@@ -117,7 +126,7 @@ export default function WarehouseInfiniteDropdown({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 flex max-h-80 w-full flex-col rounded-xl border p-2 shadow-lg">
           <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
             <div className="relative">

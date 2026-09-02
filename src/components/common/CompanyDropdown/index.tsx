@@ -8,6 +8,7 @@ interface CompanyDropdownProps {
   placeholder?: string;
   showAllOption?: boolean;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function CompanyDropdown({
@@ -16,6 +17,7 @@ export default function CompanyDropdown({
   placeholder = 'All Companies',
   showAllOption = true,
   className = '',
+  disabled = false,
 }: CompanyDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -74,14 +76,17 @@ export default function CompanyDropdown({
     <div className="relative inline-block w-full" ref={containerRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`${className} flex items-center justify-between text-left`}
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`${className} flex items-center justify-between text-left ${
+          disabled ? 'cursor-not-allowed opacity-60' : ''
+        }`}
       >
         <span className="truncate">{selectedName}</span>
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 flex max-h-80 w-full flex-col rounded-xl border p-2 shadow-lg">
           <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
             <div className="relative">
