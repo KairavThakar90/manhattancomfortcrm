@@ -652,10 +652,14 @@ export default function ContainerCommentSection({
 
   // Render recursive comment tree with inline same-position reply
   const renderCommentTree = (node, depth = 0) => {
-    const isMe =
-      (currentUserId && node.userId === currentUserId) ||
-      currentUserRole === 'administrator' ||
-      currentUserRole === 'office';
+    // Ownership drives display ("you" styling) — it must NOT be widened by
+    // role, or every admin/office viewer would see every comment rendered
+    // as their own.
+    const isMe = Boolean(currentUserId && node.userId === currentUserId);
+    // Edit/Delete access: the comment's own author, or an administrator
+    // managing all comments. Other users only ever see their own comments'
+    // controls.
+    const canManageComment = isMe || currentUserRole === 'administrator';
     const isCollapsed = collapsedComments[node.id];
     const isReplyingThisNode = replyingCommentId === node.id;
 
@@ -858,7 +862,7 @@ export default function ContainerCommentSection({
                             className="h-32 w-48 rounded-xl object-cover drop-shadow-sm transition-transform hover:scale-[1.02]"
                           />
                         </button>
-                        {isMe && fileObj.id && (
+                        {canManageComment && fileObj.id && (
                           <button
                             type="button"
                             onClick={() =>
@@ -896,7 +900,7 @@ export default function ContainerCommentSection({
                           <Download className="h-3 w-3" />
                         </div>
                       </a>
-                      {isMe && fileObj.id && (
+                      {canManageComment && fileObj.id && (
                         <button
                           type="button"
                           onClick={() =>
@@ -916,7 +920,7 @@ export default function ContainerCommentSection({
 
             {/* Action Bar matching PO Details */}
             <div className="mt-2 flex items-center gap-4">
-              {isMe && editingCommentId !== node.id && (
+              {canManageComment && editingCommentId !== node.id && (
                 <button
                   type="button"
                   onClick={() => {
@@ -930,7 +934,7 @@ export default function ContainerCommentSection({
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
               )}
-              {isMe && editingCommentId !== node.id && (
+              {canManageComment && editingCommentId !== node.id && (
                 <button
                   type="button"
                   onClick={() => handleDeleteComment(node.id)}
