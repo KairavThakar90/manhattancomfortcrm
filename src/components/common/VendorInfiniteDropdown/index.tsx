@@ -102,7 +102,7 @@ export default function VendorInfiniteDropdown({
       </button>
 
       {isOpen && (
-        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 flex max-h-80 w-full flex-col rounded-xl border p-2 shadow-lg">
+        <div className="bg-mc-white border-mc-beige-dark animate-scaleUp absolute top-full left-0 z-50 mt-1 flex max-h-80 w-full min-w-[280px] flex-col rounded-xl border p-2 shadow-lg">
           <div className="border-mc-beige-dark mb-1 border-b px-1 pt-1 pb-2">
             <div className="relative">
               <Search className="absolute top-2 left-2.5 h-3.5 w-3.5 text-slate-400" />

@@ -81,6 +81,7 @@ import {
 } from '../services/purchaseOrder.service';
 import {
   getTagUsers,
+  getUserVendors,
   User,
 } from '../../../features/users/services/user.service';
 import Pagination from '../../../components/common/Pagination';
@@ -757,6 +758,126 @@ const ApprovedStatusFilterDropdown = ({
                 }}
               >
                 {s.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+};
+
+const OwnVendorFilterDropdown = ({
+  value,
+  vendors,
+  onChange,
+}: {
+  value: string;
+  vendors: { id: string; name: string }[];
+  onChange: (val: string) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{
+    top: number | 'auto';
+    left: number;
+    width: number;
+    bottom: number | 'auto';
+  }>({
+    top: 0,
+    left: 0,
+    width: 0,
+    bottom: 'auto',
+  });
+
+  const toggleDropdown = (e: any) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 200;
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      let top: number | 'auto' = rect.bottom + 4;
+      let bottom: number | 'auto' = 'auto';
+
+      if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
+        top = 'auto';
+        bottom = window.innerHeight - rect.top + 4;
+      }
+
+      setCoords({ top, left: rect.left, width: rect.width, bottom });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const options = [{ id: 'all', name: 'Assigned Vendors' }, ...vendors];
+  const selectedLabel =
+    options.find((v) => v.id === (value || 'all'))?.name || 'Assigned Vendors';
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold flex w-full cursor-pointer items-center justify-between rounded-lg border p-2 text-xs transition-colors focus:ring-1 focus:outline-none"
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown
+          className={`text-mc-gray-soft h-3.5 w-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="border-mc-beige-dark bg-mc-white z-[9999] max-h-60 overflow-hidden overflow-y-auto rounded-lg border py-1 text-xs shadow-lg"
+          >
+            {options.map((v) => (
+              <button
+                key={v.id}
+                className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors ${
+                  (value || 'all') === v.id
+                    ? 'bg-mc-beige-light text-mc-black font-bold'
+                    : 'text-mc-gray-dark hover:bg-mc-beige-light/50'
+                }`}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  onChange(v.id);
+                  setIsOpen(false);
+                }}
+              >
+                <span className="truncate">{v.name}</span>
+                {(value || 'all') === v.id && (
+                  <Check className="text-mc-gold h-3.5 w-3.5 shrink-0" />
+                )}
               </button>
             ))}
           </div>,
@@ -1919,6 +2040,35 @@ export default function POManagement({
   const setVendorFilter = propOnVendorFilterChange
     ? propOnVendorFilterChange
     : setLocalVendorFilter;
+
+  // A Vendor-role login is scoped to only the vendor(s) their own user
+  // account is linked to (GET /users/{user_id}/vendors) — never the full
+  // vendor list every admin/office user sees.
+  const [ownVendors, setOwnVendors] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [isLoadingOwnVendors, setIsLoadingOwnVendors] = useState(false);
+
+  useEffect(() => {
+    if (userRole !== 'Vendor' || !currentUser?.id) return;
+    setIsLoadingOwnVendors(true);
+    getUserVendors(currentUser.id)
+      .then((list) => setOwnVendors(Array.isArray(list) ? list : []))
+      .catch((err) => {
+        console.error('Failed to fetch vendors for this user:', err);
+        setOwnVendors([]);
+      })
+      .finally(() => setIsLoadingOwnVendors(false));
+  }, [userRole, currentUser?.id]);
+
+  // Once the vendor-user's own vendors load, default the filter to "all"
+  // among just those vendors rather than leaving it pointed at nothing.
+  useEffect(() => {
+    if (userRole === 'Vendor' && ownVendors.length === 1 && !vendorFilter) {
+      setVendorFilter(ownVendors[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownVendors, userRole]);
 
   const [localDateFrom, setLocalDateFrom] = useState('');
   const dateFrom = propDateFrom !== undefined ? propDateFrom : localDateFrom;
@@ -4751,6 +4901,26 @@ Supply Chain CRM Coordinator`;
                   showAllOption={true}
                   placeholder="All Vendors"
                   className="border-mc-beige-dark bg-mc-white text-mc-black focus:border-mc-gold focus:ring-mc-gold w-full rounded-lg border p-2 text-xs focus:ring-1 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+          {/* A vendor login linked to only one vendor has nothing to
+              filter between — the dropdown only earns its place once
+              GET /users/{id}/vendors resolves with more than one. */}
+          {userRole === 'Vendor' && ownVendors.length > 1 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Filter className="text-mc-gray-soft h-3.5 w-3.5" />
+                <span className="text-mc-gray-soft text-xs font-bold">
+                  Vendor:
+                </span>
+              </div>
+              <div className="w-44">
+                <OwnVendorFilterDropdown
+                  value={vendorFilter}
+                  vendors={ownVendors}
+                  onChange={setVendorFilter}
                 />
               </div>
             </div>

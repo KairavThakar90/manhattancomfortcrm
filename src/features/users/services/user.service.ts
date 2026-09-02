@@ -6,6 +6,7 @@ import {
   USERS_UPDATE,
   USERS_DELETE,
   USERS_TAG,
+  USER_VENDORS,
   ACTIVITIES_LIST,
 } from '../../../utils/endpoints';
 
@@ -110,9 +111,23 @@ export async function getTagUsers(params?: { role?: string }): Promise<any[]> {
         item.username ||
         item.email ||
         '';
-      return { id: item.id || '', name, role: item.role || item.user_role || '' };
+      return {
+        id: item.id || '',
+        name,
+        role: item.role || item.user_role || '',
+      };
     })
     .filter((u) => Boolean(u.name));
+}
+
+/**
+ * Fetch the vendors a given (vendor-role) user is linked to — used to scope
+ * a vendor login's own "Vendor" filter dropdown to just their vendor(s),
+ * rather than showing every vendor in the system.
+ */
+export async function getUserVendors(userId: string): Promise<any[]> {
+  const { data } = await apiClient.get<any>(USER_VENDORS(userId));
+  return Array.isArray(data) ? data : data?.results || data?.vendors || [];
 }
 
 export async function getUserActivities(params?: {
