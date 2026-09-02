@@ -1219,6 +1219,9 @@ export default function POManagement({
     typeof window !== 'undefined' &&
       window.location.search.includes('comment_id'),
   );
+  // Shown when a deep-linked comment (e.g. from an email) can no longer be
+  // found — most likely because the commenting user deleted it.
+  const [commentNotFound, setCommentNotFound] = useState(false);
 
   // Mention Tagging State
   const [tagUsers, setTagUsers] = useState<any[]>([]);
@@ -2092,6 +2095,7 @@ export default function POManagement({
 
       if (commentId) {
         setHighlightedCommentId(commentId);
+        setCommentNotFound(false);
 
         // If it's an item comment, we don't necessarily want to open the PO comment drawer
         if (!itemId) {
@@ -2122,7 +2126,9 @@ export default function POManagement({
             if (deepLinkIntervalRef.current)
               clearInterval(deepLinkIntervalRef.current);
             setIsLocatingComment(false);
-            toast.error('Could not locate the specific comment.');
+            // The comment referenced by the link is gone (deleted) — show a
+            // friendly modal instead of a toast that's easy to miss.
+            setCommentNotFound(true);
           }
         }, 250);
       }
@@ -5042,6 +5048,40 @@ Supply Chain CRM Coordinator`;
       {isLocatingComment && (
         <FullPageLoader message="Locating shared comment..." />
       )}
+
+      {/* Deep-linked comment no longer exists (deleted by its author) */}
+      {commentNotFound &&
+        createPortal(
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-sm">
+            <div className="bg-mc-white relative w-full max-w-sm rounded-2xl border border-slate-100 p-5 shadow-xl">
+              <button
+                type="button"
+                onClick={() => setCommentNotFound(false)}
+                className="absolute top-3 right-3 rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h4 className="text-mc-black pr-6 text-sm font-bold">
+                Comment not available
+              </h4>
+              <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
+                This comment could not be found. It may have been deleted by
+                the user who posted it.
+              </p>
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setCommentNotFound(false)}
+                  className="bg-mc-black rounded-lg px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
       {/* PO DETAIL OVERLAY MODAL (Rule 2) */}
       {selectedPO &&
         createPortal(
@@ -5588,6 +5628,16 @@ Supply Chain CRM Coordinator`;
                                       String(node.userId) ===
                                         String(currentUser.id))));
 
+                              // Edit/Delete access: the comment's own
+                              // author, or an administrator managing all
+                              // comments. Other users only ever see their
+                              // own comments' controls. Reply stays open to
+                              // everyone.
+                              const canManageComment =
+                                isMe ||
+                                String(userRole).toLowerCase() ===
+                                  'administrator';
+
                               const isCollapsed =
                                 collapsedComments[node.id] || false;
 
@@ -5862,7 +5912,7 @@ Supply Chain CRM Coordinator`;
                                                           </div>
                                                         )}
                                                       </button>
-                                                      {isMe &&
+                                                      {canManageComment &&
                                                         !isOptimistic &&
                                                         fileObj.id && (
                                                           <button
@@ -5929,7 +5979,7 @@ Supply Chain CRM Coordinator`;
                                                         <Loader2 className="h-4 w-4 animate-spin text-white" />
                                                       </div>
                                                     )}
-                                                    {isMe &&
+                                                    {canManageComment &&
                                                       !isOptimistic &&
                                                       fileObj.id && (
                                                         <button
@@ -5981,7 +6031,7 @@ Supply Chain CRM Coordinator`;
                                               Download
                                             </button>
                                           )}
-                                        {isMe &&
+                                        {canManageComment &&
                                           editingCommentId !== node.id && (
                                             <button
                                               type="button"
@@ -5998,7 +6048,7 @@ Supply Chain CRM Coordinator`;
                                               Edit
                                             </button>
                                           )}
-                                        {isMe &&
+                                        {canManageComment &&
                                           editingCommentId !== node.id && (
                                             <button
                                               type="button"
