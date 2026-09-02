@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, UserPlus, Loader2, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import {
+  X,
+  UserPlus,
+  Loader2,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Search,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createUser, updateUser } from '../services/user.service';
 import { fetchVendorsPage } from '../../../store/vendorSlice';
@@ -122,8 +130,10 @@ function CheckboxMultiSelect({
   className,
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [rect, setRect] = useState(null);
 
   useEffect(() => {
@@ -156,10 +166,18 @@ function CheckboxMultiSelect({
   useEffect(() => {
     if (isOpen && dropdownRef.current) {
       setRect(dropdownRef.current.getBoundingClientRect());
+      searchInputRef.current?.focus();
+    } else if (!isOpen) {
+      setSearchTerm('');
     }
   }, [isOpen]);
 
   const selectedOptions = options.filter((opt) => values.includes(opt.value));
+  const filteredOptions = searchTerm
+    ? options.filter((opt) =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : options;
 
   const toggleValue = (value) => {
     onChange(
@@ -215,36 +233,54 @@ function CheckboxMultiSelect({
               left: rect.left + window.scrollX,
               width: rect.width,
             }}
-            className="border-mc-beige-dark bg-mc-white absolute z-[9999] max-h-60 overflow-y-auto rounded-lg border py-1 shadow-none"
+            className="border-mc-beige-dark bg-mc-white absolute z-[9999] flex max-h-72 flex-col overflow-hidden rounded-lg border shadow-none"
           >
-            {options.length === 0 && (
-              <div className="text-mc-gray-soft px-3 py-2 text-sm">
-                No vendors found
+            <div className="border-mc-beige-dark border-b p-2">
+              <div className="relative">
+                <Search className="text-mc-gray-soft pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Search vendors..."
+                  className="border-mc-beige-dark focus:border-mc-gold w-full rounded-md border py-1.5 pr-2 pl-8 text-sm focus:outline-none"
+                />
               </div>
-            )}
-            {options.map((opt) => {
-              const checked = values.includes(opt.value);
-              return (
-                <label
-                  key={opt.value}
-                  className="hover:bg-mc-beige-light flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleValue(opt.value)}
-                    className="border-mc-beige-dark h-4 w-4 cursor-pointer rounded text-black accent-black focus:ring-black"
-                  />
-                  <span
-                    className={
-                      checked ? 'text-mc-black font-bold' : 'text-mc-gray-dark'
-                    }
+            </div>
+            <div className="overflow-y-auto py-1">
+              {filteredOptions.length === 0 && (
+                <div className="text-mc-gray-soft px-3 py-2 text-sm">
+                  No vendors found
+                </div>
+              )}
+              {filteredOptions.map((opt) => {
+                const checked = values.includes(opt.value);
+                return (
+                  <label
+                    key={opt.value}
+                    className="hover:bg-mc-beige-light flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors"
                   >
-                    {opt.label}
-                  </span>
-                </label>
-              );
-            })}
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleValue(opt.value)}
+                      className="border-mc-beige-dark h-4 w-4 cursor-pointer rounded text-black accent-black focus:ring-black"
+                    />
+                    <span
+                      className={
+                        checked
+                          ? 'text-mc-black font-bold'
+                          : 'text-mc-gray-dark'
+                      }
+                    >
+                      {opt.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           </div>,
           document.body,
         )}
@@ -357,6 +393,13 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
   const [warehousesLoading, setWarehousesLoading] = useState(
     user?.role === 'warehouse',
   );
+  // PhoneInput needs to remount when the Country changes so it can pick up
+  // the new dial code — but the key must never be derived from the phone
+  // value itself (that remounted the field on every single digit typed,
+  // stealing focus mid-type). Instead this only updates when the Country
+  // dropdown is actually changed (see its onChange below) and only while
+  // the phone field is still empty.
+  const [phoneInputKey, setPhoneInputKey] = useState(formData.country);
 
   // Fetch role-dependent data when user prop changes (edit mode: role-specific dropdowns)
   useEffect(() => {
@@ -644,12 +687,14 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
 
                 <Select
                   value={findCountryOption(formData.country)}
-                  onChange={(option) =>
-                    setFormData((p) => ({
-                      ...p,
-                      country: option ? option.label : '',
-                    }))
-                  }
+                  onChange={(option) => {
+                    const nextCountry = option ? option.label : '';
+                    setFormData((p) => ({ ...p, country: nextCountry }));
+                    // Only remount PhoneInput (to pick up the new dial code)
+                    // while the phone field is still empty — never once the
+                    // user has started typing a number.
+                    if (!formData.phone) setPhoneInputKey(nextCountry);
+                  }}
                   options={countryOptions}
                   styles={reactSelectStyles}
                   placeholder="Select country"
@@ -663,10 +708,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                   Phone
                 </label>
                 <PhoneInput
-                  // Only remount to pick up the new dial code while the field
-                  // is still empty — once a number is typed, changing the
-                  // Country dropdown must not wipe it.
-                  key={formData.phone ? 'phone-set' : formData.country}
+                  key={phoneInputKey}
                   country={(
                     findCountryOption(formData.country)?.value || 'us'
                   ).toLowerCase()}
