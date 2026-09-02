@@ -120,7 +120,25 @@ export default function ContainerCommentSection({
   const scrollContainerRef = useRef(null);
   const mainInputRef = useRef(null);
   const inputContainerRef = useRef(null);
-  const currentUserId = localStorage.getItem('userId');
+  // The logged-in user's id/name is stored inside the "user" JSON blob
+  // (there is no separate "userId" key) — read it from there so comment
+  // ownership can be matched against `comment.user_id`. Some comment
+  // payloads don't reliably carry a matching user_id, so a display-name
+  // fallback (matching the PO comments' approach) is used as a backstop.
+  const currentUser = useMemo(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+  const currentUserId = currentUser?.id ?? null;
+  const currentUserName = String(
+    currentUser?.full_name || currentUser?.name || '',
+  )
+    .trim()
+    .toLowerCase();
   const currentUserRole = String(
     localStorage.getItem('userRole') || '',
   ).toLowerCase();
@@ -655,7 +673,11 @@ export default function ContainerCommentSection({
     // Ownership drives display ("you" styling) — it must NOT be widened by
     // role, or every admin/office viewer would see every comment rendered
     // as their own.
-    const isMe = Boolean(currentUserId && node.userId === currentUserId);
+    const isMe = Boolean(
+      (currentUserId && String(node.userId) === String(currentUserId)) ||
+        (currentUserName &&
+          String(node.user || '').trim().toLowerCase() === currentUserName),
+    );
     // Edit/Delete access: the comment's own author, or an administrator
     // managing all comments. Other users only ever see their own comments'
     // controls.
