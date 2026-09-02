@@ -9,7 +9,6 @@ import POManagement from '../components/POManagement';
 import { useCRM } from '../../../hooks/useCRM';
 import {
   getPurchaseOrders,
-  createPurchaseOrder,
   getPurchaseOrderById,
   getPurchaseOrdersAllFilters,
 } from '../services/purchaseOrder.service';
@@ -586,7 +585,7 @@ export default function POManagementPage() {
     );
   }
 
-  const handlePOUpdateCascade = async (po) => {
+  const handlePOUpdateCascade = (po) => {
     const exists = purchaseOrders.some(
       (p) =>
         p.id === po.id ||
@@ -620,7 +619,10 @@ export default function POManagementPage() {
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
     } else {
-      // Optimistic create UI state for locally drafted PO
+      // Optimistic, local-only UI state for a locally drafted PO (e.g. the
+      // CSV mock import). This never calls the real create-PO API on its
+      // own — creating a PO against the backend only happens through the
+      // explicit "Create Purchase Order" button/modal.
       const mockId = po.id || `PO-${Math.floor(10000 + Math.random() * 90000)}`;
       const newLocalPO = {
         ...po,
@@ -630,40 +632,6 @@ export default function POManagementPage() {
       const updated = [...purchaseOrders, newLocalPO];
       handleUpdatePOs(updated);
       dispatch(setPurchaseOrdersList(updated));
-
-      const dbVendorId = po.vendorId;
-
-      try {
-        const response = await createPurchaseOrder({
-          vendor_id: dbVendorId,
-          purchase_title:
-            po.description || po.id || `PO for ${po.vendorName || 'Vendor'}`,
-          expected_delivery_date: po.eta,
-          notes: po.vendorNote || '',
-          items: po.items?.map((it) => ({
-            sku: it.sku,
-            qty_ordered: it.qty,
-            unit_price: it.unitPrice,
-          })),
-        });
-
-        if (response && response.id) {
-          const mappedCreated = {
-            ...newLocalPO,
-            id: response.sellercloud_po_id
-              ? `PO-${response.sellercloud_po_id}`
-              : response.id,
-            uuid: response.id,
-          };
-          const finalUpdated = purchaseOrders.map((p) =>
-            p.id === mockId ? mappedCreated : p,
-          );
-          handleUpdatePOs(finalUpdated);
-          dispatch(setPurchaseOrdersList(finalUpdated));
-        }
-      } catch (err) {
-        console.error('Failed to sync new PO to backend API:', err);
-      }
     }
   };
 

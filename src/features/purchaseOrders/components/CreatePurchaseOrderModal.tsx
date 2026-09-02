@@ -285,7 +285,19 @@ export default function CreatePurchaseOrderModal({
           })}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form
+          onSubmit={handleSubmit}
+          // Pressing Enter in a field (e.g. Purchase Title) implicitly
+          // submits the form per browser default — block that on every
+          // step except the last, so the create-PO API only ever fires
+          // from an explicit click on "Create Purchase Order".
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isLastStep) {
+              e.preventDefault();
+            }
+          }}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <div className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-4">
             {/* Step 1: General Info */}
             {currentStepKey === 'general' && (
