@@ -45,6 +45,9 @@ export default function MainLayout() {
 
   // Filter nav items by role
   const visibleNavItems = navItems.filter((tab) => {
+    // Hide Dashboard entirely while impersonating another user — it
+    // surfaces company-wide executive data unrelated to that session.
+    if (tab.id === 'dashboard' && isImpersonating()) return false;
     if (!tab.roles) return true; // no restriction = visible to all
     const normalizedRole = (userRole || '').toLowerCase();
     return tab.roles.some((r) => r.toLowerCase() === normalizedRole);
@@ -71,6 +74,14 @@ export default function MainLayout() {
       navigate('/container-flow', { replace: true });
     }
   }, [userRole, location.pathname, navigate]);
+
+  // Never let an impersonated session sit on the Dashboard — it surfaces
+  // company-wide executive data unrelated to "logged in as this user".
+  useEffect(() => {
+    if (isImpersonating() && location.pathname.startsWith('/dashboard')) {
+      navigate('/purchase-orders', { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const openComingSoon = (tab) => {
     setComingSoonModal(tab);

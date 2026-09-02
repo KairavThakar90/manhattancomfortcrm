@@ -188,8 +188,18 @@ export function isTokenPresent(): boolean {
  * Log in as another user (admin-only "Login" action in User Management).
  * Stashes the admin's own session under `admin_*` keys first so
  * `restoreAdminSession()` can switch back without a fresh login.
+ *
+ * `fallbackUser` — the row data the caller already has for this user (from
+ * the users list) — is used to fill in `user`/`userRole` whenever the
+ * impersonate response omits them or leaves `role` blank. Without this,
+ * `mapBackendRole(undefined)` silently defaults to 'Administrator', which
+ * made every impersonated session show up as an admin regardless of who
+ * was actually being logged into.
  */
-export async function impersonateUser(userId: string): Promise<LoginResponse> {
+export async function impersonateUser(
+  userId: string,
+  fallbackUser?: LoginUser,
+): Promise<LoginResponse> {
   const adminToken = localStorage.getItem('token');
   const adminRefreshToken = localStorage.getItem('refresh_token');
   const adminUser = localStorage.getItem('user');
@@ -217,10 +227,12 @@ export async function impersonateUser(userId: string): Promise<LoginResponse> {
     localStorage.setItem('refresh_token', data.refresh_token);
   }
 
-  if (data.user) {
-    localStorage.setItem('user', JSON.stringify(data.user));
-    const mappedRole = mapBackendRole(data.user.role);
-    localStorage.setItem('userRole', mappedRole);
+  const effectiveUser =
+    data.user && data.user.role ? data.user : fallbackUser || data.user;
+  if (effectiveUser) {
+    localStorage.setItem('user', JSON.stringify(effectiveUser));
+    localStorage.setItem('userRole', mapBackendRole(effectiveUser.role));
+    data.user = effectiveUser;
   }
 
   return data;

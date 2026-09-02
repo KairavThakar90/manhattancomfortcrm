@@ -125,18 +125,18 @@ export default function UserManagementPage() {
       [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email;
     try {
       setLoginAsLoadingId(user.id);
-      const { user: impersonatedUser } = await impersonateUser(user.id);
+      // Pass the row we already have as a fallback — if the impersonate
+      // response omits the user/role, we still land on the right dashboard
+      // and role badge instead of silently defaulting to Administrator.
+      const { user: impersonatedUser } = await impersonateUser(user.id, user);
       toast.success(`Logged in as ${userName}`);
-      // Land on whichever page that role actually sees first — landing on
-      // /dashboard only to have MainLayout immediately redirect a Vendor or
-      // Warehouse user away is what caused the dashboard to flash briefly.
+      // Never land an impersonated session on the Dashboard — it surfaces
+      // company-wide executive data that isn't this action's purpose.
+      // Route to the same landing page each role already gets elsewhere
+      // in the app (Vendor/Warehouse) or Purchase Orders otherwise.
       const mappedRole = mapBackendRole(impersonatedUser?.role);
       const landingPath =
-        mappedRole === 'Vendor'
-          ? '/purchase-orders'
-          : mappedRole === 'Warehouse'
-            ? '/container-flow'
-            : '/dashboard';
+        mappedRole === 'Warehouse' ? '/container-flow' : '/purchase-orders';
       // Full reload so every part of the app (redux state, cached data,
       // route guards) re-initializes cleanly under the new session.
       window.location.href = landingPath;
