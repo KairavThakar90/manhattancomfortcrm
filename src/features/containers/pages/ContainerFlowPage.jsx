@@ -1590,7 +1590,10 @@ export default function ContainerFlowPage() {
       handleViewContainerComments(container);
 
       if (commentId || category) {
-        // Give the container details + comment sections time to fetch/render.
+        // Only need to wait for the popup/modal to actually mount before
+        // the comment sections can pick up the event — the sections
+        // themselves poll while their own comments are still loading, so
+        // this no longer needs to wait for the network fetch too.
         setTimeout(() => {
           window.dispatchEvent(
             new CustomEvent('container-deep-link', {
@@ -1602,8 +1605,8 @@ export default function ContainerFlowPage() {
           // and a later refresh doesn't keep re-triggering the same jump.
           setTimeout(() => {
             deepLinkNavigate('/container-flow', { replace: true });
-          }, 1500);
-        }, 500);
+          }, 4000);
+        }, 50);
       }
     };
 

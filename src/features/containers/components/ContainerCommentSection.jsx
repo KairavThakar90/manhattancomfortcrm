@@ -22,6 +22,7 @@ import {
 import { compressImageIfNeeded } from '../../../utils/imageCompression';
 import ImagePreviewModal from '../../../components/common/ImagePreviewModal';
 import ConfirmDeleteModal from '../../../components/common/ConfirmDeleteModal';
+import FullPageLoader from '../../../components/common/FullPageLoader';
 
 // Helper to format ISO timestamp into readable string
 function formatCommentDate(dateStr) {
@@ -108,6 +109,12 @@ export default function ContainerCommentSection({
   const [previewImage, setPreviewImage] = useState(null);
   const [deleteCommentTarget, setDeleteCommentTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  // Shown when a deep-linked comment (e.g. from an email) can no longer be
+  // found — most likely because the commenting user deleted it.
+  const [commentNotFound, setCommentNotFound] = useState(false);
+  // True while actively searching for a deep-linked comment id, so the user
+  // sees a loading state instead of a static/frozen-looking screen.
+  const [isLocatingComment, setIsLocatingComment] = useState(false);
 
   const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -594,41 +601,51 @@ export default function ContainerCommentSection({
     return { rootNodes: roots };
   }, [comments]);
 
-  // Deep-link: once the target comment has rendered, scroll to it and, if
-  // it carries an image attachment, auto-open the image preview modal.
+  // Deep-link: once the target comment has rendered, scroll to it and
+  // highlight it. The image preview modal is left for the user to open by
+  // clicking the attachment themselves — it is not auto-opened.
   // Polls briefly since comments load asynchronously after the modal opens.
   const deepLinkHandledRef = useRef(null);
   useEffect(() => {
     if (!highlightedCommentId) return;
     if (deepLinkHandledRef.current === highlightedCommentId) return;
 
+    setCommentNotFound(false);
+    setIsLocatingComment(true);
+
+    const locate = () => {
+      const el = document.getElementById(highlightedCommentId);
+      if (!el) return false;
+
+      deepLinkHandledRef.current = highlightedCommentId;
+      setIsLocatingComment(false);
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+
+      return true;
+    };
+
+    // Check immediately (comments may already be loaded/rendered) before
+    // falling back to polling while they finish fetching.
+    if (locate()) return;
+
     let attempts = 0;
-    const maxAttempts = 40; // ~10s
+    const maxAttempts = 60; // ~9s at 150ms
     const intervalId = setInterval(() => {
       attempts++;
-      const el = document.getElementById(highlightedCommentId);
-      if (el) {
+      if (locate()) {
         clearInterval(intervalId);
-        deepLinkHandledRef.current = highlightedCommentId;
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
-
-        const targetComment = comments.find(
-          (c) => c.id === highlightedCommentId,
-        );
-        const imageAttachment = (targetComment?.attachments || []).find(
-          (att) =>
-            att.content_type?.startsWith('image/') ||
-            att.file_url?.match(/\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i),
-        );
-        if (imageAttachment) {
-          setPreviewImage(imageAttachment.file_url);
-        }
       } else if (attempts >= maxAttempts) {
         clearInterval(intervalId);
+        deepLinkHandledRef.current = highlightedCommentId;
+        setIsLocatingComment(false);
+        // The comment referenced by the link is gone (deleted) — let the
+        // user know instead of leaving them staring at a page that never
+        // scrolls anywhere.
+        setCommentNotFound(true);
       }
-    }, 250);
+    }, 150);
 
     return () => clearInterval(intervalId);
   }, [highlightedCommentId, comments]);
@@ -1221,6 +1238,10 @@ export default function ContainerCommentSection({
         </div>
       </div>
 
+      {isLocatingComment && (
+        <FullPageLoader message="Locating shared comment..." />
+      )}
+
       {/* Messages Stream */}
       <div
         ref={scrollContainerRef}
@@ -1497,6 +1518,38 @@ export default function ContainerCommentSection({
         onCancel={() => !isDeleting && setDeleteCommentTarget(null)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Deep-linked comment no longer exists (deleted by its author) */}
+      {commentNotFound && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 p-4 font-sans backdrop-blur-sm">
+          <div className="bg-mc-white relative w-full max-w-sm rounded-2xl border border-slate-100 p-5 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setCommentNotFound(false)}
+              className="absolute top-3 right-3 rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h4 className="text-mc-black pr-6 text-sm font-bold">
+              Comment not available
+            </h4>
+            <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
+              This comment could not be found. It may have been deleted by
+              the user who posted it.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setCommentNotFound(false)}
+                className="bg-mc-black rounded-lg px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
