@@ -41,6 +41,7 @@ import { toast } from 'react-toastify';
 import Select from 'react-select';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import Pagination from '../../../components/common/Pagination';
@@ -348,6 +349,10 @@ export default function ContainerFlowPage() {
   // Container the standalone Comments popup (ContainerCommentsModal) is
   // currently open for — opened directly from the table's Comments icon.
   const [commentsModalContainer, setCommentsModalContainer] = useState(null);
+  const { containerId: containerIdParam } = useParams();
+  const [deepLinkSearchParams] = useSearchParams();
+  const deepLinkNavigate = useNavigate();
+  const deepLinkDispatchedRef = useRef(null);
   const [isViewContainerLoading, setIsViewContainerLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1550,6 +1555,90 @@ export default function ContainerFlowPage() {
     }
     setCommentsModalContainer(container);
   };
+
+  // Email "View Comment" deep-link support. Two URL shapes are accepted:
+  //   /container-flow/:containerId?category=...&comment_id=...
+  //   /container-flow?container_id=...&category=...&comment_id=...
+  // Opens the Container Details modal on the Comments tab for the given
+  // container, then broadcasts a 'container-deep-link' event so the modal
+  // can scroll to / highlight the specific comment (and auto-open its
+  // image attachment, if any) once it has rendered.
+  useEffect(() => {
+    // The email link format may embed the id as "container_id=3491" or
+    // "container_id:3861" inside a path segment, or as a plain
+    // "?container_id=3491" query param.
+    const rawContainerId =
+      containerIdParam || deepLinkSearchParams.get('container_id');
+    if (!rawContainerId) return;
+
+    const cleanContainerId = decodeURIComponent(rawContainerId).replace(
+      /^container_id[:=]/i,
+      '',
+    );
+    if (!cleanContainerId) return;
+
+    const category = deepLinkSearchParams.get('category');
+    const commentId = deepLinkSearchParams.get('comment_id');
+    const deepLinkKey = `${cleanContainerId}-${category}-${commentId}`;
+
+    if (deepLinkDispatchedRef.current === deepLinkKey) return;
+    deepLinkDispatchedRef.current = deepLinkKey;
+
+    const openAndBroadcast = (container) => {
+      // The email's "View Comment" link maps to the standalone Comments
+      // popup (Discussion Scope dropdown), not the Details modal's tab.
+      handleViewContainerComments(container);
+
+      if (commentId || category) {
+        // Give the container details + comment sections time to fetch/render.
+        setTimeout(() => {
+          window.dispatchEvent(
+            new CustomEvent('container-deep-link', {
+              detail: { containerId: container.id, category, commentId },
+            }),
+          );
+          // Once the comment has had time to scroll into view/highlight,
+          // drop the deep-link params so the address bar is clean again
+          // and a later refresh doesn't keep re-triggering the same jump.
+          setTimeout(() => {
+            deepLinkNavigate('/container-flow', { replace: true });
+          }, 1500);
+        }, 500);
+      }
+    };
+
+    // The email's `container_id` is usually the human-facing SellerCloud
+    // container id, not the internal DB id `getContainerDetails` expects.
+    // Resolve it first: check what's already loaded, then fall back to an
+    // API search (so a container from another page still deep-links).
+    const alreadyLoaded = (reduxContainersRef.current || []).find(
+      (c) =>
+        String(c.id) === String(cleanContainerId) ||
+        String(c.sellercloud_container_id) === String(cleanContainerId),
+    );
+
+    if (alreadyLoaded) {
+      openAndBroadcast(alreadyLoaded);
+      return;
+    }
+
+    getContainers({ search: cleanContainerId, page: 1, page_size: 25 })
+      .then((data) => {
+        const results = Array.isArray(data) ? data : data?.results || [];
+        const found =
+          results.find(
+            (c) =>
+              String(c.id) === String(cleanContainerId) ||
+              String(c.sellercloud_container_id) === String(cleanContainerId),
+          ) || results[0];
+        openAndBroadcast(found || { id: cleanContainerId });
+      })
+      .catch((err) => {
+        console.error('Failed to resolve deep-linked container:', err);
+        // Fall back to treating the value as the internal id directly.
+        openAndBroadcast({ id: cleanContainerId });
+      });
+  }, [containerIdParam, deepLinkSearchParams]);
 
   const handleEditContainer = async (container) => {
     if (!container.id) {

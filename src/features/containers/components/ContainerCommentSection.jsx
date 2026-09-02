@@ -66,6 +66,9 @@ export default function ContainerCommentSection({
   loadMentionOptions,
   onActivityAdded,
   onCountChange,
+  // Email "View Comment" deep-link support: id of the comment to scroll to,
+  // highlight with a red border, and (if it carries an image) auto-preview.
+  highlightedCommentId,
 }) {
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -591,6 +594,45 @@ export default function ContainerCommentSection({
     return { rootNodes: roots };
   }, [comments]);
 
+  // Deep-link: once the target comment has rendered, scroll to it and, if
+  // it carries an image attachment, auto-open the image preview modal.
+  // Polls briefly since comments load asynchronously after the modal opens.
+  const deepLinkHandledRef = useRef(null);
+  useEffect(() => {
+    if (!highlightedCommentId) return;
+    if (deepLinkHandledRef.current === highlightedCommentId) return;
+
+    let attempts = 0;
+    const maxAttempts = 40; // ~10s
+    const intervalId = setInterval(() => {
+      attempts++;
+      const el = document.getElementById(highlightedCommentId);
+      if (el) {
+        clearInterval(intervalId);
+        deepLinkHandledRef.current = highlightedCommentId;
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+
+        const targetComment = comments.find(
+          (c) => c.id === highlightedCommentId,
+        );
+        const imageAttachment = (targetComment?.attachments || []).find(
+          (att) =>
+            att.content_type?.startsWith('image/') ||
+            att.file_url?.match(/\.(jpeg|jpg|gif|png|webp|bmp)(\?.*)?$/i),
+        );
+        if (imageAttachment) {
+          setPreviewImage(imageAttachment.file_url);
+        }
+      } else if (attempts >= maxAttempts) {
+        clearInterval(intervalId);
+      }
+    }, 250);
+
+    return () => clearInterval(intervalId);
+  }, [highlightedCommentId, comments]);
+
   // Render recursive comment tree with inline same-position reply
   const renderCommentTree = (node, depth = 0) => {
     const isMe =
@@ -600,8 +642,18 @@ export default function ContainerCommentSection({
     const isCollapsed = collapsedComments[node.id];
     const isReplyingThisNode = replyingCommentId === node.id;
 
+    const isHighlighted = highlightedCommentId === node.id;
+
     return (
-      <div key={node.id} id={node.id} className="relative mb-3 flex scroll-mt-20 flex-col">
+      <div
+        key={node.id}
+        id={node.id}
+        className={`relative mb-3 flex scroll-mt-20 flex-col ${
+          isHighlighted
+            ? 'rounded-xl border-2 border-red-500 p-2 transition-all duration-1000'
+            : ''
+        }`}
+      >
         <div className="group relative flex items-start gap-3 transition-colors">
           <div
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-100 text-xs font-bold shadow-sm ${

@@ -35,6 +35,10 @@ export const appRoutes = [
   },
   { path: '/container-flow', element: React.createElement(ContainerFlowPage) },
   {
+    path: '/container-flow/:containerId',
+    element: React.createElement(ContainerFlowPage),
+  },
+  {
     path: '/sourcing-vendors',
     element: React.createElement(VendorManagementPage),
   },

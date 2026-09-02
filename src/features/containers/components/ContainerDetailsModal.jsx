@@ -432,6 +432,10 @@ export default function ContainerDetailsModal({
   const [itemsPage, setItemsPage] = useState(1);
   const [itemsPageSize, setItemsPageSize] = useState(10);
   const [activeTab, setActiveTab] = useState(initialTab);
+  // Email "View Comment" deep-link support: comment/category to scroll to
+  // and highlight once ContainerCommentSection has rendered.
+  const [deepLinkCategory, setDeepLinkCategory] = useState(null);
+  const [deepLinkCommentId, setDeepLinkCommentId] = useState(null);
 
   // Keep the active tab in sync when the modal is reopened (e.g. re-opened
   // via the table's Comments icon) with a different initialTab.
@@ -441,6 +445,19 @@ export default function ContainerDetailsModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [container?.id, initialTab]);
+
+  useEffect(() => {
+    const handleDeepLink = (e) => {
+      const { containerId, category, commentId } = e.detail || {};
+      if (container?.id && String(containerId) !== String(container.id)) return;
+      setActiveTab('comments');
+      if (category) setDeepLinkCategory(category);
+      if (commentId) setDeepLinkCommentId(commentId);
+    };
+    window.addEventListener('container-deep-link', handleDeepLink);
+    return () =>
+      window.removeEventListener('container-deep-link', handleDeepLink);
+  }, [container?.id]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncingSingle, setIsSyncingSingle] = useState(false);
   const [emailError, setEmailError] = useState('');
@@ -1980,6 +1997,13 @@ export default function ContainerDetailsModal({
                           title="Vendor Credit Needed"
                           placeholder="Type a message... (Use @ to tag)"
                           loadMentionOptions={loadVendorMentionOptions}
+                          highlightedCommentId={
+                            deepLinkCommentId &&
+                            (!deepLinkCategory ||
+                              deepLinkCategory === 'vendor_credit')
+                              ? deepLinkCommentId
+                              : null
+                          }
                         />
                         <ContainerCommentSection
                           containerId={container?.id}
@@ -1987,6 +2011,13 @@ export default function ContainerDetailsModal({
                           title="Receiving Closure Notes"
                           placeholder="Type a message... (Use @ to tag)"
                           loadMentionOptions={loadTeamMentionOptions}
+                          highlightedCommentId={
+                            deepLinkCommentId &&
+                            (!deepLinkCategory ||
+                              deepLinkCategory === 'receiving_closure')
+                              ? deepLinkCommentId
+                              : null
+                          }
                         />
                       </div>
                     </div>

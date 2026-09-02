@@ -37,6 +37,25 @@ export default function ContainerCommentsModal({ container, onClose }) {
   const [scopeIndex, setScopeIndex] = useState(0);
   const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
   const [scopeCounts, setScopeCounts] = useState({});
+  const [deepLinkCommentId, setDeepLinkCommentId] = useState(null);
+
+  // Email "View Comment" deep-link support: switch to the referenced
+  // category/scope and pass the comment id down so it gets scrolled to and
+  // highlighted once it renders.
+  useEffect(() => {
+    const handleDeepLink = (e) => {
+      const { containerId, category, commentId } = e.detail || {};
+      if (container?.id && String(containerId) !== String(container.id)) return;
+      if (category) {
+        const idx = SCOPES.findIndex((s) => s.category === category);
+        if (idx !== -1) setScopeIndex(idx);
+      }
+      if (commentId) setDeepLinkCommentId(commentId);
+    };
+    window.addEventListener('container-deep-link', handleDeepLink);
+    return () =>
+      window.removeEventListener('container-deep-link', handleDeepLink);
+  }, [container?.id]);
 
   useEffect(() => {
     if (!container?.id) return;
@@ -144,6 +163,7 @@ export default function ContainerCommentsModal({ container, onClose }) {
               title={activeScope.label}
               placeholder="Type a message... (Use @ to tag)"
               loadMentionOptions={activeScope.loadMentionOptions}
+              highlightedCommentId={deepLinkCommentId}
               onCountChange={(count) =>
                 setScopeCounts((prev) =>
                   prev[activeScope.category] === count
