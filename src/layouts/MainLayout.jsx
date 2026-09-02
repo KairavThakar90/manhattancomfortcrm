@@ -12,9 +12,14 @@ import {
   User,
 } from 'lucide-react';
 import { useCRM } from '../hooks/useCRM';
-import { logout } from '../features/auth/services/auth.service';
+import {
+  logout,
+  isImpersonating,
+  restoreAdminSession,
+} from '../features/auth/services/auth.service';
 import { navItems } from '../utils/navigation';
 import UpdateProfileModal from '../features/users/components/UpdateProfileModal';
+import FullPageLoader from '../components/common/FullPageLoader';
 
 export default function MainLayout() {
   const {
@@ -36,6 +41,7 @@ export default function MainLayout() {
   const [comingSoonModal, setComingSoonModal] = useState(null); // holds { label, icon }
   const [modalVisible, setModalVisible] = useState(false);
   const [showUpdateProfileModal, setShowUpdateProfileModal] = useState(false);
+  const [isReturningToAdmin, setIsReturningToAdmin] = useState(false);
 
   // Filter nav items by role
   const visibleNavItems = navItems.filter((tab) => {
@@ -99,6 +105,13 @@ export default function MainLayout() {
     await logout();
   };
 
+  const handleReturnToAdmin = async () => {
+    setIsReturningToAdmin(true);
+    await restoreAdminSession();
+    // Full reload to re-initialize the app cleanly under the admin session.
+    window.location.href = '/user-management';
+  };
+
   const handleNavClick = (tabId, path) => {
     if (tabId !== 'purchase-orders') {
       setSelectedPOId(null);
@@ -115,6 +128,9 @@ export default function MainLayout() {
 
   return (
     <div className="bg-mc-beige-light text-mc-black selection:bg-mc-gold flex min-h-screen font-sans antialiased selection:text-white">
+      {isReturningToAdmin && (
+        <FullPageLoader message="Returning to your account..." />
+      )}
       {/* 1. INTERACTIVE NAVIGATION SIDEBAR */}
       <aside
         className={`border-mc-beige-dark bg-mc-white text-mc-gray-soft flex flex-shrink-0 flex-col justify-between border-r transition-all duration-300 ease-in-out select-none ${
@@ -340,6 +356,18 @@ export default function MainLayout() {
               )}
             </div>
 
+            {/* Shown while an admin is logged in as another user */}
+            {isImpersonating() && (
+              <button
+                onClick={handleReturnToAdmin}
+                title="Return to your own account"
+                className="border-mc-gold bg-mc-beige-light text-mc-black hover:bg-mc-gold/20 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Return to Admin
+              </button>
+            )}
+
             {/* Quick Session user tag */}
             <div className="relative">
               <button
@@ -401,11 +429,9 @@ export default function MainLayout() {
         {/* INTERNAL VIEWPORT PORTAL */}
         <div
           className={`min-h-0 flex-1 p-6 ${
-            [
-              '/purchase-orders',
-              '/containers',
-              '/tracker-logistics',
-            ].includes(location.pathname)
+            ['/purchase-orders', '/containers', '/tracker-logistics'].includes(
+              location.pathname,
+            )
               ? 'flex flex-col overflow-hidden'
               : 'overflow-y-auto'
           }`}

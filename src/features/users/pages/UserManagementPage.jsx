@@ -19,21 +19,27 @@ import {
   ChevronDown,
   Check,
   Filter,
+  LogIn,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../store/userSlice';
 import { deleteUser, getUserById } from '../services/user.service';
+import {
+  impersonateUser,
+  mapBackendRole,
+} from '../../auth/services/auth.service';
 import { useCRM } from '../../../hooks/useCRM';
 import AddUserModal from '../components/AddUserModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import Pagination from '../../../components/common/Pagination';
 import TableLoader from '../../../components/common/TableLoader';
+import FullPageLoader from '../../../components/common/FullPageLoader';
 import DataTable from '../../../components/common/DataTable';
 import moment from 'moment-timezone';
 
 export default function UserManagementPage() {
   const dispatch = useDispatch();
-  const { user: currentUser } = useCRM();
+  const { user: currentUser, userRole } = useCRM();
 
   const { list: users, loading } = useSelector((state) => state.users);
 
@@ -47,6 +53,7 @@ export default function UserManagementPage() {
   const [deletingUser, setDeletingUser] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [editLoadingId, setEditLoadingId] = useState(null);
+  const [loginAsLoadingId, setLoginAsLoadingId] = useState(null);
 
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const roleDropdownRef = useRef(null);
@@ -110,6 +117,34 @@ export default function UserManagementPage() {
       toast.error('Failed to load user details. Please try again.');
     } finally {
       setEditLoadingId(null);
+    }
+  }, []);
+
+  const handleLoginAsUser = useCallback(async (user) => {
+    const userName =
+      [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email;
+    try {
+      setLoginAsLoadingId(user.id);
+      const { user: impersonatedUser } = await impersonateUser(user.id);
+      toast.success(`Logged in as ${userName}`);
+      // Land on whichever page that role actually sees first — landing on
+      // /dashboard only to have MainLayout immediately redirect a Vendor or
+      // Warehouse user away is what caused the dashboard to flash briefly.
+      const mappedRole = mapBackendRole(impersonatedUser?.role);
+      const landingPath =
+        mappedRole === 'Vendor'
+          ? '/purchase-orders'
+          : mappedRole === 'Warehouse'
+            ? '/container-flow'
+            : '/dashboard';
+      // Full reload so every part of the app (redux state, cached data,
+      // route guards) re-initializes cleanly under the new session.
+      window.location.href = landingPath;
+    } catch (err) {
+      console.error('Failed to log in as user:', err);
+      toast.error('Failed to log in as this user.');
+    } finally {
+      setLoginAsLoadingId(null);
     }
   }, []);
 
@@ -187,8 +222,8 @@ export default function UserManagementPage() {
       {
         header: 'Email',
         accessor: 'email',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[25%]',
-        className: 'px-6 py-3 w-[25%] text-mc-gray-soft text-sm',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[20%]',
+        className: 'px-6 py-3 w-[20%] text-mc-gray-soft text-sm',
         render: (u) => {
           const val = u.email || 'N/A';
           return (
@@ -241,8 +276,8 @@ export default function UserManagementPage() {
           </div>
         ),
         accessor: 'last_login',
-        headerClassName: 'px-6 py-3 bg-transparent text-left w-[17%]',
-        className: 'px-6 py-3 w-[17%] text-mc-gray-soft text-xs font-mono',
+        headerClassName: 'px-6 py-3 bg-transparent text-left w-[12%]',
+        className: 'px-6 py-3 w-[12%] text-mc-gray-soft text-xs font-mono',
         render: (u) => {
           if (!u.last_login) return '-';
           try {
@@ -256,6 +291,57 @@ export default function UserManagementPage() {
           } catch {
             return 'N/A';
           }
+        },
+      },
+      {
+        header: 'Access',
+        accessor: 'login_as',
+        headerClassName: 'px-6 py-3 bg-transparent text-center w-[10%]',
+        className: 'px-6 py-3 w-[10%] text-center',
+        render: (u) => {
+          const isAdmin =
+            String(userRole || '').toLowerCase() === 'administrator';
+          const isSelf =
+            currentUser?.id && String(currentUser.id) === String(u.id);
+          // Never show "Login" for another administrator's row — only
+          // non-admin accounts can be logged into this way. Row data uses
+          // the raw backend role value ('admin'), unlike the current
+          // viewer's role which is already mapped to 'Administrator'.
+          const targetIsAdmin = String(u.role || '').toLowerCase() === 'admin';
+          if (!isAdmin || isSelf || targetIsAdmin) return null;
+          return (
+            <button
+              onClick={() => handleLoginAsUser(u)}
+              disabled={loginAsLoadingId === u.id}
+              className="border-mc-beige-dark hover:bg-mc-beige-light hover:text-mc-gold inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold text-slate-600 transition disabled:cursor-not-allowed disabled:opacity-50"
+              title={`Log in as this user`}
+            >
+              {loginAsLoadingId === u.id ? (
+                <svg
+                  className="h-3.5 w-3.5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+              ) : (
+                <LogIn className="h-3.5 w-3.5" />
+              )}
+              Login
+            </button>
+          );
         },
       },
       {
@@ -317,9 +403,12 @@ export default function UserManagementPage() {
     ],
     [
       currentUser,
+      userRole,
       handleDeleteUser,
       handleEditUser,
       editLoadingId,
+      handleLoginAsUser,
+      loginAsLoadingId,
       searchQuery,
       renderHighlightedText,
     ],
@@ -327,6 +416,9 @@ export default function UserManagementPage() {
 
   return (
     <div className="animate-in fade-in bg-mc-beige-light/30 relative flex h-full w-full flex-col overflow-hidden">
+      {loginAsLoadingId && (
+        <FullPageLoader message="Logging in as this user..." />
+      )}
       {/* Header */}
       <div className="border-mc-beige-dark bg-mc-white sticky top-0 z-30 flex w-full flex-shrink-0 flex-col items-start justify-between gap-4 border-b px-5 py-3 shadow-none sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">

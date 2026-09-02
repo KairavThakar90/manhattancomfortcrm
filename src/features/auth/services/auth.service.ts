@@ -6,6 +6,8 @@ import {
   AUTH_REFRESH,
   AUTH_VERIFY_2FA,
   AUTH_GOOGLE_LOGIN,
+  AUTH_IMPERSONATE,
+  AUTH_EXIT_IMPERSONATION,
 } from '../../../utils/endpoints';
 
 // ==========================================
@@ -138,11 +140,11 @@ export async function logout(): Promise<void> {
   } catch {
     // Silently fail — clear local state regardless
   }
-  localStorage.removeItem('token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('isAuthenticated');
+  // Wipe everything (not just the auth keys) so a logout — including one
+  // from inside an impersonated session — never leaves stale data (e.g.
+  // stashed `admin_*` impersonation keys, cached preferences) behind for
+  // the next login to accidentally pick up.
+  localStorage.clear();
 }
 
 /**
@@ -180,6 +182,111 @@ export async function getMe(): Promise<Record<string, unknown>> {
  */
 export function isTokenPresent(): boolean {
   return !!localStorage.getItem('token');
+}
+
+/**
+ * Log in as another user (admin-only "Login" action in User Management).
+ * Stashes the admin's own session under `admin_*` keys first so
+ * `restoreAdminSession()` can switch back without a fresh login.
+ */
+export async function impersonateUser(userId: string): Promise<LoginResponse> {
+  const adminToken = localStorage.getItem('token');
+  const adminRefreshToken = localStorage.getItem('refresh_token');
+  const adminUser = localStorage.getItem('user');
+  const adminRole = localStorage.getItem('userRole');
+
+  const { data } = await apiClient.post<LoginResponse>(
+    AUTH_IMPERSONATE(userId),
+  );
+
+  const token = data.access_token || data.token;
+  if (token) {
+    // Only stash the admin session once we know impersonation actually
+    // succeeded, and only if we're not already impersonating someone.
+    if (!localStorage.getItem('admin_token') && adminToken) {
+      localStorage.setItem('admin_token', adminToken);
+      if (adminRefreshToken)
+        localStorage.setItem('admin_refresh_token', adminRefreshToken);
+      if (adminUser) localStorage.setItem('admin_user', adminUser);
+      if (adminRole) localStorage.setItem('admin_userRole', adminRole);
+    }
+    localStorage.setItem('token', token);
+  }
+
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+
+  if (data.user) {
+    localStorage.setItem('user', JSON.stringify(data.user));
+    const mappedRole = mapBackendRole(data.user.role);
+    localStorage.setItem('userRole', mappedRole);
+  }
+
+  return data;
+}
+
+/** True while the current session is an admin impersonating another user. */
+export function isImpersonating(): boolean {
+  return !!localStorage.getItem('admin_token');
+}
+
+/**
+ * Switch back from an impersonated session to the admin's own session.
+ * Calls the exit-impersonation endpoint first (while still authenticated as
+ * the impersonated user, so the backend can end that session server-side),
+ * then restores whatever it returns — falling back to the admin session
+ * stashed locally by `impersonateUser()` if the call fails or returns
+ * nothing usable.
+ */
+export async function restoreAdminSession(): Promise<void> {
+  const adminToken = localStorage.getItem('admin_token');
+  if (!adminToken) return;
+
+  const adminRefreshToken = localStorage.getItem('admin_refresh_token');
+  const adminUser = localStorage.getItem('admin_user');
+  const adminRole = localStorage.getItem('admin_userRole');
+
+  const restoreLocalAdminSession = () => {
+    localStorage.setItem('token', adminToken);
+    if (adminRefreshToken)
+      localStorage.setItem('refresh_token', adminRefreshToken);
+    if (adminUser) localStorage.setItem('user', adminUser);
+    if (adminRole) localStorage.setItem('userRole', adminRole);
+  };
+
+  try {
+    const { data } = await apiClient.post<LoginResponse>(
+      AUTH_EXIT_IMPERSONATION,
+    );
+    const token = data?.access_token || data?.token;
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      restoreLocalAdminSession();
+    }
+    if (data?.refresh_token) {
+      localStorage.setItem('refresh_token', data.refresh_token);
+    }
+    if (data?.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userRole', mapBackendRole(data.user.role));
+    } else if (adminUser) {
+      localStorage.setItem('user', adminUser);
+      if (adminRole) localStorage.setItem('userRole', adminRole);
+    }
+  } catch (err) {
+    console.error(
+      'Exit-impersonation request failed — restoring the locally stashed admin session instead:',
+      err,
+    );
+    restoreLocalAdminSession();
+  } finally {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_refresh_token');
+    localStorage.removeItem('admin_user');
+    localStorage.removeItem('admin_userRole');
+  }
 }
 
 /**

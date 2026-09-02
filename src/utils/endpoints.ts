@@ -17,6 +17,11 @@ export const AUTH_ME = '/auth/me';
 export const AUTH_UPDATE_PASSWORD = '/auth/update-password';
 export const AUTH_COLUMN_PREFERENCES = '/auth/me/column-preferences';
 export const APP_HEALTH = '/health';
+// "Login as user" — lets an administrator start a session as another user
+// directly from the User Management table.
+export const AUTH_IMPERSONATE = (userId: string) =>
+  `/auth/impersonate/${userId}`;
+export const AUTH_EXIT_IMPERSONATION = '/auth/exit-impersonation';
 
 // ------------------------------------------
 // Auth & User Endpoints
