@@ -7,7 +7,6 @@ import {
   Loader2,
   Save,
   Info,
-  Copy,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -18,6 +17,13 @@ import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDro
 import WarehouseInfiniteDropdown from '../../../components/common/WarehouseInfiniteDropdown';
 import CompanyDropdown from '../../../components/common/CompanyDropdown';
 import { createPurchaseOrder } from '../services/purchaseOrder.service';
+import { getCompanies } from '../../../services/company.service';
+import { getWarehouses } from '../../../services/warehouse.service';
+
+// Default selections for a new PO — most POs are for this company/warehouse,
+// so pre-select them instead of making every user pick them manually.
+const DEFAULT_COMPANY_NAME = 'Manhattan Comfort';
+const DEFAULT_WAREHOUSE_NAME = 'South Brunswick';
 
 interface ThemedSelectOption {
   value: number | string;
@@ -54,9 +60,7 @@ function ThemedSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selected = options.find(
-    (opt) => String(opt.value) === String(value),
-  );
+  const selected = options.find((opt) => String(opt.value) === String(value));
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -103,28 +107,6 @@ const PO_TYPE_OPTIONS = [
   { value: 3, label: 'Blanket' },
 ];
 
-const DISCOUNT_TYPE_OPTIONS = [
-  { value: 0, label: 'None' },
-  { value: 1, label: 'Percent (%)' },
-  { value: 2, label: 'Fixed Amount ($)' },
-];
-
-const emptyAddress = {
-  FirstName: '',
-  LastName: '',
-  MiddleName: '',
-  ZipCode: '',
-  City: '',
-  Country: '',
-  Business: '',
-  AddressLine1: '',
-  AddressLine2: '',
-  Fax: '',
-  Region: '',
-  State: '',
-  Phone: '',
-};
-
 const emptyProductRow = {
   ProductID: '',
   QtyUnitsOrdered: '',
@@ -141,8 +123,6 @@ const emptyProductRow = {
 const STEPS = [
   { key: 'general', label: 'General Info' },
   { key: 'products', label: 'Products' },
-  { key: 'billing', label: 'Billing Address' },
-  { key: 'shipping', label: 'Shipping Address' },
   { key: 'review', label: 'Review & Create' },
 ];
 
@@ -162,19 +142,63 @@ export default function CreatePurchaseOrderModal({
     companyId: '',
     vendorId: '',
     poType: 0,
-    caseQtyMode: false,
     defaultWarehouseId: '',
     description: '',
     vendorNote: '',
-    paymentTermId: '',
     expectedDeliveryDate: '',
   });
-  const [billingAddress, setBillingAddress] = useState({ ...emptyAddress });
-  const [shippingAddress, setShippingAddress] = useState({ ...emptyAddress });
-  const [sameAsBilling, setSameAsBilling] = useState(true);
   const [products, setProducts] = useState([{ ...emptyProductRow }]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Pre-select the usual Company/Warehouse for a new PO so most users never
+  // have to touch these fields — only fills them in while still empty, so
+  // it never overwrites a choice already made in this session.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (!form.companyId) {
+      getCompanies()
+        .then((companies) => {
+          const match = companies.find((c) =>
+            (c.name || '')
+              .toLowerCase()
+              .includes(DEFAULT_COMPANY_NAME.toLowerCase()),
+          );
+          if (match) {
+            const id = String(match.sellercloud_company_id || match.id);
+            setForm((p) => (p.companyId ? p : { ...p, companyId: id }));
+          }
+        })
+        .catch((err) =>
+          console.error('Failed to auto-select default company:', err),
+        );
+    }
+
+    if (!form.defaultWarehouseId) {
+      getWarehouses()
+        .then((data) => {
+          const results = Array.isArray(data)
+            ? data
+            : data?.results || data?.data || [];
+          const match = results.find((w: any) =>
+            (w.name || w.warehouse_name || '')
+              .toLowerCase()
+              .includes(DEFAULT_WAREHOUSE_NAME.toLowerCase()),
+          );
+          if (match) {
+            const id = String(match.sellercloud_warehouse_id || match.id);
+            setForm((p) =>
+              p.defaultWarehouseId ? p : { ...p, defaultWarehouseId: id },
+            );
+          }
+        })
+        .catch((err) =>
+          console.error('Failed to auto-select default warehouse:', err),
+        );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -205,16 +229,11 @@ export default function CreatePurchaseOrderModal({
       companyId: '',
       vendorId: '',
       poType: 0,
-      caseQtyMode: false,
       defaultWarehouseId: '',
       description: '',
       vendorNote: '',
-      paymentTermId: '',
       expectedDeliveryDate: '',
     });
-    setBillingAddress({ ...emptyAddress });
-    setShippingAddress({ ...emptyAddress });
-    setSameAsBilling(true);
     setProducts([{ ...emptyProductRow }]);
     setErrors({});
   };
@@ -303,20 +322,15 @@ export default function CreatePurchaseOrderModal({
       }
     }
 
-    const finalShipping = sameAsBilling ? billingAddress : shippingAddress;
-
     const payload = {
       CompanyID: Number(form.companyId),
       VendorID: Number(form.vendorId) || (form.vendorId as unknown as number),
       POType: Number(form.poType),
-      CaseQtyMode: form.caseQtyMode,
       DefaultWarehouseID: Number(form.defaultWarehouseId),
       Description: form.description.trim(),
       VendorNote: form.vendorNote.trim(),
-      PaymentTermID: form.paymentTermId ? Number(form.paymentTermId) : 0,
-      ExpectedDeliveryDate: new Date(
-        form.expectedDeliveryDate,
-      ).toISOString(),
+      PaymentTermID: 0,
+      ExpectedDeliveryDate: new Date(form.expectedDeliveryDate).toISOString(),
       Products: products
         .filter((p) => p.ProductID.trim())
         .map((p) => ({
@@ -333,8 +347,6 @@ export default function CreatePurchaseOrderModal({
             : Number(form.defaultWarehouseId),
           ItemNotes: p.ItemNotes.trim(),
         })),
-      BillingAddress: billingAddress,
-      ShippingAddress: finalShipping,
     };
 
     try {
@@ -355,193 +367,9 @@ export default function CreatePurchaseOrderModal({
   };
 
   const inputClass =
-    'w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm text-slate-800 transition-colors hover:border-black focus:border-black focus:outline-hidden focus:ring-0';
+    'w-full rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-800 transition-colors hover:border-black focus:border-black focus:outline-hidden focus:ring-0';
   const labelClass = 'mb-1 block text-xs font-semibold text-slate-600';
   const errorClass = 'mt-1 text-[10px] font-semibold text-rose-500';
-
-  const renderAddressFields = (
-    address: typeof emptyAddress,
-    setAddress: React.Dispatch<React.SetStateAction<typeof emptyAddress>>,
-    disabled = false,
-  ) => (
-    <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className={labelClass}>First Name</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.FirstName}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, FirstName: e.target.value }))
-          }
-          placeholder="First name"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Last Name</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.LastName}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, LastName: e.target.value }))
-          }
-          placeholder="Last name"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Middle Name</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.MiddleName}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, MiddleName: e.target.value }))
-          }
-          placeholder="Middle name"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Business</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.Business}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, Business: e.target.value }))
-          }
-          placeholder="Business name"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Phone</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.Phone}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, Phone: e.target.value }))
-          }
-          placeholder="Phone number"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Fax</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.Fax}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, Fax: e.target.value }))
-          }
-          placeholder="Fax number"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div className="col-span-2">
-        <label className={labelClass}>Address Line 1</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.AddressLine1}
-          onChange={(e) =>
-            setAddress((prev) => ({
-              ...prev,
-              AddressLine1: e.target.value,
-            }))
-          }
-          placeholder="Street address"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div className="col-span-2">
-        <label className={labelClass}>Address Line 2</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.AddressLine2}
-          onChange={(e) =>
-            setAddress((prev) => ({
-              ...prev,
-              AddressLine2: e.target.value,
-            }))
-          }
-          placeholder="Apartment, suite, unit, etc. (optional)"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>City</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.City}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, City: e.target.value }))
-          }
-          placeholder="City"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>State</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.State}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, State: e.target.value }))
-          }
-          placeholder="State"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Region</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.Region}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, Region: e.target.value }))
-          }
-          placeholder="Region"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Zip Code</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.ZipCode}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, ZipCode: e.target.value }))
-          }
-          placeholder="Zip code"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-      <div>
-        <label className={labelClass}>Country</label>
-        <input
-          type="text"
-          disabled={disabled}
-          value={address.Country}
-          onChange={(e) =>
-            setAddress((prev) => ({ ...prev, Country: e.target.value }))
-          }
-          placeholder="Country"
-          className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
-        />
-      </div>
-    </div>
-  );
 
   const currentStepKey = STEPS[stepIndex].key;
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -552,7 +380,7 @@ export default function CreatePurchaseOrderModal({
       onClick={handleClose}
     >
       <div
-        className="animate-scaleUp flex h-[92vh] w-full max-w-7xl flex-col rounded-2xl border border-slate-100 bg-white shadow-xl"
+        className="animate-scaleUp flex h-[78vh] w-full max-w-7xl flex-col rounded-2xl border border-slate-100 bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -610,10 +438,7 @@ export default function CreatePurchaseOrderModal({
           })}
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col"
-        >
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-4">
             {/* Step 1: General Info */}
             {currentStepKey === 'general' && (
@@ -665,9 +490,7 @@ export default function CreatePurchaseOrderModal({
                       className={inputClass}
                     />
                     {errors.defaultWarehouseId && (
-                      <p className={errorClass}>
-                        {errors.defaultWarehouseId}
-                      </p>
+                      <p className={errorClass}>{errors.defaultWarehouseId}</p>
                     )}
                   </div>
                   <div>
@@ -689,19 +512,6 @@ export default function CreatePurchaseOrderModal({
                       </p>
                     )}
                   </div>
-                  <div>
-                    <label className={labelClass}>Payment Term ID</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.paymentTermId}
-                      onChange={(e) =>
-                        setField('paymentTermId', e.target.value)
-                      }
-                      placeholder="SellerCloud Payment Term ID"
-                      className={inputClass}
-                    />
-                  </div>
                   <div className="col-span-2">
                     <label className={labelClass}>Description</label>
                     <textarea
@@ -721,23 +531,6 @@ export default function CreatePurchaseOrderModal({
                       placeholder="Note visible to the vendor"
                       className={`${inputClass} resize-none`}
                     />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                    <input
-                      id="caseQtyMode"
-                      type="checkbox"
-                      checked={form.caseQtyMode}
-                      onChange={(e) =>
-                        setField('caseQtyMode', e.target.checked)
-                      }
-                      className="accent-mc-gold h-4 w-4 rounded"
-                    />
-                    <label
-                      htmlFor="caseQtyMode"
-                      className="text-xs font-semibold text-slate-700"
-                    >
-                      Case Qty Mode
-                    </label>
                   </div>
                 </div>
               </div>
@@ -833,97 +626,6 @@ export default function CreatePurchaseOrderModal({
                             className={inputClass}
                           />
                         </div>
-                        <div>
-                          <label className={labelClass}>
-                            Qty Cases Ordered
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={p.QtyCasesOrdered}
-                            onChange={(e) =>
-                              setProductField(
-                                i,
-                                'QtyCasesOrdered',
-                                e.target.value,
-                              )
-                            }
-                            placeholder="0"
-                            className={inputClass}
-                          />
-                        </div>
-                        <div>
-                          <label className={labelClass}>
-                            Qty Units Per Case
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={p.QtyUnitsPerCase}
-                            onChange={(e) =>
-                              setProductField(
-                                i,
-                                'QtyUnitsPerCase',
-                                e.target.value,
-                              )
-                            }
-                            placeholder="0"
-                            className={inputClass}
-                          />
-                        </div>
-                        <div>
-                          <label className={labelClass}>Case Price</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={p.CasePrice}
-                            onChange={(e) =>
-                              setProductField(i, 'CasePrice', e.target.value)
-                            }
-                            placeholder="0.00"
-                            className={inputClass}
-                          />
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Discount Type</label>
-                          <ThemedSelect
-                            value={p.DiscountType}
-                            onChange={(val) =>
-                              setProductField(i, 'DiscountType', Number(val))
-                            }
-                            options={DISCOUNT_TYPE_OPTIONS}
-                            className={inputClass}
-                          />
-                        </div>
-                        <div>
-                          <label className={labelClass}>Discount Value</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={p.DiscountValue}
-                            onChange={(e) =>
-                              setProductField(i, 'DiscountValue', e.target.value)
-                            }
-                            placeholder="0.00"
-                            className={inputClass}
-                          />
-                        </div>
-                        <div>
-                          <label className={labelClass}>
-                            Warehouse (optional override)
-                          </label>
-                          <WarehouseInfiniteDropdown
-                            value={p.WarehouseID}
-                            onChange={(val) =>
-                              setProductField(i, 'WarehouseID', val)
-                            }
-                            placeholder="Use default warehouse"
-                            className={inputClass}
-                          />
-                        </div>
                         <div className="col-span-3">
                           <label className={labelClass}>Item Notes</label>
                           <input
@@ -940,46 +642,6 @@ export default function CreatePurchaseOrderModal({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Step 3: Billing Address */}
-            {currentStepKey === 'billing' && (
-              <div>
-                <h4 className="mb-3 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                  Billing Address
-                </h4>
-                {renderAddressFields(billingAddress, setBillingAddress)}
-              </div>
-            )}
-
-            {/* Step 4: Shipping Address */}
-            {currentStepKey === 'shipping' && (
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase">
-                    Shipping Address
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => setSameAsBilling((prev) => !prev)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-slate-700"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={sameAsBilling}
-                      onChange={(e) => setSameAsBilling(e.target.checked)}
-                      className="accent-mc-gold h-3.5 w-3.5 rounded"
-                    />
-                    <Copy className="h-3 w-3" />
-                    Same as billing address
-                  </button>
-                </div>
-                {renderAddressFields(
-                  sameAsBilling ? billingAddress : shippingAddress,
-                  setShippingAddress,
-                  sameAsBilling,
-                )}
               </div>
             )}
 
@@ -1012,10 +674,6 @@ export default function CreatePurchaseOrderModal({
                       {PO_TYPE_OPTIONS.find((o) => o.value === form.poType)
                         ?.label || form.poType}
                     </dd>
-                    <dt className="text-slate-500">Case Qty Mode</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.caseQtyMode ? 'Yes' : 'No'}
-                    </dd>
                     <dt className="text-slate-500">Default Warehouse</dt>
                     <dd className="font-semibold text-slate-800">
                       {form.defaultWarehouseId || '—'}
@@ -1023,10 +681,6 @@ export default function CreatePurchaseOrderModal({
                     <dt className="text-slate-500">Expected Delivery</dt>
                     <dd className="font-semibold text-slate-800">
                       {form.expectedDeliveryDate || '—'}
-                    </dd>
-                    <dt className="text-slate-500">Payment Term ID</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.paymentTermId || '0'}
                     </dd>
                     <dt className="text-slate-500">Description</dt>
                     <dd className="font-semibold text-slate-800">
@@ -1037,7 +691,8 @@ export default function CreatePurchaseOrderModal({
 
                 <div className="rounded-xl border border-slate-200 p-4">
                   <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                    Products ({products.filter((p) => p.ProductID.trim()).length})
+                    Products (
+                    {products.filter((p) => p.ProductID.trim()).length})
                   </h4>
                   <div className="space-y-1.5">
                     {products
@@ -1051,48 +706,10 @@ export default function CreatePurchaseOrderModal({
                             {p.ProductID}
                           </span>
                           <span className="text-slate-500">
-                            Units: {p.QtyUnitsOrdered || 0} · Cases:{' '}
-                            {p.QtyCasesOrdered || 0}
+                            Units: {p.QtyUnitsOrdered || 0}
                           </span>
                         </div>
                       ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                      Billing Address
-                    </h4>
-                    <p className="text-xs text-slate-700">
-                      {[
-                        `${billingAddress.FirstName} ${billingAddress.LastName}`.trim(),
-                        billingAddress.AddressLine1,
-                        billingAddress.City,
-                        billingAddress.State,
-                        billingAddress.ZipCode,
-                      ]
-                        .filter(Boolean)
-                        .join(', ') || '—'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                      Shipping Address
-                    </h4>
-                    <p className="text-xs text-slate-700">
-                      {sameAsBilling
-                        ? 'Same as billing address'
-                        : [
-                            `${shippingAddress.FirstName} ${shippingAddress.LastName}`.trim(),
-                            shippingAddress.AddressLine1,
-                            shippingAddress.City,
-                            shippingAddress.State,
-                            shippingAddress.ZipCode,
-                          ]
-                            .filter(Boolean)
-                            .join(', ') || '—'}
-                    </p>
                   </div>
                 </div>
               </div>
