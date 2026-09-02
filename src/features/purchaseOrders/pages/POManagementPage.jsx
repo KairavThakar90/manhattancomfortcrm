@@ -227,9 +227,10 @@ export default function POManagementPage() {
           params.channel_order_id = channelFilter;
         }
 
-        if (userRole === 'Vendor') {
-          params.vendor_id = '3f5551f4-186e-467d-9340-5b74d8e7b766'; // ABC Manufacturing default
-        }
+        // Vendor-role users are scoped to their own purchase orders
+        // server-side (via the authenticated user), so no vendor_id filter
+        // is sent from here — sending one previously hardcoded every vendor
+        // login to a single fixed vendor's data.
 
         let results = [];
         if (activeSubTab !== 'kanban') {

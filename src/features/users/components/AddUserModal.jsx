@@ -113,6 +113,145 @@ function CustomSelect({
   );
 }
 
+function CheckboxMultiSelect({
+  values,
+  onChange,
+  options,
+  placeholder,
+  error,
+  className,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const menuRef = useRef(null);
+  const [rect, setRect] = useState(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      const isOutsideTrigger =
+        dropdownRef.current && !dropdownRef.current.contains(event.target);
+      const isOutsideMenu =
+        menuRef.current && !menuRef.current.contains(event.target);
+      if (isOutsideTrigger && (!menuRef.current || isOutsideMenu)) {
+        setIsOpen(false);
+      }
+    }
+    const handleClose = () => setIsOpen(false);
+    const handleScroll = (event) => {
+      if (menuRef.current && menuRef.current.contains(event.target)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleClose);
+    window.addEventListener('scroll', handleScroll, true); // Catch internal modal scroll
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleClose);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      setRect(dropdownRef.current.getBoundingClientRect());
+    }
+  }, [isOpen]);
+
+  const selectedOptions = options.filter((opt) => values.includes(opt.value));
+
+  const toggleValue = (value) => {
+    onChange(
+      values.includes(value)
+        ? values.filter((v) => v !== value)
+        : [...values, value],
+    );
+  };
+
+  return (
+    <>
+      <div className={`relative ${className || ''}`} ref={dropdownRef}>
+        <div
+          className={`bg-mc-white flex min-h-[38px] w-full cursor-pointer flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1.5 text-sm transition-colors focus:outline-none ${error ? 'border-rose-300 focus:ring-rose-500' : 'border-mc-beige-dark hover:border-mc-gold focus:ring-mc-gold focus:ring-2'}`}
+          onClick={() => setIsOpen(!isOpen)}
+          tabIndex={0}
+        >
+          {selectedOptions.length === 0 ? (
+            <span className="text-mc-gray-soft px-1">{placeholder}</span>
+          ) : (
+            selectedOptions.map((opt) => (
+              <span
+                key={opt.value}
+                className="bg-mc-beige-light text-mc-black flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold"
+              >
+                {opt.label}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleValue(opt.value);
+                  }}
+                  className="text-mc-gray-soft hover:text-mc-black"
+                  aria-label={`Remove ${opt.label}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))
+          )}
+          <ChevronDown
+            className={`text-mc-gray-soft ml-auto h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </div>
+      {isOpen &&
+        rect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              top: rect.bottom + window.scrollY + 4,
+              left: rect.left + window.scrollX,
+              width: rect.width,
+            }}
+            className="border-mc-beige-dark bg-mc-white absolute z-[9999] max-h-60 overflow-y-auto rounded-lg border py-1 shadow-none"
+          >
+            {options.length === 0 && (
+              <div className="text-mc-gray-soft px-3 py-2 text-sm">
+                No vendors found
+              </div>
+            )}
+            {options.map((opt) => {
+              const checked = values.includes(opt.value);
+              return (
+                <label
+                  key={opt.value}
+                  className="hover:bg-mc-beige-light flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleValue(opt.value)}
+                    className="border-mc-beige-dark h-4 w-4 cursor-pointer rounded text-black accent-black focus:ring-black"
+                  />
+                  <span
+                    className={
+                      checked ? 'text-mc-black font-bold' : 'text-mc-gray-dark'
+                    }
+                  >
+                    {opt.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
 export default function AddUserModal({ user = null, onClose, onSuccess }) {
   const dispatch = useDispatch();
   const vendors = useSelector((state) => state.vendors.list) || [];
@@ -198,7 +337,9 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
     email: user?.email || '',
     password: '',
     role: user?.role || 'admin',
-    vendorId: user?.vendor_id || '',
+    // Vendor is now a multi-select — carry forward legacy single `vendor_id`
+    // records as a one-item array so existing users still show correctly.
+    vendorIds: user?.vendor_ids || (user?.vendor_id ? [user.vendor_id] : []),
     warehouseId: user?.warehouse_id || '',
     country: user?.country || 'United States',
     phone: user?.phone || '',
@@ -255,8 +396,8 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
     } else if (formData.password && formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
-    if (formData.role === 'vendor' && !formData.vendorId)
-      newErrors.vendorId = 'Vendor is required';
+    if (formData.role === 'vendor' && formData.vendorIds.length === 0)
+      newErrors.vendorIds = 'At least one vendor is required';
     if (formData.role === 'warehouse' && !formData.warehouseId)
       newErrors.warehouseId = 'Warehouse is required';
 
@@ -289,7 +430,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
       payload.username = payload.email.split('@')[0];
 
       if (formData.role === 'vendor') {
-        payload.vendor_id = formData.vendorId;
+        payload.vendor_ids = formData.vendorIds;
         payload.country = formData.country;
         payload.phone = formData.phone;
         payload.payment_terms = formData.payment_terms;
@@ -323,7 +464,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
 
   return (
     <div className="animate-in fade-in bg-mc-black/30 fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="border-mc-beige-dark relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border bg-white shadow-none">
+      <div className="border-mc-beige-dark relative flex max-h-[85vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl border bg-white shadow-none">
         <div className="border-mc-beige-dark bg-mc-white flex items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="bg-mc-beige-light text-mc-black flex h-10 w-10 items-center justify-center rounded-lg">
@@ -405,7 +546,7 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                 setFormData((p) => ({
                   ...p,
                   role: val,
-                  vendorId: val === 'vendor' ? p.vendorId : '',
+                  vendorIds: val === 'vendor' ? p.vendorIds : [],
                   warehouseId: val === 'warehouse' ? p.warehouseId : '',
                 }));
 
@@ -473,25 +614,25 @@ export default function AddUserModal({ user = null, onClose, onSuccess }) {
                 <label className="text-mc-black mb-1 block text-xs font-semibold">
                   Vendor <span className="text-rose-500">*</span>
                 </label>
-                <CustomSelect
-                  value={formData.vendorId}
-                  onChange={(val) => {
-                    setFormData((p) => ({ ...p, vendorId: val }));
-                    if (errors.vendorId)
-                      setErrors((p) => ({ ...p, vendorId: undefined }));
+                <CheckboxMultiSelect
+                  values={formData.vendorIds}
+                  onChange={(vendorIds) => {
+                    setFormData((p) => ({ ...p, vendorIds }));
+                    if (errors.vendorIds)
+                      setErrors((p) => ({ ...p, vendorIds: undefined }));
                   }}
                   options={vendors.map((v) => ({
                     value: v.id,
                     label: `${v.name}${v.country ? ` (${v.country})` : ''}`,
                   }))}
                   placeholder={
-                    vendorsLoading ? 'Loading vendors...' : 'Select a vendor'
+                    vendorsLoading ? 'Loading vendors...' : 'Select vendor(s)'
                   }
-                  error={errors.vendorId}
+                  error={errors.vendorIds}
                 />
-                {errors.vendorId && (
+                {errors.vendorIds && (
                   <p className="mt-1 text-[10px] font-medium text-rose-500">
-                    {errors.vendorId}
+                    {errors.vendorIds}
                   </p>
                 )}
               </div>
