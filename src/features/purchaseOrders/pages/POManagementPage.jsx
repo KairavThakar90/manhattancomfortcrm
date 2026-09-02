@@ -636,10 +636,12 @@ export default function POManagementPage() {
       try {
         const response = await createPurchaseOrder({
           vendor_id: dbVendorId,
+          purchase_title:
+            po.description || po.id || `PO for ${po.vendorName || 'Vendor'}`,
           expected_delivery_date: po.eta,
+          notes: po.vendorNote || '',
           items: po.items?.map((it) => ({
             sku: it.sku,
-            product_name: it.name,
             qty_ordered: it.qty,
             unit_price: it.unitPrice,
           })),

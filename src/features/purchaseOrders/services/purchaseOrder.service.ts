@@ -75,11 +75,18 @@ export interface PurchaseOrder {
   sellercloud_link?: string;
 }
 
+export interface CreatePOItemPayload {
+  sku: string;
+  qty_ordered: number;
+  unit_price: number;
+}
+
 export interface CreatePOPayload {
-  vendorId: string;
-  items: PurchaseOrderItem[];
-  eta: string;
-  [key: string]: unknown;
+  vendor_id: string;
+  purchase_title: string;
+  expected_delivery_date?: string;
+  notes?: string;
+  items: CreatePOItemPayload[];
 }
 
 export interface UpdatePOPayload {
