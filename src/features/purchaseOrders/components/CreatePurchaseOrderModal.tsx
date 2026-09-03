@@ -393,7 +393,7 @@ export default function CreatePurchaseOrderModal({
                       onChange={(e) =>
                         setField('purchaseTitle', e.target.value)
                       }
-                      placeholder="e.g. Fall 2026 Production PO"
+                      placeholder="Enter title"
                       className={inputClass}
                     />
                     {errors.purchaseTitle && (
@@ -401,13 +401,13 @@ export default function CreatePurchaseOrderModal({
                     )}
                   </div>
                   <div className="col-span-2">
-                    <label className={labelClass}>Notes</label>
+                    <label className={labelClass}>Description</label>
                     <textarea
-                      rows={3}
+                      rows={6}
                       value={form.notes}
                       onChange={(e) => setField('notes', e.target.value)}
-                      placeholder="e.g. Standard container loading instructions"
-                      className={`${inputClass} resize-none`}
+                      placeholder="Enter description"
+                      className={`${inputClass} resize-y`}
                     />
                   </div>
                 </div>
@@ -474,7 +474,7 @@ export default function CreatePurchaseOrderModal({
                               onChange={(e) =>
                                 setItemField(i, 'sku', e.target.value)
                               }
-                              placeholder="e.g. BS007-BZ"
+                              placeholder="Enter SKU"
                               className={`${inputClass} font-mono`}
                             />
                           ) : (
@@ -573,7 +573,7 @@ export default function CreatePurchaseOrderModal({
                     <dd className="font-semibold text-slate-800">
                       {form.purchaseTitle || '—'}
                     </dd>
-                    <dt className="text-slate-500">Notes</dt>
+                    <dt className="text-slate-500">Description</dt>
                     <dd className="font-semibold text-slate-800">
                       {form.notes || '—'}
                     </dd>
