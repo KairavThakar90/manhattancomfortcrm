@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import ContainerCommentSection from './ContainerCommentSection';
 import { getTagUsers } from '../../users/services/user.service';
@@ -33,7 +33,11 @@ const SCOPES = [
  * switch between the container's comment categories, and a single comment
  * thread (list + input) for whichever scope is selected.
  */
-export default function ContainerCommentsModal({ container, onClose }) {
+export default function ContainerCommentsModal({
+  container,
+  onClose,
+  onTotalCountChange,
+}) {
   const [scopeIndex, setScopeIndex] = useState(0);
   const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
   const [scopeCounts, setScopeCounts] = useState({});
@@ -73,6 +77,23 @@ export default function ContainerCommentsModal({ container, onClose }) {
       cancelled = true;
     };
   }, [container?.id]);
+
+  // Report the combined comment count across all scopes so the caller can
+  // reflect it instantly on the main table row (no need to refetch the list).
+  // The callback is read from a ref rather than a dependency: the caller
+  // passes a fresh inline function on every render, which would otherwise
+  // retrigger this effect indefinitely.
+  const onTotalCountChangeRef = useRef(onTotalCountChange);
+  onTotalCountChangeRef.current = onTotalCountChange;
+
+  useEffect(() => {
+    if (!onTotalCountChangeRef.current) return;
+    const total = SCOPES.reduce(
+      (sum, scope) => sum + (scopeCounts[scope.category] || 0),
+      0,
+    );
+    onTotalCountChangeRef.current(total);
+  }, [scopeCounts]);
 
   if (!container) return null;
 

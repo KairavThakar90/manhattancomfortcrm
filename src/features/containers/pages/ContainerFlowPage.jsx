@@ -1556,6 +1556,21 @@ export default function ContainerFlowPage() {
     setCommentsModalContainer(container);
   };
 
+  // Reflects a freshly-added/removed comment's total count on the main
+  // table row instantly, without waiting for a full list refetch.
+  const handleContainerCommentsCountChange = (containerId, count) => {
+    setCommentsModalContainer((prev) =>
+      prev && prev.id === containerId ? { ...prev, comments_count: count } : prev,
+    );
+    dispatch(
+      setContainersList(
+        reduxContainers.map((c) =>
+          c.id === containerId ? { ...c, comments_count: count } : c,
+        ),
+      ),
+    );
+  };
+
   // Closing the standalone Comments popup drops the viewer back into the
   // full Details modal for that same container — but only when the
   // container actually has comments; otherwise just close the popup.
@@ -2579,6 +2594,9 @@ export default function ContainerFlowPage() {
           <ContainerCommentsModal
             container={commentsModalContainer}
             onClose={handleCloseContainerComments}
+            onTotalCountChange={(count) =>
+              handleContainerCommentsCountChange(commentsModalContainer.id, count)
+            }
           />
         )}
 
@@ -3477,7 +3495,10 @@ export default function ContainerFlowPage() {
       {commentsModalContainer && (
         <ContainerCommentsModal
           container={commentsModalContainer}
-          onClose={() => setCommentsModalContainer(null)}
+          onClose={handleCloseContainerComments}
+          onTotalCountChange={(count) =>
+            handleContainerCommentsCountChange(commentsModalContainer.id, count)
+          }
         />
       )}
     </div>

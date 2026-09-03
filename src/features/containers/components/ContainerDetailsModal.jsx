@@ -18,6 +18,7 @@ import {
   Clock,
   Info,
   RefreshCw,
+  Warehouse,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -875,7 +876,7 @@ export default function ContainerDetailsModal({
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-2.5">
             <div className="flex items-center gap-3">
               <div className="bg-mc-beige-light text-mc-black flex h-8 w-8 items-center justify-center rounded-lg">
-                <Eye className="h-4 w-4" />
+                <Package className="h-4 w-4" />
               </div>
               <div>
                 <h3 className="text-sm leading-tight font-bold text-slate-800">
@@ -906,6 +907,20 @@ export default function ContainerDetailsModal({
                           data-tooltip-content={containerStageMeta.description}
                         >
                           {containerStageMeta.label}
+                        </span>
+                      </>
+                    )}
+                    {(container.warehouse_name ||
+                      container.warehouse?.name ||
+                      (typeof container.warehouse === 'string' &&
+                        container.warehouse)) && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                          <Warehouse className="h-3.5 w-3.5" />
+                          {container.warehouse_name ||
+                            container.warehouse?.name ||
+                            container.warehouse}
                         </span>
                       </>
                     )}
