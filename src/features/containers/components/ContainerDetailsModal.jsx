@@ -783,6 +783,7 @@ export default function ContainerDetailsModal({
       await updateContainer(container.id, finalPayload, options);
       toast.success('Container details updated successfully');
       if (onRefresh) onRefresh();
+      onClose();
     } catch (e) {
       toast.error('Failed to update Container details');
       console.error(e);
