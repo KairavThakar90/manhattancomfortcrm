@@ -572,8 +572,19 @@ export default function CreatePurchaseOrderModal({
                                   !items.some(
                                     (row, ri) =>
                                       ri !== i &&
-                                      row.productId &&
-                                      String(row.productId) === String(p.id),
+                                      // Exclude by productId (already picked
+                                      // from this dropdown in another row)
+                                      // or by sku (already present as a
+                                      // manual row — e.g. an existing item
+                                      // loaded when editing a PO).
+                                      ((row.productId &&
+                                        String(row.productId) ===
+                                          String(p.id)) ||
+                                        (row.sku &&
+                                          row.sku.trim().toLowerCase() ===
+                                            String(p.sku || '')
+                                              .trim()
+                                              .toLowerCase())),
                                   ),
                               )}
                               loading={isLoadingProducts}
@@ -609,17 +620,22 @@ export default function CreatePurchaseOrderModal({
                         </div>
                         <div>
                           <label className={labelClass}>Unit Price</label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={it.unit_price}
-                            onChange={(e) =>
-                              setItemField(i, 'unit_price', e.target.value)
-                            }
-                            placeholder="0.00"
-                            className={inputClass}
-                          />
+                          <div className="relative">
+                            <span className="text-mc-gray-soft pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={it.unit_price}
+                              onChange={(e) =>
+                                setItemField(i, 'unit_price', e.target.value)
+                              }
+                              placeholder="0.00"
+                              className={`${inputClass} pl-5`}
+                            />
+                          </div>
                           {errors[`item-${i}-price`] && (
                             <p className={errorClass}>
                               {errors[`item-${i}-price`]}
