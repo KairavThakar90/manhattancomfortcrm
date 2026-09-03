@@ -4,8 +4,13 @@ import { X, Plus, Trash2, Loader2, Save, Info, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import CompanyDropdown from '../../../components/common/CompanyDropdown';
+import ProductDropdown from '../../../components/common/ProductDropdown';
 import { createPurchaseOrder } from '../services/purchaseOrder.service';
 import { getCompanies } from '../../../services/company.service';
+import {
+  getProductsByVendor,
+  type Product,
+} from '../../../services/product.service';
 
 // Default company for a new PO — most POs are for this company, so
 // pre-select it instead of making every user pick it manually. Not part of
@@ -16,6 +21,10 @@ const emptyItemRow = {
   sku: '',
   qty_ordered: '',
   unit_price: '',
+  // Product-picked rows carry the source product's id; manual rows have
+  // freeform SKU/price entry instead of picking from the vendor's catalog.
+  productId: '',
+  isManual: false,
 };
 
 const STEPS = [
@@ -47,6 +56,33 @@ export default function CreatePurchaseOrderModal({
   const [items, setItems] = useState([{ ...emptyItemRow }]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  // Load the selected vendor's product catalog so item rows can be picked
+  // from it instead of typed manually.
+  useEffect(() => {
+    if (!isOpen || !form.vendorId) {
+      setProducts([]);
+      return;
+    }
+    let cancelled = false;
+    setIsLoadingProducts(true);
+    getProductsByVendor(form.vendorId)
+      .then((data) => {
+        if (!cancelled) setProducts(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load vendor products:', err);
+        if (!cancelled) setProducts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingProducts(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, form.vendorId]);
 
   // Pre-select the usual Company for a new PO — this field is disabled (not
   // sent to the API) but still shown for context.
@@ -86,6 +122,29 @@ export default function CreatePurchaseOrderModal({
 
   const addItemRow = () => {
     setItems((prev) => [...prev, { ...emptyItemRow }]);
+  };
+
+  const handleSelectProduct = (index: number, productId: string) => {
+    const product = products.find((p) => String(p.id) === productId);
+    setItems((prev) =>
+      prev.map((row, i) =>
+        i === index
+          ? {
+              ...row,
+              productId,
+              sku: product?.sku || row.sku,
+              unit_price:
+                product?.unit_price != null
+                  ? String(product.unit_price)
+                  : product?.price != null
+                    ? String(product.price)
+                    : row.unit_price,
+            }
+          : row,
+      ),
+    );
+    if (errors[`item-${index}-qty`])
+      setErrors((prev) => ({ ...prev, [`item-${index}-qty`]: '' }));
   };
 
   const removeItemRow = (index: number) => {
@@ -173,9 +232,7 @@ export default function CreatePurchaseOrderModal({
     setStepIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleCreate = async () => {
     for (let i = 0; i < STEPS.length - 1; i++) {
       if (!validateStep(i)) {
         setStepIndex(i);
@@ -288,16 +345,13 @@ export default function CreatePurchaseOrderModal({
         </div>
 
         <form
-          onSubmit={handleSubmit}
-          // Pressing Enter in a field (e.g. Purchase Title) implicitly
-          // submits the form per browser default — block that on every
-          // step except the last, so the create-PO API only ever fires
-          // from an explicit click on "Create Purchase Order".
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !isLastStep) {
-              e.preventDefault();
-            }
-          }}
+          // The create-PO API is called only from the explicit "Create
+          // Purchase Order" button's onClick (handleCreate) — never via
+          // native form submission. This avoids a React/browser quirk
+          // where clicking "Next" from the second-to-last step swaps this
+          // same button's type to "submit" mid-click and can trigger an
+          // immediate, unintended form submit.
+          onSubmit={(e) => e.preventDefault()}
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-4">
@@ -367,17 +421,15 @@ export default function CreatePurchaseOrderModal({
                   <h4 className="text-xs font-bold tracking-wider text-slate-400 uppercase">
                     Items
                   </h4>
-                  <button
-                    type="button"
-                    onClick={addItemRow}
-                    className="bg-mc-gold text-mc-black flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition hover:opacity-80"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Item
-                  </button>
                 </div>
                 {errors.items && (
                   <p className={`${errorClass} mb-2`}>{errors.items}</p>
+                )}
+                {!form.vendorId && (
+                  <p className="mb-2 text-[11px] text-slate-400">
+                    Select a vendor on the General Info step to pick from
+                    their product catalog, or add a manual item instead.
+                  </p>
                 )}
 
                 <div className="space-y-3">
@@ -396,18 +448,51 @@ export default function CreatePurchaseOrderModal({
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
+                      <div className="mb-2 flex items-center justify-between pr-6">
+                        <span className="text-[10px] font-bold tracking-wide text-slate-400 uppercase">
+                          {it.isManual ? 'Manual Item' : 'Product Item'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setItemField(i, 'isManual', !it.isManual)
+                          }
+                          className="text-mc-black text-[11px] font-semibold underline decoration-dotted underline-offset-2"
+                        >
+                          {it.isManual
+                            ? 'Pick from product list'
+                            : 'Enter manually instead'}
+                        </button>
+                      </div>
                       <div className="grid grid-cols-3 gap-3 pr-6">
                         <div>
                           <label className={labelClass}>SKU *</label>
-                          <input
-                            type="text"
-                            value={it.sku}
-                            onChange={(e) =>
-                              setItemField(i, 'sku', e.target.value)
-                            }
-                            placeholder="e.g. BS007-BZ"
-                            className={`${inputClass} font-mono`}
-                          />
+                          {it.isManual ? (
+                            <input
+                              type="text"
+                              value={it.sku}
+                              onChange={(e) =>
+                                setItemField(i, 'sku', e.target.value)
+                              }
+                              placeholder="e.g. BS007-BZ"
+                              className={`${inputClass} font-mono`}
+                            />
+                          ) : (
+                            <ProductDropdown
+                              value={it.productId}
+                              onChange={(val) => handleSelectProduct(i, val)}
+                              products={products}
+                              loading={isLoadingProducts}
+                              disabled={!form.vendorId}
+                              placeholder={
+                                !form.vendorId
+                                  ? 'Select a vendor first'
+                                  : '-- Select product --'
+                              }
+                              emptyLabel="No products found for vendor"
+                              className={`${inputClass} font-mono`}
+                            />
+                          )}
                         </div>
 
                         <div>
@@ -445,6 +530,17 @@ export default function CreatePurchaseOrderModal({
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={addItemRow}
+                    className="bg-mc-gold text-mc-black flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition hover:opacity-80"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Item
+                  </button>
                 </div>
               </div>
             )}
@@ -521,7 +617,8 @@ export default function CreatePurchaseOrderModal({
 
             {isLastStep ? (
               <button
-                type="submit"
+                type="button"
+                onClick={handleCreate}
                 disabled={isSaving}
                 className={`flex items-center gap-2 rounded-lg px-5 py-2 text-xs font-bold shadow-xs transition ${
                   isSaving

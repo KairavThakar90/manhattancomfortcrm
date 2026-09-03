@@ -73,6 +73,11 @@ export const PO_WAREHOUSE_BULK_ASSIGN = '/purchase-orders/bulk/warehouse';
 export const COMPANIES_LIST = '/companies';
 
 // ------------------------------------------
+// Product Endpoints
+// ------------------------------------------
+export const PRODUCTS_LIST = '/products';
+
+// ------------------------------------------
 // Vendor Endpoints
 // ------------------------------------------
 export const VENDORS_LIST = '/vendors';
