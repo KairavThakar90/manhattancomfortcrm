@@ -99,31 +99,32 @@ export default function CreatePurchaseOrderModal({
     };
   }, [isOpen, form.vendorId]);
 
-  // Fetch the company list once per open — used both to pre-select the
+  // Fetch the company list once and cache it — used both to pre-select the
   // usual Company for a new PO and to resolve its name for display (the
   // field itself is disabled/not sent to the API, shown for context only).
   useEffect(() => {
     if (!isOpen || companies.length > 0) return;
 
     getCompanies()
-      .then((fetchedCompanies) => {
-        setCompanies(fetchedCompanies);
-        if (form.companyId) return;
-        const match = fetchedCompanies.find((c) =>
-          (c.name || '')
-            .toLowerCase()
-            .includes(DEFAULT_COMPANY_NAME.toLowerCase()),
-        );
-        if (match) {
-          const id = String(match.sellercloud_company_id || match.id);
-          setForm((p) => (p.companyId ? p : { ...p, companyId: id }));
-        }
-      })
-      .catch((err) =>
-        console.error('Failed to auto-select default company:', err),
-      );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+      .then((fetchedCompanies) => setCompanies(fetchedCompanies))
+      .catch((err) => console.error('Failed to load companies:', err));
+  }, [isOpen, companies.length]);
+
+  // Pre-select the usual Company on every open (not just the first time the
+  // list is fetched) — handleReset clears companyId after a successful
+  // create, but the cached company list is kept, so this must run again
+  // independently of the fetch above.
+  useEffect(() => {
+    if (!isOpen || form.companyId || companies.length === 0) return;
+
+    const match = companies.find((c) =>
+      (c.name || '').toLowerCase().includes(DEFAULT_COMPANY_NAME.toLowerCase()),
+    );
+    if (match) {
+      const id = String(match.sellercloud_company_id || match.id);
+      setForm((p) => (p.companyId ? p : { ...p, companyId: id }));
+    }
+  }, [isOpen, companies, form.companyId]);
 
   if (!isOpen) return null;
 
