@@ -1,12 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { createPortal } from 'react-dom';
-import { X, Plus, Trash2, Loader2, Save, Info, Check } from 'lucide-react';
+import {
+  X,
+  Plus,
+  Trash2,
+  Loader2,
+  Save,
+  Info,
+  Check,
+  Building2,
+  Truck,
+  FileText,
+  Package,
+} from 'lucide-react';
 import { toast } from 'react-toastify';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import CompanyDropdown from '../../../components/common/CompanyDropdown';
 import ProductDropdown from '../../../components/common/ProductDropdown';
 import { createPurchaseOrder } from '../services/purchaseOrder.service';
-import { getCompanies } from '../../../services/company.service';
+import { getCompanies, type Company } from '../../../services/company.service';
 import {
   getProductsByVendor,
   type Product,
@@ -58,6 +71,8 @@ export default function CreatePurchaseOrderModal({
   const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const vendors = useSelector((state: any) => state.vendors?.list) || [];
 
   // Load the selected vendor's product catalog so item rows can be picked
   // from it instead of typed manually.
@@ -84,14 +99,17 @@ export default function CreatePurchaseOrderModal({
     };
   }, [isOpen, form.vendorId]);
 
-  // Pre-select the usual Company for a new PO — this field is disabled (not
-  // sent to the API) but still shown for context.
+  // Fetch the company list once per open — used both to pre-select the
+  // usual Company for a new PO and to resolve its name for display (the
+  // field itself is disabled/not sent to the API, shown for context only).
   useEffect(() => {
-    if (!isOpen || form.companyId) return;
+    if (!isOpen || companies.length > 0) return;
 
     getCompanies()
-      .then((companies) => {
-        const match = companies.find((c) =>
+      .then((fetchedCompanies) => {
+        setCompanies(fetchedCompanies);
+        if (form.companyId) return;
+        const match = fetchedCompanies.find((c) =>
           (c.name || '')
             .toLowerCase()
             .includes(DEFAULT_COMPANY_NAME.toLowerCase()),
@@ -118,10 +136,31 @@ export default function CreatePurchaseOrderModal({
     setItems((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
     );
+    const errorKey =
+      key === 'qty_ordered'
+        ? `item-${index}-qty`
+        : key === 'unit_price'
+          ? `item-${index}-price`
+          : null;
+    if (errorKey && errors[errorKey]) {
+      setErrors((prev) => ({ ...prev, [errorKey]: '' }));
+    }
+    if (errors.items) setErrors((prev) => ({ ...prev, items: '' }));
   };
 
   const addItemRow = () => {
-    setItems((prev) => [...prev, { ...emptyItemRow }]);
+    setItems((prev) => {
+      const usedProductIds = new Set(
+        prev.filter((row) => row.productId).map((row) => row.productId),
+      );
+      const hasProductsLeft = products.some(
+        (p) => !usedProductIds.has(String(p.id)),
+      );
+      return [
+        ...prev,
+        { ...emptyItemRow, isManual: !hasProductsLeft },
+      ];
+    });
   };
 
   const handleSelectProduct = (index: number, productId: string) => {
@@ -170,29 +209,31 @@ export default function CreatePurchaseOrderModal({
     onClose();
   };
 
-  // TEMP: validation disabled for now — allow free navigation/submit
-  // without requiring these fields. Restore the checks below to re-enable.
   const validateGeneral = () => {
     const nextErrors: Record<string, string> = {};
-    // if (!form.vendorId) nextErrors.vendorId = 'Vendor is required.';
-    // if (!form.purchaseTitle.trim())
-    //   nextErrors.purchaseTitle = 'Purchase title is required.';
+    if (!form.vendorId) nextErrors.vendorId = 'Please select a vendor.';
+    if (!form.purchaseTitle.trim())
+      nextErrors.purchaseTitle = 'Please enter a title for this purchase order.';
     return nextErrors;
   };
 
   const validateItems = () => {
     const nextErrors: Record<string, string> = {};
-    // const hasValidItem = items.some((it) => it.sku.trim());
-    // if (!hasValidItem) {
-    //   nextErrors.items = 'Add at least one item line.';
-    // } else {
-    //   items.forEach((it, i) => {
-    //     if (!it.sku.trim()) return;
-    //     if (!it.qty_ordered || Number(it.qty_ordered) <= 0) {
-    //       nextErrors[`item-${i}-qty`] = 'Enter a quantity greater than 0.';
-    //     }
-    //   });
-    // }
+    const hasValidItem = items.some((it) => it.sku.trim());
+    if (!hasValidItem) {
+      nextErrors.items = 'Please add at least one item before continuing.';
+    } else {
+      items.forEach((it, i) => {
+        if (!it.sku.trim()) return;
+        if (!it.qty_ordered || Number(it.qty_ordered) <= 0) {
+          nextErrors[`item-${i}-qty`] =
+            'Please enter a quantity greater than 0.';
+        }
+        if (it.unit_price !== '' && Number(it.unit_price) < 0) {
+          nextErrors[`item-${i}-price`] = 'Unit price can’t be negative.';
+        }
+      });
+    }
     return nextErrors;
   };
 
@@ -279,6 +320,13 @@ export default function CreatePurchaseOrderModal({
   const currentStepKey = STEPS[stepIndex].key;
   const isLastStep = stepIndex === STEPS.length - 1;
   const validItems = items.filter((it) => it.sku.trim());
+  const selectedCompanyName =
+    companies.find(
+      (c) => String(c.sellercloud_company_id || c.id) === form.companyId,
+    )?.name || form.companyId;
+  const selectedVendorName =
+    vendors.find((v: any) => String(v.id) === form.vendorId)?.name ||
+    form.vendorId;
 
   return createPortal(
     <div
@@ -363,7 +411,7 @@ export default function CreatePurchaseOrderModal({
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelClass}>Company *</label>
+                    <label className={labelClass}>Company <span className="text-rose-500">*</span></label>
                     <CompanyDropdown
                       value={form.companyId}
                       onChange={(val) => setField('companyId', val)}
@@ -374,7 +422,7 @@ export default function CreatePurchaseOrderModal({
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Vendor *</label>
+                    <label className={labelClass}>Vendor <span className="text-rose-500">*</span></label>
                     <VendorInfiniteDropdown
                       value={form.vendorId}
                       onChange={(val) => setField('vendorId', val)}
@@ -386,7 +434,7 @@ export default function CreatePurchaseOrderModal({
                     )}
                   </div>
                   <div>
-                    <label className={labelClass}>Purchase Title *</label>
+                    <label className={labelClass}>Purchase Title <span className="text-rose-500">*</span></label>
                     <input
                       type="text"
                       value={form.purchaseTitle}
@@ -466,7 +514,7 @@ export default function CreatePurchaseOrderModal({
                       </div>
                       <div className="grid grid-cols-3 gap-3 pr-6">
                         <div>
-                          <label className={labelClass}>SKU *</label>
+                          <label className={labelClass}>SKU <span className="text-rose-500">*</span></label>
                           {it.isManual ? (
                             <input
                               type="text"
@@ -481,7 +529,16 @@ export default function CreatePurchaseOrderModal({
                             <ProductDropdown
                               value={it.productId}
                               onChange={(val) => handleSelectProduct(i, val)}
-                              products={products}
+                              products={products.filter(
+                                (p) =>
+                                  String(p.id) === it.productId ||
+                                  !items.some(
+                                    (row, ri) =>
+                                      ri !== i &&
+                                      row.productId &&
+                                      String(row.productId) === String(p.id),
+                                  ),
+                              )}
                               loading={isLoadingProducts}
                               disabled={!form.vendorId}
                               placeholder={
@@ -489,14 +546,14 @@ export default function CreatePurchaseOrderModal({
                                   ? 'Select a vendor first'
                                   : '-- Select product --'
                               }
-                              emptyLabel="No products found for vendor"
+                              emptyLabel="All products already added"
                               className={`${inputClass} font-mono`}
                             />
                           )}
                         </div>
 
                         <div>
-                          <label className={labelClass}>Qty Ordered *</label>
+                          <label className={labelClass}>Qty Ordered <span className="text-rose-500">*</span></label>
                           <input
                             type="number"
                             min="0"
@@ -526,6 +583,11 @@ export default function CreatePurchaseOrderModal({
                             placeholder="0.00"
                             className={inputClass}
                           />
+                          {errors[`item-${i}-price`] && (
+                            <p className={errorClass}>
+                              {errors[`item-${i}-price`]}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -548,47 +610,90 @@ export default function CreatePurchaseOrderModal({
             {/* Step 3: Review */}
             {currentStepKey === 'review' && (
               <div className="space-y-4">
-                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                  <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <Info className="h-4 w-4 flex-shrink-0 text-amber-600" />
                   <p className="text-xs text-amber-800">
-                    Review the details below before creating this purchase
-                    order.
+                    This order will be synced with Sellercloud once created.
+                    Please review the details below before creating.
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-4">
-                  <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                  <h4 className="mb-3 text-xs font-bold tracking-wider text-slate-400 uppercase">
                     General
                   </h4>
-                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                    <dt className="text-slate-500">Company ID</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.companyId || '—'}
-                    </dd>
-                    <dt className="text-slate-500">Vendor ID</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.vendorId || '—'}
-                    </dd>
-                    <dt className="text-slate-500">Purchase Title</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.purchaseTitle || '—'}
-                    </dd>
-                    <dt className="text-slate-500">Description</dt>
-                    <dd className="font-semibold text-slate-800">
-                      {form.notes || '—'}
-                    </dd>
-                  </dl>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
+                      <Building2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase">
+                          Company
+                        </p>
+                        <p className="truncate text-xs font-bold text-slate-800">
+                          {selectedCompanyName || '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
+                      <Truck className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase">
+                          Vendor
+                        </p>
+                        <p className="truncate text-xs font-bold text-slate-800">
+                          {selectedVendorName || '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
+                      <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase">
+                          Purchase Title
+                        </p>
+                        <p className="truncate text-xs font-bold text-slate-800">
+                          {form.purchaseTitle || '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
+                      <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase">
+                          Description
+                        </p>
+                        <p className="text-xs font-semibold whitespace-pre-wrap text-slate-700">
+                          {form.notes || 'No description provided'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 p-4">
-                  <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                    Items ({validItems.length})
-                  </h4>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h4 className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                      <Package className="h-3.5 w-3.5" />
+                      Items ({validItems.length})
+                    </h4>
+                    <p className="text-xs font-bold text-slate-800">
+                      Total: $
+                      {validItems
+                        .reduce(
+                          (sum, it) =>
+                            sum +
+                            (Number(it.qty_ordered) || 0) *
+                              (Number(it.unit_price) || 0),
+                          0,
+                        )
+                        .toFixed(2)}
+                    </p>
+                  </div>
                   <div className="space-y-1.5">
                     {validItems.map((it, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between text-xs"
+                        className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs"
                       >
                         <span className="font-mono font-semibold text-slate-800">
                           {it.sku}
