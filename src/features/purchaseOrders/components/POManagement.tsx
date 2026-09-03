@@ -3250,7 +3250,7 @@ Supply Chain CRM Coordinator`;
           : targetId,
         vendor_id: String(detailData.vendor_id || detailData.vendor?.id || ''),
         purchase_title: detailData.purchase_title || detailData.title || '',
-        notes: detailData.notes || '',
+        description: detailData.description || detailData.notes || '',
         items: (detailData.items || []).map((item: any) => ({
           sku: item.sku || '',
           qty_ordered: item.qty_ordered ?? item.qty ?? 0,

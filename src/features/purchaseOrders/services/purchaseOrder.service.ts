@@ -84,6 +84,7 @@ export interface CreatePOItemPayload {
 export interface CreatePOPayload {
   vendor_id: string;
   purchase_title: string;
+  description?: string;
   expected_delivery_date?: string;
   notes?: string;
   items: CreatePOItemPayload[];

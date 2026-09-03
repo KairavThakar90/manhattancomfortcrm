@@ -11,7 +11,6 @@ import {
   Check,
   Building2,
   Truck,
-  FileText,
   Package,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -53,7 +52,7 @@ interface EditingPurchaseOrder {
   id: string;
   vendor_id?: string;
   purchase_title?: string;
-  notes?: string;
+  description?: string;
   items?: { sku: string; qty_ordered: number; unit_price: number }[];
 }
 
@@ -77,8 +76,7 @@ export default function CreatePurchaseOrderModal({
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState({
     vendorId: '',
-    purchaseTitle: '',
-    notes: '',
+    description: '',
     // Informational-only field below — not part of the create-PO API
     // payload, shown disabled and pre-filled with its usual default.
     companyId: '',
@@ -101,8 +99,7 @@ export default function CreatePurchaseOrderModal({
     setForm((prev) => ({
       ...prev,
       vendorId: editingPO.vendor_id || '',
-      purchaseTitle: editingPO.purchase_title || '',
-      notes: editingPO.notes || '',
+      description: editingPO.description || editingPO.purchase_title || '',
     }));
     setItems(
       editingPO.items && editingPO.items.length > 0
@@ -242,8 +239,7 @@ export default function CreatePurchaseOrderModal({
     setStepIndex(0);
     setForm({
       vendorId: '',
-      purchaseTitle: '',
-      notes: '',
+      description: '',
       companyId: '',
     });
     setItems([{ ...emptyItemRow }]);
@@ -258,8 +254,8 @@ export default function CreatePurchaseOrderModal({
   const validateGeneral = () => {
     const nextErrors: Record<string, string> = {};
     if (!form.vendorId) nextErrors.vendorId = 'Please select a vendor.';
-    if (!form.purchaseTitle.trim())
-      nextErrors.purchaseTitle = 'Please enter a title for this purchase order.';
+    if (!form.description.trim())
+      nextErrors.description = 'Please enter a description for this purchase order.';
     return nextErrors;
   };
 
@@ -330,8 +326,7 @@ export default function CreatePurchaseOrderModal({
 
     const payload = {
       vendor_id: form.vendorId,
-      purchase_title: form.purchaseTitle.trim(),
-      notes: form.notes.trim(),
+      purchase_title: form.description.trim(),
       items: items
         .filter((it) => it.sku.trim())
         .map((it) => ({
@@ -487,30 +482,18 @@ export default function CreatePurchaseOrderModal({
                       <p className={errorClass}>{errors.vendorId}</p>
                     )}
                   </div>
-                  <div>
-                    <label className={labelClass}>Purchase Title <span className="text-rose-500">*</span></label>
-                    <input
-                      type="text"
-                      value={form.purchaseTitle}
-                      onChange={(e) =>
-                        setField('purchaseTitle', e.target.value)
-                      }
-                      placeholder="Enter title"
-                      className={inputClass}
-                    />
-                    {errors.purchaseTitle && (
-                      <p className={errorClass}>{errors.purchaseTitle}</p>
-                    )}
-                  </div>
                   <div className="col-span-2">
-                    <label className={labelClass}>Description</label>
+                    <label className={labelClass}>Description <span className="text-rose-500">*</span></label>
                     <textarea
                       rows={6}
-                      value={form.notes}
-                      onChange={(e) => setField('notes', e.target.value)}
+                      value={form.description}
+                      onChange={(e) => setField('description', e.target.value)}
                       placeholder="Enter description"
                       className={`${inputClass} resize-y`}
                     />
+                    {errors.description && (
+                      <p className={errorClass}>{errors.description}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -701,24 +684,13 @@ export default function CreatePurchaseOrderModal({
                       </div>
                     </div>
                     <div className="col-span-2 flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
-                      <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold text-slate-400 uppercase">
-                          Purchase Title
-                        </p>
-                        <p className="truncate text-xs font-bold text-slate-800">
-                          {form.purchaseTitle || '—'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="col-span-2 flex items-start gap-2.5 rounded-lg bg-slate-50 p-2.5">
                       <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold text-slate-400 uppercase">
                           Description
                         </p>
                         <p className="text-xs font-semibold whitespace-pre-wrap text-slate-700">
-                          {form.notes || 'No description provided'}
+                          {form.description || 'No description provided'}
                         </p>
                       </div>
                     </div>
