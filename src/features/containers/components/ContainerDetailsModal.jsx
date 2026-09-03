@@ -431,7 +431,7 @@ export default function ContainerDetailsModal({
   // Optional: a list-only refresh (no reopening of this same modal). Used
   // when we're about to close the modal — onRefresh's default reopen
   // behavior would otherwise pop it back open once its fetch resolves.
-  onListRefresh,
+  onListRefresh = null,
   initialTab = 'details',
 }) {
   const [itemsPage, setItemsPage] = useState(1);

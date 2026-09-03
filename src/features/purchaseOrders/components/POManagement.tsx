@@ -1023,6 +1023,20 @@ const CompletionFilterDropdown = ({
   );
 };
 
+// Edit/Delete on a PO row are only offered while it hasn't been assigned to
+// any container yet — mirrors the "Containers" column's own fallback chain
+// (po.containers -> containerIds/containerNames -> comma-separated po.container)
+// so both agree on what counts as "assigned".
+const isPOUnassignedToContainer = (po: any) => {
+  if (Array.isArray(po?.containers) && po.containers.length > 0) return false;
+  if (Array.isArray(po?.containerIds) && po.containerIds.length > 0)
+    return false;
+  if (Array.isArray(po?.containerNames) && po.containerNames.length > 0)
+    return false;
+  if (po?.container && po.container !== 'N/A') return false;
+  return true;
+};
+
 const highlightText = (
   text: string | number | undefined | null,
   query: string | undefined | null,
@@ -3590,30 +3604,34 @@ Supply Chain CRM Coordinator`;
               >
                 <Eye className="h-3 w-3" />
               </button>
-              <button
-                type="button"
-                title="Edit Purchase Order"
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  handleEditPO(po);
-                }}
-                disabled={isLoadingEditPO}
-                className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Pencil className="h-3 w-3" />
-              </button>
-              {!isVendor && (
-                <button
-                  type="button"
-                  title="Delete Purchase Order"
-                  onClick={(e: any) => {
-                    e.stopPropagation();
-                    setDeletePOTarget(po);
-                  }}
-                  className="inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-rose-500"
-                >
-                  <Trash className="h-3 w-3" />
-                </button>
+              {isPOUnassignedToContainer(po) && (
+                <>
+                  <button
+                    type="button"
+                    title="Edit Purchase Order"
+                    onClick={(e: any) => {
+                      e.stopPropagation();
+                      handleEditPO(po);
+                    }}
+                    disabled={isLoadingEditPO}
+                    className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  {!isVendor && (
+                    <button
+                      type="button"
+                      title="Delete Purchase Order"
+                      onClick={(e: any) => {
+                        e.stopPropagation();
+                        setDeletePOTarget(po);
+                      }}
+                      className="inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-rose-500"
+                    >
+                      <Trash className="h-3 w-3" />
+                    </button>
+                  )}
+                </>
               )}
             </div>
             {po.containerLeadTimeDays && (
@@ -4238,30 +4256,34 @@ Supply Chain CRM Coordinator`;
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>
-              <button
-                type="button"
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  handleEditPO(po);
-                }}
-                disabled={isLoadingEditPO}
-                title="Edit Purchase Order"
-                className="text-mc-black inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              {!isVendor && (
-                <button
-                  type="button"
-                  onClick={(e: any) => {
-                    e.stopPropagation();
-                    setDeletePOTarget(po);
-                  }}
-                  title="Delete Purchase Order"
-                  className="inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold text-rose-500 transition hover:bg-rose-50"
-                >
-                  <Trash className="h-3.5 w-3.5" />
-                </button>
+              {isPOUnassignedToContainer(po) && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e: any) => {
+                      e.stopPropagation();
+                      handleEditPO(po);
+                    }}
+                    disabled={isLoadingEditPO}
+                    title="Edit Purchase Order"
+                    className="text-mc-black inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  {!isVendor && (
+                    <button
+                      type="button"
+                      onClick={(e: any) => {
+                        e.stopPropagation();
+                        setDeletePOTarget(po);
+                      }}
+                      title="Delete Purchase Order"
+                      className="inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold text-rose-500 transition hover:bg-rose-50"
+                    >
+                      <Trash className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </>
               )}
             </div>
           );
