@@ -2142,25 +2142,6 @@ export default function POManagement({
   // PO creation state
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // TEMP: "Create Purchase Order" is restricted to these logged-in users
-  // only, while the flow is still being validated.
-  const CREATE_PO_ALLOWED_EMAILS = [
-    'sanjay.storetransform@gmail.com',
-    'projectmanager663@gmail.com',
-    'ravistoretransform@gmail.com',
-  ];
-  const canCreatePO = (() => {
-    try {
-      const stored = localStorage.getItem('user');
-      const currentUserEmail = stored ? JSON.parse(stored)?.email : null;
-      return CREATE_PO_ALLOWED_EMAILS.includes(
-        String(currentUserEmail || '').toLowerCase(),
-      );
-    } catch {
-      return false;
-    }
-  })();
-
   // Import State
   const [showImportModal, setShowImportModal] = useState(false);
   const [importCsvText, setImportCsvText] = useState('');
@@ -4936,7 +4917,7 @@ Supply Chain CRM Coordinator`;
             </>
           )}
 
-          {userRole !== 'Vendor' && canCreatePO && (
+          {userRole !== 'Vendor' && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="bg-mc-black flex items-center gap-1 rounded-lg px-3.5 py-1.5 text-xs font-medium text-white shadow-xs transition hover:bg-black"
