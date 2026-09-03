@@ -428,6 +428,10 @@ export default function ContainerDetailsModal({
   isLoading = false,
   onClose,
   onRefresh,
+  // Optional: a list-only refresh (no reopening of this same modal). Used
+  // when we're about to close the modal — onRefresh's default reopen
+  // behavior would otherwise pop it back open once its fetch resolves.
+  onListRefresh,
   initialTab = 'details',
 }) {
   const [itemsPage, setItemsPage] = useState(1);
@@ -463,6 +467,10 @@ export default function ContainerDetailsModal({
   const [isSyncingSingle, setIsSyncingSingle] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [trackingData, setTrackingData] = useState({});
+  // Snapshot of the container's attachment ids as originally loaded — used
+  // to detect whether the user actually changed anything about attachments
+  // before deciding whether to include them in the save payload at all.
+  const originalAttachmentIdsRef = useRef([]);
   const [prevContainer, setPrevContainer] = useState(null);
   const [attachmentToDelete, setAttachmentToDelete] = useState(null);
   const [isDeletingAttachment, setIsDeletingAttachment] = useState(false);
@@ -612,6 +620,11 @@ export default function ContainerDetailsModal({
                   : []
       ).filter((a) => a && a.id);
 
+      originalAttachmentIdsRef.current = atts
+        .map((a) => a.id)
+        .sort()
+        .join(',');
+
       setTrackingData({
         container_name: cName,
         door: container.door || '',
@@ -745,13 +758,27 @@ export default function ContainerDetailsModal({
         attachmentsToUpload,
         attachment,
         existingAttachments,
+        // These are read-only "Archived Notes" carried over from the old
+        // pre-Comments system — they must never be re-submitted on save,
+        // since the Discussion/Comments sections are now the source of
+        // truth for vendor-credit and receiving-closure notes.
+        factory_credit_needed,
+        receiving_closure_notes,
         ...restPayload
       } = payload;
 
-      // Send references for standard DRF many-to-many list expectations
-      restPayload.attachments = existingAttachments
-        ? existingAttachments.map((a) => a.id)
-        : [];
+      // Only send the retained-attachments list if the user actually
+      // changed it (removed one) — otherwise omit the field entirely
+      // rather than re-submitting an unchanged list on every save.
+      const currentAttachmentIds = (existingAttachments || [])
+        .map((a) => a.id)
+        .sort()
+        .join(',');
+      if (currentAttachmentIds !== originalAttachmentIdsRef.current) {
+        restPayload.attachments = existingAttachments
+          ? existingAttachments.map((a) => a.id)
+          : [];
+      }
 
       // The API expects the JSON data as a stringified object under 'container_data'
       finalPayload.append('container_data', JSON.stringify(restPayload));
@@ -782,8 +809,12 @@ export default function ContainerDetailsModal({
 
       await updateContainer(container.id, finalPayload, options);
       toast.success('Container details updated successfully');
-      if (onRefresh) onRefresh();
       onClose();
+      // Refresh the underlying list without reopening this modal — call
+      // the list-only variant if the caller provided one, otherwise fall
+      // back to onRefresh (which may reopen, but only if that's all we have).
+      if (onListRefresh) onListRefresh();
+      else if (onRefresh) onRefresh();
     } catch (e) {
       toast.error('Failed to update Container details');
       console.error(e);

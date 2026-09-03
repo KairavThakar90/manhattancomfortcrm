@@ -2613,6 +2613,10 @@ export default function ContainerFlowPage() {
               );
             }
           }}
+          onListRefresh={() => {
+            fetchContainerAPI(1, '', false);
+            fetchTablePage();
+          }}
         />
 
         {/* Standalone Container Comments Popup — must be inside this return block */}
@@ -2781,6 +2785,10 @@ export default function ContainerFlowPage() {
                 containerDetailsInitialTab,
               );
             }
+          }}
+          onListRefresh={() => {
+            fetchContainerAPI(1, '', false);
+            fetchTablePage();
           }}
         />
 
@@ -3391,6 +3399,10 @@ export default function ContainerFlowPage() {
               containerDetailsInitialTab,
             );
           }
+        }}
+        onListRefresh={() => {
+          fetchContainerAPI(1, '', false);
+          fetchTablePage();
         }}
       />
 
