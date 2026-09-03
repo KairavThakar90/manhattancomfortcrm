@@ -5256,8 +5256,22 @@ Supply Chain CRM Coordinator`;
         createPortal(
           <div
             onClick={() => {
-              onSelectPO(null);
-              setIsCommentOnlyView(false);
+              // Clicking outside the comment-only popup surfaces the full
+              // Details modal instead of dismissing everything — but only
+              // when the PO actually has comments.
+              const commentsCount =
+                parseInt(
+                  (selectedPO as any)?.total_comments_count ??
+                    (selectedPO as any)?.commentsCount,
+                  10,
+                ) || 0;
+              if (isCommentOnlyView && commentsCount > 0) {
+                setIsCommentOnlyView(false);
+                setActiveDrawerSection('details');
+              } else {
+                onSelectPO(null);
+                setIsCommentOnlyView(false);
+              }
             }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs"
           >
@@ -5363,8 +5377,21 @@ Supply Chain CRM Coordinator`;
                   </div>
                   <button
                     onClick={() => {
-                      onSelectPO(null);
+                      // Closing the comment-only popup drops the viewer into
+                      // the full PO Details modal rather than dismissing it
+                      // — but only when the PO actually has comments.
+                      const commentsCount =
+                        parseInt(
+                          (selectedPO as any)?.total_comments_count ??
+                            (selectedPO as any)?.commentsCount,
+                          10,
+                        ) || 0;
                       setIsCommentOnlyView(false);
+                      if (commentsCount > 0) {
+                        setActiveDrawerSection('details');
+                      } else {
+                        onSelectPO(null);
+                      }
                     }}
                     className="rounded-md p-1.5 text-slate-400 hover:bg-slate-200"
                   >

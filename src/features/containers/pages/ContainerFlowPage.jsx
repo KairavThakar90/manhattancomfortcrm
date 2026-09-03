@@ -1556,6 +1556,25 @@ export default function ContainerFlowPage() {
     setCommentsModalContainer(container);
   };
 
+  // Closing the standalone Comments popup drops the viewer back into the
+  // full Details modal for that same container — but only when the
+  // container actually has comments; otherwise just close the popup.
+  const handleCloseContainerComments = () => {
+    const container = commentsModalContainer;
+    setCommentsModalContainer(null);
+    const count =
+      parseInt(
+        container?.comments_count ??
+          container?.comment_count ??
+          container?.total_comments_count ??
+          container?.commentsCount,
+        10,
+      ) || 0;
+    if (container?.id && count > 0) {
+      handleViewContainer(container);
+    }
+  };
+
   // Email "View Comment" deep-link support. Two URL shapes are accepted:
   //   /container-flow/:containerId?category=...&comment_id=...
   //   /container-flow?container_id=...&category=...&comment_id=...
@@ -2559,7 +2578,7 @@ export default function ContainerFlowPage() {
         {commentsModalContainer && (
           <ContainerCommentsModal
             container={commentsModalContainer}
-            onClose={() => setCommentsModalContainer(null)}
+            onClose={handleCloseContainerComments}
           />
         )}
 
