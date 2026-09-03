@@ -891,6 +891,12 @@ export default function ContainerFlowPage() {
   const [fetchedPOItems, setFetchedPOItems] = useState([]);
   const [loadingPOItems, setLoadingPOItems] = useState(false);
 
+  // qty_remaining is the single source of truth for what's left to
+  // allocate — no other field or derived calculation is used.
+  const getRawRemainingQty = (item) => item.qty_remaining || 0;
+
+  const computeRemainingQty = (item) => getRawRemainingQty(item);
+
   useEffect(() => {
     async function fetchItems() {
       if (selectedPOs.length === 0) {
@@ -971,6 +977,33 @@ export default function ContainerFlowPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPOs.length, selectedPOIds.join(',')]);
 
+  // Once a fresh (post-sync) item list lands, reconcile any rows already
+  // allocated — their maxQty was frozen at add-time and otherwise never
+  // reflects newer remaining-qty data (e.g. another container claiming
+  // stock in the meantime), which is what showed a stale "/ N" limit.
+  useEffect(() => {
+    if (fetchedPOItems.length === 0) return;
+    setSelectedItems((prev) =>
+      prev.map((selected) => {
+        const fresh = fetchedPOItems.find(
+          (i) =>
+            (i.po_item_id || i.id || i.uuid || i.poItemId) === selected.id,
+        );
+        if (!fresh) return selected;
+        const maxQty = computeRemainingQty(fresh);
+        return {
+          ...selected,
+          maxQty,
+          allocateQty:
+            selected.allocateQty !== '' && Number(selected.allocateQty) > maxQty
+              ? maxQty
+              : selected.allocateQty,
+        };
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedPOItems]);
+
   const availableItems = useMemo(() => {
     const items = fetchedPOItems.length > 0 ? fetchedPOItems : [];
     if (!items) return [];
@@ -980,7 +1013,7 @@ export default function ContainerFlowPage() {
           (sItem) =>
             sItem.id ===
             (item.po_item_id || item.id || item.uuid || item.poItemId),
-        ),
+        ) && getRawRemainingQty(item) > 0,
     );
   }, [selectedItems, fetchedPOItems]);
 
@@ -1212,17 +1245,6 @@ export default function ContainerFlowPage() {
       (i) => (i.po_item_id || i.id || i.uuid || i.poItemId) === itemId,
     );
     if (item) {
-      const remainingQty =
-        item.qty_remaining !== undefined
-          ? item.qty_remaining
-          : item.remaining_qty !== undefined
-            ? item.remaining_qty
-            : (item.qty_ordered || item.qty || 0) -
-              (item.qty_in_container ||
-                item.qty_received ||
-                item.receivedQty ||
-                0);
-
       setSelectedItems([
         ...selectedItems,
         {
@@ -1242,8 +1264,7 @@ export default function ContainerFlowPage() {
             item.product_image ||
             null,
           allocateQty: 0,
-          maxQty:
-            remainingQty > 0 ? remainingQty : item.qty_ordered || item.qty || 0,
+          maxQty: computeRemainingQty(item),
           bound_po_id: item.bound_po_id,
         },
       ]);
@@ -1750,12 +1771,17 @@ export default function ContainerFlowPage() {
               null,
             allocateQty:
               item.qty_in_container || item.qty || item.allocateQty || 0,
+            // The API's remaining-qty already excludes this container's own
+            // current allocation (it was subtracted when that qty was
+            // committed) — add it back so the max reflects what the user can
+            // actually raise this row's qty to, not less than what's already set.
             maxQty:
-              item.qty_remaining !== undefined
+              (item.qty_remaining !== undefined
                 ? item.qty_remaining
                 : item.remaining_qty !== undefined
                   ? item.remaining_qty
-                  : item.qty_ordered || item.maxQty || 9999,
+                  : item.qty_ordered || item.maxQty || 9999) +
+              (item.qty_in_container || item.qty || item.allocateQty || 0),
           })),
         );
       } else {

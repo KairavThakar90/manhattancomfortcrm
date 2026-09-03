@@ -3,7 +3,10 @@ import { useSelector } from 'react-redux';
 import { Package, X, CheckCircle2, Save } from 'lucide-react';
 import InfiniteScrollDropdown from '../../../components/InfiniteScrollDropdown';
 import { getContainerPOItems } from '../services/container.service';
-import { getPurchaseOrders } from '../../purchaseOrders/services/purchaseOrder.service';
+import {
+  getPurchaseOrders,
+  syncPOQuantities,
+} from '../../purchaseOrders/services/purchaseOrder.service';
 import { toast } from 'react-toastify';
 
 export default function AddContainerItemsWizard({ onClose, onConfirm }) {
@@ -101,6 +104,32 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
 
       try {
         setLoadingPOItems(true);
+
+        // Sync this PO's quantities first — items are only fetched once
+        // sync-quantities responds with success, so the qty/remaining shown
+        // reflects the latest Sellercloud data rather than a stale snapshot.
+        let syncSucceeded = false;
+        try {
+          const syncResult = await syncPOQuantities(poId);
+          syncSucceeded =
+            syncResult?.success === true ||
+            syncResult?.status === true ||
+            syncResult?.status === 'success';
+          if (!syncSucceeded) {
+            console.warn(
+              `Quantity sync for PO ${poId} did not report success`,
+              syncResult,
+            );
+          }
+        } catch (syncErr) {
+          console.error(`Failed to sync quantities for PO ${poId}`, syncErr);
+        }
+
+        if (!syncSucceeded) {
+          setFetchedPOItems(selectedPO?.items || []);
+          return;
+        }
+
         const data = await getContainerPOItems(poId);
         let items = Array.isArray(data)
           ? data
@@ -121,12 +150,20 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
     fetchItems();
   }, [selectedPO]);
 
+  // qty_remaining is the single source of truth for what's left to
+  // allocate — no other field or derived calculation is used.
+  const getRawRemaining = (item) => item.qty_remaining || 0;
+
+  const computeMaxQty = (item) => getRawRemaining(item);
+
   const availableItems = useMemo(() => {
     const items =
       fetchedPOItems.length > 0 ? fetchedPOItems : selectedPO?.items || [];
     if (!items) return [];
     return items.filter(
-      (item) => !selectedItems.some((sItem) => sItem.sku === item.sku),
+      (item) =>
+        !selectedItems.some((sItem) => sItem.sku === item.sku) &&
+        getRawRemaining(item) > 0,
     );
   }, [selectedPO, selectedItems, fetchedPOItems]);
 
@@ -148,20 +185,35 @@ export default function AddContainerItemsWizard({ onClose, onConfirm }) {
       }));
   }, [availableItems, itemSearchQuery]);
 
+  // Once a fresh (post-sync) item list lands, reconcile any rows the user
+  // already added — their maxQty was frozen at add-time and otherwise never
+  // reflects newer remaining-qty data (e.g. another container claiming stock
+  // in the meantime), which is exactly what showed the wrong "/ 1" limit.
+  useEffect(() => {
+    if (fetchedPOItems.length === 0) return;
+    setSelectedItems((prev) =>
+      prev.map((selected) => {
+        const fresh = fetchedPOItems.find((i) => i.sku === selected.sku);
+        if (!fresh) return selected;
+        const maxQty = computeMaxQty(fresh);
+        return {
+          ...selected,
+          maxQty,
+          allocateQty:
+            selected.allocateQty !== '' && Number(selected.allocateQty) > maxQty
+              ? maxQty
+              : selected.allocateQty,
+        };
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedPOItems]);
+
   const handleAddItem = (sku) => {
     const item = availableItems.find((i) => i.sku === sku);
     if (!item) return;
 
-    const maxQty =
-      item.qty_remaining !== undefined
-        ? item.qty_remaining
-        : item.remaining_qty !== undefined
-          ? item.remaining_qty
-          : item.unreceived_qty !== undefined
-            ? item.unreceived_qty
-            : item.qty_ordered !== undefined
-              ? item.qty_ordered
-              : item.qty || 1000;
+    const maxQty = computeMaxQty(item);
 
     const originalQty =
       item.qty_ordered !== undefined
