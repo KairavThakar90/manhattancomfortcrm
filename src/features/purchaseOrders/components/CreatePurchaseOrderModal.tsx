@@ -18,7 +18,10 @@ import { toast } from 'react-toastify';
 import VendorInfiniteDropdown from '../../../components/common/VendorInfiniteDropdown';
 import CompanyDropdown from '../../../components/common/CompanyDropdown';
 import ProductDropdown from '../../../components/common/ProductDropdown';
-import { createPurchaseOrder } from '../services/purchaseOrder.service';
+import {
+  createPurchaseOrder,
+  updatePurchaseOrder,
+} from '../services/purchaseOrder.service';
 import { getCompanies, type Company } from '../../../services/company.service';
 import {
   getProductsByVendor,
@@ -46,17 +49,31 @@ const STEPS = [
   { key: 'review', label: 'Review & Create' },
 ];
 
+interface EditingPurchaseOrder {
+  id: string;
+  vendor_id?: string;
+  purchase_title?: string;
+  notes?: string;
+  items?: { sku: string; qty_ordered: number; unit_price: number }[];
+}
+
 interface CreatePurchaseOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreated: () => void;
+  // When set, the modal opens flipped into edit mode: pre-filled from this
+  // PO's fetched details, and submitting calls updatePurchaseOrder instead
+  // of createPurchaseOrder.
+  editingPO?: EditingPurchaseOrder | null;
 }
 
 export default function CreatePurchaseOrderModal({
   isOpen,
   onClose,
   onCreated,
+  editingPO = null,
 }: CreatePurchaseOrderModalProps) {
+  const isEditMode = !!editingPO;
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState({
     vendorId: '',
@@ -73,6 +90,34 @@ export default function CreatePurchaseOrderModal({
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const vendors = useSelector((state: any) => state.vendors?.list) || [];
+
+  // Flip into edit mode: pre-fill the form/items from the fetched PO
+  // details whenever the modal opens with an editingPO. Existing items
+  // are loaded as manual rows since the API doesn't return a product id
+  // to match back against the vendor's product catalog.
+  useEffect(() => {
+    if (!isOpen || !editingPO) return;
+    setStepIndex(0);
+    setForm((prev) => ({
+      ...prev,
+      vendorId: editingPO.vendor_id || '',
+      purchaseTitle: editingPO.purchase_title || '',
+      notes: editingPO.notes || '',
+    }));
+    setItems(
+      editingPO.items && editingPO.items.length > 0
+        ? editingPO.items.map((it) => ({
+            ...emptyItemRow,
+            sku: it.sku || '',
+            qty_ordered: String(it.qty_ordered ?? ''),
+            unit_price: String(it.unit_price ?? ''),
+            isManual: true,
+          }))
+        : [{ ...emptyItemRow }],
+    );
+    setErrors({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, editingPO]);
 
   // Load the selected vendor's product catalog so item rows can be picked
   // from it instead of typed manually.
@@ -298,16 +343,24 @@ export default function CreatePurchaseOrderModal({
 
     try {
       setIsSaving(true);
-      await createPurchaseOrder(payload);
-      toast.success('Purchase order created successfully!');
+      if (isEditMode && editingPO) {
+        await updatePurchaseOrder(editingPO.id, payload as any);
+        toast.success('Purchase order updated successfully!');
+      } else {
+        await createPurchaseOrder(payload);
+        toast.success('Purchase order created successfully!');
+      }
       handleReset();
       onCreated();
       onClose();
     } catch (error: any) {
-      console.error('Failed to create purchase order', error);
+      console.error('Failed to save purchase order', error);
       const apiMessage =
         error?.response?.data?.message || error?.response?.data?.detail;
-      toast.error(apiMessage || 'Failed to create purchase order.');
+      toast.error(
+        apiMessage ||
+          `Failed to ${isEditMode ? 'update' : 'create'} purchase order.`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -340,7 +393,7 @@ export default function CreatePurchaseOrderModal({
       >
         <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4">
           <h3 className="font-display text-base font-bold text-slate-900">
-            Create Purchase Order
+            {isEditMode ? 'Edit Purchase Order' : 'Create Purchase Order'}
           </h3>
           <button
             onClick={handleClose}
@@ -614,8 +667,9 @@ export default function CreatePurchaseOrderModal({
                 <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
                   <Info className="h-4 w-4 flex-shrink-0 text-amber-600" />
                   <p className="text-xs text-amber-800">
-                    This order will be synced with Sellercloud once created.
-                    Please review the details below before creating.
+                    {isEditMode
+                      ? 'This order will be synced with Sellercloud once updated. Please review the details below before saving.'
+                      : 'This order will be synced with Sellercloud once created. Please review the details below before creating.'}
                   </p>
                 </div>
 
@@ -737,7 +791,13 @@ export default function CreatePurchaseOrderModal({
                 ) : (
                   <Save className="h-3.5 w-3.5" />
                 )}
-                {isSaving ? 'Creating...' : 'Create Purchase Order'}
+                {isSaving
+                  ? isEditMode
+                    ? 'Updating...'
+                    : 'Creating...'
+                  : isEditMode
+                    ? 'Update Purchase Order'
+                    : 'Create Purchase Order'}
               </button>
             ) : (
               <button

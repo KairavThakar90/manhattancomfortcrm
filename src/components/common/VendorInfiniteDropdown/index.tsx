@@ -38,15 +38,24 @@ export default function VendorInfiniteDropdown({
   const hasMore = useSelector((state: any) => state.vendors.hasMore) !== false;
 
   useEffect(() => {
-    if (isOpen) {
-      // Only fetch the full list when opened, rely on local filtering for search
+    // Fetch when opened (rely on local filtering for search), or when a
+    // value is pre-set (e.g. editing an existing record) but not yet in the
+    // loaded list — otherwise the selected name can't be resolved and the
+    // raw id shows instead.
+    const needsFetch =
+      isOpen ||
+      (value &&
+        value !== 'all' &&
+        !vendors.some((v: any) => v.id === value));
+    if (needsFetch) {
       dispatch(
         (fetchVendorsPage as any)({
           search: '',
         }),
       );
     }
-  }, [isOpen, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, value, dispatch]);
 
   useEffect(() => {
     const clickOutside = (e: MouseEvent) => {

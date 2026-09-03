@@ -78,6 +78,7 @@ import {
   updatePOStatus,
   updatePODelayReason,
   updatePurchaseOrderItemQuantity,
+  deletePurchaseOrder,
 } from '../services/purchaseOrder.service';
 import {
   getTagUsers,
@@ -1308,6 +1309,10 @@ export default function POManagement({
     attachmentId?: string | null;
   } | null>(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
+  const [deletePOTarget, setDeletePOTarget] = useState<any>(null);
+  const [isDeletingPO, setIsDeletingPO] = useState(false);
+  const [editingPO, setEditingPO] = useState<any>(null);
+  const [isLoadingEditPO, setIsLoadingEditPO] = useState(false);
   const [detailedPOItems, setDetailedPOItems] = useState<any[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -3188,6 +3193,79 @@ Supply Chain CRM Coordinator`;
       });
   };
 
+  const handleConfirmDeletePO = () => {
+    if (!deletePOTarget) return;
+    // DELETE /purchase-orders/:po_id expects the same sellercloud PO id used
+    // by every other single-PO endpoint (view/edit/sync) — strip the "PO-"
+    // display prefix, don't fall back to the internal DB uuid.
+    const idForApi = String(
+      deletePOTarget.sellercloud_po_id ||
+        String(deletePOTarget.id || '').replace(/^PO-/i, '') ||
+        '',
+    );
+    if (!idForApi) {
+      toast.error('Unable to determine purchase order id.');
+      setDeletePOTarget(null);
+      return;
+    }
+    setIsDeletingPO(true);
+    deletePurchaseOrder(idForApi)
+      .then(() => {
+        toast.success('Purchase order deleted successfully.');
+        onAddActivity(
+          `Deleted purchase order ${deletePOTarget.id}`,
+          'PO Updated',
+        );
+        if (selectedPOId === deletePOTarget.id) onSelectPO(null);
+        if (onRefreshData) onRefreshData();
+      })
+      .catch((err) => {
+        console.error('Failed to delete purchase order', err);
+        const apiMessage =
+          err?.response?.data?.message || err?.response?.data?.detail;
+        toast.error(apiMessage || 'Failed to delete purchase order.');
+      })
+      .finally(() => {
+        setIsDeletingPO(false);
+        setDeletePOTarget(null);
+      });
+  };
+
+  // Fetch the full PO details from the API and open the same
+  // Create-Purchase-Order modal, pre-filled, flipped into edit mode.
+  const handleEditPO = async (po: any) => {
+    const targetId = String(po.id).replace(/^PO-/i, '');
+    setIsLoadingEditPO(true);
+    try {
+      const detailData: any = await getPurchaseOrderById(targetId);
+      if (!detailData) {
+        toast.error('Failed to load purchase order details.');
+        return;
+      }
+      setEditingPO({
+        // PUT /purchase-orders/:po_id expects the same sellercloud PO id
+        // used to fetch these details — not the internal DB id/uuid.
+        id: detailData.sellercloud_po_id
+          ? String(detailData.sellercloud_po_id)
+          : targetId,
+        vendor_id: String(detailData.vendor_id || detailData.vendor?.id || ''),
+        purchase_title: detailData.purchase_title || detailData.title || '',
+        notes: detailData.notes || '',
+        items: (detailData.items || []).map((item: any) => ({
+          sku: item.sku || '',
+          qty_ordered: item.qty_ordered ?? item.qty ?? 0,
+          unit_price: item.unit_price ?? item.unitPrice ?? 0,
+        })),
+      });
+      setShowCreateModal(true);
+    } catch (err) {
+      console.error('Failed to load purchase order for editing', err);
+      toast.error('Failed to load purchase order details.');
+    } finally {
+      setIsLoadingEditPO(false);
+    }
+  };
+
   // Add a discussion comment
   const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3494,6 +3572,11 @@ Supply Chain CRM Coordinator`;
                   <ExternalLink className="h-3 w-3" />
                 </a>
               )}
+              {po.status === 'Delayed' && (
+                <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-rose-500" />
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 title="View PO Insights"
@@ -3503,12 +3586,34 @@ Supply Chain CRM Coordinator`;
                   onSelectPO(po.id);
                   setActiveDrawerSection('details');
                 }}
-                className="hover:text-mc-black ml-0.5 inline-flex shrink-0 items-center text-slate-400 transition-colors"
+                className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors"
               >
                 <Eye className="h-3 w-3" />
               </button>
-              {po.status === 'Delayed' && (
-                <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-rose-500" />
+              <button
+                type="button"
+                title="Edit Purchase Order"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  handleEditPO(po);
+                }}
+                disabled={isLoadingEditPO}
+                className="hover:text-mc-black inline-flex shrink-0 items-center text-slate-400 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+              {!isVendor && (
+                <button
+                  type="button"
+                  title="Delete Purchase Order"
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    setDeletePOTarget(po);
+                  }}
+                  className="inline-flex shrink-0 items-center text-slate-400 transition-colors hover:text-rose-500"
+                >
+                  <Trash className="h-3 w-3" />
+                </button>
               )}
             </div>
             {po.containerLeadTimeDays && (
@@ -4133,6 +4238,31 @@ Supply Chain CRM Coordinator`;
               >
                 <Eye className="h-3.5 w-3.5" />
               </button>
+              <button
+                type="button"
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  handleEditPO(po);
+                }}
+                disabled={isLoadingEditPO}
+                title="Edit Purchase Order"
+                className="text-mc-black inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              {!isVendor && (
+                <button
+                  type="button"
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    setDeletePOTarget(po);
+                  }}
+                  title="Delete Purchase Order"
+                  className="inline-flex items-center justify-center gap-1 rounded-md p-1.5 font-semibold text-rose-500 transition hover:bg-rose-50"
+                >
+                  <Trash className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           );
         },
@@ -4148,6 +4278,9 @@ Supply Chain CRM Coordinator`;
       searchQuery,
       syncingPOIds,
       handleSyncSinglePO,
+      isVendor,
+      handleEditPO,
+      isLoadingEditPO,
     ],
   );
 
@@ -6721,9 +6854,14 @@ Supply Chain CRM Coordinator`;
 
       <CreatePurchaseOrderModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        editingPO={editingPO}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingPO(null);
+        }}
         onCreated={() => {
           setShowCreateModal(false);
+          setEditingPO(null);
           if (onRefreshData) onRefreshData();
         }}
       />
@@ -7045,6 +7183,17 @@ Supply Chain CRM Coordinator`;
         }
         onCancel={() => !isDeletingComment && setDeleteCommentTarget(null)}
         onConfirm={handleConfirmDeleteComment}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={!!deletePOTarget}
+        isDeleting={isDeletingPO}
+        title="Delete Purchase Order"
+        message={`This can't be undone. Are you sure you want to delete ${
+          deletePOTarget?.id || 'this purchase order'
+        }?`}
+        onCancel={() => !isDeletingPO && setDeletePOTarget(null)}
+        onConfirm={handleConfirmDeletePO}
       />
 
       <ContainerDetailsModal
